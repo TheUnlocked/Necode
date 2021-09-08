@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id          Int         @id @default(autoincrement())
+  username    String      @unique
+  password    String
+  displayName String
+  email       String
+  verified    Boolean
+  createdAt   DateTime    @default(now()) @db.Timestamp(6)
+  instructs   Classroom[] @relation("instructs")
+  classes     Classroom[] @relation("attends")
+}
+
+model Classroom {
+  id           Int      @id @default(autoincrement())
+  name         String   @unique
+  displayName  String
+  createdAt    DateTime @default(now()) @db.Timestamp(6)
+  instructor   User     @relation("instructs", fields: [instructorId], references: [id])
+  instructorId Int
+  students     User[]   @relation("attends")
+}
+
+model Activity {
+  id             Int           @id @default(autoincrement())
+  activityType   String
+  lesson         Lesson @relation(fields: [lessonId], references: [id])
+  lessonId       Int
+  displayName    String
+  order          Int
+  clonedFrom     Activity[] @relation("cloned", fields: [clonedFromId], references: [id])
+  clonedFromId   Int
+  clonedBy       Activity[] @relation("cloned")
+  configuration  Json
+  interactionMode String
+  transientData  Json
+}
+
+model Lesson {
+  id            Int           @id @default(autoincrement())
+  displayName   String
+  activities    Activity[]
+}

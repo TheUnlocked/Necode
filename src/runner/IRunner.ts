@@ -1,4 +1,4 @@
-import { Result } from "../../languages/Language";
+import { Result } from "../languages/Language";
 
 export interface IRunner {
     run(code: string): Promise<Result>;

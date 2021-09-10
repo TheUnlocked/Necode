@@ -1,5 +1,5 @@
 import { NextPage } from "next";
-import { CreateTestActivity } from "../activities/test-based/CreateTestActivity";
+import { CreateTestActivity } from "../src/activities/test-based/CreateTestActivity";
 
 const DemoPage: NextPage = () => {
     return <div style={{height: '100vh'}}><CreateTestActivity/></div>;

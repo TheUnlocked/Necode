@@ -1,6 +1,6 @@
 import { Box, Card, CardContent } from "@mui/material";
 import { Monaco } from "@monaco-editor/react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ReflexContainer, ReflexElement, ReflexSplitter } from "react-reflex";
 import IsolatedEditor from "../../components/IsolatedEditor";
 
@@ -15,6 +15,7 @@ export function CreateTestActivity() {
     }
 
     const [val, setVal] = useState("");
+    const setValueRefs = useRef(Object.fromEntries(['a.ts', 'b.ts'].map(x => [x, { current: (_={}) => {} }])));
 
     useEffect(() => {
         if (val?.includes("reset")) {
@@ -32,8 +33,8 @@ export function CreateTestActivity() {
                 "semanticHighlighting.enabled": true
             }}
             defaultLanguage="typescript"
-            value={val}
-            onChange={v => setVal(v ?? "")}
+            setValueRef={setValueRefs.current[path]}
+            onChange={v => (setVal(v ?? ""), Object.entries(setValueRefs.current).forEach(([p, s]) => p === path ? null : s.current(v)))}
         />;
     }
 

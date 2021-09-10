@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
-import MonacoEditor, { useMonaco } from "@monaco-editor/react";
+import MonacoEditor, { EditorProps, OnChange, useMonaco } from "@monaco-editor/react";
 import { Box } from "@mui/material";
 import dynamic from "next/dynamic";
-import { orderedMessagePatcher } from "../util/OrderedEvents";
+import { IsolatedEditorProps } from "../src/components/IsolatedEditor";
 
 const Editor = dynamic(() => Promise.resolve(() => {
-    const [props, setProps] = useState<any>(null);
-    
+    const [props, setProps] = useState<IsolatedEditorProps | undefined>();
+    const [value, setValue] = useState<string | undefined>();
+
     const monaco = useMonaco();
     const [monacoConfiguration, setMonacoConfiguration] = useState("null");
 
@@ -24,32 +25,41 @@ const Editor = dynamic(() => Promise.resolve(() => {
     useEffect(() => {
         let listener: (ev: MessageEvent<any>) => any;
         window.addEventListener('message', listener = ({data}) => {
-            if (data.type === 'props') {
-                if (data.props.configureMonaco) {
-                    setMonacoConfiguration(data.props.configureMonaco);
-                    delete data.props.configureMonaco;
+            switch (data.type) {
+                case 'props': {
+                    if (data.props.configureMonaco) {
+                        setMonacoConfiguration(data.props.configureMonaco);
+                        delete data.props.configureMonaco;
+                    }
+                    delete data.props.value;
+                    setProps(Object.fromEntries(Object.entries(data.props).map(([key, value]: [string, any]) => {
+                        if (value?.__isFunction__) {
+                            return [key, (...args: any[]) => window.postMessage({
+                                type: 'invokeFunction',
+                                function: key,
+                                args
+                            }, window.location.origin)];
+                        }
+                        return [key, value];
+                    })) as IsolatedEditorProps);
+                    break;
                 }
-                setProps((oldProps: any) => Object.fromEntries(Object.entries(data.props).map(([key, value]: [string, any]) => {
-                    if (value?.__isFunction__) {
-                        return [key, (...args: any[]) => window.postMessage({
-                            type: 'invokeFunction',
-                            function: key,
-                            args
-                        }, window.location.origin)];
-                    }
-                    if (key === 'value' && oldProps?.__preserveValue__) {
-                        if (oldProps?.path === 'a.ts') console.log("preserved", oldProps?.value);
-                        return [key, oldProps.value];
-                    }
-                    return [key, value];
-                })));
+                case 'setValue': {
+                    setValue(data.value);
+                    break;
+                }
             }
         });
         return () => window.removeEventListener('message', listener);
     }, []);
 
+    const onChangeHandler: OnChange = (val, ev) => {
+        setValue(val);
+        props?.onChange?.(val, ev);
+    };
+
     return <Box sx={{ height: '100vh', width: '100vw', overflow: 'hidden' }}>
-        <MonacoEditor {...props} />
+        <MonacoEditor {...props} value={value} onChange={onChangeHandler} />
     </Box>;
 }), { ssr: false });
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import MonacoEditor, { EditorProps, OnChange, useMonaco } from "@monaco-editor/react";
+import MonacoEditor, { OnChange, useMonaco } from "@monaco-editor/react";
 import { Box } from "@mui/material";
 import dynamic from "next/dynamic";
 import { IsolatedEditorProps } from "../src/components/IsolatedEditor";
@@ -31,6 +31,9 @@ const Editor = dynamic(() => Promise.resolve(() => {
                         setMonacoConfiguration(data.props.configureMonaco);
                         delete data.props.configureMonaco;
                     }
+                    // Cannot set value from props requests, must send a setValue request
+                    // The reason why is somewhat technical but basically has to do with
+                    // an RPC race condition if you try to do it the intuitive way.
                     delete data.props.value;
                     setProps(Object.fromEntries(Object.entries(data.props).map(([key, value]: [string, any]) => {
                         if (value?.__isFunction__) {

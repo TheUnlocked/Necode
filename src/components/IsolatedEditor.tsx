@@ -1,6 +1,6 @@
 import { EditorProps } from "@monaco-editor/react";
 import { styled } from "@mui/system";
-import { MutableRefObject, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const InvisibleIframe = styled("iframe")`
     display: block;
@@ -27,7 +27,29 @@ export interface IsolatedEditorProps extends Omit<EditorProps, 'value'> {
      * A ref object which will be populated with a function to set the value of the monaco editor.
      * For technical reasons, the value of an isolated monaco editor cannot be set with the value property.
      */
-    setValueRef?: MutableRefObject<(value: string) => void>;
+    onSetValueChanged?: (setValue: (value: string) => void) => void;
+}
+
+export function useIsolatedEditor() {
+    const valueBuffer = useRef<string | undefined>();
+    const [setValue, setSetValue] = useState<(x: string) => void>(() => (x: string) => valueBuffer.current = x);
+
+    const setValueChangedHandler = useCallback((newSetValue: (x: string) => void) => {
+        if (valueBuffer.current !== undefined) {
+            newSetValue(valueBuffer.current);
+            valueBuffer.current = undefined;
+        }
+        setSetValue(() => newSetValue);
+    }, []);
+
+    const Editor = useCallback(function Editor(props: Omit<IsolatedEditorProps, 'onSetValueUpdate'>) {
+        return <IsolatedEditor {...props} onSetValueChanged={setValueChangedHandler} />;
+    }, [setValueChangedHandler]);
+
+    return {
+        Editor,
+        setValue
+    };
 }
 
 export default function IsolatedEditor(props: IsolatedEditorProps) {
@@ -38,7 +60,7 @@ export default function IsolatedEditor(props: IsolatedEditorProps) {
             const fns: { [key: string]: Function } = {};
             const fixedProps: { [key: string]: any } = {};
             for (const key of Object.keys(props) as (keyof typeof props)[]) {
-                if (key === 'setValueRef') {
+                if (key === 'onSetValueChanged') {
                     continue;
                 }
                 if (key === 'configureMonaco') {
@@ -65,8 +87,8 @@ export default function IsolatedEditor(props: IsolatedEditorProps) {
                 }, window.location.origin);
             }
 
-            if (props.setValueRef) {
-                props.setValueRef.current = setValue;
+            if (props.onSetValueChanged) {
+                props.onSetValueChanged(setValue);
             }
 
             const contentWindow = iframeRef.current.contentWindow;

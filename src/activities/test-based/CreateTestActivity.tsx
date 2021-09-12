@@ -2,7 +2,7 @@ import { Box, Card, CardContent } from "@mui/material";
 import { Monaco } from "@monaco-editor/react";
 import React, { useEffect, useRef, useState } from "react";
 import { ReflexContainer, ReflexElement, ReflexSplitter } from "react-reflex";
-import IsolatedEditor from "../../components/IsolatedEditor";
+import { useIsolatedEditor } from "../../components/IsolatedEditor";
 
 declare const monaco: Monaco;
 
@@ -15,7 +15,7 @@ export function CreateTestActivity() {
     }
 
     const [val, setVal] = useState("");
-    const setValueRefs = useRef(Object.fromEntries(['a.ts', 'b.ts'].map(x => [x, { current: (_={}) => {} }])));
+    const setValuesRef = useRef({} as { [path: string]: (value: string) => void });
 
     useEffect(() => {
         if (val?.includes("reset")) {
@@ -24,7 +24,10 @@ export function CreateTestActivity() {
     }, [val]);
     
     function ConfiguredEditor(path: string) {
-        return <IsolatedEditor
+        const { Editor, setValue } = useIsolatedEditor();
+        setValuesRef.current[path] = setValue;
+
+        return <Editor
             configureMonaco={configureMonaco}
             path={path}
             keepCurrentModel={true}
@@ -33,8 +36,7 @@ export function CreateTestActivity() {
                 "semanticHighlighting.enabled": true
             }}
             defaultLanguage="typescript"
-            setValueRef={setValueRefs.current[path]}
-            onChange={v => (setVal(v ?? ""), Object.entries(setValueRefs.current).forEach(([p, s]) => p === path ? null : s.current(v)))}
+            onChange={v => (setVal(v ?? ""), Object.entries(setValuesRef.current).forEach(([p, s]) => p === path ? null : s(v!)))}
         />;
     }
 

@@ -1,7 +1,5 @@
-import { Result } from "../languages/Language";
-
 export interface IRunner {
-    run(code: string): Promise<Result>;
+    load(code: string): Promise<any>;
 }
 
 export interface IRunnerProvider<TRunner extends IRunner = IRunner> {

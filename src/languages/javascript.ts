@@ -1,17 +1,17 @@
-import Language from "./Language";
+import ILanguage from "./ILanguage";
 
-interface JavascriptFeatureImpl {
-    /** Transforms just the user code */
-    transformUserCode?: (code: string) => string;
-    /** Transforms the result after all user code transformations have occurred */
-    transformAfter?: (code: string) => string;
-    typeDefinitions?: string;
+interface JavascriptOptions {
+    entryPoint: string;
 }
 
-class Javascript extends Language<JavascriptFeatureImpl> {
-    override toRunnerCode(userCode: string, features: JavascriptFeatureImpl[]) {
-        let transformedUserCode = features.reduce((acc, provider) => provider.transformUserCode?.(acc) ?? acc, userCode);
-        const finalCode = features.reduce((acc, provider) => provider.transformAfter?.(acc) ?? acc, transformedUserCode);
-        return finalCode;
+export class Javascript implements ILanguage<JavascriptOptions> {
+    toRunnerCode(code: string, options: JavascriptOptions) {
+        // Note: Find way to do this better than loading from unpkg
+        return `
+        (() => {
+            importScripts("https://unpkg.com/comlink/dist/umd/comlink.js");
+            Comlink.expose(new Function(${JSON.stringify(`${code}; return ${options.entryPoint};`)})());
+        })();
+        `;
     }
 }

@@ -5,41 +5,12 @@
 // 4. Retrieve response
 
 import { IRunner, IRunnerProvider } from "./IRunner";
+import { AnyMessage, MainToIFrameEventMap, MainToIframeMessage, Message, IframeToMainEventMap, IframeToMainMessage } from "./MessageTypes";
 
 export interface SecureRunnerOptions {
     /** Polling frequency in milliseconds. Default: 500 */
     pollFrequency: number;
 }
-
-interface MessageMap {
-    ping: never;
-}
-
-type Message<Type extends keyof MessageMap> = MessageMap[Type] extends never ? {
-    type: Type
-    origin: 'main';
-} : {
-    type: Type;
-    body: MessageMap[Type];
-    origin: 'main';
-}
-
-type AnyMessage = Message<keyof MessageMap>;
-
-interface RecvMessageMap {
-    pong: never;
-}
-
-type RecvMessage<Type extends keyof RecvMessageMap> = RecvMessageMap[Type] extends never ? {
-    type: Type
-    origin: 'runner';
-} : {
-    type: Type;
-    body: RecvMessageMap[Type];
-    origin: 'runner';
-}
-
-type AnyRecvMessage = RecvMessage<keyof RecvMessageMap>;
 
 export class BrowserRunnerProvider implements IRunnerProvider<BrowserRunner> {
     async requisition(): Promise<BrowserRunner> {
@@ -89,22 +60,31 @@ export class BrowserRunner implements IRunner {
         this.iframe = document.createElement('iframe');
         this.iframe.setAttribute('sandbox', 'allow-scripts');
         this.iframe.style.display = 'none';
+
+        this.iframe.srcdoc = `<!DOCTYPE html>
+        <html>
+            <head>
+                <script type="module">
+                    import * as Comlink from "https://unpkg.com/comlink/dist/esm/comlink.mjs";
+                    let exposed = null;
+                    ${iframeMessageHandler.toString()}
+                    iframeMessageHandler();
+                    Comlink.expose(() => exposed);
+                </script>
+            </head>
+        </html>`;
+        
         return new Promise<void>(resolve => {
             this.iframe.addEventListener('load', () => {
-                const messageScript = document.createElement('script');
-                messageScript.innerHTML = `${iframeMessageHandler.toString()}\niframeMessageHandler();`;
-                messageScript.addEventListener('load', () => {
-                    this.beginListening();
-                    resolve();
-                });
-                this.iframe.contentDocument!.head.append(messageScript);
+                this.beginListening();
+                resolve();
             });
             document.body.append(this.iframe);
         });
     }
 
-    private postMessage<Type extends keyof MessageMap>(order: Omit<Message<Type>, 'origin'>) {
-        this.iframe.contentWindow!.postMessage({ ...order, origin: 'main' } as Message<Type>, window.location.origin);
+    private postMessage<Event extends keyof MainToIFrameEventMap>(order: Omit<MainToIframeMessage<Event>, 'origin'>) {
+        this.iframe.postMessage({ ...order, } as MainToIframeMessage<Event>, window.location.origin);
     }
 
     private messageListener!: (ev: MessageEvent<any>) => any;
@@ -112,9 +92,9 @@ export class BrowserRunner implements IRunner {
     private respondedSinceLastInterval = false;
 
     private beginListening() {
-        this.iframe.contentWindow!.addEventListener('message', this.messageListener = e => {
-            const message = e as AnyRecvMessage;
-            if (message.origin === 'runner') {
+        this.iframe.message('message', this.messageListener = e => {
+            const message = e.data as AnyMessage;
+            if (message.origin === 'worker') {
                 switch (message.type) {
                     case 'pong':
                         this.isResponding = true;
@@ -133,8 +113,8 @@ export class BrowserRunner implements IRunner {
         }, this.options.pollFrequency) as any as number;
     }
 
-    run(code: string) {
-        return null!;
+    async load(code: string) {
+        this.postMessage()
     }
 
     /**
@@ -148,14 +128,16 @@ export class BrowserRunner implements IRunner {
     }
 }
 
+declare let exposed: any;
+
 function iframeMessageHandler() {
-    function postMessage<Type extends keyof RecvMessageMap>(order: Omit<RecvMessage<Type>, 'origin'>) {
-        window.postMessage({ ...order, origin: 'runner' } as RecvMessage<Type>, window.location.origin);
+    function postMessage<Type extends keyof IframeToMainEventMap>(order: Omit<IframeToMainMessage<Type>, 'origin'>) {
+        window.postMessage({ ...order, origin: 'worker' } as IframeToMainMessage<Type>, window.location.origin);
     }
 
     window.addEventListener('message', e => {
         const message: AnyMessage = e.data;
-        if (message.origin === 'main') {
+        if (message.origin === 'iframe') {
             switch (message.type) {
                 case 'ping':
                     postMessage({ type: 'pong' });

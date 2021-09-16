@@ -21,16 +21,16 @@ export default createTheme({
         MuiCssBaseline: {
             styleOverrides: `
                 .reflex-container {
-                    & > .reflex-splitter {
+                    && > .reflex-splitter {
                         background-color: ${splitterCore};
                     }
-                    & > .reflex-splitter {
+                    && > .reflex-splitter {
                         &.active, &:hover {
                             background-color: ${splitterCoreHover};
                         }
                     }
 
-                    &.horizontal > .reflex-splitter {
+                    &&.horizontal > .reflex-splitter {
                         border-color: ${splitterFill};
                         border-width: ${splitterBorderThickness} 0;
                         padding-top: ${splitterCoreThickness};
@@ -48,7 +48,7 @@ export default createTheme({
                         }
                     }
 
-                    &.vertical > .reflex-splitter {
+                    &&.vertical > .reflex-splitter {
                         border-color: ${splitterFill};
                         border-width: 0 ${splitterBorderThickness};
                         padding-left: ${splitterCoreThickness};

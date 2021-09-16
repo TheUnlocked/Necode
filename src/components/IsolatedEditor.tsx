@@ -1,6 +1,6 @@
 import { EditorProps } from "@monaco-editor/react";
-import { styled } from "@mui/system";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { styled, SxProps, Theme } from "@mui/system";
+import { useCallback, useEffect, useRef } from "react";
 
 const InvisibleIframe = styled("iframe")`
     display: block;
@@ -26,25 +26,39 @@ export interface IsolatedEditorProps extends Omit<EditorProps, 'value'> {
     /**
      * A ref object which will be populated with a function to set the value of the monaco editor.
      * For technical reasons, the value of an isolated monaco editor cannot be set with the value property.
+     * 
+     * In order to make the value persist across element reloads (e.g. during development),
+     * bind defaultValue to the editor value given from the onChange callback.
      */
     onSetValueChanged?: (setValue: (value: string) => void) => void;
+
+    sx?: SxProps<Theme>;
 }
 
 export function useIsolatedEditor() {
     const valueBuffer = useRef<string | undefined>();
-    const [setValue, setSetValue] = useState<(x: string) => void>(() => (x: string) => valueBuffer.current = x);
+    const setValueRef = useRef<((value: string) => void) | undefined>();
 
     const setValueChangedHandler = useCallback((newSetValue: (x: string) => void) => {
         if (valueBuffer.current !== undefined) {
             newSetValue(valueBuffer.current);
             valueBuffer.current = undefined;
         }
-        setSetValue(() => newSetValue);
+        setValueRef.current = newSetValue;
     }, []);
 
     const Editor = useCallback(function Editor(props: Omit<IsolatedEditorProps, 'onSetValueUpdate'>) {
         return <IsolatedEditor {...props} onSetValueChanged={setValueChangedHandler} />;
     }, [setValueChangedHandler]);
+
+    const setValue = useCallback((value: string) => {
+        if (setValueRef.current === undefined) {
+            valueBuffer.current = value;
+        }
+        else {
+            setValueRef.current(value);
+        }
+    }, []);
 
     return {
         Editor,
@@ -60,7 +74,7 @@ export default function IsolatedEditor(props: IsolatedEditorProps) {
             const fns: { [key: string]: Function } = {};
             const fixedProps: { [key: string]: any } = {};
             for (const key of Object.keys(props) as (keyof typeof props)[]) {
-                if (key === 'onSetValueChanged') {
+                if (key === 'onSetValueChanged' || key === 'sx') {
                     continue;
                 }
                 if (key === 'configureMonaco') {
@@ -113,7 +127,7 @@ export default function IsolatedEditor(props: IsolatedEditorProps) {
 
             return () => contentWindow.removeEventListener('message', listener);
         }
-    }, [props, iframeRef]);
+    }, [props]);
 
-    return <InvisibleIframe ref={iframeRef} src="/editor"/>;
+    return <InvisibleIframe sx={props.sx} ref={iframeRef} src="/editor"/>;
 }

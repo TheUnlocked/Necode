@@ -1,5 +1,4 @@
 node_modules
 .next
-false
 # Keep environment variables out of version control
 .env

@@ -3,17 +3,9 @@ import { Monaco } from "@monaco-editor/react";
 import React, { useEffect, useRef, useState } from "react";
 import { ReflexContainer, ReflexElement, ReflexSplitter } from "react-reflex";
 import { useIsolatedEditor } from "../../components/IsolatedEditor";
-
-declare const monaco: Monaco;
+import typescriptMonacoConfig from "../../monaco-config/typescript";
 
 export function CreateTestActivity() {
-    function configureMonaco() {
-        monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-            ...monaco?.languages.typescript.typescriptDefaults.getCompilerOptions(),
-            strict: true
-        });
-    }
-
     const [val, setVal] = useState("");
     const setValuesRef = useRef({} as { [path: string]: (value: string) => void });
 
@@ -28,7 +20,7 @@ export function CreateTestActivity() {
         setValuesRef.current[path] = setValue;
 
         return <Editor
-            configureMonaco={configureMonaco}
+            configureMonaco={typescriptMonacoConfig}
             path={path}
             keepCurrentModel={true}
             theme="vs-dark" options={{

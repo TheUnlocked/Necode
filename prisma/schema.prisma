@@ -10,13 +10,17 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// model Session {
+  
+// }
+
 model User {
   id          Int         @id @default(autoincrement())
-  username    String      @unique
-  password    String
+  authId      String      @unique
   displayName String
   email       String
-  verified    Boolean
+  firstName   String
+  lastName    String
   createdAt   DateTime    @default(now()) @db.Timestamp(6)
   instructs   Classroom[] @relation("instructs")
   classes     Classroom[] @relation("attends")

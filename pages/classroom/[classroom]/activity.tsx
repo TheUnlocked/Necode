@@ -1,10 +1,11 @@
 import { NextPage } from "next";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import { useContext, useEffect } from "react";
 import { CanvasActivity } from "../../../src/activities/canvas/CanvasActivity";
 import { MetaTransformerContext } from "../../../src/contexts/MetaTransformerContext";
 
-const Page: NextPage = () => {
+const Page: NextPage = dynamic(() => Promise.resolve(() => {
     const { query } = useRouter();
     const metaTransformer = useContext(MetaTransformerContext);
 
@@ -17,6 +18,6 @@ const Page: NextPage = () => {
     }, [metaTransformer, query]);
 
     return <div style={{height: 'calc(100vh - 64px)'}}><CanvasActivity/></div>;
-};
+}), { ssr: false });
 
 export default Page;

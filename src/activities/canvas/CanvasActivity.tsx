@@ -14,7 +14,7 @@ const SharedCanvas = styled('canvas')({
 
 export function CanvasActivity() {
     const { Editor } = useIsolatedEditor();
-    const code = useRef("/**\n * @param {Omit<CanvasRenderingContext2D, 'canvas'>} ctx\n */\nfunction draw(ctx) {\n    \n}");
+    const [code, setCode] = useState("/**\n * @param {CanvasRenderingContext2D} ctx\n */\nfunction draw(ctx) {\n    \n}");
 
     const runner = useMemo(() => {
         const runner = new BrowserRunner();
@@ -32,17 +32,21 @@ export function CanvasActivity() {
         }
     }, []);
 
+    const runnerCode = useMemo(() => new Javascript().toRunnerCode(code, { entryPoint: "draw" }), [code]);
+
     useEffect(() => {
         if (context2d) {
-            const interval = setInterval(() => {
+            function run() {
                 runner.runWithArguments(
-                    new Javascript().toRunnerCode(code.current, { entryPoint: "draw" }),
+                    runnerCode,
                     [context2d]
                 );
-            }, 2000);
+            }
+            const interval = setInterval(run, 100);
+            run();
             return () => clearInterval(interval);
         }
-    }, [context2d, runner]);
+    }, [context2d, runner, runnerCode]);
 
     return <Box sx={{
             px: 2,
@@ -63,8 +67,8 @@ export function CanvasActivity() {
                                 "semanticHighlighting.enabled": true
                             }}
                             defaultLanguage="javascript"
-                            defaultValue={code.current}
-                            onChange={v => code.current = v ?? ""} />
+                            defaultValue={code}
+                            onChange={v => setCode(v ?? "")} />
                     </Box>
                 </Card>
             </ReflexElement>

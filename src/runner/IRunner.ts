@@ -1,5 +1,5 @@
 export interface IRunner {
-    load(code: string): Promise<any>;
+    runWithArguments(code: string, args: any[], timeout?: number): Promise<any>;
 }
 
 export interface IRunnerProvider<TRunner extends IRunner = IRunner> {

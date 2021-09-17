@@ -4,13 +4,8 @@
 // 3. Deliver the code into that worker, and eval it.
 // 4. Retrieve response
 
+import { proxy, windowEndpoint, wrap } from "comlink";
 import { IRunner, IRunnerProvider } from "./IRunner";
-import { AnyMessage, MainToIFrameEventMap, MainToIframeMessage, Message, IframeToMainEventMap, IframeToMainMessage } from "./MessageTypes";
-
-export interface SecureRunnerOptions {
-    /** Polling frequency in milliseconds. Default: 500 */
-    pollFrequency: number;
-}
 
 export class BrowserRunnerProvider implements IRunnerProvider<BrowserRunner> {
     async requisition(): Promise<BrowserRunner> {
@@ -30,23 +25,17 @@ export class BrowserRunnerProvider implements IRunnerProvider<BrowserRunner> {
     }
 }
 
+type MainToIframeMessage = {
+    type: 'getRunnerFunction',
+    code: string,
+    timeout: number
+};
+
 export class BrowserRunner implements IRunner {
-    private options: SecureRunnerOptions;
-    private iframe!: HTMLIFrameElement;
+    private iframe?: HTMLIFrameElement;
+    private exectutor?: (msg: MainToIframeMessage) => Promise<any>;
     wasStarted = false;
     isAlive = false;
-    isResponding = false;
-
-    /**
-     * 
-     * @param options An options object. Options cannot be changed after the SecureRunner is constructed.
-     */
-    constructor(options: Partial<SecureRunnerOptions> = {}) {
-        this.options = {
-            pollFrequency: 500,
-            ...options
-        };
-    }
 
     async start() {
         if (this.wasStarted) {
@@ -61,88 +50,63 @@ export class BrowserRunner implements IRunner {
         this.iframe.setAttribute('sandbox', 'allow-scripts');
         this.iframe.style.display = 'none';
 
-        this.iframe.srcdoc = `<!DOCTYPE html>
-        <html>
-            <head>
-                <script type="module">
-                    import * as Comlink from "https://unpkg.com/comlink/dist/esm/comlink.mjs";
-                    let exposed = null;
-                    ${iframeMessageHandler.toString()}
-                    iframeMessageHandler();
-                    Comlink.expose(() => exposed);
-                </script>
-            </head>
-        </html>`;
+        this.iframe.srcdoc = /* html */ `<script type="module">
+            import * as Comlink from "https://unpkg.com/comlink/dist/esm/comlink.mjs";
+            Comlink.expose((req) => {
+                switch (req.type) {
+                    case 'getRunnerFunction': {
+                        try {
+                            const blob = new Blob([req.code], {type: 'application/javascript'});
+                            const worker = new Worker(URL.createObjectURL(blob));
+                            return Comlink.proxy(function(...args) {
+                                return new Promise((resolve, reject) => {
+                                    let timedOut = false;
+                                    const timer = setTimeout(() => { worker.terminate(); timedOut = true; reject(); }, req.timeout);
+                                    Comlink.wrap(worker)(...args).then(result => {
+                                        if (!timedOut) {
+                                            resolve(result);
+                                        }
+                                    }, error => {
+                                        resolve(null);
+                                    });
+                                });
+                            });
+                        }
+                        catch (e) {
+                            // Some error with the code
+                            return Comlink.proxy(() => {});
+                        }
+                    }
+                }
+            }, Comlink.windowEndpoint(window.parent));
+        </script>`;
         
         return new Promise<void>(resolve => {
-            this.iframe.addEventListener('load', () => {
-                this.beginListening();
+            this.iframe!.addEventListener('load', () => {
+                this.exectutor = wrap<(msg: MainToIframeMessage) => any>(windowEndpoint(this.iframe!.contentWindow!));
                 resolve();
             });
-            document.body.append(this.iframe);
+            document.body.append(this.iframe!);
         });
     }
 
-    private postMessage<Event extends keyof MainToIFrameEventMap>(order: Omit<MainToIframeMessage<Event>, 'origin'>) {
-        this.iframe.postMessage({ ...order, } as MainToIframeMessage<Event>, window.location.origin);
-    }
-
-    private messageListener!: (ev: MessageEvent<any>) => any;
-    private pollingInterval!: number;
-    private respondedSinceLastInterval = false;
-
-    private beginListening() {
-        this.iframe.message('message', this.messageListener = e => {
-            const message = e.data as AnyMessage;
-            if (message.origin === 'worker') {
-                switch (message.type) {
-                    case 'pong':
-                        this.isResponding = true;
-                        this.respondedSinceLastInterval = true;
-                        break;
-                }
-            }
-        });
-
-        this.pollingInterval = setInterval(() => {
-            if (!this.respondedSinceLastInterval) {
-                this.isResponding = false;
-            }
-            this.respondedSinceLastInterval = false;
-            this.postMessage({ type: 'ping' });
-        }, this.options.pollFrequency) as any as number;
-    }
-
-    async load(code: string) {
-        this.postMessage()
+    async runWithArguments(code: string, args: any[], timeout: number = 200) {
+        if (this.exectutor) {
+            const fn = await this.exectutor({
+                type: 'getRunnerFunction',
+                code,
+                timeout
+            });
+            console.log(args);
+            return fn(...args.map(proxy));
+        }
     }
 
     /**
      * Shuts down the SecureRunner
      */
     shutdown() {
-        clearInterval(this.pollingInterval);
-        this.iframe.contentWindow!.removeEventListener('message', this.messageListener);
-        this.iframe.remove();
+        this.iframe?.remove();
         this.isAlive = false;
     }
-}
-
-declare let exposed: any;
-
-function iframeMessageHandler() {
-    function postMessage<Type extends keyof IframeToMainEventMap>(order: Omit<IframeToMainMessage<Type>, 'origin'>) {
-        window.postMessage({ ...order, origin: 'worker' } as IframeToMainMessage<Type>, window.location.origin);
-    }
-
-    window.addEventListener('message', e => {
-        const message: AnyMessage = e.data;
-        if (message.origin === 'iframe') {
-            switch (message.type) {
-                case 'ping':
-                    postMessage({ type: 'pong' });
-                    break;
-            }
-        }
-    });
 }

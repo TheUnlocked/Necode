@@ -14,7 +14,7 @@ const SharedCanvas = styled('canvas')({
 
 export function CanvasActivity() {
     const { Editor } = useIsolatedEditor();
-    const code = useRef("/**\n * @param {CanvasRenderingContext2D} ctx\n */\nfunction draw(ctx) {\n    \n}");
+    const code = useRef("/**\n * @param {Omit<CanvasRenderingContext2D, 'canvas'>} ctx\n */\nfunction draw(ctx) {\n    \n}");
 
     const runner = useMemo(() => {
         const runner = new BrowserRunner();
@@ -35,8 +35,11 @@ export function CanvasActivity() {
     useEffect(() => {
         if (context2d) {
             const interval = setInterval(() => {
-                runner.load(new Javascript().toRunnerCode(code.current, { entryPoint: "draw" }));
-            }, 500);
+                runner.runWithArguments(
+                    new Javascript().toRunnerCode(code.current, { entryPoint: "draw" }),
+                    [context2d]
+                );
+            }, 2000);
             return () => clearInterval(interval);
         }
     }, [context2d, runner]);

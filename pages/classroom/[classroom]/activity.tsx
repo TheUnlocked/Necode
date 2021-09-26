@@ -17,7 +17,7 @@ const Page: NextPage = dynamic(() => Promise.resolve(() => {
         ] });
     }, [metaTransformer, query]);
 
-    return <div style={{height: 'calc(100vh - 64px)'}}><CanvasActivity/></div>;
+    return <div style={{height: 'calc(100vh - 64px)'}}><CanvasActivity classroom={query.classroom as string} /></div>;
 }), { ssr: false });
 
 export default Page;

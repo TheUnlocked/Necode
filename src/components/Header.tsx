@@ -1,9 +1,8 @@
 import { AppBar, Breadcrumbs, Button, Link, Stack, Toolbar, Typography, useScrollTrigger } from "@mui/material";
-import { signIn, signOut, useSession } from "next-auth/client";
+import { signIn, signOut, useSession } from "next-auth/react";
 import React from "react";
 import { MetaInfo } from "../contexts/MetaTransformerContext";
 import NextLink, { LinkProps } from "next/link";
-import { useRouter } from "next/dist/client/router";
 
 export default function Header(props: {
     path: MetaInfo['path']
@@ -13,7 +12,7 @@ export default function Header(props: {
         threshold: 0
     });
 
-    const [session, loading] = useSession();
+    const { data: session, status } = useSession();
 
     function breadcrumbsLink(link: { label: string, href?: LinkProps['href'] }, index: number, isLast: boolean) {
         if (link.href) {
@@ -34,14 +33,17 @@ export default function Header(props: {
             <Breadcrumbs sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}>
                 {props.path.map((x, i) => breadcrumbsLink(x, i, i === props.path.length - 1))}
             </Breadcrumbs>
-            <Stack direction="row" justifyContent="end" alignItems="baseline" spacing={4}>
-                {session?.user
-                    ? <>
-                        <Typography>Signed in as <strong>{(session.user as any).username}</strong></Typography>
-                        <Button color="inherit" onClick={() => signOut({ redirect: false })}>Sign Out</Button>
-                    </>
-                    : <Button variant="contained" onClick={() => signIn("wpi", { redirect: false })}>Sign In</Button>}
-            </Stack>
+            {
+                status === "loading" ? undefined
+                : <Stack direction="row" justifyContent="end" alignItems="baseline" spacing={4}>
+                    {session?.user
+                        ? <>
+                            <Typography>Signed in as <strong>{session?.user.username}</strong></Typography>
+                            <Button color="inherit" onClick={() => signOut({ redirect: false })}>Sign Out</Button>
+                        </>
+                        : <Button variant="contained" onClick={() => signIn("wpi", { redirect: false })}>Sign In</Button>}
+                </Stack>
+            }
         </Toolbar>
     </AppBar>;
 }

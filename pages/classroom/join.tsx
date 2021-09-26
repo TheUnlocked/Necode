@@ -3,12 +3,12 @@ import { NextPage } from "next";
 import { useRouter } from "next/dist/client/router";
 import { FormEventHandler, useEffect, useState } from "react";
 import FormPage from "../../src/components/FormPage";
-import { signIn, useSession } from "next-auth/client";
-import { ClassroomJoinResponse200 } from "../../src/types/api/ClassroomJoin";
+import { signIn, useSession } from "next-auth/react";
+import { ResponseData200 } from "../api/classroom/join";
 
 const Join: NextPage = () => {
     const router = useRouter();
-    const [session, loading] = useSession();
+    const { data: session, status } = useSession();
 
     const [joinCode, setJoinCode] = useState("");
 
@@ -20,7 +20,7 @@ const Join: NextPage = () => {
 
     if (!session) {
         return <FormPage title="Join a Classroom" error hideSubmit>
-            {loading ? <Skeleton animation="wave" variant="rectangular" height="56px" sx={{ borderRadius: 1 }} /> : <>
+            {status === 'loading' ? <Skeleton animation="wave" variant="rectangular" height="56px" sx={{ borderRadius: 1 }} /> : <>
                 <Typography>You must sign in before you can join a classroom.</Typography>
                 <Button variant="contained" onClick={() => signIn("wpi")}>Sign In</Button>
             </>}
@@ -35,7 +35,7 @@ const Join: NextPage = () => {
         });
 
         if (res.ok) {
-            const data = (await res.json()) as ClassroomJoinResponse200;
+            const data = (await res.json()) as ResponseData200;
             router.push(`/classroom/${data.classroomId}/`);
         }
     };

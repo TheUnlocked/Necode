@@ -1,5 +1,7 @@
 export interface IRunner {
-    runWithArguments(code: string, args: any[], timeout?: number): Promise<any>;
+    readonly isPrepared: boolean;
+    prepareCode(code: string | undefined): void;
+    run(args: any[], timeout?: number): Promise<any>;
 }
 
 export interface IRunnerProvider<TRunner extends IRunner = IRunner> {

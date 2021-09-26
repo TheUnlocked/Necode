@@ -9,8 +9,9 @@ import { MetaInfo, MetaTransformerContext } from '../src/contexts/MetaTransforme
 import { useMergeReducer } from '../src/util/merge-reducer';
 import Editor from './editor';
 import editorTheme from '../src/themes/editorTheme';
-import { Provider as SessionProvider } from 'next-auth/client';
+import { SessionProvider } from 'next-auth/react';
 import Header from '../src/components/Header';
+import { SnackbarProvider } from 'notistack';
 
 function MyApp({ Component, pageProps }: AppProps) {
     const [meta, metaTransformer] = useMergeReducer({
@@ -33,10 +34,12 @@ function MyApp({ Component, pageProps }: AppProps) {
         <ThemeProvider theme={theme}>
             <CssBaseline />
             <MetaTransformerContext.Provider value={metaTransformer}>
-                <SessionProvider session={pageProps.session}>
-                    <Header path={meta.path} />
-                    <Component {...pageProps} />
-                </SessionProvider>
+            <SnackbarProvider hideIconVariant>
+            <SessionProvider session={pageProps.session}>
+                <Header path={meta.path} />
+                <Component {...pageProps} />
+            </SessionProvider>
+            </SnackbarProvider>
             </MetaTransformerContext.Provider>
         </ThemeProvider>
     </>;

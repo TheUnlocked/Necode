@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
-import MonacoEditor, { OnChange, useMonaco } from "@monaco-editor/react";
+import React, { useCallback, useEffect, useState } from "react";
+import MonacoEditor, { OnChange, useMonaco, Monaco } from "@monaco-editor/react";
 import { Box } from "@mui/material";
 import dynamic from "next/dynamic";
-import { IsolatedEditorProps } from "../src/components/IsolatedEditor";
+import { IsolatedEditorProps } from "../src/hooks/IsolatedEditorHook";
 
 const Editor = dynamic(() => Promise.resolve(() => {
     const [props, setProps] = useState<IsolatedEditorProps | undefined>();

@@ -2,6 +2,7 @@
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  * Copyright (c) 2017, Amjad Masad
+ * Some additional changes were made for this project.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -16,13 +17,8 @@ module.exports = ({ types: t, template }) => {
   // even if the error ends up being caught by the code.
   const buildGuard = template(`
   if (ITERATOR++ > MAX_ITERATIONS) {
-    var csb_global = typeof window === 'undefined' ? self : window;
-    csb_global.infiniteLoopError = new RangeError(
-      'Potential infinite loop: exceeded ' +
-      MAX_ITERATIONS +
-      ' iterations. You can disable this check by creating a sandbox.config.json file.'
-    );
-    throw csb_global.infiniteLoopError;
+    const e = new RangeError(\`Potential infinite loop: exceeded \${MAX_ITERATIONS} iterations.\`);
+    throw e;
   }
   `);
 

@@ -10,49 +10,106 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// model Session {
-  
-// }
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+  oauth_token_secret String?
+  oauth_token        String?
+
+  ext_expires_in     Int?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum SitewideRights {
+  None
+  Admin
+}
 
 model User {
-  id          Int         @id @default(autoincrement())
-  authId      String      @unique
-  displayName String
-  email       String
-  firstName   String
-  lastName    String
-  createdAt   DateTime    @default(now()) @db.Timestamp(6)
-  instructs   Classroom[] @relation("instructs")
-  classes     Classroom[] @relation("attends")
+  id             String                @id @default(cuid())
+  username       String                @unique
+  displayName    String
+  email          String                @unique
+  firstName      String
+  lastName       String
+  rights         SitewideRights        @default(None)
+  emailVerified  DateTime? // Required for NextAuth.js, but never used
+  accounts       Account[]
+  sessions       Session[]
+  classes        ClassroomMembership[]
 }
 
 model Classroom {
-  id           Int      @id @default(autoincrement())
-  name         String   @unique
-  displayName  String
-  createdAt    DateTime @default(now()) @db.Timestamp(6)
-  instructor   User     @relation("instructs", fields: [instructorId], references: [id])
-  instructorId Int
-  students     User[]   @relation("attends")
+  id          String                @id @default(cuid())
+  name        String                @unique
+  displayName String
+  members     ClassroomMembership[]
+  lessons     Lesson[]
+}
+
+enum ClassroomRole {
+  Student
+  Instructor
+}
+
+model ClassroomMembership {
+  user        User          @relation(fields: [userId], references: [id])
+  userId      String
+  classroom   Classroom     @relation(fields: [classroomId], references: [id])
+  classroomId String
+  role        ClassroomRole @default(Student)
+
+  @@id([userId, classroomId])
 }
 
 model Activity {
-  id             Int           @id @default(autoincrement())
-  activityType   String
-  lesson         Lesson @relation(fields: [lessonId], references: [id])
-  lessonId       Int
-  displayName    String
-  order          Int
-  clonedFrom     Activity[] @relation("cloned", fields: [clonedFromId], references: [id])
-  clonedFromId   Int
-  clonedBy       Activity[] @relation("cloned")
-  configuration  Json
-  interactionMode String
-  transientData  Json
+  id              String     @id @default(cuid())
+  activityType    String
+  lesson          Lesson     @relation(fields: [lessonId], references: [id])
+  lessonId        String
+  displayName     String
+  configuration   Json
+  order           Int
+  clonedFrom      Activity[] @relation("cloned", fields: [clonedFromId], references: [id])
+  clonedFromId    String
+  clonedBy        Activity[] @relation("cloned")
+  transientData   Json
 }
 
 model Lesson {
-  id            Int           @id @default(autoincrement())
-  displayName   String
-  activities    Activity[]
+  id          String     @id @default(cuid())
+  displayName String
+  activities  Activity[]
+  classroom   Classroom @relation(fields: [classroomId], references: [id])
+  classroomId String
+  date        DateTime @db.Date
 }

@@ -1,28 +1,45 @@
-import NextAuth from "next-auth";
-import { Provider } from "next-auth/providers";
-import { PrismaClient } from "@prisma/client";
-import { JWT } from "next-auth/jwt";
+import NextAuth, { ISODateString, User } from "next-auth";
+import { CredentialInput, CredentialsConfig, OAuthConfig, Provider } from "next-auth/providers";
+import { SitewideRights } from "@prisma/client";
+import { PrismaAdapter } from "@next-auth/prisma-adapter"
+import { nanoid } from "nanoid";
+import { prisma } from "../../../src/db/prisma";
 
 const WPI_TENANT_ID = process.env.MSAL_TENANT_ID;
 
-const WPIProvider: Provider = {
+const WPIProvider: OAuthConfig<{
+    id: string,
+    displayName: string,
+    givenName: string,
+    surname: string,
+    mail: string
+}> = {
     id: 'wpi',
     name: 'WPI Microsoft Login',
     type: 'oauth',
     version: '2.0',
-    scope: 'https://graph.microsoft.com/user.read',
-    params: { grant_type: 'authorization_code' },
-    accessTokenUrl: `https://login.microsoftonline.com/${WPI_TENANT_ID}/oauth2/v2.0/token`,
-    authorizationUrl: `https://login.microsoftonline.com/${WPI_TENANT_ID}/oauth2/v2.0/authorize?response_type=code&response_mode=query`,
-    profileUrl: 'https://graph.microsoft.com/v1.0/me/',
-    profile: profile => {
+    authorization: {
+        url: `https://login.microsoftonline.com/${WPI_TENANT_ID}/oauth2/v2.0/authorize?response_type=code&response_mode=query`,
+        params: {
+            scope: 'https://graph.microsoft.com/user.read',
+        }
+    },
+    token: {
+        url: `https://login.microsoftonline.com/${WPI_TENANT_ID}/oauth2/v2.0/token`,
+        params: {
+            grant_type: 'authorization_code'
+        },
+    },
+    userinfo: 'https://graph.microsoft.com/v1.0/me/',
+    profile(profile) {
         return {
-            id: profile.id as string,
-            authId: profile.id,
-            displayName: profile.displayName as string,
+            id: profile.id,
+            username: profile.mail.split('@', 1)[0],
+            displayName: profile.displayName,
             firstName: profile.givenName,
             lastName: profile.surname,
-            email: profile.mail as string,
+            email: profile.mail,
+            rights: "None"
         };
     },
     clientId: process.env.MSAL_APPLICATION_ID!,
@@ -30,41 +47,69 @@ const WPIProvider: Provider = {
     tenantId: WPI_TENANT_ID
 };
 
-const prisma = new PrismaClient();
+const DevProvider: CredentialsConfig<{
+    username: CredentialInput,
+    rights: CredentialInput,
+    [key: string]: CredentialInput
+}> = {
+    id: "dev",
+    name: "Developer Login",
+    type: "credentials",
+    credentials: {
+        username: {},
+        rights: {}
+    },
+    async authorize(credentials) {
+        const user = credentials.username || nanoid(8);
+        return {
+            id: `DEV_${user}`,
+            username: `dev_${user}`,
+            displayName: user,
+            firstName: 'Developer',
+            lastName: user,
+            email: `dev_${user}@wpi.edu`,
+            rights: credentials.rights
+        } as User;
+    }
+};
+
+declare module 'next-auth' {
+    interface Session {
+        user: User;
+        expires: ISODateString;
+    }
+    interface User {
+        id: string;
+        username: string;
+        displayName: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+        rights: SitewideRights;
+    }
+}
 
 export default NextAuth({
     providers: [
-        WPIProvider
-    ],
+        [WPIProvider as Provider],
+        process.env.NODE_ENV === 'development' ? [DevProvider] : []
+    ].flat(),
     secret: process.env.NEXTAUTH_SECRET,
-    jwt: {
-        secret: process.env.NEXTAUTH_SECRET,
-        signingKey: process.env.JWT_SIGNING_PRIVATE_KEY,
+    adapter: PrismaAdapter(prisma),
+    session: {
+        jwt: false,
+        maxAge: 30 * 24 * 60 * 60, // 30 days
+        updateAge: 24 * 60 * 60, // 24 hours
     },
     callbacks: {
-        jwt(token, user) {
-            token.firstName ??= user?.firstName;
-            token.lastName ??= user?.lastName;
-            return token;
-        },
-        session(session, token: JWT) {
-            session.user = {
-                ...session.user,
-                firstName: token.firstName,
-                lastName: token.lastName,
-                email: token.email,
-                username: token.email?.split('@', 1)[0]
-            } as any;
-            return session;
+        async session({ session, user }) {
+            return {
+                user,
+                expires: session.expires
+            };
         }
     },
-    // adapter: {
-    //     async getAdapter() {
-    //         return {
-    //             createSession(user) {
-    //                 prisma
-    //             }
-    //         }
-    //     }
-    // }
+    pages: {
+        error: '/login'
+    }
 });

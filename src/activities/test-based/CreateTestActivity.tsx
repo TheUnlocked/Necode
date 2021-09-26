@@ -1,8 +1,7 @@
 import { Box, Card, CardContent } from "@mui/material";
-import { Monaco } from "@monaco-editor/react";
 import React, { useEffect, useRef, useState } from "react";
 import { ReflexContainer, ReflexElement, ReflexSplitter } from "react-reflex";
-import { useIsolatedEditor } from "../../components/IsolatedEditor";
+import { useIsolatedEditor } from "../../hooks/IsolatedEditorHook";
 import typescriptMonacoConfig from "../../monaco-config/typescript";
 
 export function CreateTestActivity() {

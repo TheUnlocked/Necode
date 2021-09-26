@@ -10,8 +10,8 @@ export default class Bimap<T1, T2> {
     }
 
     set(key: T1, value: T2) {
-        this.deleteKey(key);
-        this.deleteValue(value);
+        this.deleteByKey(key);
+        this.deleteByValue(value);
         this.fdMap.set(key, value);
         this.bkMap.set(value, key);
         return this;
@@ -27,12 +27,12 @@ export default class Bimap<T1, T2> {
     getByKey(key: T1) { return this.fdMap.get(key); }
     getByValue(value: T2) { return this.bkMap.get(value); }
 
-    /** Alias of {@link deleteKey} */
+    /** Alias of {@link deleteByKey} */
     delete(key: T1) {
-        return this.deleteKey(key);
+        return this.deleteByKey(key);
     }
 
-    deleteKey(key: T1) {
+    deleteByKey(key: T1) {
         const value = this.fdMap.get(key);
         if (value) {
             this.fdMap.delete(key);
@@ -42,7 +42,7 @@ export default class Bimap<T1, T2> {
         return false;
     }
 
-    deleteValue(value: T2) {
+    deleteByValue(value: T2) {
         const key = this.bkMap.get(value);
         if (key) {
             this.fdMap.delete(key);

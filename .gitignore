@@ -2,3 +2,6 @@ node_modules
 .next
 # Keep environment variables out of version control
 .env
+
+# exclude websocket builds
+websocketServer/dist

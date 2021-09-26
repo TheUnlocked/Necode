@@ -1,0 +1,1 @@
+npx concurrently "tsc --watch --noEmit false --outDir websocketServer/dist --target esnext --module commonjs websocketServer/main.ts" "nodemon ./websocketServer/dist/websocketServer/main.js"

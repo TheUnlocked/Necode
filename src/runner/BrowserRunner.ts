@@ -18,15 +18,11 @@ export class BrowserRunnerProvider implements IRunnerProvider<BrowserRunner> {
     }
 }
 
-type MainToIframeMessage = {
-    type: 'getRunnerFunction',
-    code: string,
-    timeout: number
-};
-
 export class BrowserRunner implements IRunner {
     wasStarted = false;
     isAlive = false;
+    private code: string = "";
+    private compiled: Function | undefined;
 
     async start() {
         if (this.wasStarted) {
@@ -39,14 +35,36 @@ export class BrowserRunner implements IRunner {
         }
     }
 
-    async runWithArguments(code: string, args: any[], timeout: number = 200) {
-        try {
-            eval(`${code} entry(...args)`);
+    /**
+     * 
+     * @param code 
+     * @throws
+     */
+    prepareCode(code: string | undefined) {
+        if (code === undefined) {
+            this.compiled = undefined;
         }
-        catch (e) {
-            // Report error to user somehow
-            // console.log(e)
+        else {
+            console.log(`${code}\nentry(...arguments)`)
+            this.compiled = new Function(`${code}\nentry(...arguments)`);
         }
+    }
+
+    get isPrepared() {
+        return this.compiled !== undefined;
+    }
+
+    /**
+     * @param code 
+     * @param args 
+     * @param timeout 
+     * @throws
+     */
+    async run(args: any[] = [], timeout: number = 200) {
+        if (!this.compiled) {
+            throw Error("Tried to run code without preparing it");
+        }
+        return this.compiled(...args);
     }
 
     /**

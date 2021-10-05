@@ -8,13 +8,13 @@ import { ResponseData } from "../../api/classroom/[classroom]/me";
 const Page: NextPage = () => {
     const router = useRouter();
 
-    const { data, error } = useSWR<ResponseData>(`/classroom/${router.query.classroom}/me`, jsonFetcher);
+    const { data, error } = useSWR<ResponseData>(`/api/classroom/${router.query.classroom}/me`, jsonFetcher);
 
     if (error) {
         router.replace('/404');
     }
-    else if (data) {
-        if (data.attributes.role === 'Instructor') {
+    else if (data?.response === 'ok') {
+        if (data.data.attributes.role === 'Instructor') {
             router.replace(`/classroom/${router.query.classroom}/manage`);
         }
         else {

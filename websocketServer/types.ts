@@ -1,12 +1,12 @@
 import type { SignalData } from 'simple-peer';
-import { Nominal } from '../src/util/types';
+import { NewType } from '../src/util/types';
 
 type Voidify<T> = T extends (...args: infer TArgs) => any ? (...args: TArgs) => void : T;
 type VoidifyAll<T extends {}> = { [Key in keyof T]: Voidify<T[Key]> };
 
 declare const usernameBrand: unique symbol;
 /** Use `as` casts to transform between usernames and strings */
-export type Username = Nominal<string, typeof usernameBrand>;
+export type Username = NewType<string, typeof usernameBrand>;
 
 
 export interface ClientToServerOrders {

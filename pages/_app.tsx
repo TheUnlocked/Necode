@@ -12,6 +12,10 @@ import editorTheme from '../src/themes/editorTheme';
 import { SessionProvider } from 'next-auth/react';
 import Header from '../src/components/Header';
 import { SnackbarProvider } from 'notistack';
+import { LocalizationProvider } from '@mui/lab';
+import AdapterLuxon from '@mui/lab/AdapterLuxon';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
 function MyApp({ Component, pageProps }: AppProps) {
     const [meta, metaTransformer] = useMergeReducer({
@@ -30,16 +34,21 @@ function MyApp({ Component, pageProps }: AppProps) {
         <Head>
             <title>{meta.title}</title>
             <meta name="viewport" content="initial-scale=1, width=device-width" />
+            <meta name="color-scheme" content="dark light" />
         </Head>
         <ThemeProvider theme={theme}>
             <CssBaseline />
             <MetaTransformerContext.Provider value={metaTransformer}>
+            <LocalizationProvider dateAdapter={AdapterLuxon}>
             <SnackbarProvider hideIconVariant>
+            <DndProvider backend={HTML5Backend}>
             <SessionProvider session={pageProps.session}>
                 <Header path={meta.path} />
                 <Component {...pageProps} />
             </SessionProvider>
+            </DndProvider>
             </SnackbarProvider>
+            </LocalizationProvider>
             </MetaTransformerContext.Provider>
         </ThemeProvider>
     </>;

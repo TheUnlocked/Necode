@@ -8,6 +8,7 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["interactiveTransactions"]
 }
 
 model Session {
@@ -25,6 +26,7 @@ model Account {
   provider           String
   providerAccountId  String
   refresh_token      String?
+  refresh_token_expires_in Int?
   access_token       String?
   expires_at         Int?
   token_type         String?
@@ -82,9 +84,9 @@ enum ClassroomRole {
 }
 
 model ClassroomMembership {
-  user        User          @relation(fields: [userId], references: [id])
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String
-  classroom   Classroom     @relation(fields: [classroomId], references: [id])
+  classroom   Classroom     @relation(fields: [classroomId], references: [id], onDelete: Cascade)
   classroomId String
   role        ClassroomRole @default(Student)
 
@@ -99,17 +101,21 @@ model Activity {
   displayName     String
   configuration   Json
   order           Int
-  clonedFrom      Activity[] @relation("cloned", fields: [clonedFromId], references: [id])
-  clonedFromId    String
-  clonedBy        Activity[] @relation("cloned")
-  transientData   Json
 }
 
 model Lesson {
   id          String     @id @default(cuid())
   displayName String
   activities  Activity[]
+}
+
+model PlannedLesson {
+  lesson      Lesson @relation(fields: [lessonId], references: [id])
+  lessonId    String
   classroom   Classroom @relation(fields: [classroomId], references: [id])
   classroomId String
   date        DateTime @db.Date
+  lessonData  Json
+
+  @@id([lessonId, classroomId, date])
 }

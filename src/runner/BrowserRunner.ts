@@ -45,7 +45,6 @@ export class BrowserRunner implements IRunner {
             this.compiled = undefined;
         }
         else {
-            console.log(`${code}\nentry(...arguments)`)
             this.compiled = new Function(`${code}\nentry(...arguments)`);
         }
     }

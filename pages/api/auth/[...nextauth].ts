@@ -1,9 +1,11 @@
 import NextAuth, { ISODateString, User } from "next-auth";
 import { CredentialInput, CredentialsConfig, OAuthConfig, Provider } from "next-auth/providers";
+import GithubProvider from "next-auth/providers/github"
 import { SitewideRights } from "@prisma/client";
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import { nanoid } from "nanoid";
 import { prisma } from "../../../src/db/prisma";
+import Email from "next-auth/providers/email";
 
 const WPI_TENANT_ID = process.env.MSAL_TENANT_ID;
 
@@ -47,32 +49,6 @@ const WPIProvider: OAuthConfig<{
     tenantId: WPI_TENANT_ID
 };
 
-const DevProvider: CredentialsConfig<{
-    username: CredentialInput,
-    rights: CredentialInput,
-    [key: string]: CredentialInput
-}> = {
-    id: "dev",
-    name: "Developer Login",
-    type: "credentials",
-    credentials: {
-        username: {},
-        rights: {}
-    },
-    async authorize(credentials) {
-        const user = credentials.username || nanoid(8);
-        return {
-            id: `DEV_${user}`,
-            username: `dev_${user}`,
-            displayName: user,
-            firstName: 'Developer',
-            lastName: user,
-            email: `dev_${user}@wpi.edu`,
-            rights: credentials.rights
-        } as User;
-    }
-};
-
 declare module 'next-auth' {
     interface Session {
         user: User;
@@ -92,16 +68,60 @@ declare module 'next-auth' {
 export default NextAuth({
     providers: [
         [WPIProvider as Provider],
-        process.env.NODE_ENV === 'development' ? [DevProvider] : []
+        process.env.NODE_ENV === 'development' ? [
+            Email({ 
+                sendVerificationRequest: async ({ url }) => {
+                    console.log(url);
+                }
+            }),
+            GithubProvider({
+                clientId: process.env.GITHUB_ID,
+                clientSecret: process.env.GITHUB_SECRET,
+                profile(profile: {}) {
+                    // ts type assertion
+                    function _(_: any): asserts _ is { id: string, name?: string, login: string, email: string, image: string } {};
+                    _(profile);
+                    return {
+                        id: profile.id,
+                        username: profile.login,
+                        displayName: profile.name || profile.login,
+                        firstName: "Github",
+                        lastName: profile.login,
+                        email: profile.email || `${profile.login}@example.edu`,
+                        rights: "None",
+                    };
+                }
+            })
+        ] : []
     ].flat(),
     secret: process.env.NEXTAUTH_SECRET,
-    adapter: PrismaAdapter(prisma),
+    adapter: (() => {
+        const adapter = PrismaAdapter(prisma);
+        const createUser = adapter.createUser;
+        adapter.createUser = function(user) {
+            if (process.env.NODE_ENV === 'development') {
+                user.username ??= (user.email as string).split('@', 1)[0];
+                user.displayName ??= user.username;
+                user.firstName ??= 'dev';
+                user.lastName ??= user.username;
+            }
+            return createUser.call(this, user);
+        }
+        return adapter;
+    })(),
     session: {
         jwt: false,
         maxAge: 30 * 24 * 60 * 60, // 30 days
         updateAge: 24 * 60 * 60, // 24 hours
     },
+    jwt: {
+        signingKey: process.env.JWT_SIGNING_PRIVATE_KEY
+    },
     callbacks: {
+        // async jwt({ token, user }) {
+        //     Object.assign(token, user ?? {});
+        //     return token;
+        // },
         async session({ session, user }) {
             return {
                 user,

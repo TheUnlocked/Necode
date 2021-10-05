@@ -8,13 +8,13 @@ export default createTheme({
         primary: blue,
         secondary: pink
     },
-    components: {
-        MuiCssBaseline: {
-            styleOverrides: `
-                body {
-                    background-color: unset;
-                }
-            `
-        }
-    }
+    // components: {
+    //     MuiCssBaseline: {
+    //         styleOverrides: `
+    //             body {
+    //                 background-color: unset;
+    //             }
+    //         `
+    //     }
+    // }
 });

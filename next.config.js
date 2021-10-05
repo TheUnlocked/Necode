@@ -1,5 +1,7 @@
+const withTM = require('next-transpile-modules')([/* Problematic module names go here */]);
+
 /** @type {import('next').NextConfig} */
-module.exports = {
+module.exports = withTM({
   reactStrictMode: true,
   webpack(config, ctx) {
     if (!ctx.isServer) {
@@ -23,4 +25,4 @@ module.exports = {
       ]
     };
   }
-}
+});

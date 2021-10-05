@@ -1,4 +1,4 @@
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import { AuthLevel, ClientToServerEventMap, eventAuthorization, ServerToClientEventMap, Username } from './types';
 import jwtVerify from 'jose/jwt/verify';
 import parseJwk from 'jose/jwk/parse';
@@ -7,6 +7,8 @@ import { $in, isNotNull } from '../src/util/typeguards';
 import { Classroom } from './Classroom';
 import Bimap from '../src/util/Bimap';
 import { createServer } from 'http';
+import tracked, { Tracked } from '../src/util/trackedEventEmitter';
+import { nanoid } from 'nanoid';
 
 dotenv.config()
 
@@ -78,11 +80,9 @@ io.on('connection', socket => {
                 return next();
             }
             console.log(ev, 'not authorized');
-            return;
             return next(new Error("Not authorized"));
         }
         console.log(ev, 'is not a vaid event');
-        return;
         return next(new Error("Invalid Event"));
     });
 
@@ -122,29 +122,46 @@ io.on('connection', socket => {
     });
 
     socket.on('linkParticipants', (initiator, participants, initiatorInfo, participantInfo) => {
-        console.log('link', initiator, 'with', participants.join(', '));
+        const linkId = nanoid();
+        console.log(`[${linkId}]`, 'link', initiator, 'with', participants.join(', '));
+
+        const trackedSocket = tracked(socket);
+        const participantSockets = {} as { [participant: string]: Tracked<Socket> };
 
         const initiatorId = fromUsername(initiator);
         if (!initiatorId) {
-            console.log(initiator, 'is not a valid user');
+            console.log(`[${linkId}]`, initiator, 'is not a valid user');
             return;
         }
         const participantIds = participants.map(fromUsername).filter((x): x is string => x as any as boolean);
         if (participantIds.length === 0) return;
         
         for (const participantId of participantIds) {
+            if (participantId === socket.id) {
+                console.log(`[${linkId}]`, 'ignoring request to link', myUsername, 'to themselves');
+                continue;
+            }
+
             const participantUsername = toUsername(participantId)!;
 
             io.to(initiatorId).emit('createWebRTCConnection', true, participantUsername, initiatorInfo);
-            console.log('told', initiator, 'to initiate connection with', participantUsername);
+            console.log(`[${linkId}]`, 'told', initiator, 'to initiate connection with', participantUsername);
             
             const participantSocket = io.sockets.sockets.get(participantId);
             if (participantSocket) {
-                participantSocket.on('provideWebRTCSignal', (user, signal) => {
+                const trackedparticipantSocket = tracked(participantSocket);
+                participantSockets[participantId] = trackedparticipantSocket;
+                
+                trackedparticipantSocket.on('provideWebRTCSignal', (user, signal) => {
                     if (fromUsername(user) === socket.id) {
-                        console.log('signal from', participantUsername, 'to', myUsername);
+                        console.log(`[${linkId}]`, 'signal from', participantUsername, 'to', myUsername);
                         socket.emit('signalWebRTCConnection', participantUsername, signal);
                     }
+                });
+
+                trackedparticipantSocket.on('disconnect', () => {
+                    trackedparticipantSocket.offTracked();
+                    delete participantSockets[participantId];
                 });
             }
             else {
@@ -153,12 +170,31 @@ io.on('connection', socket => {
             }
         }
         io.to(participantIds).emit('createWebRTCConnection', false, initiator, participantInfo);
-        console.log('told', participants.join(', '), 'to create connection with', initiator);
+        console.log(`[${linkId}]`, 'told', participants.join(', '), 'to create connection with', initiator);
 
-        socket.on('provideWebRTCSignal', (user, signal) => {
-            console.log('signal from', myUsername, 'to', user);
+        trackedSocket.on('provideWebRTCSignal', (user, signal) => {
+            console.log(`[${linkId}]`, 'signal from', myUsername, 'to', user);
             if (participants.includes(user)) {
                 io.to(fromUsername(user)!).emit('signalWebRTCConnection', myUsername, signal);
+            }
+        });
+
+        trackedSocket.on('unlinkParticipants', (from, to) => {
+            console.log(`[${linkId}]`, 'unlink', initiator, 'from', to.join(', '));
+            if (from === myUsername) {
+                for (const participantUsername of to) {
+                    const participantId = fromUsername(participantUsername);
+                    if (participantId && participantId in participantSockets) {
+                        participantSockets[participantId].offTracked();
+                        delete participantSockets[participantId];
+                    }
+                }
+                if (Object.keys(participantSockets).length === 0) {
+                    console.log(`[${linkId}]`, 'all participants severed, closing link');
+                    // This should clear the last reference to this data
+                    // and allow the GC to clean everything up.
+                    trackedSocket.offTracked();
+                }
             }
         });
     });

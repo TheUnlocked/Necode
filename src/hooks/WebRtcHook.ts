@@ -1,8 +1,8 @@
-import { DependencyList, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { AuthLevel, ClientToServerEventMap, ClientToServerOrders, ServerToClientEventMap, Username } from '../../websocketServer/types';
 import Peer from 'simple-peer';
-import tracked, { TrackingList } from '../util/trackedEventEmitter';
+import tracked from '../util/trackedEventEmitter';
 
 export function useSignalingWebsocket(classroom: string) {
     const [wsInstance, setWs] = useState<Socket<ServerToClientEventMap, ClientToServerEventMap> | undefined>();
@@ -20,8 +20,10 @@ export function useSignalingWebsocket(classroom: string) {
     
             ws.on('connect', async () => {
                 const jwt = await (await fetch(`/api/classroom/${classroom}/jwt`, { method: 'POST' })).text();
-                ws.once('grantAuthorization', (authLevel, forUsername, inClassroom) => {
-                    if (authLevel !== AuthLevel.Denied) {
+                ws.emit('join', jwt, (response) => {
+                    if (response.authority !== AuthLevel.Denied) {
+                        const { authority: authLevel, user: forUsername, classroom: inClassroom } = response;
+
                         if (classroom === inClassroom) {
                             // dev
                             usernameRef.current = forUsername;
@@ -41,7 +43,6 @@ export function useSignalingWebsocket(classroom: string) {
                         // authorization denied, show error?
                     }
                 });
-                ws.emit('join', jwt);
             });
     
             return () => { ws.close(); };
@@ -54,8 +55,7 @@ export function useSignalingWebsocket(classroom: string) {
         getParticipants() {
             return new Promise((resolve, reject) => {
                 if (wsInstance) {
-                    wsInstance.once('provideParticipants', resolve);
-                    wsInstance.emit('getParticipants');
+                    wsInstance.emit('getParticipants', resolve);
                 }
                 else {
                     // ws is not yet established
@@ -63,15 +63,19 @@ export function useSignalingWebsocket(classroom: string) {
                 }
             });
         },
-        linkParticipants(initiator, participants, initiatorInfo, participantInfo) {
-            console.log('link', initiator, 'with', participants.join(','));
-            wsInstance.emit('linkParticipants', initiator, participants, initiatorInfo, participantInfo);
+        linkRtc(initiator, participant, initiatorInfo, participantInfo) {
+            console.log('link', initiator, 'with', participant);
+            wsInstance.emit('linkRtc', initiator, participant, initiatorInfo, participantInfo);
         },
-        unlinkParticipants(user, connections) {
-            console.log('unlink', user, 'with', connections.join(','));
-            wsInstance.emit('unlinkParticipants', user, connections);
+        unlinkRtc(conn) {
+            console.log('unlink', conn);
+            wsInstance.emit('unlinkRtc', conn);
         }
-    } as ClientToServerOrders & { ws: typeof wsInstance, authLevel: AuthLevel } : undefined, [
+    } as Omit<ClientToServerOrders, 'getParticipants'> & {
+        ws: typeof wsInstance,
+        authLevel: AuthLevel,
+        getParticipants(): Promise<Username[]>
+    } : undefined, [
         authLevel,
         wsInstance
     ]);
@@ -91,23 +95,24 @@ export function useRTC<T>(classroom: string, onPeer: (peer: Peer.Instance, info:
         const ws = socketInfo?.ws ? tracked(socketInfo.ws) : undefined;
         
         if (ws) {
-            ws.on('createWebRTCConnection', (initiator, peerUsername, info) => {
+            ws.on('createWebRTCConnection', (initiator, connectionId, info) => {
                 const peer = new Peer({
                     initiator
                 });
                 let notifiedPeer = false;
-                console.log('created peer');
+                console.log('created peer', connectionId);
                 
                 const peerTrackedWs = tracked(ws);
 
                 peer.on('error', err => console.log('peer error', err))
                 
                 peer.on('signal', data => {
-                    console.log('signal to peer', peerUsername);
-                    ws.emit('provideWebRTCSignal', peerUsername, data);
+                    console.log('signal to peer', connectionId);
+                    ws.emit('provideWebRTCSignal', connectionId, data);
                 });
-                peerTrackedWs.on('signalWebRTCConnection', (user, signal) => {
-                    if (user === peerUsername) {
+                peerTrackedWs.on('signalWebRTCConnection', (conn, signal) => {
+                    if (conn === connectionId) {
+                        console.log('recieved signal from peer', conn)
                         peer.signal(signal);
                         if (!notifiedPeer) {
                             notifiedPeer = true;
@@ -116,8 +121,8 @@ export function useRTC<T>(classroom: string, onPeer: (peer: Peer.Instance, info:
                     }
                 });
 
-                peerTrackedWs.on('killWebRTCConnection', withUser => {
-                    if (withUser === peerUsername) {
+                peerTrackedWs.on('killWebRTCConnection', (conn) => {
+                    if (conn === connectionId) {
                         peer.destroy();
                     }
                 });

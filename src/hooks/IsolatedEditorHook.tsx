@@ -125,7 +125,7 @@ export default function IsolatedEditor(props: IsolatedEditorProps) {
                 props: fixedProps
             }, window.location.origin);
 
-            return () => contentWindow.removeEventListener('message', listener);
+            return () => contentWindow?.removeEventListener('message', listener);
         }
     }, [props]);
 

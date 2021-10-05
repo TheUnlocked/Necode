@@ -15,6 +15,7 @@ import { Python3 } from "../../languages/python3";
 import dedent from "dedent-js";
 import AutoRing from "../../util/AutoRing";
 import tracked from "../../util/trackedEventEmitter";
+import Editor from "@monaco-editor/react";
 
 const SharedCanvas = styled('canvas')({
     maxWidth: "100%",
@@ -110,7 +111,6 @@ export function CanvasActivity(props: {
         python: `"""\nDraw on the canvas\n"""\ndef draw(ctx):\n    pass\n`,
     }), []);
 
-    const { Editor } = useIsolatedEditor();
     const [code, setCode] = useState(defaultCode.javascript);
 
     useEffect(() => {
@@ -188,44 +188,32 @@ export function CanvasActivity(props: {
                 onPeer(...peer);
             }
             peersRef.current = [];
-            peer.addStream(canvasMediaStream);
-            peer.on('stream', stream => {
-                if (incomingVideoRef.current) {
-                    incomingVideoRef.current.srcObject = stream;
-                }
-            });
+            if (info.role === 'send') {
+                peer.addStream(canvasMediaStream);
+            }
+            else {
+                peer.on('stream', stream => {
+                    if (incomingVideoRef.current) {
+                        incomingVideoRef.current.srcObject = stream;
+                    }
+                });
+            }
         }
         else {
             peersRef.current.push([peer, info]);
         }
     }, [canvasMediaStream]));
 
-    const participantRingRef = useRef<AutoRing<Username>>(null!);
-
     useEffect(() => {
         if (me?.response === 'ok' && rtcContext && rtcContext.authLevel >= AuthLevel.Instructor) {
             const ws = tracked(rtcContext.ws);
             ws.on('userJoin', user => {
                 setParticipants(p => p.add(user as string));
-                // if (user !== me.data.attributes.username) {
-                    participantRingRef.current?.add(user);
-                // }
             });
             ws.on('userLeave', user => {
                 setParticipants(p => (p.delete(user as string), p));
-                participantRingRef.current?.remove(user);
             });
-            rtcContext.getParticipants().then(participants => {
-                setParticipants(new Set(participants as string[]));
-                participantRingRef.current = new AutoRing(participants, {
-                    linkHandler(a, b) {
-                        rtcContext.linkParticipants(a, [b], { 'role': 'send' }, { 'role': 'recv' });
-                    },
-                    unlinkHandler(a, b) {
-                        rtcContext.unlinkParticipants(a, [b]);
-                    }
-                });
-            });
+            rtcContext.getParticipants().then(x => setParticipants(new Set(x as string[])));
             return () => ws.offTracked();
         }
     }, [rtcContext, me]);
@@ -244,7 +232,7 @@ export function CanvasActivity(props: {
                     javascript: 'javascript',
                     python3: 'python'
                 }[router.query.language as string | undefined ?? 'javascript']}
-                defaultValue={code}
+                value={code}
                 onChange={v => setCode(v ?? "")} />
         </Box>
         <Alert severity={codeError ? "error" : "success"} sx={{ wordBreak: "break-word" }}>

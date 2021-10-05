@@ -10,28 +10,21 @@ export type Username = NewType<string, typeof usernameBrand>;
 
 
 export interface ClientToServerOrders {
-    getParticipants(): Promise<Username[]>;
-    linkParticipants(initiator: Username, participants: Username[], initiatorInfo?: any, participantInfo?: any): void;
-    unlinkParticipants(user: Username, connections: Username[]): void;
+    getParticipants(callback: (participants: Username[]) => void): Promise<Username[]>;
+    linkRtc(initiator: Username, recipient: Username, initiatorInfo?: any, recipientInfo?: any): void;
+    unlinkRtc(connId: string): void;
 }
 
 export interface ClientToServerEventMap extends VoidifyAll<ClientToServerOrders> {
-    // Automatic Orders
-    join(jwt: string): void;
-
-    // Replies
-    provideWebRTCSignal(user: Username, signal: SignalData): void;
+    join(jwt: string, callback: (data: { authority: AuthLevel.Denied } | { authority: AuthLevel, user: Username, classroom: string }) => void): void;
+    provideWebRTCSignal(connId: string, signal: SignalData): void;
 }
 
 export interface ServerToClientEventMap {
     // Orders
-    createWebRTCConnection(initiator: boolean, withUser: Username, info: any): void;
-    signalWebRTCConnection(user: Username, signal: SignalData): void;
-    killWebRTCConnection(withUser: Username): void;
-
-    // Replies
-    grantAuthorization(authority: AuthLevel, user: Username, classroom: string): void;
-    provideParticipants(participants: Username[]): void;
+    createWebRTCConnection(initiator: boolean, connId: string, info: any): void;
+    signalWebRTCConnection(connId: string, signal: SignalData): void;
+    killWebRTCConnection(connId: string): void;
 
     // Events
     userJoin(name: Username): void;
@@ -52,7 +45,7 @@ export enum AuthLevel {
 export const eventAuthorization = {
     join: AuthLevel.None,
     getParticipants: AuthLevel.Instructor,
-    linkParticipants: AuthLevel.Instructor,
-    unlinkParticipants: AuthLevel.Instructor,
+    linkRtc: AuthLevel.Instructor,
+    unlinkRtc: AuthLevel.Instructor,
     provideWebRTCSignal: AuthLevel.Joined
 } as {[ eventName in keyof ClientToServerEventMap ]: AuthLevel};

@@ -3,6 +3,9 @@
     "exclude": ["../node_modules/**"],
     "compilerOptions": {
         "target": "esnext",
-        "module": "commonjs"
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "inlineSourceMap": true,
+        "strict": true
     }
 }

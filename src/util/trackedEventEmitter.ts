@@ -1,15 +1,15 @@
-import { Socket } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import { Socket as ClientSocket } from 'socket.io-client';
 import type EventEmitter from 'typed-emitter';
 
 export type TrackingList = { [ev: string]: ((...args: any) => void)[] };
 
-export type Tracked<E extends EventEmitter<any> | Socket<any, any, any> | ClientSocket<any, any>> = E & {
+export type Tracked<E extends EventEmitter<any> | Socket<any, any, any> | ClientSocket<any, any>  | Server<any, any, any>> = E & {
     offTrackedEvent(ev: Parameters<E['on']>[0]): void;
     offTracked(): void;
 };
 
-export default function tracked<E extends EventEmitter<any> | Socket<any, any, any> | ClientSocket<any, any>>(
+export default function tracked<E extends EventEmitter<any> | Socket<any, any, any> | ClientSocket<any, any> | Server<any, any, any>>(
     emitter: E
 ): Tracked<E> {
     const trackingList = {} as TrackingList;

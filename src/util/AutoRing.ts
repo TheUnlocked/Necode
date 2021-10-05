@@ -17,16 +17,21 @@ export default class AutoRing<T> {
     ) {
         this.linkHandler = options?.linkHandler;
         this.unlinkHandler = options?.unlinkHandler;
+
+        this.add = this.add.bind(this);
+        this.remove = this.remove.bind(this);
         
         if (items) {
             const itemsArr = [...items];
-            itemsArr.forEach((item, i) => {
-                const before = itemsArr[mod(i - 1, itemsArr.length)];
-                const after = itemsArr[mod(i + 1, itemsArr.length)];
-                this.linkTable.set(item, [before, after]);
-                this.linkHandler?.(item, after);
-            });
-            this.anchor = Some(itemsArr[0]);
+            if (itemsArr.length > 0) {
+                itemsArr.forEach((item, i) => {
+                    const before = itemsArr[mod(i - 1, itemsArr.length)];
+                    const after = itemsArr[mod(i + 1, itemsArr.length)];
+                    this.linkTable.set(item, [before, after]);
+                    this.linkHandler?.(item, after);
+                });
+                this.anchor = Some(itemsArr[0]);
+            }
         }
     }
 
@@ -37,15 +42,24 @@ export default class AutoRing<T> {
         if (this.linkTable.has(obj)) {
             return false;
         }
-
+        
         if (this.anchor.exists) {
             const oldAnchor = this.anchor.value;
-            const [beforeOldAnchor, afterOldAnchor] = this.linkTable.get(oldAnchor)!;
-            this.linkTable.set(oldAnchor, [beforeOldAnchor, obj]);
-            this.linkTable.set(obj, [oldAnchor, afterOldAnchor]);
-            this.unlinkHandler?.(oldAnchor, afterOldAnchor);
-            this.linkHandler?.(oldAnchor, obj);
-            this.linkHandler?.(obj, afterOldAnchor);
+            if (this.linkTable.size === 1) {
+                this.linkTable.set(oldAnchor, [obj, obj]);
+                this.linkTable.set(obj, [oldAnchor, oldAnchor]);
+                this.linkHandler?.(oldAnchor, obj);
+                this.linkHandler?.(obj, oldAnchor);
+            }
+            else {
+                const [beforeOldAnchor, afterOldAnchor] = this.linkTable.get(oldAnchor)!;
+                this.linkTable.set(oldAnchor, [beforeOldAnchor, obj]);
+                this.linkTable.set(obj, [oldAnchor, afterOldAnchor]);
+                this.linkTable.get(afterOldAnchor)![0] = obj;
+                this.unlinkHandler?.(oldAnchor, afterOldAnchor);
+                this.linkHandler?.(oldAnchor, obj);
+                this.linkHandler?.(obj, afterOldAnchor);
+            }
         }
         else {
             this.linkTable.set(obj, [obj, obj]);

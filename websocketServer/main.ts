@@ -64,6 +64,7 @@ io.on('connection', socket => {
             classroom.instructors.add(socket.id);
         }
         //dev
+        classroom.activity!.ring.remove(myUsername);
         classroom.activity!.ring.add(myUsername);
     }
 
@@ -182,7 +183,7 @@ io.on('connection', socket => {
 
         trackedSocket.on('unlinkRtc', (conn) => {
             if (conn === connId) {
-                console.log(`[${connId}]`, 'unlink');
+                console.log(`[${connId}]`, 'unlink', myUsername, 'from', recipient);
 
                 socket.emit('killWebRTCConnection', connId);
                 io.to(recipientId).emit('killWebRTCConnection', connId);

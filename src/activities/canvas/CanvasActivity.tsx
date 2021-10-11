@@ -180,27 +180,26 @@ export function CanvasActivity(props: {
 
     type PeerInfo = { role: 'send' | 'recv' };
 
-    const peersRef = useRef<[Parameters<Parameters<typeof useRTC>[1]>[0], PeerInfo][]>([]);
+    const sendPeerRef = useRef<Parameters<Parameters<typeof useRTC>[1]>[0]>();
+    const recvPeerRef = useRef<Parameters<Parameters<typeof useRTC>[1]>[0]>();
 
     const rtcContext = useRTC<PeerInfo>(props.classroom, useCallback(function onPeer(peer, info) {
-        if (canvasMediaStream) {
-            for (const peer of peersRef.current) {
-                onPeer(...peer);
+        if (info.role === 'send') {
+            if (sendPeerRef.current && !sendPeerRef.current.destroyed) {
+                sendPeerRef.current.destroy();
             }
-            peersRef.current = [];
-            if (info.role === 'send') {
-                peer.addStream(canvasMediaStream);
-            }
-            else {
-                peer.on('stream', stream => {
-                    if (incomingVideoRef.current) {
-                        incomingVideoRef.current.srcObject = stream;
-                    }
-                });
-            }
+            sendPeerRef.current = peer;
+            peer.addStream(canvasMediaStream!);
         }
         else {
-            peersRef.current.push([peer, info]);
+            if (recvPeerRef.current && !recvPeerRef.current.destroyed) {
+                recvPeerRef.current.destroy();
+            }
+            peer.on('stream', stream => {
+                if (incomingVideoRef.current) {
+                    incomingVideoRef.current.srcObject = stream;
+                }
+            });
         }
     }, [canvasMediaStream]));
 

@@ -16,7 +16,7 @@ export function useSignalingWebsocket(classroom: string) {
             const ws = io(`${window.location.hostname}:3001`, { port: '3001' }) as Socket<ServerToClientEventMap, ClientToServerEventMap>;
             // let connected = false;
     
-            ws.onAny(console.log);
+            // ws.onAny(console.log);
     
             ws.on('connect', async () => {
                 const jwt = await (await fetch(`/api/classroom/${classroom}/jwt`, { method: 'POST' })).text();
@@ -95,24 +95,32 @@ export function useRTC<T>(classroom: string, onPeer: (peer: Peer.Instance, info:
         const ws = socketInfo?.ws ? tracked(socketInfo.ws) : undefined;
         
         if (ws) {
+            let peers = [] as Peer.Instance[];
+
+            ws.on('connect', () => {
+                peers.forEach(p => p.destroy());
+                peers = [];
+            });
+
             ws.on('createWebRTCConnection', (initiator, connectionId, info) => {
                 const peer = new Peer({
                     initiator
                 });
+                peers.push(peer);
                 let notifiedPeer = false;
-                console.log('created peer', connectionId);
+                console.log('created peer', initiator, connectionId, info);
                 
                 const peerTrackedWs = tracked(ws);
 
                 peer.on('error', err => console.log('peer error', err))
                 
                 peer.on('signal', data => {
-                    console.log('signal to peer', connectionId);
+                    // console.log('signal to peer', connectionId);
                     ws.emit('provideWebRTCSignal', connectionId, data);
                 });
                 peerTrackedWs.on('signalWebRTCConnection', (conn, signal) => {
                     if (conn === connectionId) {
-                        console.log('recieved signal from peer', conn)
+                        // console.log('recieved signal from peer', conn);
                         peer.signal(signal);
                         if (!notifiedPeer) {
                             notifiedPeer = true;
@@ -123,6 +131,7 @@ export function useRTC<T>(classroom: string, onPeer: (peer: Peer.Instance, info:
 
                 peerTrackedWs.on('killWebRTCConnection', (conn) => {
                     if (conn === connectionId) {
+                        console.log('killed connection', conn);
                         peer.destroy();
                     }
                 });

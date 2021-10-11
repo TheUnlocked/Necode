@@ -1,5 +1,5 @@
 import { mod } from "./math";
-import { None, Option, Some } from "./Option";
+import { assertExists, None, Option, Some } from "./Option";
 
 export interface AutoRingOptions<T> {
     linkHandler?: (from: T, to: T) => void,
@@ -127,6 +127,8 @@ export default class AutoRing<T> {
             if (this.linkTable.size === 1) {
                 this.linkTable.set(oldAnchor, [obj, obj]);
                 this.linkTable.set(obj, [oldAnchor, oldAnchor]);
+                this.anchor = Some(obj);
+
                 this.unlinkHandler?.(oldAnchor, oldAnchor);
                 this.linkHandler?.(oldAnchor, obj);
                 this.linkHandler?.(obj, oldAnchor);
@@ -136,6 +138,8 @@ export default class AutoRing<T> {
                 this.linkTable.set(oldAnchor, [beforeOldAnchor, obj]);
                 this.linkTable.set(obj, [oldAnchor, afterOldAnchor]);
                 this.linkTable.get(afterOldAnchor)![0] = obj;
+                this.anchor = Some(obj);
+
                 this.unlinkHandler?.(oldAnchor, afterOldAnchor);
                 this.linkHandler?.(oldAnchor, obj);
                 this.linkHandler?.(obj, afterOldAnchor);
@@ -143,9 +147,10 @@ export default class AutoRing<T> {
         }
         else {
             this.linkTable.set(obj, [obj, obj]);
+            this.anchor = Some(obj);
+
             this.linkHandler?.(obj, obj);
         }
-        this.anchor = Some(obj);
         return true;
     }
 
@@ -163,17 +168,19 @@ export default class AutoRing<T> {
         
         if (this.linkTable.size === 1) {
             this.linkTable.delete(obj);
-            this.unlinkHandler?.(obj, obj);
             this.anchor = None;
+
+            this.unlinkHandler?.(obj, obj);
         }
         else if (this.linkTable.size === 2) {
             const [other] = this.linkTable.get(obj)!;
             this.linkTable.delete(obj);
             this.linkTable.set(other, [other, other]);
+            this.anchor = Some(other);
+
             this.unlinkHandler?.(other, obj);
             this.unlinkHandler?.(obj, other);
             this.linkHandler?.(other, other);
-            this.anchor = Some(other);
         }
         else {
             const [before, after] = this.linkTable.get(obj)!;
@@ -182,13 +189,13 @@ export default class AutoRing<T> {
             this.linkTable.delete(obj);
             this.linkTable.set(before, [beforeBefore, after]);
             this.linkTable.set(after, [before, afterAfter]);
+            if (obj === assertExists(this.anchor).value) {
+                this.anchor = Some(after);
+            }
+
             this.unlinkHandler?.(before, obj);
             this.unlinkHandler?.(obj, after);
             this.linkHandler?.(before, after);
-    
-            if (obj === this.anchor) {
-                this.anchor = Some(after);
-            }
         }
         return true;
     }

@@ -1,4 +1,5 @@
 import AutoRing from "../src/util/AutoRing";
+import { IProtocol } from "./rtc/protocols/IProtocol";
 import { Username } from "./types";
 
 export class Classroom {
@@ -10,9 +11,6 @@ export class Classroom {
     constructor(public name: string) {}
 }
 
-export interface RingActivity {
-    protocol: 'ring';
-    ring: AutoRing<Username>;
+export interface Activity {
+    protocol: IProtocol;
 }
-
-export type Activity = RingActivity;

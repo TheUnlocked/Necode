@@ -2,7 +2,11 @@ export enum EntityType {
     User = 'user',
     /** inherits from user */
     ClassroomUser = 'user/classroom',
-    Classroom = 'classroom'
+    Classroom = 'classroom',
+    Lesson = 'lesson',
+    /** inherits from lesson */
+    PlannedLesson = 'lesson/planned',
+    Activity = 'activity',
 }
 
 export type EntityId = string;

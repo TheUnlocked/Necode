@@ -10,7 +10,7 @@ export type ClassroomMemberEntity = Entity<EntityType.ClassroomUser, UserEntity[
     classroom: EntityReference<ClassroomEntity>;
 }>;
 
-export function makeClassroomMemberEntity(user: ClassroomMembership & { user: User & { classes?: { classroomId: string; }[]; }; }): ClassroomMemberEntity {
+export function makeClassroomMemberEntity(user: ClassroomMembership & { user: User & { classes?: { classroomId: string }[] } }): ClassroomMemberEntity {
     const userPart = makeUserEntity(user.user, { classes: user.user.classes?.map(x => x.classroomId) });
     return {
         type: EntityType.ClassroomUser,

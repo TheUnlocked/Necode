@@ -4,14 +4,20 @@ import type EventEmitter from 'typed-emitter';
 
 export type TrackingList = { [ev: string]: ((...args: any) => void)[] };
 
-export type Tracked<E extends EventEmitter<any> | Socket<any, any, any> | ClientSocket<any, any>  | Server<any, any, any>> = E & {
+type Trackable = EventEmitter<any> | Socket<any, any, any> | ClientSocket<any, any> | Server<any, any, any>;
+
+export type Tracked<E extends Trackable> = E & {
     offTrackedEvent(ev: Parameters<E['on']>[0]): void;
     offTracked(): void;
 };
 
-export default function tracked<E extends EventEmitter<any> | Socket<any, any, any> | ClientSocket<any, any> | Server<any, any, any>>(
-    emitter: E
-): Tracked<E> {
+export default function tracked<E extends Trackable>(emitter: E): Tracked<E>;
+export default function tracked<E extends Trackable>(emitter: E | undefined): Tracked<E> | undefined;
+export default function tracked<E extends Trackable>(emitter: E | undefined) {
+    if (!emitter) {
+        return undefined;
+    }
+
     const trackingList = {} as TrackingList;
     return new Proxy(emitter, {
         get(target: typeof emitter, field: string | symbol | number, reciever) {

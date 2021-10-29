@@ -49,7 +49,7 @@ export function ActivityDragDropBox({ data, moveItem, findItem, component: Compo
         }
     }), [id, findItem, moveItem]);
 
-    return <Box ref={compose(drop, dragPreview)} sx={{ opacity: isDragging ? 0 : 1 }}>
+    return <Box ref={compose(drop, dragPreview)} sx={{ opacity: isDragging ? 0 : 1, padding: 1 }}>
         <Component dragHandle={drag} data={data} />
     </Box>;
 }

@@ -1,40 +1,33 @@
-import { Server, Socket } from 'socket.io';
-import { AuthLevel, ClientToServerEventMap, eventAuthorization, ServerToClientEventMap, Username } from './types';
+import { Server } from 'socket.io';
+import { AuthLevel, eventAuthorization, IOServer, Username } from './types';
 import jwtVerify from 'jose/jwt/verify';
 import parseJwk from 'jose/jwk/parse';
 import * as dotenv from 'dotenv';
 import { $in, isNotNull } from '../src/util/typeguards';
 import { Classroom } from './Classroom';
-import Bimap from '../src/util/Bimap';
 import { createServer } from 'http';
-import tracked, { Tracked } from '../src/util/trackedEventEmitter';
-import { nanoid } from 'nanoid';
-import { createRing } from './ring';
+import { RingProtocol } from './rtc/protocols/RingProtocol';
+import { stream } from '../src/util/iterables/Stream';
+import UserManager from './UserManager';
+import RtcManager from './rtc/RtcManager';
 
 dotenv.config()
 
 const server = createServer();
 server.listen(+process.env.WS_PORT!);
 
-const io = new Server<ClientToServerEventMap, ServerToClientEventMap>(server, {
+const io: IOServer = new Server(server, {
     cors: {
-        origin: "http://localhost:3000",
+        origin: "*", // dev only
         methods: ["GET", "POST"]
     }
 });
 
 console.log("Started");
 
-const usernameIdMap = new Bimap<Username, string>();
+const users = new UserManager();
+const rtc = new RtcManager(io, users);
 const classrooms = new Map<string, Classroom>();
-
-function fromUsername(username: Username) {
-    return usernameIdMap.getByKey(username);
-}
-
-function toUsername(socketId: string) {
-    return usernameIdMap.getByValue(socketId);
-}
 
 io.on('connection', socket => {
     let authorizationLevel = AuthLevel.None;
@@ -43,7 +36,11 @@ io.on('connection', socket => {
     
     function createClassroom(name: string) {
         const classroom = new Classroom(name);
-        classroom.activity = { protocol: 'ring', ring: createRing(io, { fromUsername }) }
+        classroom.activity = {
+            protocol: new RingProtocol(
+                stream(classroom.users).map(users.toUsername.bind(users)).filter((x): x is Username => x !== undefined),
+                { rtc })
+            };
         classrooms.set(name, classroom);
         return classroom;
     }
@@ -51,7 +48,7 @@ io.on('connection', socket => {
     function connect(username: Username, roomId: string) {
         console.log(username, 'connected with id', socket.id);
         myUsername = username;
-        usernameIdMap.set(username, socket.id);
+        users.add(username, socket.id);
 
         socket.join(roomId);
         classroom = classrooms.get(roomId)!;
@@ -63,21 +60,19 @@ io.on('connection', socket => {
         if (authorizationLevel >= AuthLevel.Instructor) {
             classroom.instructors.add(socket.id);
         }
-        //dev
-        classroom.activity!.ring.remove(myUsername);
-        classroom.activity!.ring.add(myUsername);
+        classroom.activity?.protocol.onUserLeave(myUsername);
+        classroom.activity?.protocol.onUserJoin(myUsername);
     }
 
     function disconnect() {
         console.log(myUsername, 'diconnected!');
-        usernameIdMap.deleteByValue(socket.id);
+        users.deleteById(socket.id);
 
         if (classroom) {
             classroom.users.delete(socket.id);
             classroom.instructors.delete(socket.id);
             io.to([...classroom.instructors]).emit('userLeave', myUsername);
-            //dev
-            classroom.activity!.ring.remove(myUsername);
+            classroom.activity?.protocol.onUserLeave(myUsername);
         }
     }
 
@@ -124,75 +119,8 @@ io.on('connection', socket => {
     });
 
     socket.on('getParticipants', (callback) => {
-        callback(Array.from(classroom.users, toUsername).filter(isNotNull));
+        callback(Array.from(classroom.users, users.toUsername.bind(users)).filter(isNotNull));
         console.log('provided participants to', myUsername);
-    });
-
-    socket.on('linkRtc', (initiator, recipient, initiatorInfo, recipientInfo) => {
-        const connId = nanoid();
-        console.log(`[${connId}]`, 'link', initiator, 'with', recipient);
-
-        const trackedSocket = tracked(socket);
-
-        const initiatorId = fromUsername(initiator);
-        if (!initiatorId) {
-            console.log(`[${connId}]`, initiator, 'is not a valid user');
-            return;
-        }
-        const recipientId = fromUsername(recipient);
-        if (!recipientId) return;
-        
-        if (recipientId === socket.id) {
-            console.log(`[${connId}]`, 'ignoring request to link', myUsername, 'to themselves');
-            return;
-        }
-
-        const recipientUsername = toUsername(recipientId)!;
-
-        io.to(initiatorId).emit('createWebRTCConnection', true, connId, initiatorInfo);
-        console.log(`[${connId}]`, 'told', initiator, 'to initiate connection with', recipientUsername);
-        
-        const recipientSocket = io.sockets.sockets.get(recipientId);
-        if (recipientSocket) {
-            const trackedRecipientSocket = tracked(recipientSocket);
-            
-            trackedRecipientSocket.on('provideWebRTCSignal', (conn, signal) => {
-                if (conn === connId) {
-                    // console.log(`[${linkId}]`, 'signal from', recipientUsername, 'to', myUsername);
-                    socket.emit('signalWebRTCConnection', connId, signal);
-                }
-            });
-
-            trackedRecipientSocket.on('disconnect', () => {
-                trackedRecipientSocket.offTracked();
-            });
-        }
-        else {
-            // recipient socket is on a different node.
-            // We don't support this currently.
-        }
-
-        io.to(recipientId).emit('createWebRTCConnection', false, connId, recipientInfo);
-        console.log(`[${connId}]`, 'told', recipient, 'to create connection with', initiator);
-
-        trackedSocket.on('provideWebRTCSignal', (conn, signal) => {
-            if (conn === connId) {
-                io.to(recipientId).emit('signalWebRTCConnection', connId, signal);
-            }
-        });
-
-        trackedSocket.on('unlinkRtc', (conn) => {
-            if (conn === connId) {
-                console.log(`[${connId}]`, 'unlink', myUsername, 'from', recipient);
-
-                socket.emit('killWebRTCConnection', connId);
-                io.to(recipientId).emit('killWebRTCConnection', connId);
-
-                trackedSocket.offTracked();
-            }
-        });
-
-        return connId;
     });
 
 });

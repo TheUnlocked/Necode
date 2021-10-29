@@ -62,14 +62,6 @@ export function useSignalingWebsocket(classroom: string) {
                     reject();
                 }
             });
-        },
-        linkRtc(initiator, participant, initiatorInfo, participantInfo) {
-            console.log('link', initiator, 'with', participant);
-            wsInstance.emit('linkRtc', initiator, participant, initiatorInfo, participantInfo);
-        },
-        unlinkRtc(conn) {
-            console.log('unlink', conn);
-            wsInstance.emit('unlinkRtc', conn);
         }
     } as Omit<ClientToServerOrders, 'getParticipants'> & {
         ws: typeof wsInstance,
@@ -104,7 +96,8 @@ export function useRTC<T>(classroom: string, onPeer: (peer: Peer.Instance, info:
 
             ws.on('createWebRTCConnection', (initiator, connectionId, info) => {
                 const peer = new Peer({
-                    initiator
+                    initiator,
+                    trickle: true
                 });
                 peers.push(peer);
                 let notifiedPeer = false;

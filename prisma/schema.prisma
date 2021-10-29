@@ -75,7 +75,7 @@ model Classroom {
   name        String                @unique
   displayName String
   members     ClassroomMembership[]
-  lessons     Lesson[]
+  lessons     PlannedLesson[]
 }
 
 enum ClassroomRole {
@@ -107,6 +107,7 @@ model Lesson {
   id          String     @id @default(cuid())
   displayName String
   activities  Activity[]
+  instances   PlannedLesson[]
 }
 
 model PlannedLesson {

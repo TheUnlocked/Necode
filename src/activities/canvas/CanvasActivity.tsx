@@ -107,8 +107,29 @@ export function CanvasActivity(props: {
     //#region Editor and Code Running
 
     const defaultCode = useMemo(() => ({
-        javascript: `/**\n * @param {Omit<CanvasRenderingContext2D, "canvas">} ctx\n */\nfunction draw(ctx) {\n    \n}`,
-        python: `"""\nDraw on the canvas\n"""\ndef draw(ctx):\n    pass\n`,
+        javascript: dedent `/**
+                             * @param {Omit<CanvasRenderingContext2D, "canvas">} ctx
+                             *   The rendering context of the canvas to the right.
+                             * @param {HTMLVideoElement} v
+                             *   A video element containing the previous user's frame.
+                             *   Draw it on your canvas using \`ctx.drawImage(v, x, y, w, h)\`.
+                             */
+                            function draw(ctx, v) {
+                                ctx.drawImage(v, 0, 0, 400, 400);
+                               \ 
+                            }`,
+        python: dedent `def draw(ctx, v):
+                            """
+                            Draw on the canvas
+
+                            :param ctx: The rendering context of the canvas to the right.
+                            :param v: A video element containing the previous user's frame.
+                                      Draw it on your canvas using \`ctx.drawImage(v, x, y, w, h)\`
+                            """
+                            ctx.drawImage(v, 0, 0, 400, 400)
+                            
+                        
+                        `,
     }), []);
 
     const [code, setCode] = useState(defaultCode.javascript);
@@ -153,10 +174,10 @@ export function CanvasActivity(props: {
         if (context2d) {
             function run() {
                 if (incomingVideoRef.current) {
-                    context2d!.drawImage(incomingVideoRef.current, 0, 0, 400, 400);
+                    // context2d!.drawImage(incomingVideoRef.current, 0, 0, 400, 400);
                 }
                 if (runner.isPrepared) {
-                    runner.run([context2d])
+                    runner.run([context2d, incomingVideoRef.current])
                         .then(() => setCodeError(null))
                         .catch(e => {
                             if (e instanceof Error) {
@@ -252,19 +273,20 @@ export function CanvasActivity(props: {
         <ReflexContainer orientation="vertical">
             <ReflexElement flex={2} minSize={500}>
                 {isInstructor
-                    ? <ReflexContainer style={{ height: "100%" }} orientation="horizontal">
-                        <ReflexElement flex={3} minSize={250}>{editorCard}</ReflexElement>
-                        <ReflexSplitter/>
-                        <ReflexElement flex={1}>
-                            <Card sx={{ height: "100%" }}>
-                                <List>
-                                    {[...participants].map(p => <ListItemButton key={p}>
-                                        {p}
-                                    </ListItemButton>)}
-                                </List>
-                            </Card>
-                        </ReflexElement>
-                    </ReflexContainer>
+                    ? editorCard
+                    // ? <ReflexContainer style={{ height: "100%" }} orientation="horizontal">
+                    //     <ReflexElement flex={3} minSize={250}>{editorCard}</ReflexElement>
+                    //     <ReflexSplitter/>
+                    //     <ReflexElement flex={1}>
+                    //         <Card sx={{ height: "100%", overflow: "auto" }}>
+                    //             <List>
+                    //                 {[...participants].map(p => <ListItemButton key={p}>
+                    //                     {p}
+                    //                 </ListItemButton>)}
+                    //             </List>
+                    //         </Card>
+                    //     </ReflexElement>
+                    // </ReflexContainer>
                     : editorCard}
             </ReflexElement>
             <ReflexSplitter/>

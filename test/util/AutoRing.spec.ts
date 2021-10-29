@@ -1,5 +1,4 @@
 import { expect } from 'chai';
-import { describe, it } from 'mocha';
 import AutoRing, { AutoRingOptions } from '../../src/util/AutoRing';
 
 type RingSpy<T> = { type: 'link' | 'unlink', from: T, to: T }[] & { 

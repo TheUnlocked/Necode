@@ -1,5 +1,8 @@
 import type { SignalData } from 'simple-peer';
+import { Server } from 'socket.io';
 import { NewType } from '../src/util/types';
+
+export type IOServer = Server<ClientToServerEventMap, ServerToClientEventMap>;
 
 type Voidify<T> = T extends (...args: infer TArgs) => any ? (...args: TArgs) => void : T;
 type VoidifyAll<T extends {}> = { [Key in keyof T]: Voidify<T[Key]> };
@@ -11,8 +14,6 @@ export type Username = NewType<string, typeof usernameBrand>;
 
 export interface ClientToServerOrders {
     getParticipants(callback: (participants: Username[]) => void): Promise<Username[]>;
-    linkRtc(initiator: Username, recipient: Username, initiatorInfo?: any, recipientInfo?: any): void;
-    unlinkRtc(connId: string): void;
 }
 
 export interface ClientToServerEventMap extends VoidifyAll<ClientToServerOrders> {

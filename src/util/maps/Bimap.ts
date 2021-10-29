@@ -1,7 +1,9 @@
+import IMap from "./IMap";
+
 /**
  * A bidirectional map data structure which enforces a 1-1 mapping.
  */
-export default class Bimap<T1, T2> {
+export default class Bimap<T1, T2> implements IMap<T1, T2> {
     private fdMap = new Map<T1, T2>();
     private bkMap = new Map<T2, T1>();
 
@@ -61,7 +63,7 @@ export default class Bimap<T1, T2> {
     keys() { return this.fdMap.keys(); }
     values() { return this.bkMap.keys(); }
     entries() { return this.fdMap.entries(); }
-    forEach<This>(callbackFn: (this: This | undefined, value: T2, key: T1, map: Bimap<T1, T2>) => void, thisArg?: This) {
+    forEach<ThisArg>(callbackFn: (this: ThisArg | undefined, value: T2, key: T1, map: this) => void, thisArg?: ThisArg) {
         for (const [key, value] of this) {
             callbackFn.call(thisArg, value, key, this)
         }

@@ -8,6 +8,7 @@ import { usePopupState, bindTrigger, bindPopper } from "material-ui-popup-state/
 import JavascriptIcon from "../../../src/util/icons/JavascriptIcon";
 import PythonIcon from "../../../src/util/icons/PythonIcon";
 import { useMaybeControlled } from "../../../src/hooks/MaybeControlledHook";
+import DragHandle from "./DragHandle";
 
 const languageOptions = [
     { value: 'javascript', label: 'Javascript', icon: <JavascriptIcon/> },
@@ -54,18 +55,8 @@ export default function LessonTextInput(props: {
         })
     } as SxProps<Theme>;
 
-    const handle = (mr: number) =>
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }} ref={props.dragHandle}>
-            <DragIndicator className="show-on-hover" sx={{
-                color: "rgba(255, 255, 255, 0.5)",
-                cursor: "grab",
-                mr
-            }} />
-        </div>;
-
     if (language !== null) {
         return <Stack direction="row" alignItems="center" spacing={0.5} sx={{
-            m: ({spacing}) => `calc(${spacing(1)} - 1px)`,
             px: 1,
             height: editorHeight + 16,
             overflow: "hidden",
@@ -77,7 +68,7 @@ export default function LessonTextInput(props: {
             },
             ...border
         }}>
-            {handle(0.5)}
+            <DragHandle innerRef={props.dragHandle} iconProps={{ className: "show-on-hover", sx: { mr: 0.5 } }} />
             <Editor
                 height={editorHeight}
                 value={value} onChange={updateValue}
@@ -121,9 +112,6 @@ export default function LessonTextInput(props: {
     return <TextField
         multiline fullWidth variant="filled" hiddenLabel
         value={value} onChange={e => updateValue(e.target.value)}
-        sx={{
-            p: ({spacing}) => `calc(${spacing(1)} - 1px)`
-        }}
         InputProps={{
             disableUnderline: true,
             sx: {
@@ -139,7 +127,7 @@ export default function LessonTextInput(props: {
                 ...border,
                 fontSize: ({typography}) => typography.body2.fontSize
             },
-            startAdornment: handle(1),
+            startAdornment: <DragHandle innerRef={props.dragHandle} iconProps={{ className: "show-on-hover", sx: { mr: 1 } }} />,
             endAdornment: <IconButton size="small" className="show-on-hover" onClick={() => updateLanguage("plaintext")}><CodeIcon/></IconButton>
         }} />;
 };

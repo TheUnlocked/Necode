@@ -1,10 +1,27 @@
-import { Card, CardContent, Divider, Stack, TextField, Typography } from "@mui/material";
+import { Photo, TextFields } from "@mui/icons-material";
+import { Card, CardContent, Divider, TextField, Typography } from "@mui/material";
 import { SxProps } from "@mui/system";
 import { DateTime } from "luxon";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { useDrop } from "react-dnd";
 import { ActivityDragDropBox, ActivityDragDropData, activityDragDropType } from "./ActivityDragDropBox";
+import GoActivityInput from "./GoActivityInput";
 import LessonTextInput from "./LessonTextInput";
+
+const activityTypes = [
+    {
+        type: "core/text",
+        displayName: "Text/Code",
+        icon: <TextFields/>,
+        configPanel: LessonTextInput
+    },
+    {
+        type: "canvas-ring",
+        displayName: "Canvas Ring",
+        icon: <Photo/>,
+        configPanel: GoActivityInput
+    },
+] as const;
 
 export default function ActivityListPane(props: {
     sx: SxProps,
@@ -13,10 +30,10 @@ export default function ActivityListPane(props: {
     const [, drop] = useDrop(() => ({ accept: activityDragDropType }));
 
     const [activities, setActivities] = useState([
-        { id: "a" },
-        { id: "b" },
-        { id: "c" },
-    ] as ActivityDragDropData[]);
+        { id: "a", type: activityTypes[0] },
+        { id: "b", type: activityTypes[0] },
+        { id: "c", type: activityTypes[1] },
+    ] as (ActivityDragDropData & {type: (typeof activityTypes)[number]})[]);
 
     const findItem = useCallback((id: string) => {
         return { index: activities.findIndex(x => x.id === id) };
@@ -63,7 +80,7 @@ export default function ActivityListPane(props: {
         </CardContent>
         <Divider />
         <CardContent ref={drop} sx={{ overflow: "auto", px: 0 }}>
-            {activities.map(x => <ActivityDragDropBox key={x.id} data={x} findItem={findItem} moveItem={moveItem} component={LessonTextInput} />)}
+            {activities.map(x => <ActivityDragDropBox key={x.id} data={x} findItem={findItem} moveItem={moveItem} component={x.type.configPanel} />)}
         </CardContent>
     </Card>;
 }

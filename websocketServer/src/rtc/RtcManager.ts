@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import tracked from "../../src/util/trackedEventEmitter";
+import tracked from "../../../src/util/trackedEventEmitter";
 import { IOServer, Username } from "../types";
 import UserManager from "../UserManager";
 

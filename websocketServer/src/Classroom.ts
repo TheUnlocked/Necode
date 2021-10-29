@@ -1,4 +1,4 @@
-import AutoRing from "../src/util/AutoRing";
+import AutoRing from "../../src/util/AutoRing";
 import { IProtocol } from "./rtc/protocols/IProtocol";
 import { Username } from "./types";
 

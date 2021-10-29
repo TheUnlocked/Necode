@@ -3,11 +3,11 @@ import { AuthLevel, eventAuthorization, IOServer, Username } from './types';
 import jwtVerify from 'jose/jwt/verify';
 import parseJwk from 'jose/jwk/parse';
 import * as dotenv from 'dotenv';
-import { $in, isNotNull } from '../src/util/typeguards';
+import { $in, isNotNull } from '../../src/util/typeguards';
 import { Classroom } from './Classroom';
 import { createServer } from 'http';
 import { RingProtocol } from './rtc/protocols/RingProtocol';
-import { stream } from '../src/util/iterables/Stream';
+import { stream } from '../../src/util/iterables/Stream';
 import UserManager from './UserManager';
 import RtcManager from './rtc/RtcManager';
 

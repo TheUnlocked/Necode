@@ -3,7 +3,7 @@ import { getSession } from 'next-auth/react';
 import { SignJWT } from 'jose/jwt/sign';
 import { parseJwk } from 'jose/jwk/parse';
 import { prisma } from '../../../../src/db/prisma';
-import { AuthLevel } from '../../../../websocketServer/types';
+import { AuthLevel } from '../../../../websocketServer/src/types';
 
 type ResponseData = string;
 

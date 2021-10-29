@@ -1,9 +1,8 @@
-import { Alert, Card, List, ListItemButton, Typography } from "@mui/material";
+import { Alert, Card, Typography } from "@mui/material";
 import { Box, styled } from "@mui/system";
 import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ReflexContainer, ReflexElement, ReflexSplitter } from "react-reflex";
-import { AuthLevel, Username } from "../../../websocketServer/types";
-import { useIsolatedEditor } from "../../hooks/IsolatedEditorHook";
+import { AuthLevel } from "../../../websocketServer/src/types";
 import { useRTC } from "../../hooks/WebRtcHook";
 import { Javascript } from "../../languages/javascript";
 import { BrowserRunner } from "../../runner/BrowserRunner";
@@ -13,7 +12,6 @@ import { useRouter } from "next/router";
 import { jsonFetcher } from "../../util/fetch";
 import { Python3 } from "../../languages/python3";
 import dedent from "dedent-js";
-import AutoRing from "../../util/AutoRing";
 import tracked from "../../util/trackedEventEmitter";
 import Editor from "@monaco-editor/react";
 

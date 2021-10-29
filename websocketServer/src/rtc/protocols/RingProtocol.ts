@@ -1,5 +1,5 @@
-import AutoRing from '../../../src/util/AutoRing';
-import { ArrayKeyMap } from '../../../src/util/maps/ArrayKeyMap';
+import AutoRing from '../../../../src/util/AutoRing';
+import { ArrayKeyMap } from '../../../../src/util/maps/ArrayKeyMap';
 import { Username } from '../../types';
 import { ConnectionInfo, IProtocol, IProtocolSettings, protocol } from './IProtocol';
 

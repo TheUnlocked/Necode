@@ -1,6 +1,6 @@
 import type { SignalData } from 'simple-peer';
 import { Server } from 'socket.io';
-import { NewType } from '../src/util/types';
+import { NewType } from '../../src/util/types';
 
 export type IOServer = Server<ClientToServerEventMap, ServerToClientEventMap>;
 

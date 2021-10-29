@@ -1,4 +1,4 @@
-import Bimap from "../src/util/maps/Bimap";
+import Bimap from "../../src/util/maps/Bimap";
 import { Classroom } from "./Classroom";
 import { Username } from "./types";
 

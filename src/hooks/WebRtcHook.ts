@@ -97,7 +97,6 @@ export function useRTC<T>(classroom: string, onPeer: (peer: Peer.Instance, info:
             ws.on('createWebRTCConnection', (initiator, connectionId, info) => {
                 const peer = new Peer({
                     initiator,
-                    trickle: true
                 });
                 peers.push(peer);
                 let notifiedPeer = false;
@@ -113,7 +112,7 @@ export function useRTC<T>(classroom: string, onPeer: (peer: Peer.Instance, info:
                 });
                 peerTrackedWs.on('signalWebRTCConnection', (conn, signal) => {
                     if (conn === connectionId) {
-                        // console.log('recieved signal from peer', conn);
+                        console.log('recieved signal from peer', conn);
                         peer.signal(signal);
                         if (!notifiedPeer) {
                             notifiedPeer = true;
@@ -133,7 +132,7 @@ export function useRTC<T>(classroom: string, onPeer: (peer: Peer.Instance, info:
 
             return () => ws.offTracked();
         }
-    }, [socketInfo]);
+    }, [socketInfo?.ws]);
     
     return socketInfo;
 }

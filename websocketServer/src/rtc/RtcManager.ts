@@ -37,11 +37,13 @@ export default class RtcManager {
         initiatorSocket.on('provideWebRTCSignal', (conn, signal) => {
             if (conn === initiatorConnId) {
                 this.io.to(recipientId).emit('signalWebRTCConnection', recipientConnId, signal);
+                console.log(`[${recipientConnId}] signal`);
             }
         });
         recipientSocket.on('provideWebRTCSignal', (conn, signal) => {
             if (conn === recipientConnId) {
                 this.io.to(initiatorId).emit('signalWebRTCConnection', initiatorConnId, signal);
+                console.log(`[${initiatorConnId}] signal`);
             }
         });
     

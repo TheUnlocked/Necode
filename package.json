@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@babel/core": "^7.15.5",
+    "@babel/plugin-transform-typescript": "^7.16.0",
     "@emotion/react": "^11.4.1",
     "@emotion/styled": "^11.3.0",
     "@monaco-editor/react": "^4.2.2",

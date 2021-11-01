@@ -13,7 +13,9 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "removeComments": true,
+    "importHelpers": true
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "src/runner/transformers/*.js"],
   "exclude": ["node_modules"]

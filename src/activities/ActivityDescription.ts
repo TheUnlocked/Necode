@@ -1,44 +1,29 @@
 import { ComponentType } from "react";
-import { SupportedLanguage } from "../languages/supportedLanguages";
+import FeatureDescription, { ConstraintsOf } from "../languages/features/FeatureDescription";
+import LanguageDescription from "../languages/LangaugeDescription";
 
 export interface ActivityConfigComponentProps {
 
 }
 
-export interface ActivityPageProps {
+export interface ActivityPageProps<ConfigData = undefined> {
     classroom: string;
-    language: SupportedLanguage;
+
+    language: LanguageDescription;
+
+    activityConfig: ConfigData;
 }
 
-interface BaseActivityDefinition {
+interface ActivityDescription<ConfigData, Features extends FeatureDescription<any>[] = FeatureDescription<any>[]> {
     id: string;
     
-    supportedLanguages: SupportedLanguage[];
+    supportedFeatures: Features;
 
-    /**
-     * * `'none'` - This activity requires no configuration.
-     * * `'inline'` - This activity can be configured through a widget in the lesson manager.
-     * * `'page'` - This activity requires a separate page to configure.
-     */
-    configType: 'none' | 'widget' | 'page';
+    configWidget?: ComponentType<ActivityConfigComponentProps>;
 
-    activityPage: ComponentType<ActivityPageProps>
+    configPage?: ComponentType<ActivityConfigComponentProps>;
+
+    activityPage: ComponentType<ActivityPageProps<ConfigData>>;
 }
-
-interface ActivityWithoutConfig extends BaseActivityDefinition {
-    configType: 'none';
-}
-
-interface ActivityWithWidgetConfig extends BaseActivityDefinition {
-    configType: 'widget';
-    configWidget: ComponentType<ActivityConfigComponentProps>;
-}
-
-interface ActivityWithPageConfig extends BaseActivityDefinition {
-    configType: 'page';
-    configPage: ComponentType<ActivityConfigComponentProps>;
-}
-
-type ActivityDescription = ActivityWithoutConfig | ActivityWithWidgetConfig | ActivityWithPageConfig;
 
 export default ActivityDescription;

@@ -8,16 +8,34 @@ import { ResponseData as MeResponseData } from "../../../pages/api/classroom/[cl
 import { jsonFetcher } from "../../../src/util/fetch";
 import { Button, Toolbar } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
-import ActivityDescription from "../../../src/activities/ActivityDescription";
-import canvasActivityDescription from "../../../src/activities/canvas";
-import { SupportedLanguage } from "../../../src/languages/supportedLanguages";
+import { testBasedActivityDescription } from "../../../src/activities/test-based";
+import { Box } from "@mui/system";
+import { TestActivityConfig } from "../../../src/activities/test-based/TestActivity";
+import allLanguages from "../../../src/languages/allLanguages";
 
 const Page: NextPage = dynamic(() => Promise.resolve(() => {
     const { query } = useRouter();
     const classroom = query.classroom;
     const metaTransformer = useContext(MetaTransformerContext);
 
-    const { activityPage: ActivityPage }: ActivityDescription = canvasActivityDescription;
+    const {
+        supportedFeatures: activitySupportedFeatures,
+        activityPage: ActivityPage
+    // } = canvasActivityDescription;
+    } = testBasedActivityDescription;
+
+    const activitySupportedLanguages = allLanguages.filter(({ features }) => activitySupportedFeatures.every(f => features.includes(f)));
+
+    const activityConfig: TestActivityConfig = {
+        description: "abc",
+        starterCode: "def",
+        webEditor: {
+            enabled: true,
+            hasCode: true,
+            hasHtml: true,
+            hasCss: true,
+        }
+    };
 
     useEffect(() => {
         metaTransformer({ path: [
@@ -34,13 +52,19 @@ const Page: NextPage = dynamic(() => Promise.resolve(() => {
         {isInstructor ? <Toolbar variant="dense" sx={{ minHeight: "36px", px: "16px !important" }}>
             <Button size="small" startIcon={<ArrowBack/>}>Return to Manage Classroom</Button>
         </Toolbar> : null}
-        <div style={{ height: `calc(100vh - 64px${isInstructor ? ' - 36px' : ''})` }}>
+        <Box sx={{
+            px: 2,
+            pb: 2,
+            height: `calc(100vh - 64px${isInstructor ? ' - 36px' : ''})`,
+            "& .reflex-container > .reflex-element": {
+                overflow: "hidden"
+            }
+        }}>
             <ActivityPage
+                activityConfig={activityConfig}
                 classroom={query.classroom as string}
-                language={canvasActivityDescription.supportedLanguages.includes(query.language as any)
-                    ? query.language as SupportedLanguage
-                    : canvasActivityDescription.supportedLanguages[0]} />
-        </div>
+                language={activitySupportedLanguages.find(x => x.name === query.language) ?? activitySupportedLanguages[0]} />
+        </Box>
     </>;
 }), { ssr: false });
 

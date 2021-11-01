@@ -1,11 +1,15 @@
+import supportsEntryPoint from "../../languages/features/SupportsEntryPoint";
 import ActivityDescription from "../ActivityDescription";
 import { CanvasActivity } from "./CanvasActivity";
 
-const canvasActivityDescription: ActivityDescription = {
+const canvasActivityDescription: ActivityDescription<undefined, [
+    typeof supportsEntryPoint
+]> = {
     id: 'canvas:ring',
-    configType: 'none',
-    activityPage: CanvasActivity,
-    supportedLanguages: ['javascript', 'typescript', 'python3']
+    supportedFeatures: [
+        supportsEntryPoint
+    ],
+    activityPage: CanvasActivity
 };
 
 export default canvasActivityDescription;

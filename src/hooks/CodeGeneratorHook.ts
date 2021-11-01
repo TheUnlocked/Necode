@@ -1,12 +1,14 @@
 import { useMemo } from "react"
-import ILanguage from "../languages/ILanguage";
+import RunnableLanguage from "../languages/RunnableLanguage";
 import { Javascript } from "../languages/javascript";
 import { NoLanguage } from "../languages/noLanguage";
 import { Python3 } from "../languages/python3";
-import { SupportedLanguage } from "../languages/supportedLanguages";
 import { Typescript } from "../languages/typescript";
+import FeatureDescription from "../languages/features/FeatureDescription";
+import LanguageDescription from "../languages/LangaugeDescription";
 
-export default function useCodeGenerator(language: SupportedLanguage): ILanguage<any> {
+export default function useCodeGenerator<Features extends FeatureDescription<any>[] = []>(language: string)
+: RunnableLanguage<LanguageDescription<Features>> {
     return useMemo(() => {
         switch (language) {
             case 'javascript':
@@ -18,5 +20,5 @@ export default function useCodeGenerator(language: SupportedLanguage): ILanguage
             default:
                 return new NoLanguage();
         }
-    }, [language]);
+    }, [language]) as RunnableLanguage<LanguageDescription<Features>>;
 }

@@ -13,6 +13,7 @@ import tracked from "../../util/trackedEventEmitter";
 import Editor from "@monaco-editor/react";
 import useCodeGenerator from "../../hooks/CodeGeneratorHook";
 import { ActivityPageProps } from "../ActivityDescription";
+import useIsSizeOrSmaller from "../../hooks/ScreenSizeHook";
 
 const SharedCanvas = styled('canvas')({
     maxWidth: "100%",
@@ -58,8 +59,8 @@ function fancyError(message: string) {
 export function CanvasActivity({
     classroom, language
 }: ActivityPageProps) {
-    const { data: me } = useSWR<MeResponseData>(`/api/classroom/${classroom}/me`, jsonFetcher);
-    const isInstructor = me?.response === 'ok' && me.data.attributes.role === 'Instructor';
+    // const { data: me } = useSWR<MeResponseData>(`/api/classroom/${classroom}/me`, jsonFetcher);
+    // const isInstructor = me?.response === 'ok' && me.data.attributes.role === 'Instructor';
 
     const [debugMsg, setDebugMsg] = useState("No debug message");
 
@@ -72,7 +73,7 @@ export function CanvasActivity({
     const lastOutboundMediaStreamRef = useRef<MediaStream>();
     const [inboundMediaStream, setInboundMediaStream] = useState<MediaStream>();
 
-    const [participants, setParticipants] = useState(new Set<string>());
+    // const [participants, setParticipants] = useState(new Set<string>());
 
     const loadInboundVideoRef = (video: HTMLVideoElement | null) => {
         setInboundVideoElt(video);
@@ -164,8 +165,8 @@ export function CanvasActivity({
         return runner;
     }, []);
 
-    const codeGenerator = useCodeGenerator(language);
-    const codeToRun = code ?? defaultCode[language];
+    const codeGenerator = useCodeGenerator(language.name);
+    const codeToRun = code ?? defaultCode[language.name];
 
     useEffect(() => () => runner.shutdown(), [runner]);
     useEffect(() => {
@@ -284,73 +285,64 @@ export function CanvasActivity({
         }
     }, [outboundMediaStream]);
 
-    useEffect(() => {
-        if (me?.response === 'ok' && rtcContext && rtcContext.authLevel >= AuthLevel.Instructor) {
-            const ws = tracked(rtcContext.ws);
-            ws.on('userJoin', user => {
-                setParticipants(p => p.add(user as string));
-            });
-            ws.on('userLeave', user => {
-                setParticipants(p => (p.delete(user as string), p));
-            });
-            rtcContext.getParticipants().then(x => setParticipants(new Set(x as string[])));
-            return () => ws.offTracked();
-        }
-    }, [rtcContext, me]);
+    // useEffect(() => {
+    //     if (me?.response === 'ok' && rtcContext && rtcContext.authLevel >= AuthLevel.Instructor) {
+    //         const ws = tracked(rtcContext.ws);
+    //         ws.on('userJoin', user => {
+    //             setParticipants(p => p.add(user as string));
+    //         });
+    //         ws.on('userLeave', user => {
+    //             setParticipants(p => (p.delete(user as string), p));
+    //         });
+    //         rtcContext.getParticipants().then(x => setParticipants(new Set(x as string[])));
+    //         return () => ws.offTracked();
+    //     }
+    // }, [rtcContext, me]);
 
     //#endregion
 
-    return <Box sx={{
-            px: 2,
-            pb: 2,
-            height: "100%",
-            "& .reflex-container > .reflex-element": {
-                overflow: "hidden"
-            }
-        }}>
-        <ReflexContainer orientation="vertical">
-            <ReflexElement flex={2}>
-                <Card sx={{ height: "100%", flexGrow: 1, display: "flex", flexDirection: "column" }}>
-                    <Typography variant="body1" component="div" sx={{ pl: 2, pr: 1, py: 1 }}>Write code to modify the canvas!</Typography>
-                    <Typography>{debugMsg}</Typography>
-                    <Box sx={{
-                        flexGrow: 1,
-                        overflow: "hidden" }}>
-                        <Editor
-                            theme="vs-dark"
-                            options={{
-                                minimap: { enabled: false },
-                                "semanticHighlighting.enabled": true,
-                                automaticLayout: true
-                            }}
-                            defaultLanguage={({
-                                python3: 'python'
-                            } as { [language: string]: string | undefined })[language] ?? language}
-                            defaultValue={defaultCode[language]}
-                            value={code}
-                            onChange={v => setCode(v ?? "")} />
-                    </Box>
-                    <Alert severity={codeError ? "error" : "success"} sx={{ wordBreak: "break-word" }}>
-                        {codeError
-                            ? <>{`${codeError.name}: `}{fancyError(codeError.message)}</>
-                            : "Your code ran successfully!"}
-                    </Alert>
-                </Card>
-            </ReflexElement>
-            <ReflexSplitter/>
-            <ReflexElement flex={1}>
+    const isSmallScreen = useIsSizeOrSmaller("sm");
+
+    return <ReflexContainer orientation={isSmallScreen ? "horizontal" : "vertical"}>
+        <ReflexElement flex={2}>
+            <Card sx={{ height: "100%", flexGrow: 1, display: "flex", flexDirection: "column" }}>
+                <Typography variant="body1" component="div" sx={{ pl: 2, pr: 1, py: 1 }}>Write code to modify the canvas!</Typography>
+                <Typography>{debugMsg}</Typography>
                 <Box sx={{
-                    height: "100%",
-                    width: "100%",
-                    pl: 1,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center"
-                }}>
-                    <SharedCanvas id="canvas-activity--canvas" width={400} height={400} ref={onCanvasRefChange} />
-                    <video width={400} height={400} autoPlay style={{ position: "absolute", left: -1e6 }} ref={loadInboundVideoRef} />
+                    flexGrow: 1,
+                    overflow: "hidden" }}>
+                    <Editor
+                        theme="vs-dark"
+                        options={{
+                            minimap: { enabled: false },
+                            "semanticHighlighting.enabled": true,
+                            automaticLayout: true
+                        }}
+                        defaultLanguage={language.monacoName}
+                        defaultValue={defaultCode[language.name]}
+                        value={code}
+                        onChange={v => setCode(v ?? "")} />
                 </Box>
-            </ReflexElement>
-        </ReflexContainer>
-    </Box>;
+                <Alert severity={codeError ? "error" : "success"} sx={{ wordBreak: "break-word" }}>
+                    {codeError
+                        ? <>{`${codeError.name}: `}{fancyError(codeError.message)}</>
+                        : "Your code ran successfully!"}
+                </Alert>
+            </Card>
+        </ReflexElement>
+        <ReflexSplitter/>
+        <ReflexElement flex={1}>
+            <Box sx={{
+                height: "100%",
+                width: "100%",
+                pl: 1,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center"
+            }}>
+                <SharedCanvas id="canvas-activity--canvas" width={400} height={400} ref={onCanvasRefChange} />
+                <video width={400} height={400} autoPlay style={{ position: "absolute", left: -1e6 }} ref={loadInboundVideoRef} />
+            </Box>
+        </ReflexElement>
+    </ReflexContainer>;
 }

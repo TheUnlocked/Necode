@@ -1,12 +1,28 @@
-import ILanguage from './ILanguage';
+import RunnableLanguage from './RunnableLanguage';
 import dedent from 'dedent-js';
 // import transformPreventInfiniteLoops from "./transformers/babel-plugin-transform-prevent-infinite-loops";
 // import { transformSync } from '@babel/core';
 
-// @ts-ignore
-import brythonRaw from 'raw-loader!brython/brython'; 
-// @ts-ignore
-import brythonStdlibRaw from 'raw-loader!brython/brython_stdlib'; 
+import brythonRaw from 'raw-loader!brython/brython.js';
+import brythonStdlibRaw from 'raw-loader!brython/brython_stdlib.js'; 
+import LanguageDescription, { FeatureOptionsOf } from './LangaugeDescription';
+import PythonIcon from '../util/icons/PythonIcon';
+import supportsAmbient, { SupportsAmbient } from "./features/SupportsAmbient";
+import supportsEntryPoint, { SupportsEntryPoint } from "./features/SupportsEntryPoint";
+
+export const pythonDescription: LanguageDescription<[
+    SupportsEntryPoint,
+    SupportsAmbient
+]> = {
+    name: 'python3',
+    monacoName: 'python',
+    displayName: 'Python 3',
+    icon: PythonIcon,
+    features: [
+        supportsEntryPoint,
+        supportsAmbient
+    ]
+};
 
 if (typeof window !== 'undefined') {
     function addScript(text: string, id: string) {
@@ -25,15 +41,16 @@ if (typeof window !== 'undefined') {
 declare global {
     var __BRYTHON__: {
         python_to_js(pythonCode: string, name?: string): string;
+        py2js(source: string, module: string, localsId: string): { to_js(): string };
     };
 }
 
-interface Python3Options {
-    entryPoint: string;
-}
+export class Python3 implements RunnableLanguage<typeof pythonDescription> {
+    toRunnerCode(code: string, options: FeatureOptionsOf<typeof pythonDescription>) {
+        if (options.ambient) {
+            return __BRYTHON__.py2js(code, '', '').to_js();
+        }
 
-export class Python3 implements ILanguage<Python3Options> {
-    toRunnerCode(code: string, options: Python3Options) {
         const rawJSified = __BRYTHON__.python_to_js(dedent`
         def entry(*args):
             result = None

@@ -1,15 +1,32 @@
-import ILanguage from "./ILanguage";
+import RunnableLanguage from "./RunnableLanguage";
 import transformPreventInfiniteLoops from "./transformers/babel-plugin-transform-prevent-infinite-loops";
 // @ts-ignore
 import transformTypescript from "@babel/plugin-transform-typescript";
 import { transformSync } from '@babel/core';
+import LanguageDescription, { FeatureOptionsOf } from "./LangaugeDescription";
+import TypescriptIcon from "../util/icons/TypescriptIcon";
+import supportsAmbient, { SupportsAmbient } from "./features/SupportsAmbient";
+import supportsIsolated, { SupportsIsolated } from "./features/SupportsIsolated";
+import supportsEntryPoint, { SupportsEntryPoint } from "./features/SupportsEntryPoint";
 
-interface TypescriptOptions {
-    entryPoint: string;
-}
+export const typescriptDescription: LanguageDescription<[
+    SupportsEntryPoint,
+    SupportsAmbient,
+    SupportsIsolated
+]> = {
+    name: 'typescript',
+    monacoName: 'typescript',
+    displayName: 'TypeScript',
+    icon: TypescriptIcon,
+    features: [
+        supportsEntryPoint,
+        supportsAmbient,
+        supportsIsolated,
+    ]
+};
 
-export class Typescript implements ILanguage<TypescriptOptions> {
-    toRunnerCode(code: string, options: TypescriptOptions) {
+export class Typescript implements RunnableLanguage<typeof typescriptDescription> {
+    toRunnerCode(code: string, options: FeatureOptionsOf<typeof typescriptDescription>) {
         try {
             const result = transformSync(code, {
                 plugins: [
@@ -17,6 +34,9 @@ export class Typescript implements ILanguage<TypescriptOptions> {
                     transformPreventInfiniteLoops
                 ]
             });
+            if (options.ambient) {
+                return result!.code!;
+            }
             return `const entry = new Function(${JSON.stringify(`${result!.code}\nreturn ${options.entryPoint};`)})();`;
         }
         catch (e) {

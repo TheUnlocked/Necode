@@ -4,7 +4,7 @@ import TestActivity, { TestActivityConfig } from "./TestActivity";
 import supportsAmbient from "../../languages/features/SupportsAmbient";
 import supportsIsolated from "../../languages/features/SupportsIsolated";
 
-export const testBasedActivityDescription: ActivityDescription<TestActivityConfig, [
+const testBasedActivityDescription: ActivityDescription<TestActivityConfig, [
     typeof supportsAmbient,
     typeof supportsIsolated
 ]> = {
@@ -15,3 +15,5 @@ export const testBasedActivityDescription: ActivityDescription<TestActivityConfi
     configPage: CreateTestActivity,
     activityPage: TestActivity,
 };
+
+export default testBasedActivityDescription;

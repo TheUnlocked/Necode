@@ -7,4 +7,3 @@ const supportsEntryPoint: FeatureDescription<{
 };
 
 export default supportsEntryPoint;
-export type SupportsEntryPoint = typeof supportsEntryPoint;

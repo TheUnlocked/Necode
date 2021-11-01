@@ -1,7 +1,7 @@
-import LanguageDescription from "./LangaugeDescription";
+import { languageDescription } from "./LangaugeDescription";
 
-export const cssDescription: LanguageDescription = {
+export const cssDescription = languageDescription({
     name: 'css',
     monacoName: 'css',
     displayName: 'CSS'
-}
+});

@@ -5,15 +5,12 @@ import dedent from 'dedent-js';
 
 import brythonRaw from 'raw-loader!brython/brython.js';
 import brythonStdlibRaw from 'raw-loader!brython/brython_stdlib.js'; 
-import LanguageDescription, { FeatureOptionsOf } from './LangaugeDescription';
+import { FeatureOptionsOf, languageDescription } from './LangaugeDescription';
 import PythonIcon from '../util/icons/PythonIcon';
-import supportsAmbient, { SupportsAmbient } from "./features/SupportsAmbient";
-import supportsEntryPoint, { SupportsEntryPoint } from "./features/SupportsEntryPoint";
+import supportsAmbient from "./features/SupportsAmbient";
+import supportsEntryPoint from "./features/SupportsEntryPoint";
 
-export const pythonDescription: LanguageDescription<[
-    SupportsEntryPoint,
-    SupportsAmbient
-]> = {
+export const pythonDescription = languageDescription({
     name: 'python3',
     monacoName: 'python',
     displayName: 'Python 3',
@@ -21,8 +18,8 @@ export const pythonDescription: LanguageDescription<[
     features: [
         supportsEntryPoint,
         supportsAmbient
-    ]
-};
+    ] as const
+});
 
 if (typeof window !== 'undefined') {
     function addScript(text: string, id: string) {

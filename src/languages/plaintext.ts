@@ -1,9 +1,9 @@
 import { Code } from "@mui/icons-material";
-import LanguageDescription from "./LangaugeDescription";
+import { languageDescription } from "./LangaugeDescription";
 
-export const plainTextDescription: LanguageDescription = {
+export const plainTextDescription = languageDescription({
     name: 'plaintext',
     monacoName: 'plaintext',
     displayName: 'Plain Text',
     icon: Code
-}
+});

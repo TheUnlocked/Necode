@@ -7,4 +7,3 @@ const supportsAmbient: FeatureDescription<{
 };
 
 export default supportsAmbient;
-export type SupportsAmbient = typeof supportsAmbient;

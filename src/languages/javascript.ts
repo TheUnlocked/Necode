@@ -1,17 +1,13 @@
 import RunnableLanguage from "./RunnableLanguage";
 import transformPreventInfiniteLoops from "./transformers/babel-plugin-transform-prevent-infinite-loops";
 import { transformSync } from '@babel/core';
-import LanguageDescription, { FeatureOptionsOf } from "./LangaugeDescription";
+import { FeatureOptionsOf, languageDescription } from "./LangaugeDescription";
 import JavascriptIcon from "../util/icons/JavascriptIcon";
-import supportsAmbient, { SupportsAmbient } from "./features/SupportsAmbient";
-import supportsIsolated, { SupportsIsolated } from "./features/SupportsIsolated";
-import supportsEntryPoint, { SupportsEntryPoint } from "./features/SupportsEntryPoint";
+import supportsAmbient from "./features/SupportsAmbient";
+import supportsIsolated from "./features/SupportsIsolated";
+import supportsEntryPoint from "./features/SupportsEntryPoint";
 
-export const javascriptDescription: LanguageDescription<[
-    SupportsEntryPoint,
-    SupportsAmbient,
-    SupportsIsolated
-]> = {
+export const javascriptDescription = languageDescription({
     name: 'javascript',
     monacoName: 'javascript',
     displayName: 'JavaScript',
@@ -20,8 +16,8 @@ export const javascriptDescription: LanguageDescription<[
         supportsEntryPoint,
         supportsAmbient,
         supportsIsolated,
-    ]
-};
+    ] as const
+});
 
 export class Javascript implements RunnableLanguage<typeof javascriptDescription> {
     toRunnerCode(code: string, options: FeatureOptionsOf<typeof javascriptDescription>) {

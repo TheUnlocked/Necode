@@ -7,4 +7,3 @@ const supportsIsolated: FeatureDescription<{
 };
 
 export default supportsIsolated;
-export type SupportsIsolated = typeof supportsIsolated;

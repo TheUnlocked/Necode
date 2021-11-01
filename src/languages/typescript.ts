@@ -3,17 +3,13 @@ import transformPreventInfiniteLoops from "./transformers/babel-plugin-transform
 // @ts-ignore
 import transformTypescript from "@babel/plugin-transform-typescript";
 import { transformSync } from '@babel/core';
-import LanguageDescription, { FeatureOptionsOf } from "./LangaugeDescription";
+import { FeatureOptionsOf, languageDescription } from "./LangaugeDescription";
 import TypescriptIcon from "../util/icons/TypescriptIcon";
-import supportsAmbient, { SupportsAmbient } from "./features/SupportsAmbient";
-import supportsIsolated, { SupportsIsolated } from "./features/SupportsIsolated";
-import supportsEntryPoint, { SupportsEntryPoint } from "./features/SupportsEntryPoint";
+import supportsAmbient from "./features/SupportsAmbient";
+import supportsIsolated from "./features/SupportsIsolated";
+import supportsEntryPoint from "./features/SupportsEntryPoint";
 
-export const typescriptDescription: LanguageDescription<[
-    SupportsEntryPoint,
-    SupportsAmbient,
-    SupportsIsolated
-]> = {
+export const typescriptDescription = languageDescription({
     name: 'typescript',
     monacoName: 'typescript',
     displayName: 'TypeScript',
@@ -22,8 +18,8 @@ export const typescriptDescription: LanguageDescription<[
         supportsEntryPoint,
         supportsAmbient,
         supportsIsolated,
-    ]
-};
+    ] as const
+});
 
 export class Typescript implements RunnableLanguage<typeof typescriptDescription> {
     toRunnerCode(code: string, options: FeatureOptionsOf<typeof typescriptDescription>) {

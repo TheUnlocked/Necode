@@ -8,7 +8,8 @@ import { ResponseData as MeResponseData } from "../../../pages/api/classroom/[cl
 import { jsonFetcher } from "../../../src/util/fetch";
 import { Button, Toolbar } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
-import { testBasedActivityDescription } from "../../../src/activities/test-based";
+import testBasedActivityDescription from "../../../src/activities/test-based";
+import canvasActivityDescription from "../../../src/activities/canvas";
 import { Box } from "@mui/system";
 import { TestActivityConfig } from "../../../src/activities/test-based/TestActivity";
 import allLanguages from "../../../src/languages/allLanguages";

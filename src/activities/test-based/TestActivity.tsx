@@ -1,5 +1,5 @@
 import Editor, { OnChange, OnMount } from "@monaco-editor/react";
-import { Button, Card, IconButton, Stack, styled, Tooltip, Typography } from "@mui/material";
+import { Button, Card, CardContent, IconButton, Stack, styled, Tooltip, Typography } from "@mui/material";
 import { ReflexContainer, ReflexElement, ReflexSplitter } from "react-reflex";
 import useIsSizeOrSmaller from "../../hooks/ScreenSizeHook";
 import { cssDescription } from "../../languages/css";
@@ -57,8 +57,9 @@ export default function TestActivity({
         webEditor: { enabled: webEditorEnabled, hasHtml, hasCss, hasCode }
     }
 }: ActivityPageProps<TestActivityConfig>) {
-    const isSmallScreen = useIsSizeOrSmaller("sm");
-    const isSmallOrMediumScreen = useIsSizeOrSmaller("md");
+    const isSmallOrSmaller = useIsSizeOrSmaller("sm");
+    const isMediumOrSmaller = useIsSizeOrSmaller("md");
+    const isLargeOrSmaller = useIsSizeOrSmaller("lg");
     
     const codeGenerator = useCodeGenerator<[typeof supportsAmbient, typeof supportsIsolated]>(language.name);
 
@@ -152,11 +153,7 @@ export default function TestActivity({
             };
 
             window.addEventListener('message', listener);
-            setTimeout(() => {
-                // Clean up just in case the event listener wasn't removed.
-                // After 5 seconds it should've loaded already.
-                window.removeEventListener('message', listener);
-            }, 5000);
+            return () => window.removeEventListener('message', listener);
         }
     }, [isReloadScheduled, editorStates, iframeElt, codeGenerator, hasHtml, hasCode, hasCss]);
 
@@ -251,7 +248,7 @@ export default function TestActivity({
 
         const Icon = language.icon;
 
-        const showKeybindingHint = !isSmallOrMediumScreen && editorState?.isDirty;
+        const showKeybindingHint = !isMediumOrSmaller && editorState?.isDirty;
 
         return <ReflexElement minSize={40}>
             <Stack direction="row" sx={{ m: 1, height: "32px" }}>
@@ -281,12 +278,25 @@ export default function TestActivity({
                     }}
                     defaultLanguage={language.monacoName}
                     onMount={onMount}
+                    value={editorState?.uncommittedValue}
                     onChange={onChange} />
             </Box>
         </ReflexElement>;
-    }, [isSmallOrMediumScreen, editorStates]);
+    }, [isMediumOrSmaller, editorStates]);
 
     const iframe = <StretchedIFrame ref={setIframeElt} sandbox="allow-scripts" />;
+
+    const descriptionPane = <ReflexElement minSize={40}>
+        <Card sx={{ height: "100%" }}>
+            <Stack direction="row" sx={{ m: 1, height: "32px" }}>
+                {/* icon */}
+                <Typography variant="overline" sx={{ ml: 1 }}>Instructions</Typography>
+            </Stack>
+            <CardContent sx={{ pt: 0 }}>
+                {description}
+            </CardContent>
+        </Card>
+    </ReflexElement>;
 
     const codeEditors = [
         hasHtml ? editorPane('html', htmlDescription) : undefined,
@@ -308,7 +318,7 @@ export default function TestActivity({
         <Button variant="contained">Submit</Button>
     </Stack>;
 
-    if (isSmallScreen) {
+    if (isSmallOrSmaller) {
         return <>
             {controls}
             <Card sx={{ height: "calc(100% - 36px)", flexGrow: 1, display: "flex", flexDirection: "column" }}>
@@ -317,6 +327,8 @@ export default function TestActivity({
                     // It's not pretty, but the React team apparently refuses to budge on this.
                     // (see https://github.com/facebook/react/issues/14374 and https://github.com/facebook/react/issues/12567)
                     ? React.createElement(ReflexContainer, {},
+                        descriptionPane,
+                        <ReflexSplitter propagate={true} />,
                         ...codeEditors,
                         <ReflexSplitter propagate={true} />,
                         <ReflexElement>
@@ -330,18 +342,46 @@ export default function TestActivity({
         </>;
     }
 
+    
+
+    if (isLargeOrSmaller) {
+        return <ReflexContainer orientation="vertical">
+            <ReflexElement minSize={40}>
+                <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+                    {webEditorEnabled
+                        // See above comment in the isSmallOrSmaller variant
+                        ? React.createElement(ReflexContainer, {},
+                            descriptionPane,
+                            <ReflexSplitter propagate={true} />,
+                            ...codeEditors
+                        )
+                        : codeOnlyEditor}
+                </Card>
+            </ReflexElement>
+            <ReflexSplitter/>
+            <ReflexElement minSize={250}>
+                <Stack direction="column" sx={{ height: "100%" }}>
+                    {controls}
+                    {iframe}
+                </Stack>
+            </ReflexElement>
+        </ReflexContainer>;
+    }
+
     return <ReflexContainer orientation="vertical">
+        {descriptionPane}
+        <ReflexSplitter propagate={true} />
         <ReflexElement minSize={40}>
-            <Card sx={{ height: "100%", flexGrow: 1, display: "flex", flexDirection: "column" }}>
+            <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
                 {webEditorEnabled
-                    // See above comment in the isSmallScreen variant
+                    // See above comment in the isSmallOrSmaller variant
                     ? React.createElement(ReflexContainer, {},
                         ...codeEditors
                     )
                     : codeOnlyEditor}
             </Card>
         </ReflexElement>
-        <ReflexSplitter/>
+        <ReflexSplitter propagate={true} />
         <ReflexElement minSize={250}>
             <Stack direction="column" sx={{ height: "100%" }}>
                 {controls}

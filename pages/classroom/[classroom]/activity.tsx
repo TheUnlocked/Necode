@@ -13,6 +13,7 @@ import canvasActivityDescription from "../../../src/activities/canvas";
 import { Box } from "@mui/system";
 import { TestActivityConfig } from "../../../src/activities/test-based/TestActivity";
 import allLanguages from "../../../src/languages/allLanguages";
+import dedent from "dedent-js";
 
 const Page: NextPage = dynamic(() => Promise.resolve(() => {
     const { query } = useRouter();
@@ -22,20 +23,32 @@ const Page: NextPage = dynamic(() => Promise.resolve(() => {
     const {
         supportedFeatures: activitySupportedFeatures,
         activityPage: ActivityPage
-    // } = canvasActivityDescription;
-    } = testBasedActivityDescription;
+    } = canvasActivityDescription;
+    // } = testBasedActivityDescription;
 
     const activitySupportedLanguages = allLanguages.filter(({ features }) => activitySupportedFeatures.every(f => features.includes(f)));
 
     const activityConfig: TestActivityConfig = {
-        description: "abc",
-        starterCode: "def",
-        webEditor: {
-            enabled: true,
-            hasCode: true,
-            hasHtml: true,
-            hasCss: true,
+        description: dedent`
+        # Problem
+        Info about problem
+        \`\`\`js
+        function someCode() {
+            return true;
         }
+        \`\`\`
+        ## Subproblem
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec laoreet maximus mauris at rhoncus.
+        Donec in lacus id tortor fermentum finibus. Nulla leo arcu, porttitor in justo nec, gravida varius mauris.
+        Donec commodo at sapien eu dictum. Quisque arcu nisi, consequat vel turpis luctus, imperdiet cursus diam.
+        Morbi ultrices at arcu quis efficitur. Integer ut vestibulum mi. Donec nec porta ante.
+        * [ ] Task 1
+        * [x] ~~Task 2~~
+        * [ ] Task 3
+        `,
+        html: { enabled: true, defaultValue: '' },
+        code: { enabled: true, defaultValue: {} },
+        css: { enabled: true, defaultValue: '' },
     };
 
     useEffect(() => {

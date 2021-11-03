@@ -2,6 +2,7 @@ node_modules
 .next
 # Keep environment variables out of version control
 .env
+.dev-ssl-certs
 
 # exclude websocket builds
 websocketServer/dist

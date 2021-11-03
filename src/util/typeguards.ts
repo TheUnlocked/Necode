@@ -5,3 +5,5 @@ export function $in<T>(field: string | number | symbol, obj: T): field is keyof 
 export function isNotNull<T>(x: T): x is NonNullable<T> {
     return x != null;
 }
+
+export function typeAssert(condition: boolean): asserts condition { }

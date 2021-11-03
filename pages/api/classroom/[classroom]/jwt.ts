@@ -24,7 +24,7 @@ export default async function handler(
                 classroom: { name: req.query.classroom as string }
             }
         });
-
+        
         if (session && session.user) {
             const keyObj = JSON.parse(process.env.JWT_SIGNING_PRIVATE_KEY!);
             const key = await parseJwk(keyObj);

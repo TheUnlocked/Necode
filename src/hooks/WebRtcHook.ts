@@ -13,7 +13,7 @@ export function useSignalingWebsocket(classroom: string) {
 
     useEffect(() => {
         if (classroom) {
-            const ws = io(`${window.location.hostname}:3001`, { port: '3001' }) as Socket<ServerToClientEventMap, ClientToServerEventMap>;
+            const ws = io(`${window.location.hostname}:3011`, { port: '3011' }) as Socket<ServerToClientEventMap, ClientToServerEventMap>;
             // let connected = false;
     
             // ws.onAny(console.log);

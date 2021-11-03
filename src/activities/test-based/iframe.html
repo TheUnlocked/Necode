@@ -1,56 +1,52 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <script>
-            const JS_ELT_ID = '__activity-js-data';
-            const CSS_ELT_ID = '__activity-css-data';
-            let initialized = false;
-            let signature = Symbol();
-            window.addEventListener('message', e => {
-                // normalize origin URLs
-                if (new URL(e.origin).origin !== new URL(document.referrer).origin) {
-                    return;
-                }
+<html><head><script>
+    const JS_ELT_ID = '__activity-js-data';
+    const CSS_ELT_ID = '__activity-css-data';
+    let initialized = false;
+    let signature = Symbol();
+    window.addEventListener('message', e => {
+        // normalize origin URLs
+        if (new URL(e.origin).origin !== new URL(document.referrer).origin) {
+            return;
+        }
 
-                if (e.data.type === 'initialize') {
-                    if (!initialized) {
-                        initialized = true;
-                        signature = e.data.signature;
-                    }
-                    return;
-                }
+        if (e.data.type === 'initialize') {
+            if (!initialized) {
+                initialized = true;
+                signature = e.data.signature;
+            }
+            return;
+        }
 
-                // verify that the message is being sent by the activity
-                if (e.data.signature !== signature) {
-                    return;
-                }
+        // verify that the message is being sent by the activity
+        if (e.data.signature !== signature) {
+            return;
+        }
 
-                switch (e.data.type) {
-                    case 'html': {
-                        document.body.innerHTML = e.data.value;
-                        return;
-                    }
-                    case 'code': {
-                        document.getElementById(JS_ELT_ID)?.remove();
-                        const scriptElt = document.createElement('script');
-                        scriptElt.id = JS_ELT_ID;
-                        scriptElt.innerHTML = e.data.value;
-                        document.head.appendChild(scriptElt);
-                        return;
-                    }
-                    case 'css': {
-                        document.getElementById(CSS_ELT_ID)?.remove();
-                        const styleElt = document.createElement('style');
-                        styleElt.id = CSS_ELT_ID;
-                        styleElt.innerHTML = e.data.value;
-                        document.head.appendChild(styleElt);
-                        return;
-                    }
-                }
-            });
-            window.parent.postMessage({ type: 'activity-iframe-loaded' }, document.referrer);
-            // clean up
-            document.currentScript.remove();
-        </script>
-    </head>
-</html>
+        switch (e.data.type) {
+            case 'html': {
+                document.body.innerHTML = e.data.value;
+                return;
+            }
+            case 'code': {
+                document.getElementById(JS_ELT_ID)?.remove();
+                const scriptElt = document.createElement('script');
+                scriptElt.id = JS_ELT_ID;
+                scriptElt.innerHTML = e.data.value;
+                document.head.appendChild(scriptElt);
+                return;
+            }
+            case 'css': {
+                document.getElementById(CSS_ELT_ID)?.remove();
+                const styleElt = document.createElement('style');
+                styleElt.id = CSS_ELT_ID;
+                styleElt.innerHTML = e.data.value;
+                document.head.appendChild(styleElt);
+                return;
+            }
+        }
+    });
+    window.parent.postMessage({ type: 'activity-iframe-loaded' }, document.referrer);
+    // clean up
+    document.currentScript.remove();
+</script></head></html>

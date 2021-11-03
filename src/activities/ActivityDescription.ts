@@ -1,9 +1,13 @@
 import { ComponentType } from "react";
-import FeatureDescription, { ConstraintsOf } from "../languages/features/FeatureDescription";
+import FeatureDescription from "../languages/features/FeatureDescription";
 import LanguageDescription from "../languages/LangaugeDescription";
 
-export interface ActivityConfigComponentProps {
+export interface ActivityConfigComponentProps<ConfigData = undefined> {
+    activityConfig: ConfigData;
 
+    onActivityConfigChange: (newConfig: ConfigData) => void;
+
+    language: LanguageDescription;
 }
 
 export interface ActivityPageProps<ConfigData = undefined> {
@@ -19,9 +23,9 @@ interface ActivityDescription<ConfigData, Features extends FeatureDescription<an
     
     supportedFeatures: Features;
 
-    configWidget?: ComponentType<ActivityConfigComponentProps>;
+    configWidget?: ComponentType<ActivityConfigComponentProps<ConfigData>>;
 
-    configPage?: ComponentType<ActivityConfigComponentProps>;
+    configPage?: ComponentType<ActivityConfigComponentProps<ConfigData>>;
 
     activityPage: ComponentType<ActivityPageProps<ConfigData>>;
 }

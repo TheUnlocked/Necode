@@ -23,8 +23,8 @@ const Page: NextPage = dynamic(() => Promise.resolve(() => {
     const {
         supportedFeatures: activitySupportedFeatures,
         activityPage: ActivityPage
-    } = canvasActivityDescription;
-    // } = testBasedActivityDescription;
+    // } = canvasActivityDescription;
+    } = testBasedActivityDescription;
 
     const activitySupportedLanguages = allLanguages.filter(({ features }) => activitySupportedFeatures.every(f => features.includes(f)));
 

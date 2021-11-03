@@ -3,9 +3,9 @@ import transformPreventInfiniteLoops from "./transformers/babel-plugin-transform
 import { transformSync } from '@babel/core';
 import { FeatureOptionsOf, languageDescription } from "./LangaugeDescription";
 import JavascriptIcon from "../util/icons/JavascriptIcon";
-import supportsAmbient from "./features/SupportsAmbient";
-import supportsIsolated from "./features/SupportsIsolated";
-import supportsEntryPoint from "./features/SupportsEntryPoint";
+import supportsAmbient from "./features/supportsAmbient";
+import supportsIsolated from "./features/supportsIsolated";
+import supportsEntryPoint from "./features/supportsEntryPoint";
 
 export const javascriptDescription = languageDescription({
     name: 'javascript',
@@ -28,7 +28,10 @@ export class Javascript implements RunnableLanguage<typeof javascriptDescription
             if (options.ambient) {
                 return result!.code!;
             }
-            return `const entry = new Function(${JSON.stringify(`${result!.code}\nreturn ${options.entryPoint};`)})();`;
+            if (typeof options.entryPoint === 'string') {
+                return `const entry = new Function(${JSON.stringify(`${result!.code}\nreturn ${options.entryPoint};`)})();`;
+            }
+            throw new Error('Javascript code must be generated in either ambient or entryPoint mode');
         }
         catch (e) {
             // The code will throw some sort of syntax error anyways, so we'll let it throw the browser version.

@@ -1,4 +1,4 @@
-import supportsEntryPoint from "../../languages/features/SupportsEntryPoint";
+import supportsEntryPoint from "../../languages/features/supportsEntryPoint";
 import ActivityDescription from "../ActivityDescription";
 import { CanvasActivity } from "./CanvasActivity";
 

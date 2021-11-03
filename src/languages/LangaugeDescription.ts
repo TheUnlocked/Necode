@@ -18,4 +18,6 @@ export function languageDescription(
     return desc;
 }
 
-export type FeatureOptionsOf<T extends LanguageDescription<any>> = ConstraintsOf<T['features']>;
+export type FeatureOptionsOf<T extends LanguageDescription<any>> = Partial<{
+    [Key in keyof ConstraintsOf<T['features']>]: ConstraintsOf<T['features']>[Key]
+}>;

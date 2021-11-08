@@ -6,6 +6,7 @@ import JavascriptIcon from "../util/icons/JavascriptIcon";
 import supportsAmbient from "./features/supportsAmbient";
 import supportsIsolated from "./features/supportsIsolated";
 import supportsEntryPoint from "./features/supportsEntryPoint";
+import supportsBabelPlugins from "./features/supportsBabelPlugins";
 
 export const javascriptDescription = languageDescription({
     name: 'javascript',
@@ -16,6 +17,7 @@ export const javascriptDescription = languageDescription({
         supportsEntryPoint,
         supportsAmbient,
         supportsIsolated,
+        supportsBabelPlugins
     ] as const
 });
 
@@ -23,7 +25,10 @@ export class Javascript implements RunnableLanguage<typeof javascriptDescription
     toRunnerCode(code: string, options: FeatureOptionsOf<typeof javascriptDescription>) {
         try {
             const result = transformSync(code, {
-                plugins: [transformPreventInfiniteLoops]
+                plugins: [
+                    ...options.babelPlugins ?? [],
+                    transformPreventInfiniteLoops
+                ]
             });
             if (options.ambient) {
                 return result!.code!;
@@ -33,7 +38,7 @@ export class Javascript implements RunnableLanguage<typeof javascriptDescription
             }
             throw new Error('Javascript code must be generated in either ambient or entryPoint mode');
         }
-        catch (e) {
+        catch (e: any) {
             // The code will throw some sort of syntax error anyways, so we'll let it throw the browser version.
             return code;
         }

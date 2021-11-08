@@ -4,8 +4,8 @@
     const CSS_ELT_ID = '__activity-css-data';
     let initialized = false;
     let signature = Symbol();
-    
-    window.addEventListener('message', e => {
+
+    window.addEventListener('message', async e => {
         if (e.data.type === 'initialize') {
             if (!initialized) {
                 initialized = true;
@@ -38,6 +38,18 @@
                 styleElt.id = CSS_ELT_ID;
                 styleElt.innerHTML = e.data.value;
                 document.head.appendChild(styleElt);
+                return;
+            }
+            case 'tests': {
+                try {
+                    const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
+                    console.log(e.data.code);
+                    await AsyncFunction(e.data.code)();
+                    window.parent.postMessage({ type: 'test-results', signature, success: true }, '*');
+                }
+                catch (e) {
+                    window.parent.postMessage({ type: 'test-results', signature, success: false, message: e?.message ?? e }, '*');
+                }
                 return;
             }
         }

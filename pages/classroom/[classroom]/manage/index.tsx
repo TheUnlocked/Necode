@@ -1,11 +1,11 @@
 import { StaticDatePicker } from "@mui/lab";
-import { Alert, Card, CardContent, ClickAwayListener, Divider, Grow, IconButton, Menu, MenuItem, MenuList, Paper, Popover, Popper, Select, Stack, TextField, Theme, Typography } from "@mui/material";
+import { Stack, TextField } from "@mui/material";
 import { NextPage } from "next";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { DateTime } from 'luxon';
-import { Box, SxProps } from "@mui/system";
-import LessonTextInput from "../../../src/components/lesson-config/LessonTextInput";
-import ActivityListPane from "../../../src/components/lesson-config/ActivityListPane";
+import { Box } from "@mui/system";
+import LessonTextInput from "../../../../src/components/lesson-config/LessonTextInput";
+import ActivityListPane from "../../../../src/components/lesson-config/ActivityListPane";
 
 
 const Page: NextPage = () => {

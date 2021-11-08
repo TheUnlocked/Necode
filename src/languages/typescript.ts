@@ -8,6 +8,7 @@ import TypescriptIcon from "../util/icons/TypescriptIcon";
 import supportsAmbient from "./features/supportsAmbient";
 import supportsIsolated from "./features/supportsIsolated";
 import supportsEntryPoint from "./features/supportsEntryPoint";
+import supportsBabelPlugins from "./features/supportsBabelPlugins";
 
 export const typescriptDescription = languageDescription({
     name: 'typescript',
@@ -18,18 +19,21 @@ export const typescriptDescription = languageDescription({
         supportsEntryPoint,
         supportsAmbient,
         supportsIsolated,
+        supportsBabelPlugins
     ] as const
 });
 
 export class Typescript implements RunnableLanguage<typeof typescriptDescription> {
-    toRunnerCode(code: string, options: FeatureOptionsOf<typeof typescriptDescription>) {
+    toRunnerCode(code: string, options: FeatureOptionsOf<typeof typescriptDescription> & { throwAllCompilerErrors?: boolean }) {
         try {
             const result = transformSync(code, {
                 plugins: [
                     transformTypescript,
+                    ...options.babelPlugins ?? [],
                     transformPreventInfiniteLoops
                 ]
             });
+
             if (options.ambient) {
                 return result!.code!;
             }
@@ -38,7 +42,10 @@ export class Typescript implements RunnableLanguage<typeof typescriptDescription
             }
             throw new Error('Typescript code must be generated in either ambient or entryPoint mode');
         }
-        catch (e) {
+        catch (e: any) {
+            if (options.throwAllCompilerErrors) {
+                throw e;
+            }
             // The code will throw some sort of syntax error anyways, so we'll let it throw the browser version.
             return code;
         }

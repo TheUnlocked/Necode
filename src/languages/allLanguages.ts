@@ -1,13 +1,13 @@
-import FeatureDescription from "./features/FeatureDescription";
+import sortByProperty from "../util/sortByProperty";
 import { javascriptDescription } from "./javascript";
 import LanguageDescription from "./LangaugeDescription";
 import { pythonDescription } from "./python3";
 import { typescriptDescription } from "./typescript";
 
-const allLanguages = [
+const allLanguages = sortByProperty([
     javascriptDescription,
     typescriptDescription,
     pythonDescription,
-] as LanguageDescription<FeatureDescription<any>[]>[];
+], 'name') as LanguageDescription[];
 
 export default allLanguages;

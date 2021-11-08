@@ -1,6 +1,6 @@
 import { LinkProps } from "next/link";
 import { createContext } from "react";
-import { MergeDispatch } from "../util/merge-reducer";
+import { MergeDispatch } from "../hooks/MergeReducerHook";
 
 export type MetaInfo = {
     title: string;

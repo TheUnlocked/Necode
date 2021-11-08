@@ -3,11 +3,13 @@ import FeatureDescription from "../languages/features/FeatureDescription";
 import LanguageDescription from "../languages/LangaugeDescription";
 
 export interface ActivityConfigComponentProps<ConfigData = undefined> {
+    classroom: string;
+    
+    language: LanguageDescription;
+    
     activityConfig: ConfigData;
 
     onActivityConfigChange: (newConfig: ConfigData) => void;
-
-    language: LanguageDescription;
 }
 
 export interface ActivityPageProps<ConfigData = undefined> {
@@ -22,6 +24,8 @@ interface ActivityDescription<ConfigData, Features extends FeatureDescription<an
     id: string;
     
     supportedFeatures: Features;
+
+    defaultConfig: ConfigData;
 
     configWidget?: ComponentType<ActivityConfigComponentProps<ConfigData>>;
 

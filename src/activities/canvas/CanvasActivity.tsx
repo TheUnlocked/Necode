@@ -14,47 +14,13 @@ import Editor from "@monaco-editor/react";
 import useCodeGenerator from "../../hooks/CodeGeneratorHook";
 import { ActivityPageProps } from "../ActivityDescription";
 import useIsSizeOrSmaller from "../../hooks/ScreenSizeHook";
+import CodeAlert from "../../components/CodeAlert";
 
 const SharedCanvas = styled('canvas')({
     maxWidth: "100%",
     maxHeight: "100%",
     backgroundColor: "black"
 });
-
-function fancyError(message: string) {
-    const result = [] as (string | ReactElement)[];
-    let buffer = '';
-    let mode = 'normal' as 'normal' | 'code';
-    function clearBuffer(newMode: typeof mode) {
-        if (buffer) {
-            if (mode === 'normal') {
-                result.push(buffer);
-            }
-            else {
-                result.push(<code style={{ whiteSpace: 'pre' }}>{buffer}</code>);
-            }
-        }
-        mode = newMode;
-        buffer = '';
-    }
-    for (const ch of message) {
-        switch (ch) {
-            case '`':
-                clearBuffer(mode === 'code' ? 'normal' : 'code');
-                break;
-            case '\n':
-                if (mode === 'normal') {
-                    clearBuffer('normal');
-                    result.push(<br />);
-                    break;
-                }
-            default:
-                buffer += ch;
-        }
-    }
-    clearBuffer('normal');
-    return result;
-}
 
 export function CanvasActivity({
     classroom, language
@@ -179,14 +145,14 @@ export function CanvasActivity({
         }
     }, [codeToRun, runner, codeGenerator]);
 
-    const [codeError, setCodeError] = useState<Error | null>(null);
+    const [codeError, setCodeError] = useState<Error | undefined>();
 
     useEffect(() => {
         if (context2d) {
             function run() {
                 if (runner.isPrepared) {
                     runner.run([context2d, inboundVideoElt])
-                        .then(() => setCodeError(null))
+                        .then(() => setCodeError(undefined))
                         .catch(e => {
                             if (e instanceof Error) {
                                 setCodeError(e);
@@ -323,11 +289,7 @@ export function CanvasActivity({
                         value={code}
                         onChange={v => setCode(v ?? "")} />
                 </Box>
-                <Alert severity={codeError ? "error" : "success"} sx={{ wordBreak: "break-word" }}>
-                    {codeError
-                        ? <>{`${codeError.name}: `}{fancyError(codeError.message)}</>
-                        : "Your code ran successfully!"}
-                </Alert>
+                <CodeAlert error={codeError} />
             </Card>
         </ReflexElement>
         <ReflexSplitter/>

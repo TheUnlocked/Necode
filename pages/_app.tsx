@@ -8,7 +8,7 @@ import theme from '../src/themes/theme';
 import { CssBaseline, ThemeProvider } from '@mui/material';
 import Head from 'next/head';
 import { MetaInfo, MetaTransformerContext } from '../src/contexts/MetaTransformerContext';
-import { useMergeReducer } from '../src/util/merge-reducer';
+import { useMergeReducer } from '../src/hooks/MergeReducerHook';
 import Editor from './editor';
 import editorTheme from '../src/themes/editorTheme';
 import { SessionProvider } from 'next-auth/react';

@@ -1,3 +1,4 @@
+import { SvgIconProps } from "@mui/material";
 import { ComponentType } from "react";
 import FeatureDescription, { ConstraintsOf } from "./features/FeatureDescription";
 
@@ -5,7 +6,7 @@ export default interface LanguageDescription<Features extends readonly FeatureDe
     readonly name: string;
     readonly monacoName: string;
     readonly displayName: string;
-    readonly icon?: ComponentType;
+    readonly icon?: ComponentType<SvgIconProps>;
     readonly features: Features;
 }
 

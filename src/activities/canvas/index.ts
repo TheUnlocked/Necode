@@ -9,7 +9,8 @@ const canvasActivityDescription: ActivityDescription<undefined, [
     supportedFeatures: [
         supportsEntryPoint
     ],
-    activityPage: CanvasActivity
+    activityPage: CanvasActivity,
+    defaultConfig: undefined
 };
 
 export default canvasActivityDescription;

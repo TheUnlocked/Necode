@@ -19,3 +19,11 @@ export function sequence<T, R = void>(...fns: ((arg: T) => R)[]): (arg: T) => R[
 export function $void(fn: (...args: void[]) => void): () => void {
     return fn;
 }
+
+export function flip(b: boolean) {
+    return !b;
+}
+
+export function make<T extends Function>(base: (cb: T) => void, action: T) {
+    return () => base(action);
+}

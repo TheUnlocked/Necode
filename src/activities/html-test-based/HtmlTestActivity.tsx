@@ -1,4 +1,4 @@
-import Editor, { OnChange, OnMount } from "@monaco-editor/react";
+import Editor, { OnChange, OnMount, useMonaco } from "@monaco-editor/react";
 import { Button, Card, CardContent, Checkbox, IconButton, Portal, Stack, styled, Tooltip, Typography } from "@mui/material";
 import { ReflexContainer, ReflexElement, ReflexSplitter } from "react-reflex";
 import useIsSizeOrSmaller from "../../hooks/ScreenSizeHook";
@@ -19,7 +19,12 @@ import supportsIsolated from "../../languages/features/supportsIsolated";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
-import { typeAssert } from "../../util/typeguards";
+import TypescriptIcon from "../../util/icons/TypescriptIcon";
+import testScaffoldingTypes from "raw-loader!./test-scaffolding.d.ts.raw";
+import testScaffoldingImpl from "raw-loader!./test-scaffolding-impl.js.raw";
+import transformTestScaffolding from "../../languages/transformers/babel-plugin-transform-test-scaffolding";
+import { Typescript } from "../../languages/typescript";
+import CodeAlert from "../../components/CodeAlert";
 
 type OptionalConfig<T>
     = { enabled: true } & T
@@ -27,6 +32,7 @@ type OptionalConfig<T>
 
 export interface TestActivityConfig {
     description: string;
+    tests: string;
     html: OptionalConfig<{ defaultValue: string }>;
     code: OptionalConfig<{ defaultValue: { [langName: string]: string } }>;
     css: OptionalConfig<{ defaultValue: string }>;
@@ -57,14 +63,17 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
     return function (props: ActivityConfigComponentProps<TestActivityConfig> | ActivityPageProps<TestActivityConfig>) {
         const {
             language,
-            activityConfig: {
-                description,
-                html,
-                code,
-                css
-            },
+            activityConfig,
             onActivityConfigChange
         } = props as (typeof props) & Partial<ActivityConfigComponentProps<TestActivityConfig> & ActivityPageProps<TestActivityConfig>>;
+
+        const {
+            description,
+            tests,
+            html,
+            code,
+            css
+        } = activityConfig;
 
         const isSmallOrSmaller = useIsSizeOrSmaller("sm");
         const isMediumOrSmaller = useIsSizeOrSmaller("md");
@@ -150,6 +159,13 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
             }
         }, []);
 
+        const [isRunningTests, setIsRunningTests] = useState(false);
+
+        function runTests() {
+            setIsRunningTests(true);
+            reload();
+        }
+
         const iframeRef = useRef<HTMLIFrameElement | null>(null);
         const [iframeElt, setIframeElt] = useState<HTMLIFrameElement | null>(null);
 
@@ -179,7 +195,7 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
 
                         const applyChanges = (type: EditorType, value: string) => {
                             if (type === 'code') {
-                                value = codeGenerator.toRunnerCode(value, { ambient: true, isolated: true })
+                                value = codeGenerator.toRunnerCode(value, { ambient: true, isolated: true });
                             }
                             iframeElt!.contentWindow!.postMessage({ type, value, signature }, '*');
                         };
@@ -195,6 +211,46 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
                         if (css.enabled && editorStates.css?.value) {
                             applyChanges('css', editorStates.css.value);
                         }
+
+                        if (isRunningTests) {
+                            try {
+                                const code = testScaffoldingImpl + new Typescript().toRunnerCode(tests, {
+                                    ambient: true,
+                                    isolated: true,
+                                    babelPlugins: [transformTestScaffolding]
+                                });
+
+                                iframeElt.contentWindow!.postMessage({ type: 'tests', signature, code }, '*');
+
+                                let finished = false;
+
+                                const testResultsListener = (ev: MessageEvent<any>) => {
+                                    if (ev.data?.signature === signature && ev.data.type === 'test-results') {
+                                        window.removeEventListener('message', testResultsListener);
+                                        finished = true;
+                                        console.log(ev.data.success ? 'Passed all tests' : 'Failed test');
+                                        if (!ev.data.success) {
+                                            console.log(ev.data.message);
+                                        }
+                                        setIsRunningTests(false);
+                                        reload();
+                                    }
+                                }
+
+                                window.addEventListener('message', testResultsListener);
+                                setTimeout(() => {
+                                    if (!finished) {
+                                        window.removeEventListener('message', testResultsListener);
+                                        setIsRunningTests(false);
+                                        console.log('Tests timed out');
+                                        reload();
+                                    }
+                                }, 10000);
+                            }
+                            catch (e) {
+                                console.log(e);
+                            }
+                        }
                     }
                 };
 
@@ -207,7 +263,7 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
                     window.removeEventListener('message', listener);
                 }, 5000);
             }
-        }, [isReloadScheduled, editorStates, iframeElt, codeGenerator, html.enabled, code.enabled, css.enabled]);
+        }, [isReloadScheduled, editorStates, iframeElt, codeGenerator, html.enabled, code.enabled, css.enabled, tests, isRunningTests]);
 
         useEffect(() => {
             if (iframeElt && iframeRef.current !== iframeElt) {
@@ -270,10 +326,10 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
                     }
                     else {
                         if (type === 'code') {
-                            dispatchEditorsState({ target: type, type: 'initialize', value: props.activityConfig.code.defaultValue![language.name], portalTarget: elt });
+                            dispatchEditorsState({ target: type, type: 'initialize', value: activityConfig.code.defaultValue![language.name], portalTarget: elt });
                         }
                         else {
-                            dispatchEditorsState({ target: type, type: 'initialize', value: props.activityConfig[type].defaultValue!, portalTarget: elt });
+                            dispatchEditorsState({ target: type, type: 'initialize', value: activityConfig[type].defaultValue!, portalTarget: elt });
                         }
                     }
                 }
@@ -283,48 +339,131 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
 
             const showKeybindingHint = !isMediumOrSmaller && editorState?.isDirty;
 
+            let toolbarItems = [] as (JSX.Element | undefined)[];
+
+            if (isEditor) {
+                toolbarItems.push(
+                    <Checkbox sx={{ m: "-9px", mr: 0 }}
+                        checked={activityConfig[type].enabled}
+                        onChange={ev => onActivityConfigChange!({
+                            ...activityConfig,
+                            [type]: {
+                                ...activityConfig[type],
+                                enabled: ev.target.checked
+                            }
+                        })} />,
+                    Icon ? <Icon /> : undefined,
+                    <Typography variant="overline" sx={{ ml: 1 }}>{language.displayName}</Typography>
+                );
+            }
+            else {
+                toolbarItems.push(
+                    Icon ? <Icon /> : undefined,
+                    <Typography variant="overline" sx={{ ml: 1 }}>{language.displayName}</Typography>,
+                    showKeybindingHint
+                        ? <Typography variant="overline" sx={{ pl: 2, ml: "auto", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            Press <Key>Ctrl</Key>+<Key>S</Key> to apply changes
+                        </Typography> : undefined,
+                    <Button onClick={() => applyChanges(type)} disabled={!editorState?.isDirty}
+                        sx={{ ml: showKeybindingHint ? undefined : "auto", flexShrink: 0 }}>
+                        Apply changes
+                    </Button>
+                );
+            }
+
             return <ReflexElement minSize={40}>
                 <Stack direction="column" sx={{ height: "100%" }}>
-                    <Stack direction="row" sx={{ m: 1, height: "24px" }}>
-                        {isEditor
-                            ? <Checkbox sx={{ m: "-9px", mr: 0 }}
-                                value={props.activityConfig[type].enabled}
-                                onChange={ev => onActivityConfigChange!({
-                                    ...props.activityConfig,
-                                    [type]: {
-                                        ...props.activityConfig[type],
-                                        enabled: ev.target.checked
-                                    }
-                                })} />
-                            : undefined}
-                        {Icon ? <Icon /> : undefined}
-                        <Typography variant="overline" sx={{ ml: 1 }}>{language.displayName}</Typography>
-                        {showKeybindingHint
-                            ? <Typography variant="overline" sx={{ pl: 2, ml: "auto", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                Press <Key>Ctrl</Key>+<Key>S</Key> to apply changes
-                            </Typography>
-                            : undefined}
-                        <Button onClick={() => applyChanges(type)} disabled={!editorState?.isDirty}
-                            sx={{ pl: 2, ml: showKeybindingHint ? undefined : "auto", flexShrink: 0 }}>
-                            Apply changes
-                        </Button>
-                    </Stack>
+                    <Stack direction="row" sx={{ m: 1, height: "24px" }}>{toolbarItems}</Stack>
                     <Box ref={onEditorContainerRef} sx={{
                         flexGrow: 1,
+                        height: "calc(100% - 40px)", // need this because monaco does weird things withou it.
                         ".monaco-editor .suggest-widget": { zIndex: 101 },
                         ".monaco-hover": { zIndex: 102 },
                     }} />
                 </Stack>
             </ReflexElement>;
-        }, [isMediumOrSmaller, editorStates, applyChanges, props.activityConfig, onActivityConfigChange]);
+        }, [isMediumOrSmaller, editorStates, applyChanges, activityConfig, onActivityConfigChange]);
 
-        const iframe = <StretchedIFrame ref={setIframeElt} sandbox="allow-scripts" />;
+        const monaco = useMonaco();
+
+        useEffect(() => {
+            if (monaco && isEditor) {
+                const lib = monaco.languages.typescript.typescriptDefaults.addExtraLib(
+                    testScaffoldingTypes,
+                    "test-scaffolding.d.ts"
+                );
+        
+                return () => lib.dispose();
+            }
+        }, [monaco]);
+
+        const [testsCompileError, setTestsCompileError] = useState<Error | undefined>();
+
+        useEffect(() => {
+            if (isEditor) {
+                try {
+                    new Typescript().toRunnerCode(tests, {
+                        ambient: true,
+                        isolated: true,
+                        throwAllCompilerErrors: true,
+                        babelPlugins: [transformTestScaffolding]
+                    });
+                    setTestsCompileError(undefined);
+                }
+                catch (e) {
+                    if (e instanceof Error) {
+                        if (e.message.startsWith('unknown: ')) {
+                            e.message = e.message.slice(9);
+                        }
+                        setTestsCompileError(e);
+                    }
+                    else {
+                        setTestsCompileError(new Error(`${e}`));
+                    }
+                }
+            }
+        }, [tests]);
+
+        let iframeOrTestPane: JSX.Element;
+
+        if (isEditor) {
+            iframeOrTestPane = <Card sx={{ height: "100%" }}>
+                <Stack direction="column" sx={{ height: "100%" }}>
+                    <Stack direction="row" sx={{ m: 1, height: "24px" }}>
+                        <TypescriptIcon />
+                        <Typography variant="overline" sx={{ ml: 1 }}>Tests</Typography>
+                    </Stack>
+                    <Box sx={{
+                        overflow: "hidden",
+                        flexGrow: 1
+                    }}>
+                        <Editor
+                            theme="vs-dark"
+                            options={{
+                                minimap: { enabled: false },
+                                "semanticHighlighting.enabled": true,
+                                automaticLayout: true,
+                                fixedOverflowWidgets: true,
+                            }}
+                            language="typescript"
+                            value={tests}
+                            onChange={val => onActivityConfigChange!({
+                                ...activityConfig,
+                                tests: val ?? ""
+                            })} />
+                    </Box>
+                    <CodeAlert error={testsCompileError} successMessage="Your tests compiled successfully!" />
+                </Stack>
+            </Card>
+        }
+        else {
+            iframeOrTestPane = <StretchedIFrame ref={setIframeElt} sandbox="allow-scripts" />;
+        }
 
         const descriptionPane = <ReflexElement minSize={40} flex={!isLargeOrSmaller ? 2 : undefined}>
             <Card sx={{ height: "100%" }}>
                 <Stack direction="column" sx={{ height: "100%" }}>
                     <Stack direction="row" sx={{ m: 1, height: "24px" }}>
-                        {/* icon */}
                         <Typography variant="overline" sx={{ ml: 1 }}>Instructions</Typography>
                     </Stack>
                     {isEditor
@@ -337,11 +476,12 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
                                 fixedOverflowWidgets: true,
                                 lineNumbers: "off",
                                 lineDecorationsWidth: 0,
+                                wordWrap: "on",
                             }}
-                            defaultLanguage="markdown"
+                            language="markdown"
                             value={description}
                             onChange={val => onActivityConfigChange!({
-                                ...props.activityConfig,
+                                ...activityConfig,
                                 description: val ?? ""
                             })} />
                         : <CardContent sx={{ pt: 0, flexGrow: 1, overflow: "auto" }}>
@@ -352,21 +492,22 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
         </ReflexElement>;
 
         const codeEditors = [
-            html.enabled ? editorPane('html', htmlDescription) : undefined,
-            html.enabled && (code.enabled || css.enabled) ? <ReflexSplitter propagate={true} /> : undefined,
-            code.enabled ? editorPane('code', language) : undefined,
-            code.enabled && css.enabled ? <ReflexSplitter propagate={true} /> : undefined,
-            css.enabled ? editorPane('css', cssDescription) : undefined,
+            isEditor || html.enabled ? editorPane('html', htmlDescription) : undefined,
+            isEditor || html.enabled && (code.enabled || css.enabled) ? <ReflexSplitter propagate={true} /> : undefined,
+            isEditor || code.enabled ? editorPane('code', language) : undefined,
+            isEditor || code.enabled && css.enabled ? <ReflexSplitter propagate={true} /> : undefined,
+            isEditor || css.enabled ? editorPane('css', cssDescription) : undefined,
         ];
 
-        const controls = <Stack direction="row" justifyContent="end" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+        const controls = isEditor ? undefined : <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: "6px" }}>
+            <Button variant="contained" onClick={runTests}>Run tests</Button>
+            <Box sx={{ flexGrow: 1 }} />
             <Tooltip title="Apply all changes">
                 <IconButton onClick={applyAllChanges}><SyncIcon/></IconButton>
             </Tooltip>
             <Tooltip title="Reload">
                 <IconButton onClick={reload}><RefreshIcon/></IconButton>
             </Tooltip>
-            <Button variant="contained">Submit</Button>
         </Stack>;
 
         const editor = useCallback((type: EditorType, language: LanguageDescription) => {
@@ -376,35 +517,65 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
                 return undefined;
             }
 
-            const onMount: OnMount = (editor, monaco) => {
-                editor.addAction({
-                    id: 'apply-changes',
-                    label: 'Apply Changes',
-                    keybindings: [
-                        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S
-                    ],
-                    run: () => applyChanges(type)
-                });
-            };
+            if (isEditor) {
+                // Editor mode
+                return <Editor
+                    theme="vs-dark"
+                    options={{
+                        minimap: { enabled: false },
+                        "semanticHighlighting.enabled": true,
+                        automaticLayout: true,
+                        fixedOverflowWidgets: true,
+                    }}
+                    language={language.monacoName}
+                    value={type === "code" ? activityConfig.code.defaultValue![language.name] ?? "" : activityConfig[type].defaultValue}
+                    onChange={v => onActivityConfigChange!({
+                        ...activityConfig,
+                        [type]: {
+                            ...activityConfig[type],
+                            defaultValue: type === "code"
+                                ? {
+                                    ...activityConfig.code.defaultValue ?? {},
+                                    [language.name]: v
+                                }
+                                : v
+                        }
+                    })}
+                />;
+            }
+            else {
+                // Activity mode
+                const onMount: OnMount = (editor, monaco) => {
+                    editor.addAction({
+                        id: 'apply-changes',
+                        label: 'Apply Changes',
+                        keybindings: [
+                            monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S
+                        ],
+                        run: () => applyChanges(type)
+                    });
+                };
+    
+                const onChange: OnChange = (value) => {
+                    dispatchEditorsState({ target: type, type: 'valueChange', value: value ?? '' });
+                };
+    
+                return <Editor
+                    theme="vs-dark"
+                    options={{
+                        minimap: { enabled: false },
+                        "semanticHighlighting.enabled": true,
+                        automaticLayout: true,
+                        fixedOverflowWidgets: true
+                    }}
+                    language={language.monacoName}
+                    onMount={onMount}
+                    value={editorState?.uncommittedValue}
+                    onChange={onChange}
+                />;
+            }
 
-            const onChange: OnChange = (value) => {
-                dispatchEditorsState({ target: type, type: 'valueChange', value: value ?? '' });
-            };
-
-            return <Editor
-                theme="vs-dark"
-                options={{
-                    minimap: { enabled: false },
-                    "semanticHighlighting.enabled": true,
-                    automaticLayout: true,
-                    fixedOverflowWidgets: true
-                }}
-                defaultLanguage={language.monacoName}
-                onMount={onMount}
-                value={editorState?.uncommittedValue}
-                onChange={onChange}
-            />;
-        }, [editorStates, applyChanges]);
+        }, [editorStates, applyChanges, activityConfig, onActivityConfigChange]);
 
         let layout: JSX.Element;
 
@@ -412,9 +583,8 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
             layout = <>
                 {controls}
                 <Card sx={{ height: "calc(100% - 36px)", flexGrow: 1, display: "flex", flexDirection: "column" }}>
-                    {/* Need to use createElement to allow spreading codeEditors to suppress React key warnings.
-                    * It's not pretty, but the React team apparently refuses to budge on this.
-                    * (see https://github.com/facebook/react/issues/14374 and https://github.com/facebook/react/issues/12567) */}
+                    {/* Need to use React.createElement because of limitations in
+                        the Re-Flex used for having draggable panes */}
                     {React.createElement(ReflexContainer, {},
                         descriptionPane,
                         <ReflexSplitter propagate={true} />,
@@ -422,7 +592,7 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
                         <ReflexSplitter propagate={true} />,
                         <ReflexElement>
                             <Stack direction="column" sx={{ height: "100%" }}>
-                                {iframe}
+                                {iframeOrTestPane}
                             </Stack>
                         </ReflexElement>
                     )}
@@ -433,19 +603,18 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
             layout = <ReflexContainer orientation="vertical">
                 <ReflexElement minSize={40}>
                     <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-                            {/* See above comment in the isSmallOrSmaller variant */}
-                            {React.createElement(ReflexContainer, {},
-                                descriptionPane,
-                                <ReflexSplitter propagate={true} />,
-                                ...codeEditors
-                            )}
+                        {React.createElement(ReflexContainer, {},
+                            descriptionPane,
+                            <ReflexSplitter propagate={true} />,
+                            ...codeEditors
+                        )}
                     </Card>
                 </ReflexElement>
                 <ReflexSplitter/>
-                <ReflexElement minSize={250}>
+                <ReflexElement minSize={isEditor ? 40 : 250}>
                     <Stack direction="column" sx={{ height: "100%" }}>
                         {controls}
-                        {iframe}
+                        {iframeOrTestPane}
                     </Stack>
                 </ReflexElement>
             </ReflexContainer>;
@@ -456,26 +625,27 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
                 <ReflexSplitter propagate={true} />
                 <ReflexElement minSize={40} flex={3}>
                     <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-                            {/* See above comment in the isSmallOrSmaller variant */}
-                            {React.createElement(ReflexContainer, {},
-                                ...codeEditors
-                            )}
+                        {React.createElement(ReflexContainer, {}, ...codeEditors)}
                     </Card>
                 </ReflexElement>
                 <ReflexSplitter propagate={true} />
-                <ReflexElement minSize={250} flex={2}>
+                <ReflexElement minSize={isEditor ? 40 : 250} flex={2}>
                     <Stack direction="column" sx={{ height: "100%" }}>
                         {controls}
-                        {iframe}
+                        {iframeOrTestPane}
                     </Stack>
                 </ReflexElement>
             </ReflexContainer>;
         }
 
         return <>
-            {html.enabled && editorStates.html ? <Portal container={editorStates.html.portalTarget}>{editor('html', htmlDescription)}</Portal> : undefined}
-            {code.enabled && editorStates.code ? <Portal container={editorStates.code.portalTarget}>{editor('code', language)}</Portal> : undefined}
-            {css.enabled && editorStates.css ? <Portal container={editorStates.css.portalTarget}>{editor('css', cssDescription)}</Portal> : undefined}
+            {/* Portals deliberately deactivated when pane is disabled in editor mode */}
+            {html.enabled && editorStates.html ?
+                <Portal container={editorStates.html.portalTarget}>{editor('html', htmlDescription)}</Portal> : undefined}
+            {code.enabled && editorStates.code ?
+                <Portal container={editorStates.code.portalTarget}>{editor('code', language)}</Portal> : undefined}
+            {css.enabled && editorStates.css ?
+                <Portal container={editorStates.css.portalTarget}>{editor('css', cssDescription)}</Portal> : undefined}
             {layout}
         </>;
     }

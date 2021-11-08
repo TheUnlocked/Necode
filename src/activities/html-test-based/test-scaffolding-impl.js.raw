@@ -1,0 +1,54 @@
+const SHOW_TEST = Symbol('showtest');
+
+async function check(assertion, display) {
+    display ??= 'Your code failed a secret test :(';
+    try {
+        if (!await assertion()) {
+            throw new Error(display);
+        }
+    }
+    catch (e) {
+        throw new Error(display);
+    }
+}
+
+async function checkError(shouldFail, display, validateError) {
+    display ??= 'Your code failed a secret test :(';
+    try {
+        await shouldFail();
+    }
+    catch (e) {
+        try {
+            if (!validateError || validateError(e)) {
+                return;
+            }
+        }
+        catch (e) {}
+    }
+    throw new Error(display);
+}
+
+function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, Math.min(ms, 500)));
+}
+
+function waitFor(condition, timeoutMs) {
+    timeoutMs = Math.min(timeoutMs ?? 100, 500);
+    return new Promise(resolve => {
+        if (condition()) {
+            resolve(true);
+            return;
+        }
+        const startTime = performance.now();
+        const interval = setInterval(async () => {
+            if (performance.now() - startTime >= timeoutMs) {
+                clearInterval(interval);
+                resolve(false);
+            }
+            if (await condition()) {
+                clearInterval(interval);
+                resolve(true);
+            }
+        }, Math.min(10, timeoutMs));
+    });
+}

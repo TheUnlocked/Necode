@@ -4,52 +4,23 @@ import { useRouter } from "next/router";
 import { useContext, useEffect } from "react";
 import useSWR from "swr";
 import { MetaTransformerContext } from "../../../src/contexts/MetaTransformerContext";
-import { ResponseData as MeResponseData } from "../../../pages/api/classroom/[classroom]/me";
+import { ResponseData as MeResponseData } from "../../api/classroom/[classroom]/me";
 import { jsonFetcher } from "../../../src/util/fetch";
 import { Button, Toolbar } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
-import testBasedActivityDescription from "../../../src/activities/test-based";
+import testBasedActivityDescription from "../../../src/activities/html-test-based";
 import canvasActivityDescription from "../../../src/activities/canvas";
 import { Box } from "@mui/system";
-import { TestActivityConfig } from "../../../src/activities/test-based/TestActivity";
 import allLanguages from "../../../src/languages/allLanguages";
-import dedent from "dedent-js";
 
 const Page: NextPage = dynamic(() => Promise.resolve(() => {
     const { query } = useRouter();
     const classroom = query.classroom;
     const metaTransformer = useContext(MetaTransformerContext);
 
-    const {
-        supportedFeatures: activitySupportedFeatures,
-        activityPage: ActivityPage
-    // } = canvasActivityDescription;
-    } = testBasedActivityDescription;
+    const activity = testBasedActivityDescription;
 
-    const activitySupportedLanguages = allLanguages.filter(({ features }) => activitySupportedFeatures.every(f => features.includes(f)));
-
-    const activityConfig: TestActivityConfig = {
-        description: dedent`
-        # Problem
-        Info about problem
-        \`\`\`js
-        function someCode() {
-            return true;
-        }
-        \`\`\`
-        ## Subproblem
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec laoreet maximus mauris at rhoncus.
-        Donec in lacus id tortor fermentum finibus. Nulla leo arcu, porttitor in justo nec, gravida varius mauris.
-        Donec commodo at sapien eu dictum. Quisque arcu nisi, consequat vel turpis luctus, imperdiet cursus diam.
-        Morbi ultrices at arcu quis efficitur. Integer ut vestibulum mi. Donec nec porta ante.
-        * [ ] Task 1
-        * [x] ~~Task 2~~
-        * [ ] Task 3
-        `,
-        html: { enabled: true, defaultValue: '' },
-        code: { enabled: true, defaultValue: {} },
-        css: { enabled: true, defaultValue: '' },
-    };
+    const supportedLanguages = allLanguages.filter(({ features }) => activity.supportedFeatures.every(f => features.includes(f)));
 
     useEffect(() => {
         metaTransformer({ path: [
@@ -74,10 +45,10 @@ const Page: NextPage = dynamic(() => Promise.resolve(() => {
                 overflow: "hidden"
             }
         }}>
-            <ActivityPage
-                activityConfig={activityConfig}
+            <activity.activityPage
+                activityConfig={activity.defaultConfig}
                 classroom={query.classroom as string}
-                language={activitySupportedLanguages.find(x => x.name === query.language) ?? activitySupportedLanguages[0]} />
+                language={supportedLanguages.find(x => x.name === query.language) ?? supportedLanguages[0]} />
         </Box>
     </>;
 }), { ssr: false });

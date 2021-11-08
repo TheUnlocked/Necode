@@ -11,6 +11,10 @@ export class Stream<T> implements Iterable<T> {
         
     }
 
+    toArray() {
+        return [...this];
+    }
+
     *[Symbol.iterator](): Iterator<T, any, undefined> {
         let i = -1;
         const iter = this.baseIterable[Symbol.iterator]();
@@ -185,6 +189,10 @@ export class Stream<T> implements Iterable<T> {
             yield* self;
             yield* other;
         })());
+    }
+
+    first() {
+        return this.take(1).toArray()[0];
     }
 }
 

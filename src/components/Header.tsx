@@ -29,7 +29,7 @@ export default function Header(props: {
     }
 
     return <AppBar elevation={shouldElevate ? 4 : 0} position="sticky">
-        <Toolbar>
+        <Toolbar disableGutters sx={{ px: 2 }}>
             <Breadcrumbs sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}>
                 {props.path.map((x, i) => breadcrumbsLink(x, i, i === props.path.length - 1))}
             </Breadcrumbs>

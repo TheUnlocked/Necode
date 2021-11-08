@@ -105,18 +105,20 @@ function ConfigureLanguageDialog(props: {
         </DialogContent>
         <List>
             {transientAvailableLanguages.map(getMenuItem)}
-            <Divider>Unsupported Languages</Divider>
-            {unsupportedLanguages.map(language => <ListItem key={language.name}>
-                <ListItemIcon>
-                    <Checkbox disabled />
-                </ListItemIcon>
-                {language.icon ? <ListItemIcon sx={{ minWidth: "48px" }}><language.icon sx={{
-                    color: ({ palette }) => palette.text.disabled
-                }} /></ListItemIcon> : undefined}
-                <ListItemText primary={language.displayName} primaryTypographyProps={{
-                    color: ({ palette }) => palette.text.disabled
-                }} />
-            </ListItem>)}
+            {unsupportedLanguages.length > 0 ? <>
+                <Divider>Unsupported Languages</Divider>
+                {unsupportedLanguages.map(language => <ListItem key={language.name}>
+                    <ListItemIcon>
+                        <Checkbox disabled />
+                    </ListItemIcon>
+                    {language.icon ? <ListItemIcon sx={{ minWidth: "48px" }}><language.icon sx={{
+                        color: ({ palette }) => palette.text.disabled
+                    }} /></ListItemIcon> : undefined}
+                    <ListItemText primary={language.displayName} primaryTypographyProps={{
+                        color: ({ palette }) => palette.text.disabled
+                    }} />
+                </ListItem>)}
+            </> : undefined}
         </List>
         <DialogActions>
             <Button onClick={close}>Cancel</Button>

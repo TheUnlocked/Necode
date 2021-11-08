@@ -195,7 +195,13 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
 
                         const applyChanges = (type: EditorType, value: string) => {
                             if (type === 'code') {
-                                value = codeGenerator.toRunnerCode(value, { ambient: true, isolated: true });
+                                try {
+                                    value = codeGenerator.toRunnerCode(value, { ambient: true, isolated: true });
+                                }
+                                catch (e) {
+                                    console.error(e);
+                                    value = '// Code failed to compile';
+                                }
                             }
                             iframeElt!.contentWindow!.postMessage({ type, value, signature }, '*');
                         };

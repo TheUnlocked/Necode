@@ -9,6 +9,7 @@ import { FeatureOptionsOf, languageDescription } from './LangaugeDescription';
 import PythonIcon from '../util/icons/PythonIcon';
 import supportsAmbient from "./features/supportsAmbient";
 import supportsEntryPoint from "./features/supportsEntryPoint";
+import supportsIsolated from './features/supportsIsolated';
 
 export const pythonDescription = languageDescription({
     name: 'python3',
@@ -17,7 +18,8 @@ export const pythonDescription = languageDescription({
     icon: PythonIcon,
     features: [
         supportsEntryPoint,
-        supportsAmbient
+        supportsAmbient,
+        supportsIsolated
     ] as const
 });
 
@@ -39,15 +41,27 @@ declare global {
     var __BRYTHON__: {
         python_to_js(pythonCode: string, name?: string): string;
         py2js(source: string, module: string, localsId: string): { to_js(): string };
+        show_stack(stack: any): string | undefined;
     };
 }
 
 export class Python3 implements RunnableLanguage<typeof pythonDescription> {
     toRunnerCode(code: string, options: FeatureOptionsOf<typeof pythonDescription>) {
+        let result: string;
+
         if (options.ambient) {
-            return __BRYTHON__.py2js(code, '', '').to_js();
+            try {
+                result = 'const $locals_ = globalThis;' + __BRYTHON__.py2js(code, '', '').to_js();
+            }
+            catch (e: any) {
+                const err = new SyntaxError(e.msg) as any;
+                err.lineNumber = e.lineno;
+                err.columnNumber = e.offset;
+                err.stack = __BRYTHON__.show_stack(e.$stack);
+                throw err;
+            }
         }
-        if (typeof options.entryPoint === 'string') {
+        else if (typeof options.entryPoint === 'string') {
             const rawJSified = __BRYTHON__.python_to_js(dedent`
             def entry(*args):
                 result = None
@@ -78,9 +92,15 @@ export class Python3 implements RunnableLanguage<typeof pythonDescription> {
             // const result = transformSync(js, {
             //     plugins: [transformPreventInfiniteLoops]
             // });
-            return js;
+            result = js;
         }
-        
-        throw new Error('Python 3 code must be generated in either ambient or entryPoint mode');
+        else {
+            throw new Error('Python 3 code must be generated in either ambient or entryPoint mode');
+        }
+
+        if (options.isolated) {
+            return brythonRaw + brythonStdlibRaw + result;
+        }
+        return result;
     }
 }

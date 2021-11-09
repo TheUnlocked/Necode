@@ -21,7 +21,7 @@ export default async function handler(
             },
             where: {
                 userId: session?.user.id,
-                classroom: { name: req.query.classroom as string }
+                classroom: { id: req.query.classroom as string }
             }
         });
         

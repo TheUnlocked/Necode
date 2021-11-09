@@ -1,5 +1,4 @@
-import { NextPage } from "next";
-import dynamic from "next/dynamic";
+import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { useRouter } from "next/router";
 import { useContext, useEffect } from "react";
 import useSWR from "swr";
@@ -13,9 +12,12 @@ import canvasActivityDescription from "../../../src/activities/canvas";
 import { Box } from "@mui/system";
 import allLanguages from "../../../src/languages/allLanguages";
 
-const Page: NextPage = dynamic(() => Promise.resolve(() => {
-    const { query } = useRouter();
-    const classroom = query.classroom;
+interface StaticProps {
+    classroom: string;
+}
+
+const Page: NextPage<StaticProps> = ({ classroom }) => {
+    const router = useRouter();
     const metaTransformer = useContext(MetaTransformerContext);
 
     const activity = testBasedActivityDescription;
@@ -35,22 +37,46 @@ const Page: NextPage = dynamic(() => Promise.resolve(() => {
 
     return <>
         {isInstructor ? <Toolbar variant="dense" sx={{ minHeight: "36px", px: "16px !important" }}>
-            <Button size="small" startIcon={<ArrowBack/>}>Return to Manage Classroom</Button>
+            <Button size="small" startIcon={<ArrowBack/>} onClick={() => router.push(`/classroom/${classroom}/manage`)}>
+                Return to Manage Classroom
+            </Button>
         </Toolbar> : null}
         <Box sx={{
             px: 2,
             pb: 2,
-            height: `calc(100vh - 64px${isInstructor ? ' - 36px' : ''})`,
+            ...isInstructor ? { "--header-height": "100px" } : {},
+            height: `calc(100vh - var(--header-height))`,
             "& .reflex-container > .reflex-element": {
                 overflow: "hidden"
             }
         }}>
             <activity.activityPage
                 activityConfig={activity.defaultConfig}
-                classroom={query.classroom as string}
-                language={supportedLanguages.find(x => x.name === query.language) ?? supportedLanguages[0]} />
+                classroom={classroom}
+                language={supportedLanguages.find(x => x.name === router.query.language) ?? supportedLanguages[0]} />
         </Box>
     </>;
-}), { ssr: false });
+};
+
+export const getStaticProps: GetStaticProps<StaticProps> = ctx => {
+    if (typeof ctx.params?.classroom !== 'string') {
+        return {
+            notFound: true
+        };
+    }
+
+    return {
+        props: {
+            classroom: ctx.params.classroom
+        }
+    };
+};
+
+export const getStaticPaths: GetStaticPaths = async () => {
+    return {
+        paths: [],
+        fallback: true
+    };
+}
 
 export default Page;

@@ -1,11 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getSession } from "next-auth/react";
-import { prisma } from "../../../../src/db/prisma";
-import { ClassroomMemberEntity, makeClassroomMemberEntity } from "../../../../src/api/entities/ClassroomMemberEntity";
-import { Response } from "../../../../src/api/Response";
+import { prisma } from "../../src/db/prisma";
+import { Response } from "../../src/api/Response";
 import type { IncomingMessage } from "http";
+import { makeUserEntity, UserEntity } from "../../src/api/entities/UserEntity";
 
-export type ResponseData = Response<ClassroomMemberEntity>;
+export type ResponseData = Response<UserEntity>;
 
 export default async function handler(
     req: NextApiRequest,
@@ -33,13 +33,16 @@ export default async function handler(
 export async function getMe(req: IncomingMessage, classroom: string) {
     const session = await getSession({ req });
     if (session) {
-        const user = await prisma.classroomMembership.findFirst({
+        const user = await prisma.user.findFirst({
             include: {
-                user: true
+                classes: {
+                    select: {
+                        classroomId: true
+                    }
+                }
             },
             where: {
-                userId: session.user.id,
-                classroom: { id: classroom }
+                id: session.user.id
             }
         });
         if (!user) {
@@ -55,7 +58,7 @@ export async function getMe(req: IncomingMessage, classroom: string) {
             status: 200,
             content: {
                 response: 'ok' as const,
-                data: makeClassroomMemberEntity(user)
+                data: makeUserEntity(user, { classes: user.classes.map(x => x.classroomId) })
             }
         };
     }

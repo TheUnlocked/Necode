@@ -11,7 +11,7 @@ import ActivityListPane from "../../../../src/components/lesson-config/ActivityL
 const Page: NextPage = () => {
     const [selectedDate, setSelectedDate] = useState<DateTime>(DateTime.now().startOf("day"));
 
-    return <Stack sx={{ height: 'calc(100vh - 64px)', px: 8, pb: 8, pt: 4 }} direction="row" alignItems="center" spacing={8}>
+    return <Stack sx={{ height: 'calc(100vh - var(--header-height))', px: 8, pb: 8, pt: 4 }} direction="row" alignItems="center" spacing={8}>
         <Box sx={{ pt: 2 }}>
             <StaticDatePicker value={selectedDate} onChange={d => setSelectedDate(d ?? selectedDate)}
                 renderInput={params => <TextField {...params} />}

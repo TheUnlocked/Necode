@@ -35,9 +35,9 @@ const testBasedActivityDescription: ActivityDescription<TestActivityConfig, [
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec laoreet maximus mauris at rhoncus. Donec in lacus id tortor fermentum finibus. Nulla leo arcu, porttitor in justo nec, gravida varius mauris. Donec commodo at sapien eu dictum. Quisque arcu nisi, consequat vel turpis luctus, imperdiet cursus diam. Morbi ultrices at arcu quis efficitur. Integer ut vestibulum mi. Donec nec porta ante.
         `,
         html: { enabled: true, defaultValue: dedent`
-        <!-- Put starter code in these boxes.
-            No need for the <!DOCTYPE html> and <html> tags and whatnot
-            (though if you want to include them, they won't break anything) -->
+        <meta name="color-scheme" content="dark light" />
+
+        <h1>Hello, World!</h1>
         ` },
         code: { enabled: true, defaultValue: {} },
         css: { enabled: true, defaultValue: dedent`

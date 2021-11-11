@@ -33,12 +33,12 @@ export default function tracked<E extends Trackable>(emitter: E | undefined) {
                     };
                 case nameof<Tracked<E>>(e => e.offTrackedEvent):
                     return (ev: any) => {
-                        trackingList[ev].forEach(handler => emitter.off(ev, handler));
+                        trackingList[ev].forEach(handler => (emitter as EventEmitter<any>).off(ev, handler));
                     };
                 case nameof<Tracked<E>>(e => e.offTracked):
                     return () => {
                         for (const ev in trackingList) {
-                            trackingList[ev].forEach(handler => emitter.off(ev, handler));
+                            trackingList[ev].forEach(handler => (emitter as EventEmitter<any>).off(ev, handler));
                         }
                     };
                 default:

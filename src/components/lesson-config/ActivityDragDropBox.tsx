@@ -1,26 +1,35 @@
 import { Box } from "@mui/system";
-import { FC, PropsWithChildren } from "react";
-import { ConnectDragSource, useDrag, useDrop } from "react-dnd";
+import { ComponentType, useState } from "react";
+import { useDrag, useDrop } from "react-dnd";
+import ActivityDescription, { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
+import { ActivityEntity } from "../../api/entities/ActivityEntity";
+import LanguageDescription from "../../languages/LangaugeDescription";
 import { compose } from "../../util/fp";
+import DefaultActivityWidget from "./DefaultActivityWidget";
 
 export const activityDragDropType = 'application/lesson-activity+json';
 
-export interface ActivityDragDropData {
+export type DraggableComponent = ComponentType<ActivityConfigWidgetProps<any>>;
+
+interface ActivityDragDropBoxProps {
+    activity: ActivityDescription<any>,
     id: string;
-}
-
-export interface DraggableComponent extends FC<{
-    dragHandle: ConnectDragSource,
-    data: ActivityDragDropData
-}> {}
-
-export function ActivityDragDropBox({ data, moveItem, findItem, component: Component }: {
-    data: ActivityDragDropData,
+    classroom: string;
+    activityConfig: any;
+    onActivityConfigChange: (newConfig: any) => void;
     moveItem: (id: string, to: number) => void,
     findItem: (id: string) => { index: number },
-    component: DraggableComponent
-}) {
-    const id = data.id;
+}
+
+export function ActivityDragDropBox({
+    activity,
+    id,
+    classroom,
+    activityConfig,
+    onActivityConfigChange,
+    moveItem,
+    findItem
+}: ActivityDragDropBoxProps) {
     const originalIndex = findItem(id).index;
 
     const [{ isDragging }, drag, dragPreview] = useDrag(() => ({
@@ -38,10 +47,10 @@ export function ActivityDragDropBox({ data, moveItem, findItem, component: Compo
         }
     }), [id, originalIndex, moveItem]);
 
-    const [, drop] = useDrop(() => ({
+    const [, drop] = useDrop<ActivityEntity, unknown, unknown>(() => ({
         accept: activityDragDropType,
         canDrop: () => false,
-        hover({ id: draggedId }: ActivityDragDropData) {
+        hover({ id: draggedId }) {
             if (draggedId !== id) {
                 const { index: overIndex } = findItem(id);
                 moveItem(draggedId, overIndex);
@@ -49,7 +58,14 @@ export function ActivityDragDropBox({ data, moveItem, findItem, component: Compo
         }
     }), [id, findItem, moveItem]);
 
+    const Widget = activity.configWidget ?? DefaultActivityWidget;
+
     return <Box ref={compose(drop, dragPreview)} sx={{ opacity: isDragging ? 0 : 1, padding: 1 }}>
-        <Component dragHandle={drag} data={data} />
+        <Widget
+            id={id}
+            classroom={classroom}
+            activityConfig={activityConfig}
+            onActivityConfigChange={onActivityConfigChange}
+            dragHandle={drag} />
     </Box>;
 }

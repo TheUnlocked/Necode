@@ -7,7 +7,7 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["interactiveTransactions"]
 }
 
@@ -20,23 +20,23 @@ model Session {
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?
+  id                       String  @id @default(cuid())
+  userId                   String
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String?
   refresh_token_expires_in Int?
-  access_token       String?
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?
-  session_state      String?
-  oauth_token_secret String?
-  oauth_token        String?
+  access_token             String?
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String?
+  session_state            String?
+  oauth_token_secret       String?
+  oauth_token              String?
 
-  ext_expires_in     Int?
+  ext_expires_in Int?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -57,25 +57,24 @@ enum SitewideRights {
 }
 
 model User {
-  id             String                @id @default(cuid())
-  username       String                @unique
-  displayName    String
-  email          String                @unique
-  firstName      String
-  lastName       String
-  rights         SitewideRights        @default(None)
-  emailVerified  DateTime? // Required for NextAuth.js, but never used
-  accounts       Account[]
-  sessions       Session[]
-  classes        ClassroomMembership[]
+  id            String                @id @default(cuid())
+  username      String                @unique
+  displayName   String
+  email         String                @unique
+  firstName     String
+  lastName      String
+  rights        SitewideRights        @default(None)
+  emailVerified DateTime? // Required for NextAuth.js, but never used
+  accounts      Account[]
+  sessions      Session[]
+  classes       ClassroomMembership[]
 }
 
 model Classroom {
   id          String                @id @default(cuid())
-  name        String                @unique
   displayName String
   members     ClassroomMembership[]
-  lessons     PlannedLesson[]
+  lessons     Lesson[]
 }
 
 enum ClassroomRole {
@@ -94,29 +93,21 @@ model ClassroomMembership {
 }
 
 model Activity {
-  id              String     @id @default(cuid())
-  activityType    String
-  lesson          Lesson     @relation(fields: [lessonId], references: [id])
-  lessonId        String
-  displayName     String
-  configuration   Json
-  order           Int
+  id                 String   @id @default(cuid())
+  activityType       String
+  lesson             Lesson   @relation(fields: [lessonId], references: [id])
+  lessonId           String
+  displayName        String
+  configuration      Json
+  supportedLanguages String[]
+  order              Int
 }
 
 model Lesson {
   id          String     @id @default(cuid())
   displayName String
-  activities  Activity[]
-  instances   PlannedLesson[]
-}
-
-model PlannedLesson {
-  lesson      Lesson @relation(fields: [lessonId], references: [id])
-  lessonId    String
-  classroom   Classroom @relation(fields: [classroomId], references: [id])
+  classroom   Classroom  @relation(fields: [classroomId], references: [id])
   classroomId String
-  date        DateTime @db.Date
-  lessonData  Json
-
-  @@id([lessonId, classroomId, date])
+  date        DateTime   @db.Date
+  activities  Activity[]
 }

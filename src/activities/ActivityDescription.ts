@@ -1,23 +1,24 @@
 import { ComponentType } from "react";
+import { ConnectDragSource } from "react-dnd";
 import FeatureDescription from "../languages/features/FeatureDescription";
 import LanguageDescription from "../languages/LangaugeDescription";
 
-export interface ActivityConfigComponentProps<ConfigData = undefined> {
-    classroom: string;
-    
-    language: LanguageDescription;
-    
-    activityConfig: ConfigData;
+export interface ActivityPageProps<ConfigData = undefined> {
+    id: string;
 
+    classroom: string;
+
+    language: LanguageDescription;
+
+    activityConfig: ConfigData;
+}
+
+export interface ActivityConfigPageProps<ConfigData = undefined> extends ActivityPageProps<ConfigData> {
     onActivityConfigChange: (newConfig: ConfigData) => void;
 }
 
-export interface ActivityPageProps<ConfigData = undefined> {
-    classroom: string;
-
-    language: LanguageDescription;
-
-    activityConfig: ConfigData;
+export interface ActivityConfigWidgetProps<ConfigData = undefined> extends Omit<ActivityConfigPageProps<ConfigData>, 'language'> {
+    dragHandle: ConnectDragSource;
 }
 
 interface ActivityDescription<ConfigData, Features extends FeatureDescription<any>[] = FeatureDescription<any>[]> {
@@ -27,9 +28,9 @@ interface ActivityDescription<ConfigData, Features extends FeatureDescription<an
 
     defaultConfig: ConfigData;
 
-    configWidget?: ComponentType<ActivityConfigComponentProps<ConfigData>>;
+    configWidget?: ComponentType<ActivityConfigWidgetProps<ConfigData>>;
 
-    configPage?: ComponentType<ActivityConfigComponentProps<ConfigData>>;
+    configPage?: ComponentType<ActivityConfigPageProps<ConfigData>>;
 
     activityPage: ComponentType<ActivityPageProps<ConfigData>>;
 }

@@ -36,18 +36,20 @@ module.exports = {
     plugins: [
         {
             apply: compiler => {
-                compiler.hooks.afterEmit.tap('AfterEmitPlugin', (compilation) => {
-                    if (child) {
-                        child.kill();
-                    }
-                    child = spawn('node', [rel('dist/index.js')]);
-                    child.stdout.on('data', function (data) {
-                        process.stdout.write(data);
+                if (process.env.NODE_ENV !== 'production') {
+                    compiler.hooks.afterEmit.tap('AfterEmitPlugin', () => {
+                        if (child) {
+                            child.kill();
+                        }
+                        child = spawn('node', [rel('dist/index.js')]);
+                        child.stdout.on('data', function (data) {
+                            process.stdout.write(data);
+                        });
+                        child.stderr.on('data', function (data) {
+                            process.stderr.write(data);
+                        });
                     });
-                    child.stderr.on('data', function (data) {
-                        process.stderr.write(data);
-                    });
-                });
+                }
             }
         }
     ],
@@ -55,5 +57,8 @@ module.exports = {
         bufferutil: "bufferutil",
         "utf-8-validate": "utf-8-validate",
         "socket.io": "require('socket.io')"
+    },
+    experiments: {
+        topLevelAwait: true
     }
 };

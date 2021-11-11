@@ -5,7 +5,7 @@ import useIsSizeOrSmaller from "../../hooks/ScreenSizeHook";
 import { cssDescription } from "../../languages/css";
 import { htmlDescription } from "../../languages/html";
 import LanguageDescription from "../../languages/LangaugeDescription";
-import { ActivityConfigComponentProps, ActivityPageProps } from "../ActivityDescription";
+import { ActivityConfigPageProps, ActivityPageProps } from "../ActivityDescription";
 import { Refresh as RefreshIcon, Sync as SyncIcon } from "@mui/icons-material";
 import { Box } from "@mui/system";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
@@ -25,6 +25,9 @@ import testScaffoldingImpl from "raw-loader!./test-scaffolding-impl.js.raw";
 import transformTestScaffolding from "../../languages/transformers/babel-plugin-transform-test-scaffolding";
 import { Typescript } from "../../languages/typescript";
 import CodeAlert from "../../components/CodeAlert";
+import useImperativeDialog from "../../hooks/ImperativeDialogHook";
+import TestsDialog from "./TestsDialog";
+import { typeAssert } from "../../util/typeguards";
 
 type OptionalConfig<T>
     = { enabled: true } & T
@@ -60,12 +63,12 @@ const Key = styled("code")(({theme}) => ({
 }));
 
 function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
-    return function (props: ActivityConfigComponentProps<TestActivityConfig> | ActivityPageProps<TestActivityConfig>) {
+    return function (props: ActivityConfigPageProps<TestActivityConfig> | ActivityPageProps<TestActivityConfig>) {
         const {
             language,
             activityConfig,
             onActivityConfigChange
-        } = props as (typeof props) & Partial<ActivityConfigComponentProps<TestActivityConfig> & ActivityPageProps<TestActivityConfig>>;
+        } = props as (typeof props) & Partial<ActivityConfigPageProps<TestActivityConfig> & ActivityPageProps<TestActivityConfig>>;
 
         const {
             description,
@@ -159,9 +162,20 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
             }
         }, []);
 
+        const startTests = useRef(() => {});
+        const passTests = useRef(() => {});
+        const failTests = useRef((_: string) => {});
+
+        const [testsDialog, openTestsDialog] = useImperativeDialog(TestsDialog, {
+            startRunningRef: f => startTests.current = f,
+            successRef: f => passTests.current = f,
+            failureRef: f => failTests.current = f,
+        });
+
         const [isRunningTests, setIsRunningTests] = useState(false);
 
         function runTests() {
+            openTestsDialog();
             setIsRunningTests(true);
             reload();
         }
@@ -228,6 +242,7 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
 
                                 iframeElt.contentWindow!.postMessage({ type: 'tests', signature, code }, '*');
 
+                                startTests.current();
                                 let finished = false;
 
                                 const testResultsListener = (ev: MessageEvent<any>) => {
@@ -235,8 +250,12 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
                                         window.removeEventListener('message', testResultsListener);
                                         finished = true;
                                         console.log(ev.data.success ? 'Passed all tests' : 'Failed test');
-                                        if (!ev.data.success) {
+                                        if (ev.data.success) {
+                                            passTests.current();
+                                        }
+                                        else {
                                             console.log(ev.data.message);
+                                            failTests.current(ev.data.message);
                                         }
                                         setIsRunningTests(false);
                                         reload();
@@ -248,6 +267,7 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
                                     if (!finished) {
                                         window.removeEventListener('message', testResultsListener);
                                         setIsRunningTests(false);
+                                        failTests.current('Tests timed out');
                                         console.log('Tests timed out');
                                         reload();
                                     }
@@ -645,6 +665,7 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
         }
 
         return <>
+            {testsDialog}
             {/* Portals deliberately deactivated when pane is disabled in editor mode */}
             {html.enabled && editorStates.html ?
                 <Portal container={editorStates.html.portalTarget}>{editor('html', htmlDescription)}</Portal> : undefined}

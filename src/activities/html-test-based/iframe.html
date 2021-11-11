@@ -43,7 +43,7 @@
             case 'tests': {
                 try {
                     const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
-                    console.log(e.data.code);
+                    console.debug(e.data.code);
                     await AsyncFunction(e.data.code)();
                     window.parent.postMessage({ type: 'test-results', signature, success: true }, '*');
                 }

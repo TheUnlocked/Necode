@@ -5,34 +5,44 @@ import { Code as CodeIcon, DragIndicator, TextFields as TextFieldsIcon } from "@
 import { ConnectDragSource, useDrag } from "react-dnd"
 import Editor from "@monaco-editor/react";
 import { usePopupState, bindTrigger, bindPopper } from "material-ui-popup-state/hooks";
-import JavascriptIcon from "../../../src/util/icons/JavascriptIcon";
-import PythonIcon from "../../../src/util/icons/PythonIcon";
-import { useMaybeControlled } from "../../../src/hooks/MaybeControlledHook";
 import DragHandle from "./DragHandle";
+import { editor } from "monaco-editor";
+import { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
+import allLanguages from "../../languages/allLanguages";
+import { plainTextDescription } from "../../languages/plaintext";
+import LanguageDescription from "../../languages/LangaugeDescription";
 
-const languageOptions = [
-    { value: 'javascript', label: 'Javascript', icon: <JavascriptIcon/> },
-    { value: 'python', label: 'Python', icon: <PythonIcon/> },
-    { value: 'plaintext', label: 'Plain Text', icon: <CodeIcon/> },
-] as const;
+export interface TextInputWidgetProps {
+    value: string;
+    language: string | null;
+}
 
-type Language = (typeof languageOptions)[number]['value'] | null;
-
-export default function LessonTextInput(props: {
-    id?: string
-    language?: Language,
-    onChangeLanguage?: (newLanguage: Language) => void,
-    value?: string,
-    onChange?: (newValue: string) => void,
-    dragHandle: ConnectDragSource
-}) {
-    const [language, updateLanguage] = useMaybeControlled(props, 'language', 'onChangeLanguage', null);
-    const [value, updateValue] = useMaybeControlled(props, 'value', 'onChange');
+export default function TextInputWidget({
+    id,
+    activityConfig: { value, language },
+    onActivityConfigChange,
+    dragHandle
+}: ActivityConfigWidgetProps<TextInputWidgetProps>) {
+    const languageDescription = allLanguages.find(x => x.name === language);
 
     const languageSelectPopup = usePopupState({
         variant: "popper",
-        popupId: `language-select-popup-${props.id}`
+        popupId: `language-select-popup-${id}`
     });
+
+    function onValueChange(newValue: string) {
+        onActivityConfigChange({
+            value: newValue,
+            language
+        });
+    }
+
+    function changeLanguage(newLanguage: string | null) {
+        onActivityConfigChange({
+            value,
+            language: newLanguage
+        });
+    }
 
     const [editorHeight, setEditorHeight] = useState(20);
     const updateHeight = (editor: Parameters<NonNullable<Parameters<typeof Editor>[0]['onMount']>>[0]) => () => {
@@ -68,14 +78,15 @@ export default function LessonTextInput(props: {
             },
             ...border
         }}>
-            <DragHandle innerRef={props.dragHandle} iconProps={{ className: "show-on-hover", sx: { mr: 0.5 } }} />
+            <DragHandle innerRef={dragHandle} iconProps={{ className: "show-on-hover", sx: { mr: 0.5 } }} />
             <Editor
                 height={editorHeight}
-                value={value} onChange={updateValue}
+                value={value} onChange={x => onValueChange(x ?? "")}
                 onMount={editor => {
                     editor.onDidContentSizeChange(updateHeight(editor))
                 }}
-                theme="vs-dark" language={language}
+                theme="vs-dark"
+                language={languageDescription?.monacoName}
                 options={{
                     minimap: { enabled: false },
                     scrollBeyondLastLine: false,
@@ -89,29 +100,31 @@ export default function LessonTextInput(props: {
                     hideCursorInOverviewRuler: true,
                     overviewRulerBorder: false,
                     renderIndentGuides: false,
-                }} />
+                } as editor.IStandaloneEditorConstructionOptions} />
             <span><IconButton size="small" className="show-on-hover" sx={{ ml: 0.5 }}
-                {...bindTrigger(languageSelectPopup)}>{languageOptions.find(({value}) => language === value)?.icon ?? <CodeIcon/>}</IconButton></span>
+                {...bindTrigger(languageSelectPopup)}>{languageDescription?.icon ?? <CodeIcon/>}</IconButton></span>
             <Popper {...bindPopper(languageSelectPopup)}
                 placement="left" transition>
                 {({ TransitionProps }) => <ClickAwayListener onClickAway={() => languageSelectPopup.close()}>
                     <Grow {...TransitionProps}>
                         <Paper elevation={4}>
                             <MenuList>
-                                {languageOptions.map(({value, label}) =>
-                                    <MenuItem key={value} onClick={() => (languageSelectPopup.close(), updateLanguage(value))}>{label}</MenuItem>)}
+                                {allLanguages.map(lang =>
+                                    <MenuItem key={lang.name} onClick={() => (languageSelectPopup.close(), changeLanguage(lang.name))}>
+                                        {lang.displayName}
+                                    </MenuItem>)}
                             </MenuList>
                         </Paper>
                     </Grow>
                 </ClickAwayListener>}
             </Popper>
-            <IconButton size="small" className="show-on-hover" onClick={() => updateLanguage(null)}><TextFieldsIcon/></IconButton>
+            <IconButton size="small" className="show-on-hover" onClick={() => changeLanguage(null)}><TextFieldsIcon/></IconButton>
         </Stack>
     }
 
     return <TextField
         multiline fullWidth variant="filled" hiddenLabel
-        value={value} onChange={e => updateValue(e.target.value)}
+        value={value} onChange={e => onValueChange(e.target.value)}
         InputProps={{
             disableUnderline: true,
             sx: {
@@ -127,7 +140,7 @@ export default function LessonTextInput(props: {
                 ...border,
                 fontSize: ({typography}) => typography.body2.fontSize
             },
-            startAdornment: <DragHandle innerRef={props.dragHandle} iconProps={{ className: "show-on-hover", sx: { mr: 1 } }} />,
-            endAdornment: <IconButton size="small" className="show-on-hover" onClick={() => updateLanguage("plaintext")}><CodeIcon/></IconButton>
+            startAdornment: <DragHandle innerRef={dragHandle} iconProps={{ className: "show-on-hover", sx: { mr: 1 } }} />,
+            endAdornment: <IconButton size="small" className="show-on-hover" onClick={() => changeLanguage('plaintext')}><CodeIcon/></IconButton>
         }} />;
 };

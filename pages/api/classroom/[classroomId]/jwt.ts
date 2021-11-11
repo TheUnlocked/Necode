@@ -4,13 +4,12 @@ import { SignJWT } from 'jose/jwt/sign';
 import { parseJwk } from 'jose/jwk/parse';
 import { prisma } from '../../../../src/db/prisma';
 import { AuthLevel } from '../../../../websocketServer/src/types';
-
-type ResponseData = string;
+import { endpoint, EndpointMap } from '../../../../src/api/Endpoint';
 
 
 export default async function handler(
     req: NextApiRequest,
-    res: NextApiResponse<ResponseData>
+    res: NextApiResponse<string>
 ) {
     if (req.method === 'POST') {
         const session = await getSession({ req });

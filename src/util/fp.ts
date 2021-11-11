@@ -6,6 +6,8 @@ export function compose<T>(...fns: ((arg: T) => T)[]) {
     return fns.reduce(compose2);
 }
 
+export function sequence<R = void>(...fns: (() => R)[]): () => R[];
+export function sequence<T, R = void>(...fns: ((arg: T) => R)[]): (arg: T) => R[];
 export function sequence<T, R = void>(...fns: ((arg: T) => R)[]): (arg: T) => R[] {
     return x => {
         const result = [] as R[];

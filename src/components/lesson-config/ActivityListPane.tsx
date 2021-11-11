@@ -1,39 +1,45 @@
-import { Photo, TextFields } from "@mui/icons-material";
-import { Card, CardContent, Divider, TextField, Typography } from "@mui/material";
-import { SxProps } from "@mui/system";
+import { Add, TextFields } from "@mui/icons-material";
+import { Button, Card, CardContent, Divider, IconButton, Paper, Stack, TextField, Typography } from "@mui/material";
+import { Box, SxProps } from "@mui/system";
 import { DateTime } from "luxon";
 import { useCallback, useState } from "react";
 import { useDrop } from "react-dnd";
-import { ActivityDragDropBox, ActivityDragDropData, activityDragDropType } from "./ActivityDragDropBox";
-import GoActivityInput from "./GoActivityInput";
-import LessonTextInput from "./LessonTextInput";
+import ActivityDescription from "../../activities/ActivityDescription";
+import allActivities from "../../activities/allActivities";
+import { ActivityEntity } from "../../api/entities/ActivityEntity";
+import { ActivityDragDropBox, activityDragDropType } from "./ActivityDragDropBox";
+import DefaultActivityWidget from "./DefaultActivityWidget";
+import textInputDescription from "./textInputDescription";
 
-const activityTypes = [
-    {
-        type: "core/text",
-        displayName: "Text/Code",
-        icon: <TextFields/>,
-        configPanel: LessonTextInput
-    },
-    {
-        type: "canvas-ring",
-        displayName: "Canvas Ring",
-        icon: <Photo/>,
-        configPanel: GoActivityInput
-    },
-] as const;
+function getActivityDescription(name: string) {
+    return allActivities.find(x => x.id === name);
+}
 
-export default function ActivityListPane(props: {
+interface ActivityListPaneProps {
     sx: SxProps,
-    date: DateTime
-}) {
+    date: DateTime,
+    classroom: string
+}
+
+export default function ActivityListPane({
+    sx,
+    classroom,
+    date
+}: ActivityListPaneProps) {
     const [, drop] = useDrop(() => ({ accept: activityDragDropType }));
 
-    const [activities, setActivities] = useState([
-        { id: "a", type: activityTypes[0] },
-        { id: "b", type: activityTypes[0] },
-        { id: "c", type: activityTypes[1] },
-    ] as (ActivityDragDropData & {type: (typeof activityTypes)[number]})[]);
+    const [, trashDrop] = useDrop<ActivityEntity, unknown, unknown>(() => ({
+        accept: activityDragDropType,
+        drop(item) {
+            setActivities(activities => activities.filter(x => x.id !== item.id));
+        }
+    }));
+
+    async function addActivity(activity: ActivityDescription<any>) {
+        
+    }
+
+    const [activities, setActivities] = useState<ActivityEntity[]>([]);
 
     const findItem = useCallback((id: string) => {
         return { index: activities.findIndex(x => x.id === id) };
@@ -46,7 +52,40 @@ export default function ActivityListPane(props: {
         setActivities(newArr);
     }, [activities]);
 
-    return <Card sx={props.sx}>
+    function setActivityConfig(index: number, activityConfig: any) {
+        setActivities([
+            ...activities.slice(0, index),
+            {
+                ...activities[index],
+                attributes: {
+                    ...activities[index].attributes,
+                    configuration: activityConfig
+                }
+            },
+            ...activities.slice(index + 1)
+        ]);
+    }
+
+    function makeWidget(activityEntity: ActivityEntity, index: number) {
+        const activity = getActivityDescription(activityEntity.attributes.activityType);
+
+        if (!activity) {
+            console.error(`Invalid entity type ${activityEntity.attributes.activityType}`);
+            return null;
+        }
+
+        return <ActivityDragDropBox
+            key={activityEntity.id}
+            id={activityEntity.id}
+            activity={activity}
+            classroom={classroom}
+            activityConfig={activityEntity.attributes.configuration}
+            onActivityConfigChange={x => setActivityConfig(index, x)}
+            findItem={findItem}
+            moveItem={moveItem} />;
+    }
+
+    return <Card sx={sx}>
         <CardContent>
             <TextField placeholder="New Lesson"
                 variant="standard"
@@ -76,11 +115,20 @@ export default function ActivityListPane(props: {
                     }
                 } }} />
             <br />
-            <Typography variant="body2" component="span">{props.date.toFormat("DDDD")}</Typography>
+            <Typography variant="body2" component="span">{date.toFormat("DDDD")}</Typography>
         </CardContent>
         <Divider />
-        <CardContent ref={drop} sx={{ overflow: "auto", px: 0 }}>
-            {activities.map(x => <ActivityDragDropBox key={x.id} data={x} findItem={findItem} moveItem={moveItem} component={x.type.configPanel} />)}
-        </CardContent>
+        <Box sx={{ backgroundColor: ({palette}) => palette.background.default, p: 1 }}>
+            <Stack direction="row" spacing={1}>
+                <IconButton><Add/></IconButton>
+                <IconButton onClick={() => addActivity(textInputDescription)}><TextFields/></IconButton>
+                <Stack direction="row" justifyContent="end" spacing={1} flexGrow={1}>
+                    <Button variant="outlined" color="error" disableRipple ref={trashDrop}>Drag here to delete</Button>
+                </Stack>
+            </Stack>
+        </Box>
+        <Box ref={drop}>
+            {activities.map(makeWidget)}
+        </Box>
     </Card>;
 }

@@ -6,7 +6,6 @@ import { AuthLevel } from "../../../websocketServer/src/types";
 import { useRTC } from "../../hooks/WebRtcHook";
 import { BrowserRunner } from "../../runner/BrowserRunner";
 import useSWR from "swr";
-import { ResponseData as MeResponseData } from "../../../pages/api/classroom/[classroom]/me";
 import { jsonFetcher } from "../../util/fetch";
 import dedent from "dedent-js";
 import tracked from "../../util/trackedEventEmitter";

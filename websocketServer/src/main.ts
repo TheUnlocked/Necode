@@ -5,15 +5,26 @@ import parseJwk from 'jose/jwk/parse';
 import * as dotenv from 'dotenv';
 import { $in, isNotNull } from '../../src/util/typeguards';
 import { Classroom } from './Classroom';
-import { createServer } from 'http';
 import { RingProtocol } from './rtc/protocols/RingProtocol';
 import { stream } from '../../src/util/iterables/Stream';
 import UserManager from './UserManager';
 import RtcManager from './rtc/RtcManager';
+import * as fs from 'fs';
 
 dotenv.config()
 
-const server = createServer();
+let server;
+
+if (process.env.USE_SSL_WEBSOCKET) {
+    server = (await import('https')).createServer({
+        key: fs.readFileSync(process.env.SSL_KEY as string),
+        cert: fs.readFileSync(process.env.SSL_CERT as string)
+    });
+}
+else {
+    server = (await import('http')).createServer();
+}
+
 server.listen(+process.env.WS_PORT!);
 
 const io: IOServer = new Server(server, {

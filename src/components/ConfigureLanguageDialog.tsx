@@ -2,14 +2,16 @@ import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogContentTe
 import { useEffect, useState } from "react";
 import LanguageDescription from "../languages/LangaugeDescription";
 
-export default function ConfigureLanguageDialog(props: {
+interface ConfigureLanguageDialogProps {
     open: boolean;
     onClose(): void;
     availableLanguages: LanguageDescription[];
     enabledLanguages: LanguageDescription[];
     unsupportedLanguages: LanguageDescription[];
     saveEnabledLanguages(languages: LanguageDescription[]): void;
-}) {
+}
+
+export default function ConfigureLanguageDialog(props: ConfigureLanguageDialogProps) {
     const {
         open,
         onClose,

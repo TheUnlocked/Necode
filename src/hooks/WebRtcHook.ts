@@ -4,7 +4,7 @@ import { AuthLevel, ClientToServerEventMap, ClientToServerOrders, ServerToClient
 import Peer from 'simple-peer';
 import tracked from '../util/trackedEventEmitter';
 
-export function useSignalingWebsocket(classroom: string) {
+export function useWebsocket(classroom: string) {
     const [wsInstance, setWs] = useState<Socket<ServerToClientEventMap, ClientToServerEventMap> | undefined>();
     const [authLevel, setAuthLevel] = useState(AuthLevel.None);
 
@@ -14,6 +14,7 @@ export function useSignalingWebsocket(classroom: string) {
     useEffect(() => {
         if (classroom) {
             const ws = io(`${window.location.hostname}:3011`, { port: '3011' }) as Socket<ServerToClientEventMap, ClientToServerEventMap>;
+            
             // let connected = false;
     
             // ws.onAny(console.log);
@@ -74,7 +75,7 @@ export function useSignalingWebsocket(classroom: string) {
 }
 
 export function useRTC<T>(classroom: string, onPeer: (peer: Peer.Instance, info: T) => void) {
-    const socketInfo = useSignalingWebsocket(classroom);
+    const socketInfo = useWebsocket(classroom);
 
     const onPeerRef = useRef(onPeer);
 

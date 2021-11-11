@@ -57,8 +57,8 @@ const testBasedActivityDescription: ActivityDescription<TestActivityConfig, [
         // Write assertions using check syntax:
         check(1 === 1);
 
-        // You can also use declare syntax to check for functions
-        // that the student needs to implement:
+        // You can also use the declare syntax to check for
+        // functions/variables that the student needs to implement:
         declare function foo(n);
         check(foo(3) === 9);
 

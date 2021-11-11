@@ -5,7 +5,6 @@ import { ClassroomMemberEntity } from "./ClassroomMemberEntity";
 
 
 export type ClassroomEntity = Entity<EntityType.Classroom, {
-    name: string;
     displayName: string;
     members?: EntityReference<ClassroomMemberEntity>[];
 }>;
@@ -17,7 +16,6 @@ export function makeClassroomEntity(classroom: Classroom, relationships: {
         type: EntityType.Classroom,
         id: classroom.id,
         attributes: {
-            name: classroom.name,
             displayName: classroom.displayName,
             members: relationships.members.map(makeEntityReferenceC(EntityType.ClassroomUser))
         }

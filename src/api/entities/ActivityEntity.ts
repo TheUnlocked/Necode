@@ -9,10 +9,11 @@ export type ActivityEntity = Entity<EntityType.Activity, {
     displayName: string;
     lesson: EntityReference<LessonEntity>;
     configuration: any;
+    supportedLanguages: string[];
 }>;
 
-export function makeActivityEntity(activity: Activity, relationships: {
-    lesson: string | LessonEntity;
+export function makeActivityEntity(activity: Activity, relationships?: {
+    lesson?: LessonEntity;
 }): ActivityEntity {
     return {
         type: EntityType.Activity,
@@ -21,7 +22,8 @@ export function makeActivityEntity(activity: Activity, relationships: {
             activityType: activity.activityType,
             displayName: activity.displayName,
             configuration: activity.configuration,
-            lesson: makeEntityReference(EntityType.Lesson, relationships.lesson)
+            supportedLanguages: activity.supportedLanguages,
+            lesson: makeEntityReference(EntityType.Lesson, relationships?.lesson ?? activity.lessonId)
         }
     };
 }

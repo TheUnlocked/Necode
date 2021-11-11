@@ -3,7 +3,6 @@ import { useRouter } from "next/router";
 import { useContext, useEffect } from "react";
 import useSWR from "swr";
 import { MetaTransformerContext } from "../../../src/contexts/MetaTransformerContext";
-import { ResponseData as MeResponseData } from "../../api/classroom/[classroom]/me";
 import { jsonFetcher } from "../../../src/util/fetch";
 import { Button, Toolbar } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
@@ -11,12 +10,14 @@ import testBasedActivityDescription from "../../../src/activities/html-test-base
 import canvasActivityDescription from "../../../src/activities/canvas";
 import { Box } from "@mui/system";
 import allLanguages from "../../../src/languages/allLanguages";
+import { Response } from "../../../src/api/Response";
+import { ClassroomMemberEntity } from "../../../src/api/entities/ClassroomMemberEntity";
 
 interface StaticProps {
-    classroom: string;
+    classroomId: string;
 }
 
-const Page: NextPage<StaticProps> = ({ classroom }) => {
+const Page: NextPage<StaticProps> = ({ classroomId }) => {
     const router = useRouter();
     const metaTransformer = useContext(MetaTransformerContext);
 
@@ -27,17 +28,17 @@ const Page: NextPage<StaticProps> = ({ classroom }) => {
     useEffect(() => {
         metaTransformer({ path: [
             { label: 'To Be Named', href: '/' },
-            { label: 'Class Name', href: `/classroom/${classroom}` },
+            { label: 'Class Name', href: `/classroom/${classroomId}` },
             { label: 'Activity Name', href: location.href }
         ] });
-    }, [metaTransformer, classroom]);
+    }, [metaTransformer, classroomId]);
 
-    const { data: me } = useSWR<MeResponseData>(`/api/classroom/${classroom}/me`, jsonFetcher);
+    const { data: me } = useSWR<Response<ClassroomMemberEntity>>(`/api/classroom/${classroomId}/me`, jsonFetcher);
     const isInstructor = me?.response === 'ok' && me.data.attributes.role === 'Instructor';
 
     return <>
         {isInstructor ? <Toolbar variant="dense" sx={{ minHeight: "36px", px: "16px !important" }}>
-            <Button size="small" startIcon={<ArrowBack/>} onClick={() => router.push(`/classroom/${classroom}/manage`)}>
+            <Button size="small" startIcon={<ArrowBack/>} onClick={() => router.push(`/classroom/${classroomId}/manage`)}>
                 Return to Manage Classroom
             </Button>
         </Toolbar> : null}
@@ -51,15 +52,16 @@ const Page: NextPage<StaticProps> = ({ classroom }) => {
             }
         }}>
             <activity.activityPage
+                id={""}
                 activityConfig={activity.defaultConfig}
-                classroom={classroom}
+                classroom={classroomId}
                 language={supportedLanguages.find(x => x.name === router.query.language) ?? supportedLanguages[0]} />
         </Box>
     </>;
 };
 
 export const getStaticProps: GetStaticProps<StaticProps> = ctx => {
-    if (typeof ctx.params?.classroom !== 'string') {
+    if (typeof ctx.params?.classroomId !== 'string') {
         return {
             notFound: true
         };
@@ -67,7 +69,7 @@ export const getStaticProps: GetStaticProps<StaticProps> = ctx => {
 
     return {
         props: {
-            classroom: ctx.params.classroom
+            classroomId: ctx.params.classroomId
         }
     };
 };

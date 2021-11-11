@@ -2,14 +2,13 @@ import { GetServerSideProps, NextPage } from "next";
 import { useRouter } from "next/router";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { MetaTransformerContext } from "../../../../../src/contexts/MetaTransformerContext";
-import { getMe } from "../../../../api/classroom/[classroom]/me";
+import $me from "../../../../api/classroom/[classroomId]/me";
 import { Button, Toolbar, Select, MenuItem, Stack, ToggleButton } from "@mui/material";
 import { ArrowBack, Code } from "@mui/icons-material";
 import testBasedActivityDescription from "../../../../../src/activities/html-test-based";
 import canvasActivityDescription from "../../../../../src/activities/canvas";
-import { Box } from "@mui/system";
+import { Box, SxProps } from "@mui/system";
 import allLanguages from "../../../../../src/languages/allLanguages";
-import { useMergeReducer } from "../../../../../src/hooks/MergeReducerHook";
 import LanguageDescription from "../../../../../src/languages/LangaugeDescription";
 import useImperativeDialog from "../../../../../src/hooks/ImperativeDialogHook";
 import sortByProperty from "../../../../../src/util/sortByProperty";
@@ -18,21 +17,21 @@ import Lazy from "../../../../../src/components/Lazy";
 import ConfigureLanguageDialog from "../../../../../src/components/ConfigureLanguageDialog";
 
 interface StaticProps {
-    classroom: string;
+    classroomId: string;
 }
 
-const Page: NextPage<StaticProps> = ({ classroom }) => {
+const Page: NextPage<StaticProps> = ({ classroomId }) => {
     const router = useRouter();
     const metaTransformer = useContext(MetaTransformerContext);
 
     useEffect(() => {
         metaTransformer({ path: [
             { label: 'To Be Named', href: '/' },
-            { label: 'Class Name', href: `/classroom/${classroom}` },
-            { label: 'Manage', href: `/classroom/${classroom}/manage` },
+            { label: 'Class Name', href: `/classroom/${classroomId}` },
+            { label: 'Manage', href: `/classroom/${classroomId}/manage` },
             { label: 'Activity Name', href: location.href }
         ] });
-    }, [metaTransformer, classroom]);
+    }, [metaTransformer, classroomId]);
 
     const activity = testBasedActivityDescription;
 
@@ -50,7 +49,7 @@ const Page: NextPage<StaticProps> = ({ classroom }) => {
         }
     }, [enabledLanguages, selectedLanguage]);
 
-    const [activityConfig, dispatchActivityConfig] = useMergeReducer(activity.defaultConfig);
+    const [activityConfig, setActivityConfig] = useState(activity.defaultConfig);
 
     const [configureLanguagesDialog, openConfigureLanguagesDialog] = useImperativeDialog(ConfigureLanguageDialog, {
         availableLanguages: supportedLanguages,
@@ -62,8 +61,8 @@ const Page: NextPage<StaticProps> = ({ classroom }) => {
     const [isPreview, setIsPreview] = useState(false);
 
     if (!activity.configPage) {
-        router.push(`/classroom/${classroom}/manage`);
-        return <></>;
+        router.push(`/classroom/${classroomId}/manage`);
+        return null;
     }
 
     return <>
@@ -75,7 +74,7 @@ const Page: NextPage<StaticProps> = ({ classroom }) => {
             flexDirection: "row",
             justifyContent: "space-between"
         }}>
-            <Button size="small" startIcon={<ArrowBack/>} onClick={() => router.push(`/classroom/${classroom}/manage`)}>
+            <Button size="small" startIcon={<ArrowBack/>} onClick={() => router.push(`/classroom/${classroomId}/manage`)}>
                 Return to Manage Classroom
             </Button>
             <Stack direction="row" spacing={1}>
@@ -97,23 +96,25 @@ const Page: NextPage<StaticProps> = ({ classroom }) => {
         <Box sx={{
             px: 2,
             pb: 2,
-            ...{ "--header-height": "100px" },
+            "--header-height": "100px",
             height: `calc(100vh - var(--header-height))`,
             "& .reflex-container > .reflex-element": {
                 overflow: "hidden"
             }
-        }}>
+        } as SxProps}>
             <Lazy show={isPreview} keepInDom>
                 <activity.activityPage
+                    id={""}
                     activityConfig={activityConfig}
-                    classroom={classroom}
+                    classroom={classroomId}
                     language={selectedLanguage} />
             </Lazy>
             <Lazy show={!isPreview}>
                 <activity.configPage
+                    id={""}
                     activityConfig={activityConfig}
-                    onActivityConfigChange={dispatchActivityConfig}
-                    classroom={classroom}
+                    onActivityConfigChange={setActivityConfig}
+                    classroom={classroomId}
                     language={selectedLanguage} />
             </Lazy>
         </Box>
@@ -121,17 +122,17 @@ const Page: NextPage<StaticProps> = ({ classroom }) => {
 };
 
 export const getServerSideProps: GetServerSideProps<StaticProps> = async ctx => {
-    const classroom = ctx.params?.classroom;
+    const classroomId = ctx.params?.classroomId;
     
-    if (typeof classroom !== 'string') {
+    if (typeof classroomId !== 'string') {
         return {
             notFound: true
         };
     }
 
-    const { content: { data } } = await getMe(ctx.req, classroom);
+    const { data } = await $me.GET.execute(ctx.req, { query: { classroomId }, body: undefined });
 
-    if (!data || data.attributes.role !== 'Instructor') {
+    if (data?.attributes.role !== 'Instructor') {
         return {
             notFound: true
         };
@@ -139,7 +140,7 @@ export const getServerSideProps: GetServerSideProps<StaticProps> = async ctx => 
 
     return {
         props: {
-            classroom
+            classroomId
         }
     };
 }

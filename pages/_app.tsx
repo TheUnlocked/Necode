@@ -18,7 +18,7 @@ import { LocalizationProvider } from '@mui/lab';
 import AdapterLuxon from '@mui/lab/AdapterLuxon';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { Box } from '@mui/system';
+import { Box, SxProps } from '@mui/system';
 
 function MyApp({ Component, pageProps }: AppProps) {
     const [meta, metaTransformer] = useMergeReducer({
@@ -47,7 +47,7 @@ function MyApp({ Component, pageProps }: AppProps) {
             <DndProvider backend={HTML5Backend}>
             <SessionProvider session={pageProps.session}>
                 <Header path={meta.path} />
-                <Box sx={{ ...{ "--header-height": "64px" } }}>
+                <Box sx={{ "--header-height": "64px" } as SxProps}>
                 <Component {...pageProps} />
                 </Box>
             </SessionProvider>

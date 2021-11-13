@@ -6,7 +6,7 @@ import LanguageDescription from "../languages/LangaugeDescription";
 export interface ActivityPageProps<ConfigData = undefined> {
     id: string;
 
-    classroom: string;
+    classroomId: string;
 
     language: LanguageDescription;
 
@@ -18,11 +18,17 @@ export interface ActivityConfigPageProps<ConfigData = undefined> extends Activit
 }
 
 export interface ActivityConfigWidgetProps<ConfigData = undefined> extends Omit<ActivityConfigPageProps<ConfigData>, 'language'> {
+    goToConfigPage: (() => void) | undefined;
+    
     dragHandle: ConnectDragSource;
+
+    activity: ActivityDescription<ConfigData>;
 }
 
 interface ActivityDescription<ConfigData, Features extends FeatureDescription<any>[] = FeatureDescription<any>[]> {
     id: string;
+
+    displayName: string;
     
     supportedFeatures: Features;
 

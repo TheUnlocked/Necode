@@ -145,22 +145,24 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
 
         const applyChangesRef = useRef<(type: EditorType, value: string) => void>(() => {});
         const applyChanges = useCallback((type: EditorType) => {
-            // currently only CSS is supported for hot reload
-            if (type === 'css') {
-                dispatchEditorsState({
-                    target: type,
-                    type: 'applyChanges',
-                    resolve: ({value}) => applyChangesRef.current(type, value)
-                });
+            if (activityConfig[type].enabled) {
+                // currently only CSS is supported for hot reload
+                if (type === 'css') {
+                    dispatchEditorsState({
+                        target: type,
+                        type: 'applyChanges',
+                        resolve: ({value}) => applyChangesRef.current(type, value)
+                    });
+                }
+                else {
+                    dispatchEditorsState({
+                        target: type,
+                        type: 'applyChanges',
+                        resolve: reload
+                    });
+                }
             }
-            else {
-                dispatchEditorsState({
-                    target: type,
-                    type: 'applyChanges',
-                    resolve: reload
-                });
-            }
-        }, []);
+        }, [activityConfig]);
 
         const startTests = useRef(() => {});
         const passTests = useRef(() => {});

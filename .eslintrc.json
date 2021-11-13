@@ -1,3 +1,18 @@
 {
-  "extends": "next/core-web-vitals"
+  "extends": "next/core-web-vitals",
+  "plugins": ["@grncdr/react-hooks"],
+  "rules": {
+    "react-hooks/rules-of-hooks": "off",
+    "react-hooks/exhaustive-deps": "off",
+    "@grncdr/react-hooks/rules-of-hooks": "error",
+    "@grncdr/react-hooks/exhaustive-deps": [
+      "warn",
+      {
+        "staticHooks": {
+          "useMergeReducer": [false, true],
+          "useDirty": [false, true, true, false, true]
+        }
+      }
+    ]
+  }
 }

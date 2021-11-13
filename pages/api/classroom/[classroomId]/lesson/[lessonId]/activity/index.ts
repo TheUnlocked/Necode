@@ -1,10 +1,10 @@
 import Joi from "joi";
 import { endpoint, Status } from "../../../../../../../src/api/Endpoint";
 import { ActivityEntity, makeActivityEntity } from "../../../../../../../src/api/entities/ActivityEntity";
-import { isInstructor } from "../../../../../../../src/api/validators";
+import { isInstructor } from "../../../../../../../src/api/server/validators";
 import { prisma } from "../../../../../../../src/db/prisma";
 
-const handler = endpoint(makeActivityEntity, ['classroomId', 'lessonId'] as const, {
+const apiActivityAll = endpoint(makeActivityEntity, ['classroomId', 'lessonId'] as const, {
     type: 'entityType',
     GET: {
         loginValidation: true,
@@ -36,7 +36,7 @@ const handler = endpoint(makeActivityEntity, ['classroomId', 'lessonId'] as cons
                     lessonId,
                     activityType,
                     displayName: 'placeholder',
-                    configuration: configuration,
+                    configuration: configuration ?? undefined,
                     supportedLanguages: [],
                     order: await prisma.activity.count({ where: { lessonId } })
                 }
@@ -47,4 +47,4 @@ const handler = endpoint(makeActivityEntity, ['classroomId', 'lessonId'] as cons
     }
 });
 
-export default handler;
+export default apiActivityAll;

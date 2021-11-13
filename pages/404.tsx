@@ -2,7 +2,7 @@ import { NextPage } from "next";
 import { Stack, Typography, Link } from "@mui/material";
 import { MouseEvent } from "react";
 
-const ErrorPage: NextPage = () => {
+const NotFoundPage: NextPage = () => {
     function goBack(e: MouseEvent) {
         e.preventDefault();
         window.history.back();
@@ -25,4 +25,4 @@ const ErrorPage: NextPage = () => {
     </Stack>;
 };
 
-export default ErrorPage;
+export default NotFoundPage;

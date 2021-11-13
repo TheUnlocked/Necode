@@ -1,17 +1,14 @@
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { useRouter } from "next/router";
 import { useContext, useEffect } from "react";
-import useSWR from "swr";
 import { MetaTransformerContext } from "../../../src/contexts/MetaTransformerContext";
-import { jsonFetcher } from "../../../src/util/fetch";
 import { Button, Toolbar } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
 import testBasedActivityDescription from "../../../src/activities/html-test-based";
-import canvasActivityDescription from "../../../src/activities/canvas";
 import { Box } from "@mui/system";
 import allLanguages from "../../../src/languages/allLanguages";
-import { Response } from "../../../src/api/Response";
 import { ClassroomMemberEntity } from "../../../src/api/entities/ClassroomMemberEntity";
+import useGetRequest from "../../../src/api/client/GetRequestHook";
 
 interface StaticProps {
     classroomId: string;
@@ -33,8 +30,8 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
         ] });
     }, [metaTransformer, classroomId]);
 
-    const { data: me } = useSWR<Response<ClassroomMemberEntity>>(`/api/classroom/${classroomId}/me`, jsonFetcher);
-    const isInstructor = me?.response === 'ok' && me.data.attributes.role === 'Instructor';
+    const { data: me } = useGetRequest<ClassroomMemberEntity>(`/api/classroom/${classroomId}/me`);
+    const isInstructor = me?.attributes.role === 'Instructor';
 
     return <>
         {isInstructor ? <Toolbar variant="dense" sx={{ minHeight: "36px", px: "16px !important" }}>
@@ -54,7 +51,7 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
             <activity.activityPage
                 id={""}
                 activityConfig={activity.defaultConfig}
-                classroom={classroomId}
+                classroomId={classroomId}
                 language={supportedLanguages.find(x => x.name === router.query.language) ?? supportedLanguages[0]} />
         </Box>
     </>;

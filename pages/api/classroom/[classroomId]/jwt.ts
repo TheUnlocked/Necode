@@ -7,7 +7,7 @@ import { AuthLevel } from '../../../../websocketServer/src/types';
 import { endpoint, EndpointMap } from '../../../../src/api/Endpoint';
 
 
-export default async function handler(
+export default async function apiClassroomJwt(
     req: NextApiRequest,
     res: NextApiResponse<string>
 ) {

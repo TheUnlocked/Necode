@@ -29,3 +29,13 @@ export function flip(b: boolean) {
 export function make<T extends Function>(base: (cb: T) => void, action: T) {
     return () => base(action);
 }
+
+export function callWith<T extends (...args: any) => any>(...args: Parameters<T>) {
+    return function(this: any, fn: T) {
+        return fn.apply(this, args);
+    } as (fn: T) => ReturnType<T>;
+}
+
+export function $const<T>(x: T) {
+    return () => x;
+}

@@ -1,16 +1,13 @@
 import { ClickAwayListener, Grow, IconButton, MenuItem, MenuList, Paper, Popper, Stack, TextField, Theme } from "@mui/material";
 import { useState } from "react";
-import { SxProps } from "@mui/system";
-import { Code as CodeIcon, DragIndicator, TextFields as TextFieldsIcon } from "@mui/icons-material";
-import { ConnectDragSource, useDrag } from "react-dnd"
+import { Box, SxProps } from "@mui/system";
+import { Code as CodeIcon, TextFields as TextFieldsIcon } from "@mui/icons-material";
 import Editor from "@monaco-editor/react";
 import { usePopupState, bindTrigger, bindPopper } from "material-ui-popup-state/hooks";
-import DragHandle from "./DragHandle";
+import DragHandle, { dragHandleClass, dragHandleSelector } from "./DragHandle";
 import { editor } from "monaco-editor";
 import { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
 import allLanguages from "../../languages/allLanguages";
-import { plainTextDescription } from "../../languages/plaintext";
-import LanguageDescription from "../../languages/LangaugeDescription";
 
 export interface TextInputWidgetProps {
     value: string;
@@ -70,15 +67,15 @@ export default function TextInputWidget({
             px: 1,
             height: editorHeight + 16,
             overflow: "hidden",
-            "& .show-on-hover": {
+            [`& ${dragHandleSelector}`]: {
                 visibility: languageSelectPopup.isOpen ? "visible" : "hidden"
             },
-            "&:hover .show-on-hover": {
+            [`&:hover ${dragHandleSelector}`]: {
                 visibility: "visible"
             },
             ...border
         }}>
-            <DragHandle innerRef={dragHandle} iconProps={{ className: "show-on-hover", sx: { mr: 0.5 } }} />
+            <DragHandle innerRef={dragHandle} iconProps={{ sx: { mr: 0.5 } }} />
             <Editor
                 height={editorHeight}
                 value={value} onChange={x => onValueChange(x ?? "")}
@@ -100,8 +97,9 @@ export default function TextInputWidget({
                     hideCursorInOverviewRuler: true,
                     overviewRulerBorder: false,
                     renderIndentGuides: false,
+                    fontSize: 15
                 } as editor.IStandaloneEditorConstructionOptions} />
-            <span><IconButton size="small" className="show-on-hover" sx={{ ml: 0.5 }}
+            <span><IconButton size="small" className={dragHandleClass} sx={{ ml: 0.5 }}
                 {...bindTrigger(languageSelectPopup)}>{languageDescription?.icon ?? <CodeIcon/>}</IconButton></span>
             <Popper {...bindPopper(languageSelectPopup)}
                 placement="left" transition>
@@ -118,8 +116,8 @@ export default function TextInputWidget({
                     </Grow>
                 </ClickAwayListener>}
             </Popper>
-            <IconButton size="small" className="show-on-hover" onClick={() => changeLanguage(null)}><TextFieldsIcon/></IconButton>
-        </Stack>
+            <IconButton size="small" className={dragHandleClass} onClick={() => changeLanguage(null)}><TextFieldsIcon/></IconButton>
+        </Stack>;
     }
 
     return <TextField
@@ -130,17 +128,17 @@ export default function TextInputWidget({
             sx: {
                 px: 1,
                 py: 0,
-                "& .show-on-hover": {
+                [`& ${dragHandleSelector}`]: {
                     visibility: languageSelectPopup.isOpen ? "visible" : "hidden"
                 },
-                "&:hover .show-on-hover": {
+                [`&:hover ${dragHandleSelector}`]: {
                     visibility: "visible"
                 },
                 backgroundColor: "transparent !important",
                 ...border,
-                fontSize: ({typography}) => typography.body2.fontSize
+                fontSize: ({typography}) => typography.body1.fontSize
             },
-            startAdornment: <DragHandle innerRef={dragHandle} iconProps={{ className: "show-on-hover", sx: { mr: 1 } }} />,
-            endAdornment: <IconButton size="small" className="show-on-hover" onClick={() => changeLanguage('plaintext')}><CodeIcon/></IconButton>
+            startAdornment: <DragHandle innerRef={dragHandle} iconProps={{ sx: { mr: 1 } }} />,
+            endAdornment: <IconButton size="small" className={dragHandleClass} onClick={() => changeLanguage('plaintext')}><CodeIcon/></IconButton>
         }} />;
 };

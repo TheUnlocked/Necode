@@ -1,11 +1,11 @@
 import { NextApiResponse } from "next";
 
-interface SuccessfulResponse<T> {
+export interface SuccessfulResponse<T> {
     response: 'ok';
     data: T;
     message?: undefined;
 }
-interface UnsuccessfulResponse {
+export interface UnsuccessfulResponse {
     response: 'error';
     data?: undefined;
     message: string;

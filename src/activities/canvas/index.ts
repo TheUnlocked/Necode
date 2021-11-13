@@ -6,6 +6,7 @@ const canvasActivityDescription: ActivityDescription<undefined, [
     typeof supportsEntryPoint
 ]> = {
     id: 'canvas:ring',
+    displayName: 'Canvas Ring',
     supportedFeatures: [
         supportsEntryPoint
     ],

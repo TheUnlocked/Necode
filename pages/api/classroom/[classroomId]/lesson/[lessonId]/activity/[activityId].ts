@@ -1,9 +1,9 @@
 import { makeActivityEntity } from "../../../../../../../src/api/entities/ActivityEntity";
 import { endpoint, Status } from "../../../../../../../src/api/Endpoint";
-import { isInstructor } from "../../../../../../../src/api/validators";
+import { isInstructor } from "../../../../../../../src/api/server/validators";
 import { prisma } from "../../../../../../../src/db/prisma";
 
-const handler = endpoint(makeActivityEntity, ['classroomId', 'lessonId', 'activityId'] as const, {
+const apiActivityOne = endpoint(makeActivityEntity, ['classroomId', 'lessonId', 'activityId'] as const, {
     type: 'entity',
     GET: {
         loginValidation: true,
@@ -39,4 +39,4 @@ const handler = endpoint(makeActivityEntity, ['classroomId', 'lessonId', 'activi
     }
 });
 
-export default handler;
+export default apiActivityOne;

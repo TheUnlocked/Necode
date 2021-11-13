@@ -7,3 +7,7 @@ export function isNotNull<T>(x: T): x is NonNullable<T> {
 }
 
 export function typeAssert(condition: boolean): asserts condition { }
+
+export function singleArg<T extends (arg: A, ...rest: undefined[]) => R, A, R>(f: T) {
+    return f as (arg: A) => R;
+}

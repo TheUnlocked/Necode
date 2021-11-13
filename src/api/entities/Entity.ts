@@ -4,8 +4,6 @@ export enum EntityType {
     ClassroomUser = 'user/classroom',
     Classroom = 'classroom',
     Lesson = 'lesson',
-    /** inherits from lesson */
-    PlannedLesson = 'lesson/planned',
     Activity = 'activity',
 }
 

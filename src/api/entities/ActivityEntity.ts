@@ -6,7 +6,7 @@ import { LessonEntity } from "./LessonEntity";
 
 export type ActivityEntity = Entity<EntityType.Activity, {
     activityType: string;
-    displayName: string;
+    // displayName: string;
     lesson: EntityReference<LessonEntity>;
     configuration: any;
     supportedLanguages: string[];
@@ -20,7 +20,7 @@ export function makeActivityEntity(activity: Activity, relationships?: {
         id: activity.id,
         attributes: {
             activityType: activity.activityType,
-            displayName: activity.displayName,
+            // displayName: activity.displayName,
             configuration: activity.configuration,
             supportedLanguages: activity.supportedLanguages,
             lesson: makeEntityReference(EntityType.Lesson, relationships?.lesson ?? activity.lessonId)

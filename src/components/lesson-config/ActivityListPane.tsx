@@ -1,45 +1,213 @@
-import { Add, TextFields } from "@mui/icons-material";
-import { Button, Card, CardContent, Divider, IconButton, Paper, Stack, TextField, Typography } from "@mui/material";
+import { Add, Delete, TextFields } from "@mui/icons-material";
+import { Button, Card, CardContent, Divider, IconButton, Stack, TextField, Typography } from "@mui/material";
 import { Box, SxProps } from "@mui/system";
-import { DateTime } from "luxon";
-import { useCallback, useState } from "react";
+import { nanoid } from "nanoid";
+import { Dispatch, MutableRefObject, useCallback, useEffect, useRef, useState } from "react";
 import { useDrop } from "react-dnd";
 import ActivityDescription from "../../activities/ActivityDescription";
 import allActivities from "../../activities/allActivities";
+import testBasedActivityDescription from "../../activities/html-test-based";
+import useGetRequest from "../../api/client/GetRequestHook";
+import { useLoadingContext } from "../../api/client/LoadingContext";
 import { ActivityEntity } from "../../api/entities/ActivityEntity";
+import { LessonEntity } from "../../api/entities/LessonEntity";
+import { Response } from "../../api/Response";
+import useDirty from "../../hooks/DirtyHook";
+import { useMergeReducer } from "../../hooks/MergeReducerHook";
+import { Iso8601Date, toLuxon } from "../../util/iso8601";
 import { ActivityDragDropBox, activityDragDropType } from "./ActivityDragDropBox";
-import DefaultActivityWidget from "./DefaultActivityWidget";
-import textInputDescription from "./textInputDescription";
+import SkeletonActivityListPane from "./SkeletonActivityListPane";
+import BrokenWidget from "./BrokenWidget";
+import NoopActivity from "./NoopActivity";
+import textInputActivityDescription from "./textInputDescription";
+import useImperativeDialog from "../../hooks/ImperativeDialogHook";
+import SelectActivityDialog from "./SelectActivityDialog";
 
-function getActivityDescription(name: string) {
-    return allActivities.find(x => x.id === name);
+export interface LocalActivity {
+    id: string;
+    activityType: ActivityDescription<any>;
+    configuration: any;
+    supportedLanguages: string[];
+}
+
+type LocalActivityReference = (LocalActivity & { isReference?: false }) | ({ id: string, isReference: true } & Partial<LocalActivity>);
+
+function activityEntityToLocal(entity: ActivityEntity): LocalActivity {
+    let activity = entity.attributes.activityType === textInputActivityDescription.id
+        ? textInputActivityDescription
+        : allActivities.find(x => x.id === entity.attributes.activityType);
+
+    if (!activity) {
+        activity = {
+            id: entity.attributes.activityType,
+            displayName: 'Unknown Activity',
+            defaultConfig: undefined,
+            supportedFeatures: [],
+            activityPage: NoopActivity,
+            configWidget: BrokenWidget
+        };
+    }
+
+    return {
+        id: entity.id,
+        activityType: activity,
+        configuration: entity.attributes.configuration,
+        supportedLanguages: entity.attributes.supportedLanguages
+    };
 }
 
 interface ActivityListPaneProps {
-    sx: SxProps,
-    date: DateTime,
-    classroom: string
+    sx: SxProps;
+    date: Iso8601Date;
+    classroomId: string;
+    onLessonChange?: Dispatch<LessonEntity | undefined>;
+    saveRef?: MutableRefObject<(() => void) | undefined>;
 }
 
 export default function ActivityListPane({
     sx,
-    classroom,
-    date
+    classroomId,
+    date,
+    onLessonChange,
+    saveRef: foreignSaveRef
 }: ActivityListPaneProps) {
+    const onLessonChangeRef = useRef(onLessonChange);
+    useEffect(() => void (onLessonChangeRef.current = onLessonChange), [onLessonChange]);
+    
+    const [isDirty, markDirty, clearDirty, dirtyCounter] = useDirty();
+
     const [, drop] = useDrop(() => ({ accept: activityDragDropType }));
 
-    const [, trashDrop] = useDrop<ActivityEntity, unknown, unknown>(() => ({
+    const [{ isDragging }, trashDrop] = useDrop(() => ({
         accept: activityDragDropType,
-        drop(item) {
+        collect(monitor) {
+            return {
+                isDragging: Boolean(monitor.getItem())
+            };
+        },
+        drop(item: LocalActivity) {
+            markDirty();
             setActivities(activities => activities.filter(x => x.id !== item.id));
         }
     }));
 
     async function addActivity(activity: ActivityDescription<any>) {
-        
+        const id = `%local_${nanoid()}`;
+        setActivities(x => {
+            const newActivities = x.concat({
+                id,
+                isReference: false,
+                activityType: activity,
+                configuration: activity.defaultConfig,
+                supportedLanguages: []
+            });
+            return newActivities;
+        });
+        markDirty();
     }
 
-    const [activities, setActivities] = useState<ActivityEntity[]>([]);
+    const [activities, setActivities] = useState<LocalActivityReference[]>([]);
+
+    const { data: lessonEntity, error: lessonEntityError, isValidating } = useGetRequest<LessonEntity<true>>(`/api/classroom/${classroomId}/lesson/${date}`, {
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false
+    });
+    const isLoading = (!lessonEntity && !lessonEntityError) || isValidating;
+
+    const [{ id: lessonId, displayName }, modifyActivity] = useMergeReducer<{
+        id: string | undefined,
+        displayName: string
+    }>({ id: undefined, displayName: '' });
+
+    useEffect(() => {
+        if (lessonEntity) {
+            onLessonChangeRef.current?.(lessonEntity);
+            modifyActivity({ id: lessonEntity.id, displayName: lessonEntity.attributes.displayName });
+            setActivities(lessonEntity.attributes.activities.map(activityEntityToLocal));
+
+            clearDirty();
+        }
+        else if (lessonEntityError) {
+            onLessonChangeRef.current?.(undefined);
+            modifyActivity({ id: undefined, displayName: '' });
+            setActivities([]);
+
+            clearDirty();
+        }
+    }, [lessonEntity, lessonEntityError]);
+
+    const { startUpload, finishUpload } = useLoadingContext();
+
+    const save = useCallback(() => {
+        if (isLoading) {
+            // can't save while loading
+            return;
+        }
+
+        if (!classroomId) {
+            return;
+        }
+
+        if (activities.length === 0 && displayName === '') {
+            if (lessonId) {
+                // Delete lesson
+                onLessonChange?.(undefined);
+                clearDirty();
+                startUpload();
+                return fetch(`/api/classroom/${classroomId}/lesson/${lessonId}`, { method: 'DELETE' })
+                    .finally(finishUpload);
+            }
+            return;
+        }
+
+        startUpload();
+                    
+        const body = JSON.stringify({
+            date,
+            displayName,
+            activities: activities.map<Partial<ActivityEntity['attributes']> & { id: string | undefined }>(x => ({
+                id: x.id.startsWith('%local') ? undefined : x.id,
+                activityType: x.activityType?.id,
+                configuration: x.configuration,
+                supportedLanguages: x.supportedLanguages
+            }))
+        } as LessonEntity['attributes']);
+
+        let req: Promise<Response<LessonEntity<true>>>;
+        
+        if (lessonId) {
+            req = fetch(`/api/classroom/${classroomId}/lesson/${lessonId}`, {
+                method: 'PUT',
+                body
+            }).then(x => x.json());
+        }
+        else {
+            req = fetch(`/api/classroom/${classroomId}/lesson`, {
+                method: 'POST',
+                body
+            }).then(x => x.json());
+        }
+
+        clearDirty();
+        return req
+            .then(x => onLessonChange?.(x.data))
+            .finally(finishUpload);
+    }, [date, classroomId, lessonId, displayName, activities, isLoading, onLessonChange, startUpload, finishUpload]);
+
+    const saveRef = useRef(save);
+    useEffect(() => {
+        saveRef.current = save;
+        if (foreignSaveRef) {
+            foreignSaveRef.current = save;
+        }
+    }, [save, foreignSaveRef]);
+
+    useEffect(() => {
+        if (dirtyCounter) {
+            const timer = setTimeout(saveRef.current, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [dirtyCounter]);
 
     const findItem = useCallback((id: string) => {
         return { index: activities.findIndex(x => x.id === id) };
@@ -47,88 +215,110 @@ export default function ActivityListPane({
 
     const moveItem = useCallback((id: string, to: number) => {
         const newArr = [...activities];
-        const [oldElt] = newArr.splice(activities.findIndex(x => x.id === id), 1);
+        const from = activities.findIndex(x => x.id === id);
+        const [oldElt] = newArr.splice(from, 1);
         newArr.splice(to, 0, oldElt);
         setActivities(newArr);
+        markDirty();
     }, [activities]);
 
     function setActivityConfig(index: number, activityConfig: any) {
-        setActivities([
+        const newActivities = [
             ...activities.slice(0, index),
             {
                 ...activities[index],
-                attributes: {
-                    ...activities[index].attributes,
-                    configuration: activityConfig
-                }
+                configuration: activityConfig
             },
             ...activities.slice(index + 1)
-        ]);
+        ];
+        setActivities(newActivities);
+        markDirty();
     }
 
-    function makeWidget(activityEntity: ActivityEntity, index: number) {
-        const activity = getActivityDescription(activityEntity.attributes.activityType);
+    const [selectActivityDialog, openSelectActivityDialog] = useImperativeDialog(SelectActivityDialog, {
+        onSelectActivity: addActivity
+    });
 
-        if (!activity) {
-            console.error(`Invalid entity type ${activityEntity.attributes.activityType}`);
-            return null;
+    if (isLoading) {
+        return <SkeletonActivityListPane sx={sx} />;
+    }
+
+    function makeWidget(activityEntity: LocalActivityReference, index: number) {
+        if (activityEntity.isReference) {
+            return <ActivityDragDropBox
+                key={activityEntity.id}
+                id={activityEntity.id}
+                skeleton={true}
+                classroomId={classroomId}
+                findItem={findItem}
+                moveItem={moveItem} />;
         }
 
         return <ActivityDragDropBox
             key={activityEntity.id}
             id={activityEntity.id}
-            activity={activity}
-            classroom={classroom}
-            activityConfig={activityEntity.attributes.configuration}
+            skeleton={false}
+            activity={activityEntity.activityType}
+            classroomId={classroomId}
+            activityConfig={activityEntity.configuration}
             onActivityConfigChange={x => setActivityConfig(index, x)}
             findItem={findItem}
             moveItem={moveItem} />;
     }
 
-    return <Card sx={sx}>
-        <CardContent>
-            <TextField placeholder="New Lesson"
-                variant="standard"
-                hiddenLabel
-                fullWidth
-                InputProps={{ disableUnderline: true, sx: {
-                    fontFamily: ({ typography: { h6: { fontFamily } } }) => fontFamily,
-                    fontSize: ({ typography: { h6: { fontSize } } }) => fontSize,
-                    fontWeight: ({ typography: { h6: { fontWeight } } }) => fontWeight,
-                    letterSpacing: ({ typography: { h6: { letterSpacing } } }) => letterSpacing,
-                    lineHeight: ({ typography: { h6: { lineHeight } } }) => lineHeight,
-                    "&:hover:after": {
-                        backgroundColor: ({palette}) => palette.action.hover,
-                        borderRadius: 1
-                    },
-                    "&:after": {
-                        content: "''",
-                        position: "absolute",
-                        width: ({ spacing }) => `calc(100% + ${spacing(2)})`,
-                        height: "100%",
-                        mx: -1,
-                        borderRadius: 1,
-                        transition: ({transitions}) => transitions.create('background-color', {
-                            duration: transitions.duration.shorter,
-                            easing: transitions.easing.easeOut
-                        })
-                    }
-                } }} />
-            <br />
-            <Typography variant="body2" component="span">{date.toFormat("DDDD")}</Typography>
-        </CardContent>
-        <Divider />
-        <Box sx={{ backgroundColor: ({palette}) => palette.background.default, p: 1 }}>
-            <Stack direction="row" spacing={1}>
-                <IconButton><Add/></IconButton>
-                <IconButton onClick={() => addActivity(textInputDescription)}><TextFields/></IconButton>
-                <Stack direction="row" justifyContent="end" spacing={1} flexGrow={1}>
-                    <Button variant="outlined" color="error" disableRipple ref={trashDrop}>Drag here to delete</Button>
+    return <>
+        {selectActivityDialog}
+        <Card sx={sx}>
+            <CardContent>
+                <TextField placeholder="New Lesson"
+                    variant="standard"
+                    hiddenLabel
+                    fullWidth
+                    value={displayName}
+                    onChange={e => {
+                        if (e.target.value.length <= 100) {
+                            modifyActivity({ displayName: e.target.value });
+                            markDirty();
+                        }
+                    }}
+                    InputProps={{ disableUnderline: true, sx: ({ typography, transitions }) => ({
+                        ...typography.h6,
+                        "&:hover:after": {
+                            backgroundColor: ({palette}) => palette.action.hover,
+                            borderRadius: 1
+                        },
+                        "&:after": {
+                            content: "''",
+                            position: "absolute",
+                            width: ({ spacing }) => `calc(100% + ${spacing(2)})`,
+                            height: "100%",
+                            pointerEvents: "none",
+                            mx: -1,
+                            borderRadius: 1,
+                            transition: transitions.create("background-color", {
+                                duration: transitions.duration.shorter,
+                                easing: transitions.easing.easeOut
+                            })
+                        }
+                    }) }} />
+                <Typography variant="body2" component="span">{toLuxon(date).toFormat("DDDD")}</Typography>
+            </CardContent>
+            <Divider />
+            <Box sx={{ backgroundColor: ({palette}) => palette.background.default, p: 1 }}>
+                <Stack direction="row" spacing={1}>
+                    <IconButton onClick={openSelectActivityDialog}><Add/></IconButton>
+                    <IconButton onClick={() => addActivity(textInputActivityDescription)}><TextFields/></IconButton>
+                    <Stack direction="row" justifyContent="end" spacing={1} flexGrow={1}>
+                        {isDragging
+                            ? <Button ref={trashDrop} variant="contained" color="error" disableRipple
+                                startIcon={<Delete/>}>Delete</Button>
+                            : undefined}
+                    </Stack>
                 </Stack>
+            </Box>
+            <Stack ref={drop} sx={{ p: 1, overflow: "auto" }} spacing={1}>
+                {activities.map(makeWidget)}
             </Stack>
-        </Box>
-        <Box ref={drop}>
-            {activities.map(makeWidget)}
-        </Box>
-    </Card>;
+        </Card>
+    </>;
 }

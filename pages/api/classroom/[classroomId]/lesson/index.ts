@@ -1,12 +1,13 @@
 import Joi from "joi";
 import { endpoint, Status } from "../../../../../src/api/Endpoint";
-import { ActivityEntity } from "../../../../../src/api/entities/ActivityEntity";
+import { ActivityEntity, makeActivityEntity } from "../../../../../src/api/entities/ActivityEntity";
 import { LessonEntity, makeLessonEntity } from "../../../../../src/api/entities/LessonEntity";
-import { isInstructor } from "../../../../../src/api/validators";
+import { isInstructor } from "../../../../../src/api/server/validators";
 import { prisma } from "../../../../../src/db/prisma";
 import { iso8601DateRegex } from "../../../../../src/util/iso8601";
+import { singleArg } from "../../../../../src/util/typeguards";
 
-const handler = endpoint(makeLessonEntity, ['classroomId'] as const, {
+const apiLessonAll = endpoint(makeLessonEntity, ['classroomId'] as const, {
     type: 'entityType',
     GET: {
         loginValidation: true,
@@ -26,13 +27,13 @@ const handler = endpoint(makeLessonEntity, ['classroomId'] as const, {
     POST: {
         loginValidation: true,
         schema: Joi.object<LessonEntity['attributes']>({
-            /** ISO-8601 Date only, will break in 8000 years */
             date: Joi.string().regex(iso8601DateRegex),
-            displayName: Joi.string().max(100),
+            displayName: Joi.string().allow('').max(100),
             activities: Joi.array()
                 .items(Joi.object<ActivityEntity['attributes']>({
                     activityType: Joi.string(),
-                    configuration: Joi.any()
+                    configuration: Joi.any().optional(),
+                    supportedLanguages: Joi.array().items(Joi.string())
                 }))
                 .optional()
         }),
@@ -41,11 +42,11 @@ const handler = endpoint(makeLessonEntity, ['classroomId'] as const, {
                 return fail(Status.FORBIDDEN);
             }
 
-            if (await prisma.lesson.findFirst({ select: {}, where: { classroomId, date: new Date(date) } })) {
+            if (await prisma.lesson.count({ where: { classroomId, date: new Date(date) } }) > 0) {
                 return fail(Status.BAD_REQUEST, `A lesson already exists on ${date}`);
             }
 
-            const [lesson, activityIds] = await prisma.$transaction(async () => {
+            const [lesson, acts] = await prisma.$transaction(async () => {
                 const lesson = await prisma.lesson.create({
                     data: {
                         displayName,
@@ -55,28 +56,27 @@ const handler = endpoint(makeLessonEntity, ['classroomId'] as const, {
                 });
 
                 await prisma.activity.createMany({
-                    data: (activities as ActivityEntity[]).map((x, i) => ({
+                    data: (activities as unknown as (ActivityEntity['attributes'])[]).map((x, i) => ({
                         lessonId: lesson.id,
-                        activityType: x.attributes.activityType,
+                        activityType: x.activityType,
                         displayName: 'placeholder',
-                        configuration: x.attributes.configuration,
-                        supportedLanguages: [],
+                        configuration: x.configuration,
+                        supportedLanguages: x.supportedLanguages,
                         order: i
                     }))
                 });
 
-                const activityIds = await prisma.activity.findMany({
-                    select: { id: true },
+                const acts = await prisma.activity.findMany({
                     where: { lessonId: lesson.id },
                     orderBy: { order: 'asc' }
                 });
 
-                return [lesson, activityIds] as const;
+                return [lesson, acts] as const;
             });
 
-            ok(makeLessonEntity(lesson, { activities: activityIds.map(x => x.id) }))
+            return ok(makeLessonEntity(lesson, { activities: acts.map(singleArg(makeActivityEntity)) }));
         }
     }
 });
 
-export default handler;
+export default apiLessonAll;

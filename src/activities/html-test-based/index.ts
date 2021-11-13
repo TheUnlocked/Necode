@@ -10,6 +10,7 @@ const testBasedActivityDescription: ActivityDescription<TestActivityConfig, [
     typeof supportsIsolated
 ]> = {
     id: 'testbased:html',
+    displayName: 'DOM Programming',
     supportedFeatures: [
         supportsAmbient,
         supportsIsolated

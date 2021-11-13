@@ -12,7 +12,7 @@ const HiddenLink = styled(Link)(({ theme }) => `
     text-decoration-color: ${theme.palette.text.primary};
 `);
 
-const ErrorPage: NextPage = () => {
+const InternalServerErrorPage: NextPage = () => {
     function goBack(e: MouseEvent) {
         e.preventDefault();
         window.history.back();
@@ -45,4 +45,4 @@ const ErrorPage: NextPage = () => {
     </Stack>;
 };
 
-export default ErrorPage;
+export default InternalServerErrorPage;

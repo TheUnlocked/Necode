@@ -1,35 +1,43 @@
 import { Box } from "@mui/system";
-import { ComponentType, useState } from "react";
-import { useDrag, useDrop } from "react-dnd";
+import { useRouter } from "next/router";
+import { ComponentType, ReactElement, Ref, useRef, useState } from "react";
+import { ConnectableElement, useDrag, useDrop } from "react-dnd";
 import ActivityDescription, { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
 import { ActivityEntity } from "../../api/entities/ActivityEntity";
 import LanguageDescription from "../../languages/LangaugeDescription";
 import { compose } from "../../util/fp";
+import { LocalActivity } from "./ActivityListPane";
 import DefaultActivityWidget from "./DefaultActivityWidget";
+import SkeletonWidget from "./SkeletonWidget";
 
 export const activityDragDropType = 'application/lesson-activity+json';
 
 export type DraggableComponent = ComponentType<ActivityConfigWidgetProps<any>>;
 
-interface ActivityDragDropBoxProps {
-    activity: ActivityDescription<any>,
+interface BaseActivityDragDropBoxProps {
     id: string;
-    classroom: string;
-    activityConfig: any;
-    onActivityConfigChange: (newConfig: any) => void;
+    classroomId: string;
     moveItem: (id: string, to: number) => void,
     findItem: (id: string) => { index: number },
 }
 
-export function ActivityDragDropBox({
-    activity,
-    id,
-    classroom,
-    activityConfig,
-    onActivityConfigChange,
-    moveItem,
-    findItem
-}: ActivityDragDropBoxProps) {
+interface SkeletonActivityDragDropBoxProps extends BaseActivityDragDropBoxProps {
+    skeleton: true;
+}
+
+interface RealActivityDragDropBoxProps extends BaseActivityDragDropBoxProps {
+    skeleton: false;
+    activity: ActivityDescription<any>;
+    activityConfig: any;
+    onActivityConfigChange: (newConfig: any) => void;
+}
+
+type ActivityDragDropBoxProps<IsSkeleton extends boolean>
+    = IsSkeleton extends true ? SkeletonActivityDragDropBoxProps : RealActivityDragDropBoxProps;
+
+export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityDragDropBoxProps<IsSkeleton>) {
+    const { id, classroomId, moveItem, findItem } = props;
+
     const originalIndex = findItem(id).index;
 
     const [{ isDragging }, drag, dragPreview] = useDrag(() => ({
@@ -47,25 +55,74 @@ export function ActivityDragDropBox({
         }
     }), [id, originalIndex, moveItem]);
 
-    const [, drop] = useDrop<ActivityEntity, unknown, unknown>(() => ({
+    const boxRef = useRef<Element | null>(null);
+    function setBoxRef(x: ConnectableElement) {
+        boxRef.current = x as Element;
+        return x;
+    }
+
+    const [, drop] = useDrop<LocalActivity, unknown, unknown>(() => ({
         accept: activityDragDropType,
         canDrop: () => false,
-        hover({ id: draggedId }) {
+        hover({ id: draggedId }, monitor) {
             if (draggedId !== id) {
-                const { index: overIndex } = findItem(id);
-                moveItem(draggedId, overIndex);
+                const { index: dragIndex } = findItem(draggedId);
+                const hoverIndex = originalIndex;
+
+                // Determine rectangle on screen
+                const hoverBoundingRect = boxRef.current!.getBoundingClientRect()
+
+                // Get vertical middle
+                const hoverMiddleY =
+                    (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2
+
+                // Determine mouse position
+                const clientOffset = monitor.getClientOffset()
+
+                // Get pixels to the top
+                const hoverClientY = clientOffset!.y - hoverBoundingRect.top
+
+                // Only perform the move when the mouse has crossed half of the items height
+                // When dragging downwards, only move when the cursor is below 50%
+                // When dragging upwards, only move when the cursor is above 50%
+
+                // Dragging downwards
+                if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+                    return
+                }
+
+                // Dragging upwards
+                if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+                    return
+                }
+
+                moveItem(draggedId, hoverIndex);
             }
         }
     }), [id, findItem, moveItem]);
 
+    if (props.skeleton) {
+        return <Box>
+            <SkeletonWidget />
+        </Box>;
+    }
+
+    const {
+        activity,
+        activityConfig,
+        onActivityConfigChange,
+    } = props as ActivityDragDropBoxProps<false>;
+
     const Widget = activity.configWidget ?? DefaultActivityWidget;
 
-    return <Box ref={compose(drop, dragPreview)} sx={{ opacity: isDragging ? 0 : 1, padding: 1 }}>
+    return <Box ref={compose(setBoxRef, drop, dragPreview)} sx={{ opacity: isDragging ? 0 : 1 }}>
         <Widget
             id={id}
-            classroom={classroom}
+            classroomId={classroomId}
+            activity={activity}
             activityConfig={activityConfig}
             onActivityConfigChange={onActivityConfigChange}
+            goToConfigPage={activity.configPage ? () => {} : undefined}
             dragHandle={drag} />
     </Box>;
 }

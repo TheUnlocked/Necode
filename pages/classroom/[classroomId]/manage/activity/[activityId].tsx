@@ -106,7 +106,7 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
                 <activity.activityPage
                     id={""}
                     activityConfig={activityConfig}
-                    classroom={classroomId}
+                    classroomId={classroomId}
                     language={selectedLanguage} />
             </Lazy>
             <Lazy show={!isPreview}>
@@ -114,7 +114,7 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
                     id={""}
                     activityConfig={activityConfig}
                     onActivityConfigChange={setActivityConfig}
-                    classroom={classroomId}
+                    classroomId={classroomId}
                     language={selectedLanguage} />
             </Lazy>
         </Box>

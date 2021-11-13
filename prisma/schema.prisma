@@ -95,10 +95,10 @@ model ClassroomMembership {
 model Activity {
   id                 String   @id @default(cuid())
   activityType       String
-  lesson             Lesson   @relation(fields: [lessonId], references: [id])
+  lesson             Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   lessonId           String
   displayName        String
-  configuration      Json
+  configuration      Json?
   supportedLanguages String[]
   order              Int
 }
@@ -106,7 +106,7 @@ model Activity {
 model Lesson {
   id          String     @id @default(cuid())
   displayName String
-  classroom   Classroom  @relation(fields: [classroomId], references: [id])
+  classroom   Classroom  @relation(fields: [classroomId], references: [id], onDelete: Cascade)
   classroomId String
   date        DateTime   @db.Date
   activities  Activity[]

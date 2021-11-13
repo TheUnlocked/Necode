@@ -1,11 +1,9 @@
 import ActivityDescription from "../../activities/ActivityDescription";
+import NoopActivity from "./NoopActivity";
 import TextInputWidget, { TextInputWidgetProps } from "./TextInputWidget";
 
-function NoopActivity() {
-    return null;
-}
-
-const textInputDescription: ActivityDescription<TextInputWidgetProps> = {
+/** The "activity" representing a text input. It exists for its utility as a widget. */
+const textInputActivityDescription: ActivityDescription<TextInputWidgetProps> = {
     id: 'text-field',
     supportedFeatures: [],
     defaultConfig: {
@@ -16,4 +14,4 @@ const textInputDescription: ActivityDescription<TextInputWidgetProps> = {
     configWidget: TextInputWidget
 };
 
-export default textInputDescription;
+export default textInputActivityDescription;

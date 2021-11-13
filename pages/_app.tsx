@@ -3,7 +3,7 @@ import 'highlight.js/styles/vs2015.css';
 import '../src/styles/hljs.scss';
 
 import type { AppProps } from 'next/app';
-import React from 'react';
+import React, { useMemo, useRef } from 'react';
 import theme from '../src/themes/theme';
 import { CssBaseline, ThemeProvider } from '@mui/material';
 import Head from 'next/head';
@@ -15,16 +15,39 @@ import { SessionProvider } from 'next-auth/react';
 import Header from '../src/components/Header';
 import { SnackbarProvider } from 'notistack';
 import { LocalizationProvider } from '@mui/lab';
-import AdapterLuxon from '@mui/lab/AdapterLuxon';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Box, SxProps } from '@mui/system';
+import LoadingContext, { LoadingContextInfo } from '../src/api/client/LoadingContext';
+import { callWith } from '../src/util/fp';
+import LoadingSpinners from '../src/components/LoadingSpinners';
+import CustomAdapterLuxon from '../src/util/CustomLuxonAdapter';
 
 function MyApp({ Component, pageProps }: AppProps) {
     const [meta, metaTransformer] = useMergeReducer({
         title: "MQP App",
         path: [{ label: "To be named" }]
     } as MetaInfo);
+
+    const loadingInfoRef = useRef({
+        downloads: 0,
+        uploads: 0,
+        downloadListeners: [] as ((downloaders: number) => void)[],
+        uploadListeners: [] as ((uploaders: number) => void)[]
+    });
+
+    const loadingContext = useMemo(() => ({
+        startDownload: () => loadingInfoRef.current.downloadListeners.forEach(callWith(++loadingInfoRef.current.downloads)),
+        finishDownload: () => loadingInfoRef.current.downloadListeners.forEach(callWith(--loadingInfoRef.current.downloads)),
+        startUpload: () => loadingInfoRef.current.uploadListeners.forEach(callWith(++loadingInfoRef.current.uploads)),
+        finishUpload: () => loadingInfoRef.current.uploadListeners.forEach(callWith(--loadingInfoRef.current.uploads)),
+        addDownloadListener: listener => loadingInfoRef.current.downloadListeners.push(listener),
+        addUploadListener: listener => loadingInfoRef.current.uploadListeners.push(listener),
+        removeDownloadListener: listener => loadingInfoRef.current.downloadListeners.splice(
+            loadingInfoRef.current.downloadListeners.indexOf(listener), 1),
+        removeUploadListener: listener => loadingInfoRef.current.uploadListeners.splice(
+            loadingInfoRef.current.uploadListeners.indexOf(listener), 1),
+    } as LoadingContextInfo), []);
 
     if (Component === Editor) {
         return <ThemeProvider theme={editorTheme}>
@@ -42,14 +65,17 @@ function MyApp({ Component, pageProps }: AppProps) {
         <ThemeProvider theme={theme}>
             <CssBaseline />
             <MetaTransformerContext.Provider value={metaTransformer}>
-            <LocalizationProvider dateAdapter={AdapterLuxon}>
+            <LocalizationProvider dateAdapter={CustomAdapterLuxon}>
             <SnackbarProvider hideIconVariant>
             <DndProvider backend={HTML5Backend}>
             <SessionProvider session={pageProps.session}>
+            <LoadingContext.Provider value={loadingContext}>
                 <Header path={meta.path} />
                 <Box sx={{ "--header-height": "64px" } as SxProps}>
                 <Component {...pageProps} />
                 </Box>
+                <LoadingSpinners />
+            </LoadingContext.Provider>
             </SessionProvider>
             </DndProvider>
             </SnackbarProvider>

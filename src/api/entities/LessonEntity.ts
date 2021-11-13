@@ -1,4 +1,5 @@
 import { Lesson } from ".prisma/client";
+import dayjs from "dayjs";
 import { DateTime } from "luxon";
 import { fromLuxon, Iso8601Date } from "../../util/iso8601";
 import { ActivityEntity } from "./ActivityEntity";
@@ -7,9 +8,9 @@ import { Entity, EntityType } from "./Entity";
 import { EntityReference, makeEntityReference, makeEntityReferenceC } from "./EntityReference";
 
 
-export type LessonEntity = Entity<EntityType.Lesson, {
+export type LessonEntity<HasActivities extends boolean = false> = Entity<EntityType.Lesson, {
     displayName: string;
-    activities: EntityReference<ActivityEntity>[];
+    activities: HasActivities extends true ? ActivityEntity[] : EntityReference<ActivityEntity>[];
     classroom: EntityReference<ClassroomEntity>;
     date: Iso8601Date;
 }>;
@@ -23,7 +24,7 @@ export function makeLessonEntity(lesson: Lesson, relationships: {
         attributes: {
             displayName: lesson.displayName,
             activities: relationships.activities.map(makeEntityReferenceC(EntityType.Activity)),
-            date: fromLuxon(DateTime.fromJSDate(lesson.date).startOf('day')),
+            date: fromLuxon(DateTime.fromJSDate(lesson.date)),
             classroom: makeEntityReference<ClassroomEntity>(EntityType.Classroom, lesson.classroomId)
         }
     };

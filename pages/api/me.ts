@@ -2,7 +2,7 @@ import { prisma } from "../../src/db/prisma";
 import { makeUserEntity } from "../../src/api/entities/UserEntity";
 import { endpoint, Status } from "../../src/api/Endpoint";
 
-const handler = endpoint(makeUserEntity, [], {
+const apiMe = endpoint(makeUserEntity, [], {
     type: 'entity',
     GET: {
         requiresLogin: true,
@@ -29,4 +29,4 @@ const handler = endpoint(makeUserEntity, [], {
     }
 });
 
-export default handler;
+export default apiMe;

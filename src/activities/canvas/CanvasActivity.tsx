@@ -1,14 +1,10 @@
-import { Alert, Card, Typography } from "@mui/material";
+import { Card, Typography } from "@mui/material";
 import { Box, styled } from "@mui/system";
-import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ReflexContainer, ReflexElement, ReflexSplitter } from "react-reflex";
-import { AuthLevel } from "../../../websocketServer/src/types";
 import { useRTC } from "../../hooks/WebRtcHook";
 import { BrowserRunner } from "../../runner/BrowserRunner";
-import useSWR from "swr";
-import { jsonFetcher } from "../../util/fetch";
 import dedent from "dedent-js";
-import tracked from "../../util/trackedEventEmitter";
 import Editor from "@monaco-editor/react";
 import useCodeGenerator from "../../hooks/CodeGeneratorHook";
 import { ActivityPageProps } from "../ActivityDescription";
@@ -22,7 +18,7 @@ const SharedCanvas = styled('canvas')({
 });
 
 export function CanvasActivity({
-    classroom, language
+    classroomId, language
 }: ActivityPageProps) {
     // const { data: me } = useSWR<MeResponseData>(`/api/classroom/${classroom}/me`, jsonFetcher);
     // const isInstructor = me?.response === 'ok' && me.data.attributes.role === 'Instructor';
@@ -177,7 +173,7 @@ export function CanvasActivity({
     const sendPeerRef = useRef<Parameters<Parameters<typeof useRTC>[1]>[0]>();
     const recvPeerRef = useRef<Parameters<Parameters<typeof useRTC>[1]>[0]>();
 
-    const rtcContext = useRTC<PeerInfo>(classroom, useCallback(function onPeer(peer, info) {
+    const rtcContext = useRTC<PeerInfo>(classroomId, useCallback(function onPeer(peer, info) {
         if (info.role === 'send') {
             if (sendPeerRef.current && !sendPeerRef.current.destroyed) {
                 sendPeerRef.current.destroy();

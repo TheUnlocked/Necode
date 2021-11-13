@@ -1,12 +1,10 @@
 import { ClassroomRole } from ".prisma/client";
-import Joi, { ValidationError } from "joi";
-import { NextApiRequest, NextApiResponse } from "next";
-import { getSession } from "next-auth/react";
+import Joi from "joi";
 import { prisma } from "../../../src/db/prisma";
-import { ClassroomEntity, makeClassroomEntity } from "../../../src/api/entities/ClassroomEntity";
+import { makeClassroomEntity } from "../../../src/api/entities/ClassroomEntity";
 import { endpoint, Status } from "../../../src/api/Endpoint";
 
-const handler = endpoint(makeClassroomEntity, [], {
+const apiClassroomAll = endpoint(makeClassroomEntity, [], {
     type: 'entityType',
     POST: {
         requiresLogin: true,
@@ -36,3 +34,5 @@ const handler = endpoint(makeClassroomEntity, [], {
         }
     }
 });
+
+export default apiClassroomAll;

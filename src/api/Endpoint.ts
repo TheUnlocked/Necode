@@ -5,6 +5,7 @@ import { Entity } from "./entities/Entity";
 import { Response } from "./Response";
 import { IncomingMessage } from "http";
 import { Session } from "next-auth";
+import { UndefinedIsOptional } from "../util/types";
 
 export enum Status {
     OK = 200,
@@ -105,6 +106,11 @@ type EndpointResult<P extends string, Endpoints extends Partial<EndpointMap<any>
         : Endpoints[Method]
 };
 
+export type BodyOf<T extends Endpoint<any, any, any>> =
+    T extends Endpoint<infer B, any, any>
+        ? B
+        : undefined;
+
 export function endpoint
     <P extends string, Endpoints extends EntityEndpoints<E, P>, E extends Entity<any, any>>
     (example: E | ((...args: any[]) => E), mandatoryParams: readonly P[], endpoints: Endpoints): EndpointResult<P, Endpoints>;
@@ -168,18 +174,21 @@ export function endpoint<P extends string, Endpoints extends EndpointMap<P>>(_: 
                 }
             }
 
-            let body: any;
+            let body: any = undefined;
 
-            try {
-                body = JSON.parse(req.body);
-            }
-            catch (e) {
-                return fail(Status.BAD_REQUEST);
+            if (req.body) {
+                try {
+                    body = JSON.parse(req.body);
+                }
+                catch (e) {
+                    return fail(Status.BAD_REQUEST);
+                }
             }
 
             if (endpoint.schema) {
-                const { value, error } = endpoint.schema.validate(req.body, {
-                    abortEarly: false
+                const { value, error } = endpoint.schema.validate(body, {
+                    abortEarly: false,
+                    presence: 'required'
                 });
 
                 if (error) {
@@ -207,10 +216,10 @@ export function endpoint<P extends string, Endpoints extends EndpointMap<P>>(_: 
 type ExecuteMethod<P extends string, E extends Endpoint<any, any, P>> = (
     this: E,
     req: IncomingMessage,
-    content: Omit<Parameters<E['handler']>[0], 'userId'>
+    content: UndefinedIsOptional<Omit<Parameters<E['handler']>[0], 'session'>>
 ) => Promise<Response<Parameters<Parameters<E['handler']>[1]>[0]>>;
 
-function execute<E extends Endpoint<any, any, any>>(this: E, req: IncomingMessage, content: Omit<Parameters<E['handler']>[0], 'userId'>) {
+function execute<E extends Endpoint<any, any, any>>(this: E, req: IncomingMessage, content: Omit<Parameters<E['handler']>[0], 'session'>) {
     return new Promise(async resolve => {
         function ok(result: any) {
             resolve({

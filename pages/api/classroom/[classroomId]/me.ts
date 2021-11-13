@@ -2,7 +2,7 @@ import { prisma } from "../../../../src/db/prisma";
 import { makeClassroomMemberEntity } from "../../../../src/api/entities/ClassroomMemberEntity";
 import { Endpoint, endpoint, Status } from "../../../../src/api/Endpoint";
 
-const handler = endpoint(makeClassroomMemberEntity, ['classroomId'] as const, {
+const apiClassroomMe = endpoint(makeClassroomMemberEntity, ['classroomId'] as const, {
     type: 'entity',
     GET: {
         requiresLogin: true,
@@ -26,4 +26,4 @@ const handler = endpoint(makeClassroomMemberEntity, ['classroomId'] as const, {
     }
 });
 
-export default handler;
+export default apiClassroomMe;

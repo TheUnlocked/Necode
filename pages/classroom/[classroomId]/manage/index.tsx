@@ -65,7 +65,7 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
                         <Badge key={isoDate}
                             overlap="circular" variant="dot"
                             anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-                            componentsProps={{ badge: { style: { right: "50%" } } }}
+                            componentsProps={{ badge: { style: { right: "50%", pointerEvents: "none" } } }}
                             color="primary"
                             invisible={!showsIndicators}
                         >

@@ -100,7 +100,7 @@ export default function TextInputWidget({
                     fontSize: 15
                 } as editor.IStandaloneEditorConstructionOptions} />
             <span><IconButton size="small" className={dragHandleClass} sx={{ ml: 0.5 }}
-                {...bindTrigger(languageSelectPopup)}>{languageDescription?.icon ?? <CodeIcon/>}</IconButton></span>
+                {...bindTrigger(languageSelectPopup)}>{languageDescription?.icon ? <languageDescription.icon /> : <CodeIcon/>}</IconButton></span>
             <Popper {...bindPopper(languageSelectPopup)}
                 placement="left" transition>
                 {({ TransitionProps }) => <ClickAwayListener onClickAway={() => languageSelectPopup.close()}>

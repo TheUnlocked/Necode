@@ -8,9 +8,11 @@ export default function LoadingSpinners() {
     const [downloaders, setDownloaders] = useState(0);
     const [uploaders, setUploaders] = useState(0);
 
-    const { addDownloadListener, addUploadListener, removeDownloadListener, removeUploadListener } = useLoadingContext();
+    const loadingContext = useLoadingContext();
 
     useEffect(() => {
+        const { addDownloadListener, addUploadListener, removeDownloadListener, removeUploadListener } = loadingContext;
+
         addDownloadListener(setDownloaders);
         addUploadListener(setUploaders);
 
@@ -18,7 +20,7 @@ export default function LoadingSpinners() {
             removeDownloadListener(setDownloaders);
             removeUploadListener(setUploaders);
         }
-    }, [addDownloadListener, addUploadListener, removeDownloadListener, removeUploadListener]);
+    }, [loadingContext]);
 
     const { palette } = useTheme();
 

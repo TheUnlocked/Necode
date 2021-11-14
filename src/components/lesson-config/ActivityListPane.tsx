@@ -1,5 +1,5 @@
 import { Add, Delete, TextFields } from "@mui/icons-material";
-import { Button, Card, CardContent, Divider, IconButton, Stack, TextField, Typography } from "@mui/material";
+import { Button, Card, CardContent, Divider, IconButton, Stack, TextField, Tooltip, Typography } from "@mui/material";
 import { Box, SxProps } from "@mui/system";
 import { nanoid } from "nanoid";
 import { Dispatch, MutableRefObject, useCallback, useEffect, useRef, useState } from "react";
@@ -306,8 +306,12 @@ export default function ActivityListPane({
             <Divider />
             <Box sx={{ backgroundColor: ({palette}) => palette.background.default, p: 1 }}>
                 <Stack direction="row" spacing={1}>
-                    <IconButton onClick={openSelectActivityDialog}><Add/></IconButton>
-                    <IconButton onClick={() => addActivity(textInputActivityDescription)}><TextFields/></IconButton>
+                    <Tooltip title="Add Activity">
+                        <IconButton onClick={openSelectActivityDialog}><Add/></IconButton>
+                    </Tooltip>
+                    <Tooltip title="Add Text/Code">
+                        <IconButton onClick={() => addActivity(textInputActivityDescription)}><TextFields/></IconButton>
+                    </Tooltip>
                     <Stack direction="row" justifyContent="end" spacing={1} flexGrow={1}>
                         {isDragging
                             ? <Button ref={trashDrop} variant="contained" color="error" disableRipple

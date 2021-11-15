@@ -15,3 +15,5 @@ export type UndefinedIsOptional<T> = Explicit<{
 }>;
 
 export type Awaitable<T> = T | PromiseLike<T>;
+
+export type IfAny<T, A, B> = Omit<{ a: any, b: any }, T extends never ? 'a' : 'b'> extends { a: any } ? B : A;

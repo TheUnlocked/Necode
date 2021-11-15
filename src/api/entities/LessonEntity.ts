@@ -5,27 +5,31 @@ import { fromLuxon, Iso8601Date } from "../../util/iso8601";
 import { ActivityEntity } from "./ActivityEntity";
 import { ClassroomEntity } from "./ClassroomEntity";
 import { Entity, EntityType } from "./Entity";
-import { EntityReference, makeEntityReference, makeEntityReferenceC } from "./EntityReference";
+import { EntityReference, EntityReferenceArray, makeEntityReference, makeEntityReferenceArray, ReferenceDepth } from "./EntityReference";
 
 
-export type LessonEntity<HasActivities extends boolean = false> = Entity<EntityType.Lesson, {
-    displayName: string;
-    activities: HasActivities extends true ? ActivityEntity[] : EntityReference<ActivityEntity>[];
-    classroom: EntityReference<ClassroomEntity>;
-    date: Iso8601Date;
-}>;
+type Refs = { activities?: ReferenceDepth, classroom?: ReferenceDepth };
 
-export function makeLessonEntity(lesson: Lesson, relationships: {
-    activities: (string | ActivityEntity)[];
-}): LessonEntity {
+export type LessonEntity<References extends Refs = Refs>
+    = Entity<EntityType.Lesson, {
+        displayName: string;
+        activities: EntityReferenceArray<ActivityEntity<any>, References['activities']>;
+        classroom: EntityReference<ClassroomEntity<any>, References['classroom']>;
+        date: Iso8601Date;
+    }>;
+
+export function makeLessonEntity<R extends Refs>(lesson: Lesson, relationships?: {
+    activities?: (string | ActivityEntity<any>)[];
+    classroom?: string | ClassroomEntity<any>;
+}): LessonEntity<R> {
     return {
         type: EntityType.Lesson,
         id: lesson.id,
         attributes: {
             displayName: lesson.displayName,
-            activities: relationships.activities.map(makeEntityReferenceC(EntityType.Activity)),
+            activities: makeEntityReferenceArray(EntityType.Activity, relationships?.activities),
             date: fromLuxon(DateTime.fromJSDate(lesson.date)),
-            classroom: makeEntityReference<ClassroomEntity>(EntityType.Classroom, lesson.classroomId)
+            classroom: makeEntityReference(EntityType.Classroom, relationships?.classroom)
         }
     };
 }

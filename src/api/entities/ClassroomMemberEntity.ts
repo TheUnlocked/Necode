@@ -1,24 +1,30 @@
 import { ClassroomMembership, ClassroomRole, User } from ".prisma/client";
 import { ClassroomEntity } from "./ClassroomEntity";
 import { Entity, EntityType } from "./Entity";
-import { EntityReference, makeEntityReference } from "./EntityReference";
+import { EntityReference, makeEntityReference, ReferenceDepth } from "./EntityReference";
 import { UserEntity, makeUserEntity } from "./UserEntity";
 
 
-export type ClassroomMemberEntity = Entity<EntityType.ClassroomUser, UserEntity['attributes'] & {
-    role: ClassroomRole;
-    classroom: EntityReference<ClassroomEntity>;
-}>;
+type Refs = { classroom?: ReferenceDepth, classes?: ReferenceDepth };
 
-export function makeClassroomMemberEntity(user: ClassroomMembership & { user: User & { classes?: { classroomId: string }[] } }): ClassroomMemberEntity {
-    const userPart = makeUserEntity(user.user, { classes: user.user.classes?.map(x => x.classroomId) });
+export type ClassroomMemberEntity<References extends Refs = Refs>
+    = Entity<EntityType.ClassroomUser, UserEntity<References>['attributes'] & {
+        role: ClassroomRole;
+        classroom: EntityReference<ClassroomEntity<any>, References['classroom']>;
+    }>;
+
+export function makeClassroomMemberEntity<R extends Refs>(user: ClassroomMembership & { user: User }, relationships?: {
+    classes?: (string | ClassroomEntity<any>)[];
+    classroom?: string | ClassroomEntity<any>;
+}): ClassroomMemberEntity<R> {
+    const userPart: UserEntity<R> = makeUserEntity(user.user, { classes: relationships?.classes });
     return {
         type: EntityType.ClassroomUser,
         id: user.userId,
         attributes: {
             ...userPart.attributes,
             role: user.role,
-            classroom: makeEntityReference<ClassroomEntity>(EntityType.Classroom, user.classroomId)
+            classroom: makeEntityReference(EntityType.Classroom, relationships?.classroom)
         }
     };
 }

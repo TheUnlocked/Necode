@@ -1,4 +1,4 @@
-import { GetStaticPaths, GetStaticProps, NextPage } from "next";
+import { GetServerSideProps, NextPage } from "next";
 import { useRouter } from "next/router";
 import { useContext, useEffect } from "react";
 import { MetaTransformerContext } from "../../../src/contexts/MetaTransformerContext";
@@ -57,7 +57,7 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
     </>;
 };
 
-export const getStaticProps: GetStaticProps<StaticProps> = ctx => {
+export const getServerSideProps: GetServerSideProps<StaticProps> = async ctx => {
     if (typeof ctx.params?.classroomId !== 'string') {
         return {
             notFound: true
@@ -70,12 +70,5 @@ export const getStaticProps: GetStaticProps<StaticProps> = ctx => {
         }
     };
 };
-
-export const getStaticPaths: GetStaticPaths = async () => {
-    return {
-        paths: [],
-        fallback: true
-    };
-}
 
 export default Page;

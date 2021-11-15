@@ -1,6 +1,9 @@
+import { Activity } from "@prisma/client";
 import Joi from "joi";
 import { endpoint, Status } from "../../../../../../src/api/Endpoint";
 import { ActivityEntity, makeActivityEntity } from "../../../../../../src/api/entities/ActivityEntity";
+import { makeClassroomEntity } from "../../../../../../src/api/entities/ClassroomEntity";
+import { ReferenceDepth } from "../../../../../../src/api/entities/EntityReference";
 import { LessonEntity, makeLessonEntity } from "../../../../../../src/api/entities/LessonEntity";
 import { isInstructor } from "../../../../../../src/api/server/validators";
 import { prisma } from "../../../../../../src/db/prisma";
@@ -23,14 +26,17 @@ async function maybeGetByIsoDate(lessonIdOrDate: string, classroomId: string) {
     return lessonIdOrDate;
 }
 
-const apiLessonOne = endpoint(makeLessonEntity, ['classroomId', 'lessonId'] as const, {
+const apiLessonOne = endpoint({} as LessonEntity<{ classroom: any, activities: ReferenceDepth }>, ['classroomId', 'lessonId', 'include[]'] as const, {
     type: 'entity',
     GET: {
         loginValidation: true,
-        async handler({ query: { classroomId, lessonId }, session }, ok, fail) {
+        async handler({ query: { classroomId, lessonId, include }, session }, ok, fail) {
             if (!isInstructor(session?.user.id, classroomId)) {
                 return fail(Status.FORBIDDEN);
             }
+
+            const includeActivities = include.includes('activities');
+            const includeClassroom = include.includes('classroom');
 
             lessonId = await maybeGetByIsoDate(lessonId, classroomId) ?? '';
 
@@ -40,14 +46,24 @@ const apiLessonOne = endpoint(makeLessonEntity, ['classroomId', 'lessonId'] as c
 
             const lesson = await prisma.lesson.findFirst({
                 where: { id: lessonId, classroomId },
-                include: { activities: { orderBy: { order: 'asc' } } }
+                include: {
+                    activities: { orderBy: { order: 'asc' }, select: includeActivities ? undefined : { id: true } },
+                    classroom: includeClassroom
+                }
             });
 
             if (!lesson) {
                 return fail(Status.NOT_FOUND);
             }
 
-            return ok(makeLessonEntity(lesson, { activities: lesson.activities.map(singleArg(makeActivityEntity)) }));
+            return ok(makeLessonEntity(lesson, {
+                activities: includeActivities
+                    ? (lesson.activities as Activity[]).map(singleArg(makeActivityEntity))
+                    : (lesson.activities as { id: string }[]).map(x => x.id),
+                classroom: includeClassroom
+                    ? makeClassroomEntity(lesson.classroom)
+                    : lesson.classroomId
+            }));
         }
     },
     PUT: {
@@ -60,7 +76,7 @@ const apiLessonOne = endpoint(makeLessonEntity, ['classroomId', 'lessonId'] as c
                     id: Joi.string().optional(),
                     activityType: Joi.string(),
                     configuration: Joi.any().optional(),
-                    supportedLanguages: Joi.array().items(Joi.string())
+                    enabledLanguages: Joi.array().items(Joi.string())
                 }))
         }),
         async handler({ query: { classroomId, lessonId }, body: { date, displayName, activities }, session }, ok, fail) {
@@ -92,14 +108,14 @@ const apiLessonOne = endpoint(makeLessonEntity, ['classroomId', 'lessonId'] as c
                                 activityType: x.activityType,
                                 displayName: 'placeholder',
                                 configuration: x.configuration ?? undefined,
-                                supportedLanguages: x.supportedLanguages,
+                                supportedLanguages: x.enabledLanguages,
                                 order: i
                             },
                             update: {
                                 activityType: x.activityType,
                                 displayName: 'placeholder',
                                 configuration: x.configuration ?? undefined,
-                                supportedLanguages: x.supportedLanguages,
+                                supportedLanguages: x.enabledLanguages,
                                 order: i
                             }
                         }))

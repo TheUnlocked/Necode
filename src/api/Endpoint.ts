@@ -5,7 +5,8 @@ import { Entity } from "./entities/Entity";
 import { Response } from "./Response";
 import { IncomingMessage } from "http";
 import { Session } from "next-auth";
-import { UndefinedIsOptional } from "../util/types";
+import { IfAny, UndefinedIsOptional } from "../util/types";
+import { EntityReference, EntityReferenceArray, ReferenceDepth } from "./entities/EntityReference";
 
 export enum Status {
     OK = 200,
@@ -32,6 +33,18 @@ const defaultStatusMessages: { [Code in Status]: string } = {
 type okCallback<T> = (x: T) => void;
 type failCallback = (type: Status, message?: string) => void;
 
+
+type QueryParamsObject<T extends string> = {
+    [Key in T as Key extends `${infer RealKey}[]` ? RealKey
+            : Key extends `${infer RealKey}?` ? RealKey
+            : Key]
+        : Key extends `${string}[]`
+            ? string[]
+        : Key extends `${string}?`
+            ? string | undefined
+        : string
+};
+
 export interface Endpoint<Req, Res, QueryParams extends string> {
     /**
      * @default true
@@ -41,7 +54,7 @@ export interface Endpoint<Req, Res, QueryParams extends string> {
     schema?: Schema<Req>;
 
     handler: EndpointCallback<{
-        query: { [_ in QueryParams]: string } & { [_ in string]?: string | undefined },
+        query: QueryParamsObject<QueryParams>,
         body: Req,
         session?: Session | undefined
     }, Res>;
@@ -67,14 +80,69 @@ export interface EndpointMap<
     DELETE: Endpoint<DeleteReq, DeleteRes, QueryParams>;
 }
 
+
+export type AttributesOf<E extends EntityReference<Entity<any, any>, ReferenceDepth>> =
+    E extends Entity<any, any>
+        ? Omit<E['attributes'], keyof { [
+            K in keyof E['attributes'] as
+                IfAny<E['attributes'][K], 1, 0> extends 1 ? never
+                : E['attributes'][K] extends EntityReference<Entity<any, any>, ReferenceDepth>
+                    ? K
+                : E['attributes'][K] extends EntityReferenceArray<Entity<any, any>, ReferenceDepth>
+                    ? K
+                : never]: 1
+            }> & {
+                [ K in keyof E['attributes'] as
+                    IfAny<E['attributes'][K], 1, 0> extends 1 ? never
+                    : E['attributes'][K] extends EntityReference<Entity<any, any>, ReferenceDepth>
+                        ? K
+                    : E['attributes'][K] extends EntityReferenceArray<Entity<any, any>, ReferenceDepth>
+                        ? K
+                    : never
+                ]
+                    : E['attributes'][K] extends EntityReference<Entity<any, any>, ReferenceDepth>
+                        ? AttributesOf<E['attributes'][K]>
+                    : E['attributes'][K] extends EntityReferenceArray<infer L, ReferenceDepth>
+                        ? ({ id: string } & AttributesOf<L>)[]
+                        : never
+            }
+        : {};
+
+export type PartialAttributesOf<E extends EntityReference<Entity<any, any>, ReferenceDepth>> =
+    E extends Entity<any, any>
+        ? Omit<Partial<E['attributes']>, keyof { [
+            K in keyof E['attributes'] as
+                IfAny<E['attributes'][K], 1, 0> extends 1 ? never
+                : E['attributes'][K] extends EntityReference<Entity<any, any>, ReferenceDepth>
+                    ? K
+                : E['attributes'][K] extends EntityReferenceArray<Entity<any, any>, ReferenceDepth>
+                    ? K
+                : never]: 1
+            }> & {
+                [ K in keyof E['attributes'] as
+                    IfAny<E['attributes'][K], 1, 0> extends 1 ? never
+                    : E['attributes'][K] extends EntityReference<Entity<any, any>, ReferenceDepth>
+                        ? K
+                    : E['attributes'][K] extends EntityReferenceArray<Entity<any, any>, ReferenceDepth>
+                        ? K
+                    : never
+                ]?
+                    : E['attributes'][K] extends EntityReference<Entity<any, any>, ReferenceDepth>
+                        ? PartialAttributesOf<E['attributes'][K]>
+                    : E['attributes'][K] extends EntityReferenceArray<infer L, ReferenceDepth>
+                        ? ({ id: string } & PartialAttributesOf<L>)[]
+                        : never
+            }
+        : {};
+
 type EntityEndpoints<E extends Entity<any, any>, QueryParams extends string> = {
     type: 'entity'
 } & Partial<EndpointMap<
     QueryParams,
     undefined, E,
     unknown, unknown,
-    E['attributes'], E,
-    Partial<E['attributes']>, E,
+    AttributesOf<E>, E,
+    PartialAttributesOf<E>, E,
     undefined, void
 >>;
 
@@ -83,7 +151,7 @@ type EntityTypeEndpoints<E extends Entity<any, any>, QueryParams extends string>
 } & Partial<EndpointMap<
     QueryParams,
     undefined, E[],
-    E['attributes'], E,
+    AttributesOf<E>, E,
     unknown, unknown,
     unknown, unknown,
     unknown, unknown
@@ -94,9 +162,9 @@ type SortableEntityTypeEndpoints<E extends Entity<any, any>, QueryParams extends
 } & Partial<EndpointMap<
     QueryParams,
     undefined, E[],
-    E['attributes'], E,
+    AttributesOf<E>, E,
     unknown, unknown,
-    { id: string, attributes?: Partial<E['attributes']> }[], E[],
+    { id: string, attributes?: PartialAttributesOf<E> }[], E[],
     unknown, unknown
 >>;
 
@@ -105,11 +173,6 @@ type EndpointResult<P extends string, Endpoints extends Partial<EndpointMap<any>
         ? Endpoints[Method] & { execute: ExecuteMethod<P, Endpoints[Method]> }
         : Endpoints[Method]
 };
-
-export type BodyOf<T extends Endpoint<any, any, any>> =
-    T extends Endpoint<infer B, any, any>
-        ? B
-        : undefined;
 
 export function endpoint
     <P extends string, Endpoints extends EntityEndpoints<E, P>, E extends Entity<any, any>>
@@ -161,16 +224,29 @@ export function endpoint<P extends string, Endpoints extends EndpointMap<P>>(_: 
 
             const cleanedParams = {} as any;
 
-            for (const param of Object.keys(req.query)) {
-                const value = req.query[param];
-                if (typeof value === 'string') {
-                    cleanedParams[param] = value;
-                }
-            }
-
             for (const param of mandatoryParams) {
-                if (!(param in cleanedParams)) {
-                    return fail(Status.BAD_REQUEST, `Missing query or URL parameter ${param}`);
+                const cleanParam = param.replace(/(\[]|\?)$/, '');
+                const value = req.query[cleanParam];
+                if (param.endsWith('[]')) {
+                    if (value) {
+                        cleanedParams[cleanParam] = ([] as string[]).concat(req.query[cleanParam]);
+                    }
+                    else {
+                        cleanedParams[cleanParam] = [];
+                    }
+                }
+                else {
+                    if (value) {
+                        if (typeof value === 'string') {
+                            cleanedParams[cleanParam] = value;
+                        }
+                        else {
+                            cleanedParams[cleanParam] = value[0];
+                        }
+                    }
+                    else if (!value.endsWith('?')) {
+                        return fail(Status.BAD_REQUEST, `Missing query or URL parameter ${cleanParam}`);
+                    }
                 }
             }
 

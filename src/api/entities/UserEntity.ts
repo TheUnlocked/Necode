@@ -1,22 +1,25 @@
 import { SitewideRights, User } from ".prisma/client";
 import { Entity, EntityType } from "./Entity";
-import { EntityReference, makeEntityReferenceC } from "./EntityReference";
+import { EntityReferenceArray, makeEntityReferenceArray, ReferenceDepth } from "./EntityReference";
 import { ClassroomEntity } from "./ClassroomEntity";
 
 
-export type UserEntity = Entity<EntityType.User, {
-    username: string;
-    displayName: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    rights: SitewideRights;
-    classes?: EntityReference<ClassroomEntity>[];
-}>;
+type Refs = { classes?: ReferenceDepth };
 
-export function makeUserEntity(user: User, relationships: {
-    classes?: (string | ClassroomEntity)[];
-}): UserEntity {
+export type UserEntity<References extends Refs = Refs>
+    = Entity<EntityType.User, {
+        username: string;
+        displayName: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+        rights: SitewideRights;
+        classes: EntityReferenceArray<ClassroomEntity<any>, References['classes']>;
+    }>;
+
+export function makeUserEntity<R extends Refs>(user: User, relationships?: {
+    classes?: (string | ClassroomEntity<any>)[];
+}): UserEntity<R> {
     return {
         type: EntityType.User,
         id: user.id,
@@ -27,7 +30,7 @@ export function makeUserEntity(user: User, relationships: {
             firstName: user.firstName,
             lastName: user.lastName,
             rights: user.rights,
-            classes: relationships.classes?.map(makeEntityReferenceC(EntityType.Classroom))
+            classes: makeEntityReferenceArray(EntityType.Classroom, relationships?.classes)
         }
     };
 }

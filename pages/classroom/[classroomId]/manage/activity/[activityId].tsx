@@ -2,11 +2,8 @@ import { GetServerSideProps, NextPage } from "next";
 import { useRouter } from "next/router";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { MetaTransformerContext } from "../../../../../src/contexts/MetaTransformerContext";
-import $me from "../../../../api/classroom/[classroomId]/me";
-import { Button, Toolbar, Select, MenuItem, Stack, ToggleButton } from "@mui/material";
+import { Button, Toolbar, Select, MenuItem, Stack, ToggleButton, Skeleton, Paper } from "@mui/material";
 import { ArrowBack, Code } from "@mui/icons-material";
-import testBasedActivityDescription from "../../../../../src/activities/html-test-based";
-import canvasActivityDescription from "../../../../../src/activities/canvas";
 import { Box, SxProps } from "@mui/system";
 import allLanguages from "../../../../../src/languages/allLanguages";
 import LanguageDescription from "../../../../../src/languages/LangaugeDescription";
@@ -15,12 +12,20 @@ import sortByProperty from "../../../../../src/util/sortByProperty";
 import { flip, make } from "../../../../../src/util/fp";
 import Lazy from "../../../../../src/components/Lazy";
 import ConfigureLanguageDialog from "../../../../../src/components/ConfigureLanguageDialog";
+import useGetRequest from "../../../../../src/api/client/GetRequestHook";
+import { ActivityEntity } from "../../../../../src/api/entities/ActivityEntity";
+import apiClassroomMe from "../../../../api/classroom/[classroomId]/me";
+import apiActivityOne from "../../../../api/classroom/[classroomId]/lesson/[lessonId]/activity/[activityId]";
+import allActivities from "../../../../../src/activities/allActivities";
 
 interface StaticProps {
     classroomId: string;
+    lessonId: string;
+    activityId: string;
+    date: string;
 }
 
-const Page: NextPage<StaticProps> = ({ classroomId }) => {
+const Page: NextPage<StaticProps> = ({ classroomId, lessonId, date, activityId }) => {
     const router = useRouter();
     const metaTransformer = useContext(MetaTransformerContext);
 
@@ -33,10 +38,13 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
         ] });
     }, [metaTransformer, classroomId]);
 
-    const activity = testBasedActivityDescription;
+    const activityEndpoint = `/api/classroom/${classroomId}/lesson/${lessonId}/activity/${activityId}`;
+    const { data: activityEntity } = useGetRequest<ActivityEntity>(activityEndpoint);
+
+    const activity = useMemo(() => allActivities.find(x => x.id === activityEntity?.attributes.activityType), [activityEntity]);
 
     const supportedLanguages = useMemo(
-        () => allLanguages.filter(({ features }) => activity.supportedFeatures.every(f => features.includes(f))),
+        () => allLanguages.filter(({ features }) => activity?.supportedFeatures.every(f => features.includes(f))),
         [activity]
     );
 
@@ -49,7 +57,29 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
         }
     }, [enabledLanguages, selectedLanguage]);
 
-    const [activityConfig, setActivityConfig] = useState(activity.defaultConfig);
+    const [activityConfig, setActivityConfig] = useState(activityEntity?.attributes.configuration);
+
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (activityEntity && supportedLanguages) {
+            setIsLoading(notYetFinished => {
+                if (notYetFinished) {
+                    setActivityConfig(activityEntity.attributes.configuration);
+
+                    const enabledLanguages = activityEntity.attributes.enabledLanguages.length === 0
+                        ? supportedLanguages
+                        : activityEntity.attributes.enabledLanguages
+                            .map(x => supportedLanguages.find(l => l.name === x))
+                            .filter(x => x !== undefined) as LanguageDescription[];
+                            
+                    setEnabledLanguages(enabledLanguages);
+                    setSelectedLanguage(enabledLanguages[0])
+                }
+                return false;
+            });
+        }
+    }, [activityEntity, supportedLanguages]);
 
     const [configureLanguagesDialog, openConfigureLanguagesDialog] = useImperativeDialog(ConfigureLanguageDialog, {
         availableLanguages: supportedLanguages,
@@ -59,6 +89,42 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
     });
 
     const [isPreview, setIsPreview] = useState(false);
+    
+    if (isLoading) {
+        return <>
+            <Toolbar variant="dense" sx={{
+                minHeight: "36px",
+                px: "16px !important",
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "space-between"
+            }}>
+                <Button size="small" startIcon={<ArrowBack/>}
+                    onClick={() => router.push({
+                        pathname: `/classroom/${classroomId}/manage`,
+                        hash: date
+                    })}>
+                    Return to Manage Classroom
+                </Button>
+                <Stack direction="row" spacing={1}>
+                    <Skeleton variant="rectangular" sx={{ borderRadius: "4px", width: "190px" }} />
+                    <Skeleton variant="rectangular" sx={{ borderRadius: "4px", width: "46px" }} />
+                    <Skeleton variant="rectangular" sx={{ borderRadius: "4px", width: "86px" }} />
+                </Stack>
+            </Toolbar>
+            <Paper elevation={1} sx={{
+                height: `calc(100vh - 124px)`,
+                display: "flex",
+                m: 2,
+                mt: 1
+            }} />
+        </>;
+    }
+
+    if (!activity) {
+        router.push(`/404`);
+        return null;
+    }
 
     if (!activity.configPage) {
         router.push(`/classroom/${classroomId}/manage`);
@@ -74,7 +140,11 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
             flexDirection: "row",
             justifyContent: "space-between"
         }}>
-            <Button size="small" startIcon={<ArrowBack/>} onClick={() => router.push(`/classroom/${classroomId}/manage`)}>
+            <Button size="small" startIcon={<ArrowBack/>}
+                onClick={() => router.push({
+                    pathname: `/classroom/${classroomId}/manage`,
+                    hash: date
+                })}>
                 Return to Manage Classroom
             </Button>
             <Stack direction="row" spacing={1}>
@@ -123,16 +193,30 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
 
 export const getServerSideProps: GetServerSideProps<StaticProps> = async ctx => {
     const classroomId = ctx.params?.classroomId;
+    const activityId = ctx.params?.activityId;
     
-    if (typeof classroomId !== 'string') {
+    if (typeof classroomId !== 'string' || typeof activityId !== 'string') {
         return {
             notFound: true
         };
     }
 
-    const { data } = await $me.GET.execute(ctx.req, { query: { classroomId }, body: undefined });
+    const { data: meData } = await apiClassroomMe.GET.execute(ctx.req, { query: { classroomId, include: [] }, body: undefined });
 
-    if (data?.attributes.role !== 'Instructor') {
+    if (meData?.attributes.role !== 'Instructor') {
+        return {
+            notFound: true
+        };
+    }
+
+    const { data: activityData } = await apiActivityOne.GET.execute(ctx.req, { query: {
+        activityId,
+        classroomId,
+        lessonId: undefined,
+        include: ['lesson']
+    }, body: undefined }) as { data: ActivityEntity<{ lesson: 'deep' }> };
+
+    if (!activityData) {
         return {
             notFound: true
         };
@@ -140,7 +224,10 @@ export const getServerSideProps: GetServerSideProps<StaticProps> = async ctx => 
 
     return {
         props: {
-            classroomId
+            classroomId,
+            activityId,
+            lessonId: activityData.attributes.lesson.id,
+            date: activityData.attributes.lesson.attributes.date
         }
     };
 }

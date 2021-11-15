@@ -17,6 +17,7 @@ export default function useGetRequest<T>(endpoint: Key, options?: SWRConfigurati
         data: data?.data,
         error: data?.message ?? error?.message,
         isValidating,
+        isLoading: isValidating || (!data?.data && !data?.message && !error?.message),
         mutate
     };
 }

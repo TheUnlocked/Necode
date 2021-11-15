@@ -1,23 +1,26 @@
 import { Classroom } from ".prisma/client";
 import { Entity, EntityType } from "./Entity";
-import { EntityReference, makeEntityReferenceC } from "./EntityReference";
+import { EntityReferenceArray, makeEntityReferenceArray, ReferenceDepth } from "./EntityReference";
 import { ClassroomMemberEntity } from "./ClassroomMemberEntity";
 
 
-export type ClassroomEntity = Entity<EntityType.Classroom, {
-    displayName: string;
-    members?: EntityReference<ClassroomMemberEntity>[];
-}>;
+type Refs = { members?: ReferenceDepth };
 
-export function makeClassroomEntity(classroom: Classroom, relationships: {
-    members: (string | ClassroomMemberEntity)[];
-}): ClassroomEntity {
+export type ClassroomEntity<References extends Refs = Refs>
+    = Entity<EntityType.Classroom, {
+        displayName: string;
+        members: EntityReferenceArray<ClassroomMemberEntity<any>, References['members']>;
+    }>;
+
+export function makeClassroomEntity<R extends Refs = any>(classroom: Classroom, relationships?: {
+    members?: (string | ClassroomMemberEntity<any>)[];
+}): ClassroomEntity<R> {
     return {
         type: EntityType.Classroom,
         id: classroom.id,
         attributes: {
             displayName: classroom.displayName,
-            members: relationships.members.map(makeEntityReferenceC(EntityType.ClassroomUser))
+            members: makeEntityReferenceArray(EntityType.ClassroomUser, relationships?.members)
         }
     };
 }

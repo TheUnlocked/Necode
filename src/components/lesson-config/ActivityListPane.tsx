@@ -22,12 +22,13 @@ import NoopActivity from "./NoopActivity";
 import textInputActivityDescription from "./textInputDescription";
 import useImperativeDialog from "../../hooks/ImperativeDialogHook";
 import SelectActivityDialog from "./SelectActivityDialog";
+import { AttributesOf } from "../../api/Endpoint";
 
 export interface LocalActivity {
     id: string;
     activityType: ActivityDescription<any>;
     configuration: any;
-    supportedLanguages: string[];
+    enabledLanguages: string[];
 }
 
 type LocalActivityReference = (LocalActivity & { isReference?: false }) | ({ id: string, isReference: true } & Partial<LocalActivity>);
@@ -52,7 +53,7 @@ function activityEntityToLocal(entity: ActivityEntity): LocalActivity {
         id: entity.id,
         activityType: activity,
         configuration: entity.attributes.configuration,
-        supportedLanguages: entity.attributes.supportedLanguages
+        enabledLanguages: entity.attributes.enabledLanguages
     };
 }
 
@@ -60,7 +61,7 @@ interface ActivityListPaneProps {
     sx: SxProps;
     date: Iso8601Date;
     classroomId: string;
-    onLessonChange?: Dispatch<LessonEntity | undefined>;
+    onLessonChange?: Dispatch<LessonEntity<{ activities: 'shallow' }> | undefined>;
     saveRef?: MutableRefObject<(() => void) | undefined>;
 }
 
@@ -99,7 +100,7 @@ export default function ActivityListPane({
                 isReference: false,
                 activityType: activity,
                 configuration: activity.defaultConfig,
-                supportedLanguages: []
+                enabledLanguages: []
             });
             return newActivities;
         });
@@ -108,11 +109,11 @@ export default function ActivityListPane({
 
     const [activities, setActivities] = useState<LocalActivityReference[]>([]);
 
-    const { data: lessonEntity, error: lessonEntityError, isValidating } = useGetRequest<LessonEntity<true>>(`/api/classroom/${classroomId}/lesson/${date}`, {
+    const lessonEndpoint = `/api/classroom/${classroomId}/lesson/${date}?include=activities`;
+    const { data: lessonEntity, error: lessonEntityError, isLoading } = useGetRequest<LessonEntity<{ activities: 'deep', classroom: 'shallow' }>>(lessonEndpoint, {
         revalidateOnFocus: false,
         revalidateOnReconnect: false
     });
-    const isLoading = (!lessonEntity && !lessonEntityError) || isValidating;
 
     const [{ id: lessonId, displayName }, modifyActivity] = useMergeReducer<{
         id: string | undefined,
@@ -165,15 +166,15 @@ export default function ActivityListPane({
         const body = JSON.stringify({
             date,
             displayName,
-            activities: activities.map<Partial<ActivityEntity['attributes']> & { id: string | undefined }>(x => ({
+            activities: activities.map(x => ({
                 id: x.id.startsWith('%local') ? undefined : x.id,
                 activityType: x.activityType?.id,
                 configuration: x.configuration,
-                supportedLanguages: x.supportedLanguages
+                enabledLanguages: x.enabledLanguages
             }))
-        } as LessonEntity['attributes']);
+        } as AttributesOf<LessonEntity<{ activities: 'deep' }>>);
 
-        let req: Promise<Response<LessonEntity<true>>>;
+        let req: Promise<Response<LessonEntity<{ activities: 'deep', classroom: 'shallow' }>>>;
         
         if (lessonId) {
             req = fetch(`/api/classroom/${classroomId}/lesson/${lessonId}`, {

@@ -1,29 +1,47 @@
 import { PickersDay, StaticDatePicker } from "@mui/lab";
 import { Badge, Stack, TextField, Tooltip } from "@mui/material";
-import { GetStaticPaths, GetStaticProps, NextPage } from "next";
+import { GetServerSideProps, NextPage } from "next";
 import { Dispatch, useCallback, useEffect, useRef, useState } from "react";
 import { Box } from "@mui/system";
 import ActivityListPane from "../../../../src/components/lesson-config/ActivityListPane";
 import { LessonEntity } from "../../../../src/api/entities/LessonEntity";
 import useGetRequest from "../../../../src/api/client/GetRequestHook";
-import { fromLuxon, Iso8601Date, toLuxon } from "../../../../src/util/iso8601";
+import { fromLuxon, Iso8601Date, iso8601DateRegex, toLuxon } from "../../../../src/util/iso8601";
 import SkeletonActivityListPane from "../../../../src/components/lesson-config/SkeletonActivityListPane";
 import { DateTime } from "luxon";
+import { useRouter } from "next/router";
 
+
+function getDateFromPath(path: string) {
+    const [, hash] = path.split('#', 2);
+    if (hash && iso8601DateRegex.test(hash)) {
+        return hash as Iso8601Date;
+    }
+    return null;
+}
 
 interface StaticProps {
     classroomId: string;
 }
 
 const Page: NextPage<StaticProps> = ({ classroomId }) => {
-    // Normally fromLuxon uses UTC, but we want "today" in the user's timezone
-    const [selectedDate, setSelectedDate] = useState<Iso8601Date>(fromLuxon(DateTime.now(), false));
+    const router = useRouter();
 
-    const { data: lessons } = useGetRequest<LessonEntity[]>(
+    // Normally fromLuxon uses UTC, but for the default we want "today" in the user's timezone
+    const [selectedDate, setSelectedDate] = useState(fromLuxon(DateTime.now(), false));
+
+    useEffect(() => {
+        const date = getDateFromPath(router.asPath);
+        if (date) {
+            setSelectedDate(date);
+        }
+    }, [router.asPath]);
+
+    const { data: lessons } = useGetRequest<LessonEntity<{ activities: 'shallow' }>[]>(
         classroomId === undefined ? null : `/api/classroom/${classroomId}/lesson`
     );
 
-    const [lessonsByDate, setLessonsByDate] = useState<{ [date: Iso8601Date]: LessonEntity | undefined }>({});
+    const [lessonsByDate, setLessonsByDate] = useState<{ [date: Iso8601Date]: LessonEntity<{ activities: 'shallow' }> | undefined }>({});
 
     useEffect(() => {
         if (lessons) {
@@ -31,26 +49,32 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
         }
     }, [lessons]);
 
-    const onLessonChange: Dispatch<LessonEntity | undefined> = useCallback(newLesson => {
+    const onLessonChange: Dispatch<LessonEntity<{ activities: 'shallow' }> | undefined> = useCallback(newLesson => {
         setLessonsByDate(lessonsByDate => ({
             ...lessonsByDate,
             [selectedDate]: newLesson
         }));
     }, [selectedDate]);
 
-    function isActiveLesson(lesson: LessonEntity | undefined) {
+    function isActiveLesson(lesson: LessonEntity<{ activities: 'shallow' }> | undefined) {
         return Boolean(lesson && (lesson.attributes.displayName !== '' || lesson.attributes.activities.length > 0));
     }
 
     const saveLessonRef = useRef<() => void>();
 
+    useEffect(() => {
+        saveLessonRef.current?.();
+    }, []);
+
     return <Stack sx={{ height: 'calc(100vh - var(--header-height))', px: 8, pb: 8, pt: 4 }} direction="row" alignItems="center" spacing={8}>
         <Box sx={{ pt: 2 }}>
             <StaticDatePicker
                 value={toLuxon(selectedDate)}
-                onChange={d => {
+                onChange={newDate => {
                     saveLessonRef.current?.();
-                    setSelectedDate(d ? fromLuxon(d) : selectedDate);
+                    if (newDate) {
+                        router.push({ hash: fromLuxon(newDate) });
+                    }
                 }}
                 renderInput={params => <TextField {...params} />}
                 displayStaticWrapperAs="desktop"
@@ -59,7 +83,8 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
                     const isoDate = fromLuxon(day);
                     const todayLesson = lessonsByDate[isoDate];
                     const showsIndicators = isActiveLesson(todayLesson) && !DayComponentProps.selected;
-                    return <Tooltip title={showsIndicators ? todayLesson!.attributes.displayName : ''}
+                    return <Tooltip key={DayComponentProps.key}
+                        title={showsIndicators ? todayLesson!.attributes.displayName : ''}
                         placement="top" arrow
                     > 
                         <Badge key={isoDate}
@@ -86,7 +111,7 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
 
 export default Page;
 
-export const getStaticProps: GetStaticProps<StaticProps> = ctx => {
+export const getServerSideProps: GetServerSideProps<StaticProps> = async ctx => {
     if (typeof ctx.params?.classroomId !== 'string') {
         return {
             notFound: true
@@ -99,10 +124,3 @@ export const getStaticProps: GetStaticProps<StaticProps> = ctx => {
         }
     };
 };
-
-export const getStaticPaths: GetStaticPaths = async () => {
-    return {
-        paths: [],
-        fallback: true
-    };
-}

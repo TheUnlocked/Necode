@@ -7,21 +7,27 @@ import { prisma } from "../../../../../src/db/prisma";
 import { iso8601DateRegex } from "../../../../../src/util/iso8601";
 import { singleArg } from "../../../../../src/util/typeguards";
 
-const apiLessonAll = endpoint(makeLessonEntity, ['classroomId'] as const, {
+const apiLessonAll = endpoint(makeLessonEntity, ['classroomId', 'include[]'] as const, {
     type: 'entityType',
     GET: {
         loginValidation: true,
-        async handler({ query: { classroomId }, session }, ok, fail) {
+        async handler({ query: { classroomId, include }, session }, ok, fail) {
             if (!await isInstructor(session!.user.id, classroomId)) {
                 return fail(Status.FORBIDDEN);
             }
 
+            const includeActivities = include.includes('activities');
+
             const lessons = await prisma.lesson.findMany({
                 where: { classroomId },
-                include: { activities: { select: { id: true } } }
+                include: { activities: includeActivities ? true : { select: { id: true } } }
             });
 
-            return ok(lessons.map(x => makeLessonEntity(x, { activities: x.activities.map(x => x.id) })));
+            return ok(lessons.map(x => makeLessonEntity(x, {
+                activities: includeActivities
+                    ? x.activities.map(singleArg(makeActivityEntity))
+                    : x.activities.map(x => x.id)
+            })));
         }
     },
     POST: {
@@ -33,7 +39,7 @@ const apiLessonAll = endpoint(makeLessonEntity, ['classroomId'] as const, {
                 .items(Joi.object<ActivityEntity['attributes']>({
                     activityType: Joi.string(),
                     configuration: Joi.any().optional(),
-                    supportedLanguages: Joi.array().items(Joi.string())
+                    enabledLanguages: Joi.array().items(Joi.string())
                 }))
                 .optional()
         }),
@@ -61,7 +67,7 @@ const apiLessonAll = endpoint(makeLessonEntity, ['classroomId'] as const, {
                         activityType: x.activityType,
                         displayName: 'placeholder',
                         configuration: x.configuration,
-                        supportedLanguages: x.supportedLanguages,
+                        supportedLanguages: x.enabledLanguages,
                         order: i
                     }))
                 });

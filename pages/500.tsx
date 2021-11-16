@@ -2,15 +2,11 @@ import { NextPage } from "next";
 import { Stack, Typography, Link, styled } from "@mui/material";
 import { MouseEvent } from "react";
 import dedent from "dedent-js";
+import SubtleLink from "../src/components/SubtleLink";
 
 const AsciiArt = styled('pre')`
     text-align: left;
 `;
-
-const HiddenLink = styled(Link)(({ theme }) => `
-    color: ${theme.palette.text.primary};
-    text-decoration-color: ${theme.palette.text.primary};
-`);
 
 const InternalServerErrorPage: NextPage = () => {
     function goBack(e: MouseEvent) {
@@ -31,13 +27,13 @@ const InternalServerErrorPage: NextPage = () => {
             <Typography variant="h1" fontSize="max(10vw, 6rem)" fontWeight="900">500</Typography>
             <Typography variant="h2" fontSize="max(3vw, 3rem)">Internal Server Error</Typography>
             <Typography variant="body1" fontSize="max(1vw, 1rem)" my={2}>
-                Nothing to see here... Look, a cat! It wants you to <Link href="#" onClick={goBack}>go back</Link>!
+                Look, a cat! It wants you to <Link href="#" onClick={goBack}>go back</Link>!
             </Typography>
         </Stack>
         <AsciiArt sx={{
             fontSize: "clamp(1.5rem, 3vw, 2.5rem)"
         }}>{
-       `  ／|、 `}<HiddenLink href="#" onClick={goBack}>m̵̧̎̊ͅe̸͉͋͒o̶̘͔̓w̵̩͓͘</HiddenLink>{dedent`\n
+       `  ／|、 `}<SubtleLink href="#" onClick={goBack}>m̵̧̎̊ͅe̸͉͋͒o̶̘͔̓w̵̩͓͘</SubtleLink>{dedent`\n
         ﾞ（ﾟ､ ｡ ７
           |、ﾞ ~ヽ
           じしf_, )ノ

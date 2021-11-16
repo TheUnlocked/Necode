@@ -26,7 +26,7 @@ import CustomAdapterLuxon from '../src/util/CustomLuxonAdapter';
 function MyApp({ Component, pageProps }: AppProps) {
     const [meta, metaTransformer] = useMergeReducer({
         title: "MQP App",
-        path: [{ label: "To be named" }]
+        path: [{ label: "Necode" }]
     } as MetaInfo);
 
     const loadingInfoRef = useRef({
@@ -71,7 +71,12 @@ function MyApp({ Component, pageProps }: AppProps) {
             <SessionProvider session={pageProps.session}>
             <LoadingContext.Provider value={loadingContext}>
                 <Header path={meta.path} />
-                <Box sx={{ "--header-height": "64px" } as SxProps}>
+                <Box sx={{
+                    "--header-height": "64px",
+                    display: "flex",
+                    flexDirection: "column",
+                    minHeight: "calc(100vh - 64px)"
+                } as SxProps}>
                 <Component {...pageProps} />
                 </Box>
                 <LoadingSpinners />

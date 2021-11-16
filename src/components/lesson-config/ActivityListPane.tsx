@@ -83,7 +83,7 @@ export default function ActivityListPane({
         accept: activityDragDropType,
         collect(monitor) {
             return {
-                isDragging: Boolean(monitor.getItem())
+                isDragging: Boolean(monitor.getItemType() === activityDragDropType)
             };
         },
         drop(item: LocalActivity) {
@@ -314,10 +314,13 @@ export default function ActivityListPane({
                         <IconButton onClick={() => addActivity(textInputActivityDescription)}><TextFields/></IconButton>
                     </Tooltip>
                     <Stack direction="row" justifyContent="end" spacing={1} flexGrow={1}>
-                        {isDragging
-                            ? <Button ref={trashDrop} variant="contained" color="error" disableRipple
+                        <Tooltip title="Drag activities here to delete">
+                            <Button ref={trashDrop}
+                                variant={isDragging ? "contained" : "outlined"}
+                                disabled={!isDragging}
+                                color="error" disableRipple
                                 startIcon={<Delete/>}>Delete</Button>
-                            : undefined}
+                        </Tooltip>
                     </Stack>
                 </Stack>
             </Box>

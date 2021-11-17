@@ -1,5 +1,4 @@
 const { spawn } = require('child_process');
-const tsNameof = require("ts-nameof");
 const path = require('path');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 
@@ -28,7 +27,6 @@ module.exports = {
                 options: {
                     context: path.resolve('./websocketServer'),
                     onlyCompileBundledFiles: true,
-                    getCustomTransformers: () => ({ before: [tsNameof] }),
                 }
             }
         ]

@@ -22,20 +22,20 @@ export default function tracked<E extends Trackable>(emitter: E | undefined) {
     return new Proxy(emitter, {
         get(target: typeof emitter, field: string | symbol | number, reciever) {
             switch (field) {
-                case nameof<EventEmitter<any>>(e => e.on):
-                case nameof<EventEmitter<any>>(e => e.once):
-                case nameof<EventEmitter<any>>(e => e.addListener):
-                case nameof<EventEmitter<any>>(e => e.prependListener):
-                case nameof<EventEmitter<any>>(e => e.prependOnceListener):
+                case 'on':
+                case 'once':
+                case 'addListener':
+                case 'prependListener':
+                case 'prependOnceListener':
                     return (ev: any, listener: any) => {
                         (trackingList[ev] ??= []).push(listener);
                         return (target as any)[field](ev, listener);
                     };
-                case nameof<Tracked<E>>(e => e.offTrackedEvent):
+                case 'offTrackedEvent':
                     return (ev: any) => {
                         trackingList[ev].forEach(handler => (emitter as EventEmitter<any>).off(ev, handler));
                     };
-                case nameof<Tracked<E>>(e => e.offTracked):
+                case 'offTracked':
                     return () => {
                         for (const ev in trackingList) {
                             trackingList[ev].forEach(handler => (emitter as EventEmitter<any>).off(ev, handler));

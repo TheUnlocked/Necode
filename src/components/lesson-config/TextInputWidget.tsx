@@ -5,7 +5,7 @@ import { Code as CodeIcon, TextFields as TextFieldsIcon } from "@mui/icons-mater
 import Editor from "@monaco-editor/react";
 import { usePopupState, bindTrigger, bindPopper } from "material-ui-popup-state/hooks";
 import DragHandle, { dragHandleClass, dragHandleSelector } from "./DragHandle";
-import { editor } from "monaco-editor";
+import type { editor } from "monaco-editor";
 import { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
 import allLanguages from "../../languages/allLanguages";
 

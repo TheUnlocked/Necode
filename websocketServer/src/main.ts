@@ -11,6 +11,8 @@ import SocketJWT from '../../src/api/server/SocketJWT';
 import { PrismaClient } from '.prisma/client';
 import ClassroomManager, { Classroom } from './ClassroomManager';
 import * as express from 'express';
+import { DateTime, Duration } from 'luxon';
+import { makeActivitySubmissionEntity } from '../../src/api/entities/ActivitySubmissionEntity';
 
 dotenv.config()
 
@@ -76,7 +78,7 @@ io.on('connection', socket => {
             return;
         }
         
-        console.log(socketId, 'diconnected!');
+        console.log(socketId, 'disconnected!');
         users.delete(socketId);
 
         if (classroom) {
@@ -128,12 +130,78 @@ io.on('connection', socket => {
         callback(members.map(x => users.get(x)?.userId).filter(isNotNull));
     });
 
-    socket.on('command', async (to, data) => {
-
+    socket.on('command', async (to, data, callback) => {
+        if (await getRoleInClass() === 'Instructor') {
+            if (to === undefined) {
+                to = [...classroom.membersCache];
+            }
+            if (to.length > 0) {
+                io.to(to.filter(x => x !== socketId))
+                    .emit('command', data);
+            }
+            return callback();
+        }
+        return callback('An unexpected error occurred');
     });
 
-    socket.on('request', async (data) => {
+    socket.on('request', async (data, callback) => {
+        if (await getRoleInClass()) {
+            io.to([...classroom.instructorsCache])
+                .emit('request', data);
+            return callback();
+        }
+        return callback('An unexpected error occurred');
+    });
 
+    socket.on('submit', async (data, callback) => {
+        if (!classroom.activity) {
+            return callback('No activity');
+        }
+        const role = await getRoleInClass();
+        if (!role) {
+            return callback('Not logged in');
+        }
+        if (role === 'Instructor') {
+            return callback('Instructors cannot make submissions');
+        }
+
+        try {
+            // It might seem like there could be a concurrency bug here,
+            // but it's actually okay in practice since the version has a unique
+            // constraint with respect to each user and activity.
+            const lastSubmission = await prisma.activitySubmission.findFirst({
+                where: {
+                    activityId: classroom.activity.id,
+                    userId
+                },
+                orderBy: {
+                    version: 'desc'
+                }
+            });
+            if (!lastSubmission || DateTime.fromJSDate(lastSubmission.createdAt).diff(DateTime.now()) < Duration.fromMillis(10000)) {
+                return callback('Submissions can only be made every 10 seconds');
+            }
+            // TODO: Add check for size limits
+            const submission = await prisma.activitySubmission.create({
+                data: {
+                    userId,
+                    activityId: classroom.activity.id,
+                    data,
+                    version: lastSubmission.version
+                }
+            });
+
+            callback();
+            io.to(await classroom.getInstructors())
+                .emit('submission', makeActivitySubmissionEntity(submission, {
+                    user: submission.userId
+                }));
+        }
+        catch (e) {
+            // Most trying to add a submission with a version that already exists,
+            // but it's possible that other database errors could occur.
+            callback('An unexpected error occurred');
+        }
     });
 });
 

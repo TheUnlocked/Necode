@@ -8,26 +8,30 @@ export interface ClientToServerEventMap {
     join(jwt: string, callback: (ok: boolean) => void): void;
     
     getParticipants(callback: (participants: string[]) => void): void;
-    getActivity(callback: (liveActivityinfo: LiveActivityInfo) => void): void;
+    getActivity(callback: (liveActivityInfo: LiveActivityInfo) => void): void;
     
     /**
      * Send a command as an instructor to other users in the class.
      * This should be used for transient interaction (e.g. a live chat message).
      * Data which should be preserved between reloads should NOT use command
      * and should instead use either the Submission or LiveActivity API.
-     * @param to a specific set of users, or undefined to broadcast it to everyone
+     * @param to a specific set of users to broadcast the command to.
+     *      If undefined, it will broadcast to everyone in the classroom,
+     *      EXCLUDING your current session, but possibly including
+     *      other sessions from the same account.
      * @param data the data to send in the command
      */
-    command(to: string[] | undefined, data: any): void;
+    command(to: string[] | undefined, data: any, callback: (error?: string) => void): void;
     /**
      * Send a request as a user to the instructor(s) in the class.
      * This should be used for transient interaction (e.g. a live chat message).
      * Data which should be preserved between reloads should NOT use command
      * and should instead use the Submission API.
+     * If you are an instructor, you will be sent your own request.
      * @param data the data to send in the request
      */
-    request(data: any): void;
-    submit(data: any): void;
+    request(data: any, callback: (error?: string) => void): void;
+    submit(data: any, callback: (error?: string) => void): void;
 
     provideWebRTCSignal(connId: string, signal: SignalData): void;
 }
@@ -52,7 +56,7 @@ export interface ServerToClientEventMap {
     endActivity(): void;
     command(data: any): void;
     request(data: any): void;
-    submission(entity: ActivitySubmissionEntity): void;
+    submission(entity: ActivitySubmissionEntity<{ user: 'shallow', activity: 'none' }>): void;
 }
 
 export interface LiveActivityInfo {

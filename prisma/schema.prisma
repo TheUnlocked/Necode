@@ -55,7 +55,10 @@ enum SitewideRights {
 }
 
 model User {
-  id            String                @id @default(cuid())
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   username      String                @unique
   displayName   String
   email         String                @unique
@@ -70,7 +73,10 @@ model User {
 }
 
 model Classroom {
-  id           String                @id @default(cuid())
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   displayName  String
   members      ClassroomMembership[]
   lessons      Lesson[]
@@ -93,7 +99,10 @@ model ClassroomMembership {
 }
 
 model Activity {
-  id                 String               @id @default(cuid())
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  // updatedAt excluded because of order field
+
   activityType       String
   lesson             Lesson               @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   lessonId           String
@@ -106,7 +115,10 @@ model Activity {
 }
 
 model Lesson {
-  id          String     @id @default(cuid())
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   displayName String
   classroom   Classroom  @relation(fields: [classroomId], references: [id], onDelete: Cascade)
   classroomId String
@@ -125,11 +137,16 @@ model LiveActivity {
 }
 
 model ActivitySubmission {
-  id         String   @id @default(cuid())
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   activityId String
   userId     String
   version    Int
   data       Json?
   activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, userId, version]) // hard-blocks some concurrency bugs
 }

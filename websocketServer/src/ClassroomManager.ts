@@ -125,6 +125,10 @@ export default class ClassroomManager {
 
     }
 
+    get(id: string) {
+        return this.map.get(id);
+    }
+
     getOrCreate(id: string) {
         if (!this.map.has(id)) {
             const classroom = new Classroom(id, this.io, this.prisma, this.users);

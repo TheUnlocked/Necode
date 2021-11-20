@@ -23,15 +23,41 @@ const Home: NextPage = () => {
                 <InfoSection>
                     <Typography component="h2" variant="h4" fontWeight={500}>What is Necode?</Typography>
                     <p>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed molestie mauris pulvinar magna suscipit lacinia. Pellentesque a lectus nec diam ullamcorper dictum in sed massa. Vivamus eget erat justo. Praesent eget vulputate arcu. Nulla facilisi. Morbi quis dolor ac neque posuere ullamcorper. Quisque volutpat lorem vitae enim vulputate, at aliquet neque scelerisque. Aliquam commodo dolor nec turpis porta pellentesque hendrerit non tortor. Vestibulum vitae interdum ligula. Pellentesque sit amet sem nec purus tincidunt posuere. Quisque dictum dolor vitae nibh placerat lacinia.
-
-                    Donec blandit varius lorem, et lacinia turpis suscipit et. Maecenas euismod congue nibh, eget lacinia nulla porta vitae. Donec hendrerit cursus lacus non iaculis. Vestibulum nec aliquam dui. Suspendisse massa mauris, rutrum in lobortis et, bibendum sit amet sem. Curabitur eros tortor, laoreet id elit nec, dapibus tempus nisi. Maecenas iaculis consectetur odio nec rutrum. Fusce egestas risus nibh, vel faucibus lectus pellentesque id. Sed ante tortor, volutpat ut consequat quis, maximus facilisis nunc. Duis aliquam nulla ligula, ac sollicitudin turpis tempus eu. Fusce diam ligula, accumsan lacinia accumsan volutpat, auctor eget dui. Duis lectus velit, auctor nec felis et, elementum luctus orci. Proin vehicula gravida leo, sed eleifend ipsum dictum ut. Ut at enim vulputate, cursus felis vel, tincidunt ante. Suspendisse at ex quam.                </p>
+                        Necode is experimental networked programming software designed to improve interactivity in a classroom setting.
+                        Necode enables teachers to create in-class interactive programming activities where students can write code
+                        and see it evaluated live, in order to facilitate learning for themselves and for their classmates.
+                    </p>
+                </InfoSection>
+                <InfoSection>
+                    <Typography component="h2" variant="h4" fontWeight={500}>What makes Necode special?</Typography>
+                    <p>
+                        Rather than creating a specific kind of interactive activity, for a specific programming language,
+                        Necode is designed to allow activities to be implemented independently of language implementations.
+                        Activities specify what features they require a language implementation to support,
+                        and language implementations specify what features they do support.
+                        If there&apos;s a match, that language will be available for the instructor to turn on for that activity.
+                    </p>
+                </InfoSection>
+                <InfoSection>
+                    <Typography component="h2" variant="h4" fontWeight={500}>What can do I do with Necode?</Typography>
+                    <p>
+                        Currently Necode is in development, and access will be limited to a few professors at Worcester Polytechnic Institute
+                        who have graciously agreed to use Necode in their classes, as well as the students who will be using Necode in those classes.
+                    </p>
+                    <p>
+                        Currently, the activity which is the closest to being production-ready allows for DOM programming in a manner
+                        similar to websites like <SubtleLink target="_blank" rel="noopener" href="https://codesandbox.io/">CodeSandbox</SubtleLink>{' '}
+                        or <SubtleLink target="_blank" rel="noopener" href="https://codepen.io/">CodePen</SubtleLink>, but it also supports
+                        automated tests which can be written by the instructor using a custom TypeScript DSL, as well as the ability for
+                        students to write in Python or TypeScript instead of JavaScript, depending on what the instructor is trying to teach.
+                    </p>
                 </InfoSection>
                 <InfoSection>
                     <Typography component="h2" variant="h4" fontWeight={500}>How do you pronounce &quot;Necode&quot;?</Typography>
                     <p>
                         Neh-code. Like the &quot;ne&quot; in &quot;net&quot; and then &quot;code.&quot;
-                        Like &quot;<SubtleLink target="_blank" rel="noopener" href="https://translate.google.com/?sl=ja&tl=en&text=%E7%8C%AB&op=translate">neko</SubtleLink>&quot; but if the &quot;ko&quot; was &quot;code.&quot;
+                        Like &quot;<SubtleLink target="_blank" rel="noopener" href="https://translate.google.com/?sl=ja&tl=en&text=%E7%8C%AB&op=translate">neko</SubtleLink>&quot;
+                        but if the &quot;ko&quot; was &quot;code.&quot;
                         If you can read IPA, /nekoʊd/ (or /nekəʊd/ if you&apos;re British).
                         It is NOT knee-code or neh-ko-deh or anything similar to those. Neh. Code.
                     </p>

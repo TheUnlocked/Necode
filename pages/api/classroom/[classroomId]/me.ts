@@ -4,7 +4,7 @@ import { endpoint, Status } from "../../../../src/api/Endpoint";
 import { makeClassroomEntity } from "../../../../src/api/entities/ClassroomEntity";
 
 const apiClassroomMe = endpoint(makeClassroomMemberEntity, ['classroomId', 'include[]'] as const, {
-    type: 'entity',
+    type: 'entity' as const,
     GET: {
         requiresLogin: true,
         handler: async ({ query: { classroomId, include }, session }, ok, fail) => {

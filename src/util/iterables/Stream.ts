@@ -194,6 +194,24 @@ export class Stream<T> implements Iterable<T> {
     first() {
         return this.take(1).toArray()[0];
     }
+
+    partition<U>(partitioner: (value: T, currentIndex: number) => U, thisArg?: any): Stream<[shared: U, values: T[]]> {
+        const partitions = new Map<U, T[]>();
+
+        let i = 0;
+        for (const e of this) {
+            const key = partitioner.call(thisArg, e, i++);
+            const currentSet = partitions.get(key);
+            if (!currentSet) {
+                partitions.set(key, [e]);
+            }
+            else {
+                currentSet.push(e);
+            }
+        }
+
+        return stream(partitions.entries());
+    }
 }
 
 export function stream<T>(x: Iterable<T>) {

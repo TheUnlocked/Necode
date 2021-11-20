@@ -73,11 +73,11 @@ export interface EndpointMap<
     PatchReq = any, PatchRes = any,
     DeleteReq = any, DeleteRes = any
 > {
-    GET: Endpoint<GetReq, GetRes, QueryParams>;
-    POST: Endpoint<PostReq, PostRes, QueryParams>;
-    PUT: Endpoint<PutReq, PutRes, QueryParams>;
-    PATCH: Endpoint<PatchReq, PatchRes, QueryParams>;
-    DELETE: Endpoint<DeleteReq, DeleteRes, QueryParams>;
+    GET?: Endpoint<GetReq, GetRes, QueryParams>;
+    POST?: Endpoint<PostReq, PostRes, QueryParams>;
+    PUT?: Endpoint<PutReq, PutRes, QueryParams>;
+    PATCH?: Endpoint<PatchReq, PatchRes, QueryParams>;
+    DELETE?: Endpoint<DeleteReq, DeleteRes, QueryParams>;
 }
 
 
@@ -137,36 +137,36 @@ export type PartialAttributesOf<E extends EntityReference<Entity<any, any>, Refe
 
 type EntityEndpoints<E extends Entity<any, any>, QueryParams extends string> = {
     type: 'entity'
-} & Partial<EndpointMap<
+} & EndpointMap<
     QueryParams,
     undefined, E,
     unknown, unknown,
     AttributesOf<E>, E,
     PartialAttributesOf<E>, E,
     undefined, void
->>;
+>;
 
 type EntityTypeEndpoints<E extends Entity<any, any>, QueryParams extends string> = {
     type: 'entityType'
-} & Partial<EndpointMap<
+} & EndpointMap<
     QueryParams,
     undefined, E[],
     AttributesOf<E>, E,
     unknown, unknown,
     unknown, unknown,
     unknown, unknown
->>;
+>;
 
 type SortableEntityTypeEndpoints<E extends Entity<any, any>, QueryParams extends string> = {
     type: 'entityType.sortable'
-} & Partial<EndpointMap<
+} & EndpointMap<
     QueryParams,
     undefined, E[],
     AttributesOf<E>, E,
     unknown, unknown,
     { id: string, attributes?: PartialAttributesOf<E> }[], E[],
     unknown, unknown
->>;
+>;
 
 type EndpointResult<P extends string, Endpoints extends Partial<EndpointMap<any>>> = NextApiHandler<any> & {
     [Method in keyof Endpoints]: Endpoints[Method] extends Endpoint<any, any, P>
@@ -187,7 +187,7 @@ export function endpoint
     (example: E | ((...args: any[]) => E), mandatoryParams: readonly P[], endpoints: Endpoints): EndpointResult<P, Endpoints>;
 
 export function endpoint
-    <P extends string, Endpoints extends EndpointMap<P>>
+    <P extends string, Endpoints extends EndpointMap<P> & { type: 'other' }>
     (options: any, mandatoryParams: readonly P[], endpoints: Endpoints): EndpointResult<P, Endpoints>;
 
 export function endpoint<P extends string, Endpoints extends EndpointMap<P>>(_: any, mandatoryParams: readonly P[], endpoints: Endpoints) {

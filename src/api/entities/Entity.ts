@@ -5,6 +5,7 @@ export enum EntityType {
     Classroom = 'classroom',
     Lesson = 'lesson',
     Activity = 'activity',
+    ActivitySubmission = 'submission',
 }
 
 export type EntityId = string;

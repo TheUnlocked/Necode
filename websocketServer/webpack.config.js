@@ -1,6 +1,5 @@
 const { spawn } = require('child_process');
 const path = require('path');
-const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 
 const rel = x => './' + path.join(path.relative(process.cwd(), __dirname), x);
 

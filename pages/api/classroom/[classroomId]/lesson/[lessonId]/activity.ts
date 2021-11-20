@@ -1,8 +1,8 @@
 import Joi from "joi";
-import { endpoint, Status } from "../../../../../../../src/api/Endpoint";
-import { ActivityEntity, makeActivityEntity } from "../../../../../../../src/api/entities/ActivityEntity";
-import { isInstructor } from "../../../../../../../src/api/server/validators";
-import { prisma } from "../../../../../../../src/db/prisma";
+import { endpoint, Status } from "../../../../../../src/api/Endpoint";
+import { ActivityEntity, makeActivityEntity } from "../../../../../../src/api/entities/ActivityEntity";
+import { isInstructor } from "../../../../../../src/api/server/validators";
+import { prisma } from "../../../../../../src/db/prisma";
 
 const apiActivityAll = endpoint(makeActivityEntity, ['classroomId', 'lessonId'] as const, {
     type: 'entityType',

@@ -1,17 +1,16 @@
 import AutoRing from '../../../../src/util/AutoRing';
 import { ArrayKeyMap } from '../../../../src/util/maps/ArrayKeyMap';
-import { Username } from '../../types';
-import { ConnectionInfo, IProtocol, IProtocolSettings, protocol } from './IProtocol';
+import { ConnectionInfo, RtcPolicy, RtcPolicySettings, rtcPolicy } from './RtcPolicy';
 
-@protocol
-export class RingProtocol implements IProtocol {
-    public protocolId = 'ring';
+@rtcPolicy
+export class RingPolicy implements RtcPolicy {
+    public policyId = 'ring';
 
-    private ring: AutoRing<Username>;
-    private connectionMap = new ArrayKeyMap<[Username, Username], ConnectionInfo>();
+    private ring: AutoRing<string>;
+    private connectionMap = new ArrayKeyMap<[string, string], ConnectionInfo>();
 
-    constructor(users: Iterable<Username>, private settings: IProtocolSettings) {
-        this.ring = new AutoRing<Username>(users, {
+    constructor(users: Iterable<string>, private settings: RtcPolicySettings) {
+        this.ring = new AutoRing<string>(users, {
             linkHandler: (a, b) => {
                 console.log(a, '->', b);
                 this.connectionMap.set([a, b], this.settings.rtc.createWebRtcConnection(a, b, { 'role': 'send' }, { 'role': 'recv' }));
@@ -24,10 +23,10 @@ export class RingProtocol implements IProtocol {
         });
     }
     
-    onUserJoin(user: Username): void {
+    onUserJoin(user: string): void {
         this.ring.add(user);
     }
-    onUserLeave(user: Username): void {
+    onUserLeave(user: string): void {
         this.ring.remove(user);
     }
 }

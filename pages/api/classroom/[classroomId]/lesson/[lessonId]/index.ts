@@ -135,13 +135,17 @@ const apiLessonOne = endpoint({} as LessonEntity<{ classroom: any, activities: R
 
             lessonId = await maybeGetByIsoDate(lessonId, classroomId) ?? '';
 
-            if (lessonId === '' || await prisma.lesson.count({ where: { id: lessonId, classroomId } }) === 0) {
+            if (lessonId === '') {
                 return fail(Status.NOT_FOUND);
             }
 
-            await prisma.lesson.delete({
+            const result = await prisma.lesson.delete({
                 where: { id: lessonId }
             });
+
+            if (!result) {
+                return fail(Status.NOT_FOUND);
+            }
 
             return ok();
         }

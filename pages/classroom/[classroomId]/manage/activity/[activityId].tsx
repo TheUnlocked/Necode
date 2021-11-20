@@ -15,17 +15,17 @@ import ConfigureLanguageDialog from "../../../../../src/components/ConfigureLang
 import useGetRequest from "../../../../../src/api/client/GetRequestHook";
 import { ActivityEntity } from "../../../../../src/api/entities/ActivityEntity";
 import apiClassroomMe from "../../../../api/classroom/[classroomId]/me";
-import apiActivityOne from "../../../../api/classroom/[classroomId]/lesson/[lessonId]/activity/[activityId]";
+import apiActivityOne from "../../../../api/classroom/[classroomId]/activity/[activityId]";
 import allActivities from "../../../../../src/activities/allActivities";
+import useSocket from "../../../../../src/hooks/SocketHook";
 
 interface StaticProps {
     classroomId: string;
-    lessonId: string;
     activityId: string;
     date: string;
 }
 
-const Page: NextPage<StaticProps> = ({ classroomId, lessonId, date, activityId }) => {
+const Page: NextPage<StaticProps> = ({ classroomId, date, activityId }) => {
     const router = useRouter();
     const metaTransformer = useContext(MetaTransformerContext);
 
@@ -38,7 +38,7 @@ const Page: NextPage<StaticProps> = ({ classroomId, lessonId, date, activityId }
         ] });
     }, [metaTransformer, classroomId]);
 
-    const activityEndpoint = `/api/classroom/${classroomId}/lesson/${lessonId}/activity/${activityId}`;
+    const activityEndpoint = `/api/classroom/${classroomId}/activity/${activityId}`;
     const { data: activityEntity } = useGetRequest<ActivityEntity>(activityEndpoint);
 
     const activity = useMemo(() => allActivities.find(x => x.id === activityEntity?.attributes.activityType), [activityEntity]);
@@ -177,7 +177,8 @@ const Page: NextPage<StaticProps> = ({ classroomId, lessonId, date, activityId }
                     id={""}
                     activityConfig={activityConfig}
                     classroomId={classroomId}
-                    language={selectedLanguage} />
+                    language={selectedLanguage}
+                    socketInfo={undefined} />
             </Lazy>
             <Lazy show={!isPreview}>
                 <activity.configPage
@@ -212,7 +213,6 @@ export const getServerSideProps: GetServerSideProps<StaticProps> = async ctx => 
     const { data: activityData } = await apiActivityOne.GET.execute(ctx.req, { query: {
         activityId,
         classroomId,
-        lessonId: undefined,
         include: ['lesson']
     }, body: undefined }) as { data: ActivityEntity<{ lesson: 'deep' }> };
 
@@ -226,7 +226,6 @@ export const getServerSideProps: GetServerSideProps<StaticProps> = async ctx => 
         props: {
             classroomId,
             activityId,
-            lessonId: activityData.attributes.lesson.id,
             date: activityData.attributes.lesson.attributes.date
         }
     };

@@ -1,28 +1,29 @@
 import { nanoid } from "nanoid";
 import tracked from "../../../src/util/trackedEventEmitter";
-import { IOServer, Username } from "../types";
+import { IOServer } from "../types";
 import UserManager from "../UserManager";
 
 export default class RtcManager {
-    constructor(private io: IOServer, private users: UserManager) {
+    constructor(private io: IOServer) {
 
     }
 
-    createWebRtcConnection(initiator: Username, recipient: Username, initiatorInfo: unknown, recipientInfo: unknown) {
+    createWebRtcConnection(initiatorId: string, recipientId: string, initiatorInfo: unknown, recipientInfo: unknown) {
         const connId = nanoid();
+        const initiatorName = initiatorId;
+        const recipientName = recipientId;
         const initiatorConnId = connId + '/' + nanoid();
         const recipientConnId = connId + '/' + nanoid();
-        console.log(`[${connId}]`, 'link', initiator, 'with', recipient);
+        console.log(`[${connId}]`, 'link', initiatorName, 'with', recipientName);
     
-        const initiatorId = this.users.fromUsername(initiator);
         if (!initiatorId) {
-            console.log(`[${connId}]`, initiator, 'is not a valid user');
-            throw new Error(`${initiator} is not a valid user`);
+            console.log(`[${connId}]`, initiatorName, 'is not a valid user');
+            throw new Error(`${initiatorName} is not a valid user`);
         }
-        const recipientId = this.users.fromUsername(recipient);
+
         if (!recipientId) {
-            console.log(`[${connId}]`, recipient, 'is not a valid user');
-            throw new Error(`${recipient} is not a valid user`);
+            console.log(`[${connId}]`, recipientName, 'is not a valid user');
+            throw new Error(`${recipientName} is not a valid user`);
         }
         
         const initiatorSocket = tracked(this.io.sockets.sockets.get(initiatorId));
@@ -55,10 +56,10 @@ export default class RtcManager {
         });
     
         this.io.to(initiatorId).emit('createWebRTCConnection', true, initiatorConnId, initiatorInfo);
-        console.log(`[${connId}]`, 'told', initiator, 'to initiate connection with', recipient);
+        console.log(`[${connId}]`, 'told', initiatorName, 'to initiate connection with', recipientName);
         
         this.io.to(recipientId).emit('createWebRTCConnection', false, recipientConnId, recipientInfo);
-        console.log(`[${connId}]`, 'told', recipient, 'to create connection with', initiator);
+        console.log(`[${connId}]`, 'told', recipientName, 'to create connection with', initiatorName);
     
         const self = this;
 
@@ -70,7 +71,7 @@ export default class RtcManager {
                     throw new Error(`Cannot destroy already dead connection ${connId}`);
                 }
                 this.alive = false;
-                console.log(`[${connId}]`, 'unlink', initiator, 'from', recipient);
+                console.log(`[${connId}]`, 'unlink', initiatorName, 'from', recipientName);
                 self.io.to(initiatorId).emit('killWebRTCConnection', initiatorConnId);
                 self.io.to(recipientId).emit('killWebRTCConnection', recipientConnId);
             }

@@ -1,5 +1,4 @@
 import { Lesson } from ".prisma/client";
-import dayjs from "dayjs";
 import { DateTime } from "luxon";
 import { fromLuxon, Iso8601Date } from "../../util/iso8601";
 import { ActivityEntity } from "./ActivityEntity";

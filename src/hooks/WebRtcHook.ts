@@ -1,82 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
-import { AuthLevel, ClientToServerEventMap, ClientToServerOrders, ServerToClientEventMap, Username } from '../../websocketServer/src/types';
+import { useEffect, useRef } from 'react';
 import Peer from 'simple-peer';
 import tracked from '../util/trackedEventEmitter';
+import { SocketInfo } from './SocketHook';
 
-export function useWebsocket(classroom: string) {
-    const [wsInstance, setWs] = useState<Socket<ServerToClientEventMap, ClientToServerEventMap> | undefined>();
-    const [authLevel, setAuthLevel] = useState(AuthLevel.None);
 
-    // dev
-    let usernameRef = useRef("" as Username);
-
-    useEffect(() => {
-        if (classroom) {
-            const ws = io(`${window.location.hostname}:3011`, { port: '3011' }) as Socket<ServerToClientEventMap, ClientToServerEventMap>;
-            
-            // let connected = false;
-    
-            // ws.onAny(console.log);
-    
-            ws.on('connect', async () => {
-                const jwt = await (await fetch(`/api/classroom/${classroom}/jwt`, { method: 'POST' })).text();
-                ws.emit('join', jwt, (response) => {
-                    if (response.authority !== AuthLevel.Denied) {
-                        const { authority: authLevel, user: forUsername, classroom: inClassroom } = response;
-
-                        if (classroom === inClassroom) {
-                            // dev
-                            usernameRef.current = forUsername;
-    
-                            // // Only need to setWs the first time.
-                            // if (!connected) {
-                            //     connected = true;
-                                setWs(ws);
-                                setAuthLevel(authLevel);
-                            // }
-                        }
-                        else {
-                            // incorrect authorization, bug
-                        }
-                    }
-                    else {
-                        // authorization denied, show error?
-                    }
-                });
-            });
-    
-            return () => { ws.close(); };
-        }
-    }, [classroom]);
-
-    return useMemo(() => wsInstance ? {
-        ws: wsInstance,
-        authLevel,
-        getParticipants() {
-            return new Promise((resolve, reject) => {
-                if (wsInstance) {
-                    wsInstance.emit('getParticipants', resolve);
-                }
-                else {
-                    // ws is not yet established
-                    reject();
-                }
-            });
-        }
-    } as Omit<ClientToServerOrders, 'getParticipants'> & {
-        ws: typeof wsInstance,
-        authLevel: AuthLevel,
-        getParticipants(): Promise<Username[]>
-    } : undefined, [
-        authLevel,
-        wsInstance
-    ]);
-}
-
-export function useRTC<T>(classroom: string, onPeer: (peer: Peer.Instance, info: T) => void) {
-    const socketInfo = useWebsocket(classroom);
-
+export function useRTC<T>(socketInfo: SocketInfo | undefined, onPeer: (peer: Peer.Instance, info: T) => void) {
     const onPeerRef = useRef(onPeer);
 
     useEffect(() => {
@@ -85,7 +13,11 @@ export function useRTC<T>(classroom: string, onPeer: (peer: Peer.Instance, info:
     }, [onPeer]);
 
     useEffect(() => {
-        const ws = socketInfo?.ws ? tracked(socketInfo.ws) : undefined;
+        if (!socketInfo?.socket) {
+            return;
+        }
+
+        const ws = socketInfo?.socket ? tracked(socketInfo.socket) : undefined;
         
         if (ws) {
             let peers = [] as Peer.Instance[];
@@ -133,7 +65,7 @@ export function useRTC<T>(classroom: string, onPeer: (peer: Peer.Instance, info:
 
             return () => ws.offTracked();
         }
-    }, [socketInfo?.ws]);
+    }, [socketInfo?.socket]);
     
     return socketInfo;
 }

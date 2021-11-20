@@ -1,23 +1,34 @@
 import type { SignalData } from 'simple-peer';
 import { Server } from 'socket.io';
-import { NewType } from '../../src/util/types';
+import { ActivitySubmissionEntity } from '../../src/api/entities/ActivitySubmissionEntity';
 
 export type IOServer = Server<ClientToServerEventMap, ServerToClientEventMap>;
 
-type Voidify<T> = T extends (...args: infer TArgs) => any ? (...args: TArgs) => void : T;
-type VoidifyAll<T extends {}> = { [Key in keyof T]: Voidify<T[Key]> };
+export interface ClientToServerEventMap {
+    join(jwt: string, callback: (ok: boolean) => void): void;
+    
+    getParticipants(callback: (participants: string[]) => void): void;
+    getActivity(callback: (liveActivityinfo: LiveActivityInfo) => void): void;
+    
+    /**
+     * Send a command as an instructor to other users in the class.
+     * This should be used for transient interaction (e.g. a live chat message).
+     * Data which should be preserved between reloads should NOT use command
+     * and should instead use either the Submission or LiveActivity API.
+     * @param to a specific set of users, or undefined to broadcast it to everyone
+     * @param data the data to send in the command
+     */
+    command(to: string[] | undefined, data: any): void;
+    /**
+     * Send a request as a user to the instructor(s) in the class.
+     * This should be used for transient interaction (e.g. a live chat message).
+     * Data which should be preserved between reloads should NOT use command
+     * and should instead use the Submission API.
+     * @param data the data to send in the request
+     */
+    request(data: any): void;
+    submit(data: any): void;
 
-declare const usernameBrand: unique symbol;
-/** Use `as` casts to transform between usernames and strings */
-export type Username = NewType<string, typeof usernameBrand>;
-
-
-export interface ClientToServerOrders {
-    getParticipants(callback: (participants: Username[]) => void): Promise<Username[]>;
-}
-
-export interface ClientToServerEventMap extends VoidifyAll<ClientToServerOrders> {
-    join(jwt: string, callback: (data: { authority: AuthLevel.Denied } | { authority: AuthLevel, user: Username, classroom: string }) => void): void;
     provideWebRTCSignal(connId: string, signal: SignalData): void;
 }
 
@@ -28,25 +39,23 @@ export interface ServerToClientEventMap {
     killWebRTCConnection(connId: string): void;
 
     // Events
-    userJoin(name: Username): void;
-    userLeave(name: Username): void;
+    userJoin(name: string): void;
+    userLeave(name: string): void;
+
+    /**
+     * Send when an activity starts or changes.
+     * Recieving this does NOT imply that the activity should restart.
+     * An activity restart would be indicated by recieving
+     * an endActivity event followed by a startActivity event.
+     */
+    startActivity(liveActivityinfo: LiveActivityInfo): void;
+    endActivity(): void;
+    command(data: any): void;
+    request(data: any): void;
+    submission(entity: ActivitySubmissionEntity): void;
 }
 
-export enum AuthLevel {
-    /**
-     * No user should ever have `AuthLevel.Denied`.
-     * It is only used as the response provided when an authorization JWT is denied.
-     */
-    Denied = -1,
-    None = 0,
-    Joined = 1,
-    Instructor = 10,
-};
-
-export const eventAuthorization = {
-    join: AuthLevel.None,
-    getParticipants: AuthLevel.Instructor,
-    linkRtc: AuthLevel.Instructor,
-    unlinkRtc: AuthLevel.Instructor,
-    provideWebRTCSignal: AuthLevel.Joined
-} as {[ eventName in keyof ClientToServerEventMap ]: AuthLevel};
+export interface LiveActivityInfo {
+    id: string;
+    info: any;
+}

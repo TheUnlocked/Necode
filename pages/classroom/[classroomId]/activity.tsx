@@ -9,6 +9,7 @@ import { Box } from "@mui/system";
 import allLanguages from "../../../src/languages/allLanguages";
 import { ClassroomMemberEntity } from "../../../src/api/entities/ClassroomMemberEntity";
 import useGetRequest from "../../../src/api/client/GetRequestHook";
+import useSocket from "../../../src/hooks/SocketHook";
 
 interface StaticProps {
     classroomId: string;
@@ -33,6 +34,12 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
     const { data: me } = useGetRequest<ClassroomMemberEntity>(`/api/classroom/${classroomId}/me`);
     const isInstructor = me?.attributes.role === 'Instructor';
 
+    const socketInfo = useSocket(classroomId);
+
+    if (!socketInfo) {
+        
+    }
+
     return <>
         {isInstructor ? <Toolbar variant="dense" sx={{ minHeight: "36px", px: "16px !important" }}>
             <Button size="small" startIcon={<ArrowBack/>} onClick={() => router.push(`/classroom/${classroomId}/manage`)}>
@@ -52,7 +59,8 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
                 id={""}
                 activityConfig={activity.defaultConfig}
                 classroomId={classroomId}
-                language={supportedLanguages.find(x => x.name === router.query.language) ?? supportedLanguages[0]} />
+                language={supportedLanguages.find(x => x.name === router.query.language) ?? supportedLanguages[0]}
+                socketInfo={socketInfo} />
         </Box>
     </>;
 };

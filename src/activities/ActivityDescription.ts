@@ -1,23 +1,32 @@
 import { ComponentType } from "react";
 import { ConnectDragSource } from "react-dnd";
+import { SocketInfo } from "../hooks/SocketHook";
 import FeatureDescription from "../languages/features/FeatureDescription";
 import LanguageDescription from "../languages/LangaugeDescription";
 
-export interface ActivityPageProps<ConfigData = undefined> {
+interface BaseActivityProps<ConfigData = undefined> {
     id: string;
 
     classroomId: string;
 
-    language: LanguageDescription;
-
     activityConfig: ConfigData;
 }
 
-export interface ActivityConfigPageProps<ConfigData = undefined> extends ActivityPageProps<ConfigData> {
+export interface ActivityPageProps<ConfigData = undefined> extends BaseActivityProps<ConfigData> {
+    language: LanguageDescription;
+
+    socketInfo: SocketInfo | undefined;
+}
+
+export interface ActivityConfigPageProps<ConfigData = undefined> extends BaseActivityProps<ConfigData> {
+    language: LanguageDescription;
+    
     onActivityConfigChange: (newConfig: ConfigData) => void;
 }
 
-export interface ActivityConfigWidgetProps<ConfigData = undefined> extends Omit<ActivityConfigPageProps<ConfigData>, 'language'> {
+export interface ActivityConfigWidgetProps<ConfigData = undefined> extends BaseActivityProps<ConfigData> {
+    onActivityConfigChange: (newConfig: ConfigData) => void;
+    
     goToConfigPage: (() => void) | undefined;
     
     dragHandle: ConnectDragSource;

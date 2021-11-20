@@ -1,5 +1,5 @@
-import Editor, { OnChange, OnMount, useMonaco } from "@monaco-editor/react";
-import { Button, Card, CardContent, Checkbox, IconButton, Portal, Stack, styled, Tooltip, Typography } from "@mui/material";
+import Editor, { OnChange, useMonaco } from "@monaco-editor/react";
+import { Button, Card, CardContent, Checkbox, IconButton, Stack, styled, Tooltip, Typography } from "@mui/material";
 import { ReflexContainer, ReflexElement, ReflexSplitter } from "react-reflex";
 import useIsSizeOrSmaller from "../../hooks/ScreenSizeHook";
 import { cssDescription } from "../../languages/css";
@@ -27,7 +27,9 @@ import { Typescript } from "../../languages/typescript";
 import CodeAlert from "../../components/CodeAlert";
 import useImperativeDialog from "../../hooks/ImperativeDialogHook";
 import TestsDialog from "./TestsDialog";
-import { typeAssert } from "../../util/typeguards";
+import { editorStateReducer, EditorType } from "./editorStateReducer";
+import PaneEditor from "./PaneEditor";
+import Key from "../../components/Key";
 
 type OptionalConfig<T>
     = { enabled: true } & T
@@ -48,21 +50,11 @@ const StretchedIFrame = styled("iframe")`
     border-radius: 4px;
 `;
 
-const Key = styled("code")(({theme}) => ({
-    backgroundColor: theme.palette.grey[800],
-    color: theme.palette.text.primary,
-    padding: "0 4px",
-    margin: "0 2px",
-    "&:first-of-type": {
-        marginLeft: 0,
-    },
-    "&:last-of-type": {
-        marginRight: 0,
-    },
-    borderRadius: 4
-}));
+export interface HtmlTestActivityMetaProps {
+    isEditor: boolean;
+}
 
-function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
+function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
     return function (props: ActivityConfigPageProps<TestActivityConfig> | ActivityPageProps<TestActivityConfig>) {
         const {
             language,
@@ -83,65 +75,8 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
         const isLargeOrSmaller = useIsSizeOrSmaller("lg");
         
         const codeGenerator = useCodeGenerator<[typeof supportsAmbient, typeof supportsIsolated]>(language.name);
-
-        type EditorType = 'html' | 'css' | 'code';
-        type EditorStateDispatchAction = { target: EditorType } &
-            ( { type: 'initialize', value: string, portalTarget: HTMLDivElement }
-            | { type: 'updatePortal', portalTarget: HTMLDivElement }
-            | { type: 'valueChange', value: string }
-            | { type: 'applyChanges', resolve?: (state: EditorState) => void, reject?: (reason: 'nochange') => void });
-        type EditorState = {
-            readonly isDirty: boolean;
-            readonly uncommittedValue: string;
-            readonly value: string;
-            
-            // portal data
-            readonly portalTarget: HTMLDivElement;
-        };
-        const [editorStates, dispatchEditorsState] = useReducer((state: {
-            html?: EditorState,
-            code?: EditorState,
-            css?: EditorState,
-        }, action: EditorStateDispatchAction) => {
-            switch (action.type) {
-                case 'initialize':
-                    return {...state, [action.target]: {
-                        isDirty: false,
-                        uncommittedValue: action.value,
-                        value: action.value,
-                        portalTarget: action.portalTarget
-                    } as EditorState};
-                case 'updatePortal':
-                    if (action.portalTarget === state[action.target]?.portalTarget) {
-                        // no change
-                        return state;
-                    }
-                    return {...state, [action.target]: {
-                        ...state[action.target],
-                        portalTarget: action.portalTarget
-                    } as EditorState};
-                case 'valueChange':
-                    return {...state, [action.target]: {
-                        ...state[action.target],
-                        isDirty: true,
-                        uncommittedValue: action.value
-                    } as EditorState};
-                case 'applyChanges':
-                    if (state[action.target]?.isDirty) {
-                        const newState = {
-                            ...state[action.target]!,
-                            value: state[action.target]!.uncommittedValue,
-                            isDirty: false
-                        } as EditorState;
-                        action.resolve?.(newState);
-                        return {...state, [action.target]: newState};
-                    }
-                    else {
-                        action.reject?.('nochange');
-                    }
-                    return state;
-            }
-        }, {});
+        
+        const [editorStates, dispatchEditorsState] = useReducer(editorStateReducer, {});
 
         const applyChangesRef = useRef<(type: EditorType, value: string) => void>(() => {});
         const applyChanges = useCallback((type: EditorType) => {
@@ -349,15 +284,12 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
 
             const onEditorContainerRef = (elt: HTMLDivElement) => {
                 if (elt) {
-                    if (editorState) {
-                        dispatchEditorsState({ target: type, type: 'updatePortal', portalTarget: elt });
-                    }
-                    else {
+                    if (!editorState) {
                         if (type === 'code') {
-                            dispatchEditorsState({ target: type, type: 'initialize', value: activityConfig.code.defaultValue![language.name], portalTarget: elt });
+                            dispatchEditorsState({ target: type, type: 'initialize', value: activityConfig.code.defaultValue![language.name] });
                         }
                         else {
-                            dispatchEditorsState({ target: type, type: 'initialize', value: activityConfig[type].defaultValue!, portalTarget: elt });
+                            dispatchEditorsState({ target: type, type: 'initialize', value: activityConfig[type].defaultValue! });
                         }
                     }
                 }
@@ -399,7 +331,31 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
                 );
             }
 
-            return <ReflexElement minSize={40}>
+            const editorValue = isEditor
+                ? type === "code" ? activityConfig.code.defaultValue![language.name] ?? "" : activityConfig[type].defaultValue
+                : editorState?.uncommittedValue;
+
+            const onChange: OnChange = value => {
+                if (isEditor) {
+                    onActivityConfigChange!({
+                        ...activityConfig,
+                        [type]: {
+                            ...activityConfig[type],
+                            defaultValue: type === "code"
+                                ? {
+                                    ...activityConfig.code.defaultValue ?? {},
+                                    [language.name]: value
+                                }
+                                : value
+                        }
+                    });
+                }
+                else {
+                    dispatchEditorsState({ target: type, type: 'valueChange', value: value ?? '' });
+                }
+            }
+
+            return <ReflexElement key={language.name} minSize={40}>
                 <Stack direction="column" sx={{ height: "100%" }}>
                     <Stack direction="row" sx={{ m: 1, height: "24px" }}>{toolbarItems}</Stack>
                     <Box ref={onEditorContainerRef} sx={{
@@ -407,7 +363,14 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
                         height: "calc(100% - 40px)", // need this because monaco does weird things withou it.
                         ".monaco-editor .suggest-widget": { zIndex: 101 },
                         ".monaco-hover": { zIndex: 102 },
-                    }} />
+                    }}>
+                        <PaneEditor
+                            isConfig={isEditor as true | false}
+                            language={language}
+                            value={editorValue}
+                            applyChanges={() => applyChanges(type)}
+                            onChange={onChange} />
+                    </Box>
                 </Stack>
             </ReflexElement>;
         }, [isMediumOrSmaller, editorStates, applyChanges, activityConfig, onActivityConfigChange]);
@@ -527,7 +490,7 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
             isEditor || css.enabled ? editorPane('css', cssDescription) : undefined,
         ];
 
-        const controls = isEditor ? undefined : <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: "6px" }}>
+        const controls = isEditor ? null : <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: "6px" }}>
             <Button variant="contained" onClick={runTests}>Run tests</Button>
             <Box sx={{ flexGrow: 1 }} />
             <Tooltip title="Apply all changes">
@@ -537,73 +500,6 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
                 <IconButton onClick={reload}><RefreshIcon/></IconButton>
             </Tooltip>
         </Stack>;
-
-        const editor = useCallback((type: EditorType, language: LanguageDescription) => {
-            const editorState = editorStates[type];
-
-            if (!editorState) {
-                return undefined;
-            }
-
-            if (isEditor) {
-                // Editor mode
-                return <Editor
-                    theme="vs-dark"
-                    options={{
-                        minimap: { enabled: false },
-                        "semanticHighlighting.enabled": true,
-                        automaticLayout: true,
-                        fixedOverflowWidgets: true,
-                    }}
-                    language={language.monacoName}
-                    value={type === "code" ? activityConfig.code.defaultValue![language.name] ?? "" : activityConfig[type].defaultValue}
-                    onChange={v => onActivityConfigChange!({
-                        ...activityConfig,
-                        [type]: {
-                            ...activityConfig[type],
-                            defaultValue: type === "code"
-                                ? {
-                                    ...activityConfig.code.defaultValue ?? {},
-                                    [language.name]: v
-                                }
-                                : v
-                        }
-                    })}
-                />;
-            }
-            else {
-                // Activity mode
-                const onMount: OnMount = (editor, monaco) => {
-                    editor.addAction({
-                        id: 'apply-changes',
-                        label: 'Apply Changes',
-                        keybindings: [
-                            monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S
-                        ],
-                        run: () => applyChanges(type)
-                    });
-                };
-    
-                const onChange: OnChange = (value) => {
-                    dispatchEditorsState({ target: type, type: 'valueChange', value: value ?? '' });
-                };
-    
-                return <Editor
-                    theme="vs-dark"
-                    options={{
-                        minimap: { enabled: false },
-                        "semanticHighlighting.enabled": true,
-                        automaticLayout: true,
-                        fixedOverflowWidgets: true
-                    }}
-                    language={language.monacoName}
-                    onMount={onMount}
-                    value={editorState?.uncommittedValue}
-                    onChange={onChange}
-                />;
-            }
-
-        }, [editorStates, applyChanges, activityConfig, onActivityConfigChange]);
 
         let layout: JSX.Element;
 
@@ -668,13 +564,6 @@ function createTestActivityPage({ isEditor }: { isEditor: boolean }) {
 
         return <>
             {testsDialog}
-            {/* Portals deliberately deactivated when pane is disabled in editor mode */}
-            {html.enabled && editorStates.html ?
-                <Portal container={editorStates.html.portalTarget}>{editor('html', htmlDescription)}</Portal> : undefined}
-            {code.enabled && editorStates.code ?
-                <Portal container={editorStates.code.portalTarget}>{editor('code', language)}</Portal> : undefined}
-            {css.enabled && editorStates.css ?
-                <Portal container={editorStates.css.portalTarget}>{editor('css', cssDescription)}</Portal> : undefined}
             {layout}
         </>;
     }

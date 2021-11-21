@@ -1,24 +1,20 @@
-import { TextField, Alert, Button } from "@mui/material";
+import { TextField } from "@mui/material";
 import { NextPage } from "next";
 import FormPage from "../../src/components/FormPage";
-import { signIn, signOut, useSession } from "next-auth/react";
 import DevPageWarning from "../../src/components/DevPageWarning";
 import { FormEventHandler, useCallback, useState } from "react";
-import { PostRequestData } from "../api/classroom";
 import { useSnackbar } from 'notistack';
 import { ClassroomEntity } from "../../src/api/entities/ClassroomEntity";
 import { Response } from "../../src/api/Response";
 import { useRouter } from "next/router";
 
 const Page: NextPage = () => {
-    const { data: session } = useSession();
-
     const [name, setName] = useState("");
     const [displayName, setDisplayName] = useState("");
 
     const router = useRouter();
 
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+    const { enqueueSnackbar } = useSnackbar();
 
     const onSubmit: FormEventHandler<HTMLFormElement> = useCallback(async e => {
         e.preventDefault();
@@ -28,13 +24,13 @@ const Page: NextPage = () => {
             body: JSON.stringify({
                 name,
                 displayName
-            } as PostRequestData)
+            })
         });
 
         const data = await response.json() as Response<ClassroomEntity>;
 
         if (data.response === 'ok') {
-            router.push(`/classroom/${data.data.attributes.name}`);
+            router.push(`/classroom/${data.data.id}`);
         }
         else {
             enqueueSnackbar(data.message, { variant: 'error' });

@@ -25,7 +25,7 @@ import CustomAdapterLuxon from '../src/util/CustomLuxonAdapter';
 
 function MyApp({ Component, pageProps }: AppProps) {
     const [meta, metaTransformer] = useMergeReducer({
-        title: "MQP App",
+        title: "Necode",
         path: [{ label: "Necode" }]
     } as MetaInfo);
 

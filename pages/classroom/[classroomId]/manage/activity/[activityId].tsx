@@ -17,7 +17,6 @@ import { ActivityEntity } from "../../../../../src/api/entities/ActivityEntity";
 import apiClassroomMe from "../../../../api/classroom/[classroomId]/me";
 import apiActivityOne from "../../../../api/classroom/[classroomId]/activity/[activityId]";
 import allActivities from "../../../../../src/activities/allActivities";
-import useSocket from "../../../../../src/hooks/SocketHook";
 
 interface StaticProps {
     classroomId: string;

@@ -1,6 +1,6 @@
 import { NextPage } from "next";
 import React from "react";
-import { Box, Card } from "@mui/material";
+import { Card } from "@mui/material";
 import { useRouter } from "next/router";
 
 const Login: NextPage = () => {
@@ -9,7 +9,7 @@ const Login: NextPage = () => {
     return <Card>
         Login Failed
         <br/>
-        { router.query.error ? `Reason: ${router.query.error}` : undefined}
+        {router.query.error ? `Reason: ${router.query.error}` : undefined}
     </Card>;
 };
 

@@ -5,11 +5,46 @@
     let initialized = false;
     let signature = Symbol();
 
+    let htmlTemplate;
+
+    function setHtml(data) {
+        const userContentElts = document.getElementsByTagName('user-content');
+        if (userContentElts.length > 0) {
+            for (const elt of userContentElts) {
+                elt.innerHTML = data ?? '';
+            }
+        }
+        else {
+            document.body.innerHTML = data ?? '';
+        }
+    }
+
+    function setJs(data) {
+        document.getElementById(JS_ELT_ID)?.remove();
+        const scriptElt = document.createElement('script');
+        scriptElt.id = JS_ELT_ID;
+        scriptElt.innerHTML = data ?? '';
+        document.head.appendChild(scriptElt);
+    }
+
+    function setCss(data) {
+        document.getElementById(CSS_ELT_ID)?.remove();
+        const styleElt = document.createElement('style');
+        styleElt.id = CSS_ELT_ID;
+        styleElt.innerHTML = data ?? '';
+        document.head.appendChild(styleElt);
+    }
+
     window.addEventListener('message', async e => {
         if (e.data.type === 'initialize') {
             if (!initialized) {
                 initialized = true;
                 signature = e.data.signature;
+                htmlTemplate = e.data.template;
+                document.body.innerHTML = htmlTemplate;
+                setHtml(e.data.html);
+                setJs(e.data.js);
+                setCss(e.data.css);
             }
             return;
         }
@@ -21,24 +56,13 @@
 
         switch (e.data.type) {
             case 'html': {
-                document.body.innerHTML = e.data.value;
-                return;
+                return setHtml(e.data.value);
             }
-            case 'code': {
-                document.getElementById(JS_ELT_ID)?.remove();
-                const scriptElt = document.createElement('script');
-                scriptElt.id = JS_ELT_ID;
-                scriptElt.innerHTML = e.data.value;
-                document.head.appendChild(scriptElt);
-                return;
+            case 'js': {
+                return setJs(e.data.value);
             }
             case 'css': {
-                document.getElementById(CSS_ELT_ID)?.remove();
-                const styleElt = document.createElement('style');
-                styleElt.id = CSS_ELT_ID;
-                styleElt.innerHTML = e.data.value;
-                document.head.appendChild(styleElt);
-                return;
+                return setCss(e.data.value);
             }
             case 'tests': {
                 try {
@@ -57,4 +81,8 @@
     window.parent.postMessage({ type: 'activity-iframe-loaded' }, '*');
     // clean up
     document.currentScript.remove();
-</script></head></html>
+</script><style>
+    user-content {
+        display: contents;
+    }
+</style></head></html>

@@ -10,10 +10,7 @@ import { Refresh as RefreshIcon, Sync as SyncIcon } from "@mui/icons-material";
 import { Box } from "@mui/system";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import React from "react";
-import iframeHtml from "raw-loader!./iframe.html";
-import { nanoid } from "nanoid";
 import useCodeGenerator from "../../hooks/CodeGeneratorHook";
-import { $void } from "../../util/fp";
 import supportsAmbient from "../../languages/features/supportsAmbient";
 import supportsIsolated from "../../languages/features/supportsIsolated";
 import ReactMarkdown from "react-markdown";
@@ -21,7 +18,6 @@ import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import TypescriptIcon from "../../util/icons/TypescriptIcon";
 import testScaffoldingTypes from "raw-loader!./test-scaffolding.d.ts.raw";
-import testScaffoldingImpl from "raw-loader!./test-scaffolding-impl.js.raw";
 import transformTestScaffolding from "../../languages/transformers/babel-plugin-transform-test-scaffolding";
 import { Typescript } from "../../languages/typescript";
 import CodeAlert from "../../components/CodeAlert";
@@ -30,6 +26,7 @@ import TestsDialog from "./TestsDialog";
 import { editorStateReducer, EditorType } from "./editorStateReducer";
 import PaneEditor from "./PaneEditor";
 import Key from "../../components/Key";
+import { ActivityIframe } from "./ActivityIframe";
 
 type OptionalConfig<T>
     = { enabled: true } & T
@@ -74,30 +71,17 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
         const isMediumOrSmaller = useIsSizeOrSmaller("md");
         const isLargeOrSmaller = useIsSizeOrSmaller("lg");
         
-        const codeGenerator = useCodeGenerator<[typeof supportsAmbient, typeof supportsIsolated]>(language.name);
-        
         const [editorStates, dispatchEditorsState] = useReducer(editorStateReducer, {});
 
-        const applyChangesRef = useRef<(type: EditorType, value: string) => void>(() => {});
+        const reloadRef = useRef<() => Promise<void>>();
+        const runTestsRef = useRef<() => Promise<void>>();
+
         const applyChanges = useCallback((type: EditorType) => {
-            if (activityConfig[type].enabled) {
-                // currently only CSS is supported for hot reload
-                if (type === 'css') {
-                    dispatchEditorsState({
-                        target: type,
-                        type: 'applyChanges',
-                        resolve: ({value}) => applyChangesRef.current(type, value)
-                    });
-                }
-                else {
-                    dispatchEditorsState({
-                        target: type,
-                        type: 'applyChanges',
-                        resolve: reload
-                    });
-                }
-            }
-        }, [activityConfig]);
+            dispatchEditorsState({
+                target: type,
+                type: 'applyChanges'
+            });
+        }, []);
 
         const startTests = useRef(() => {});
         const passTests = useRef(() => {});
@@ -109,175 +93,46 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
             failureRef: f => failTests.current = f,
         });
 
-        const [isRunningTests, setIsRunningTests] = useState(false);
-
-        function runTests() {
-            openTestsDialog();
-            setIsRunningTests(true);
-            reload();
-        }
-
-        const iframeRef = useRef<HTMLIFrameElement | null>(null);
-        const [iframeElt, setIframeElt] = useState<HTMLIFrameElement | null>(null);
-
-        const [isReloadScheduled, scheduleReload] = useState(false);
-        function reload() {
-            scheduleReload(true);
-        }
-
-        useEffect(() => {
-            if (isReloadScheduled && iframeElt) {
-                scheduleReload(false);
-
-                iframeElt.srcdoc = iframeHtml;
-
-                const signature = nanoid();
-        
-                const listener = (ev: MessageEvent<any>) => {
-                    if (ev.data?.type === 'activity-iframe-loaded') {
-                        window.removeEventListener('message', listener);
-
-                        if (!iframeElt.contentWindow) {
-                            // iframe is probably gone already
-                            return;
-                        }
-
-                        iframeElt.contentWindow!.postMessage({ type: 'initialize', signature }, '*');
-
-                        const applyChanges = (type: EditorType, value: string) => {
-                            if (type === 'code') {
-                                try {
-                                    value = codeGenerator.toRunnerCode(value, { ambient: true, isolated: true });
-                                }
-                                catch (e) {
-                                    console.error(e);
-                                    value = '// Code failed to compile';
-                                }
-                            }
-                            iframeElt!.contentWindow!.postMessage({ type, value, signature }, '*');
-                        };
-
-                        applyChangesRef.current = applyChanges;
-
-                        if (html.enabled && editorStates.html?.value) {
-                            applyChanges('html', editorStates.html.value);
-                        }
-                        if (code.enabled && editorStates.code?.value) {
-                            applyChanges('code', editorStates.code.value);
-                        }
-                        if (css.enabled && editorStates.css?.value) {
-                            applyChanges('css', editorStates.css.value);
-                        }
-
-                        if (isRunningTests) {
-                            try {
-                                const code = testScaffoldingImpl + new Typescript().toRunnerCode(tests, {
-                                    ambient: true,
-                                    isolated: true,
-                                    babelPlugins: [transformTestScaffolding]
-                                });
-
-                                iframeElt.contentWindow!.postMessage({ type: 'tests', signature, code }, '*');
-
-                                startTests.current();
-                                let finished = false;
-
-                                const testResultsListener = (ev: MessageEvent<any>) => {
-                                    if (ev.data?.signature === signature && ev.data.type === 'test-results') {
-                                        window.removeEventListener('message', testResultsListener);
-                                        finished = true;
-                                        console.log(ev.data.success ? 'Passed all tests' : 'Failed test');
-                                        if (ev.data.success) {
-                                            passTests.current();
-                                        }
-                                        else {
-                                            console.log(ev.data.message);
-                                            failTests.current(ev.data.message);
-                                        }
-                                        setIsRunningTests(false);
-                                        reload();
-                                    }
-                                }
-
-                                window.addEventListener('message', testResultsListener);
-                                setTimeout(() => {
-                                    if (!finished) {
-                                        window.removeEventListener('message', testResultsListener);
-                                        setIsRunningTests(false);
-                                        failTests.current('Tests timed out');
-                                        console.log('Tests timed out');
-                                        reload();
-                                    }
-                                }, 10000);
-                            }
-                            catch (e) {
-                                console.log(e);
-                            }
-                        }
-                    }
-                };
-
-                window.addEventListener('message', listener);
-                setTimeout(() => {
-                    // Clean up just in case the event listener wasn't removed.
-                    // After 5 seconds it should've loaded already.
-                    // Normal useEffect cleanup doesn't work since the dependencies
-                    // could change before the event listener fires normally.
-                    window.removeEventListener('message', listener);
-                }, 5000);
-            }
-        }, [isReloadScheduled, editorStates, iframeElt, codeGenerator, html.enabled, code.enabled, css.enabled, tests, isRunningTests]);
-
-        useEffect(() => {
-            if (iframeElt && iframeRef.current !== iframeElt) {
-                iframeRef.current = iframeElt;
-                reload();
-            }
-        }, [iframeElt]);
-
         const applyAllChanges = useCallback(() => {
-            const promises = [] as Promise<void>[];
             if (html.enabled) {
-                promises.push(new Promise(resolve => {
-                    dispatchEditorsState({
-                        target: 'html',
-                        type: 'applyChanges',
-                        resolve: ({value}) => {
-                            applyChangesRef.current('html', value);
-                            resolve();
-                        },
-                        reject: $void(resolve)
-                    });
-                }));
+                dispatchEditorsState({
+                    target: 'html',
+                    type: 'applyChanges'
+                });
             }
             if (code.enabled) {
-                promises.push(new Promise(resolve => {
-                    dispatchEditorsState({
-                        target: 'code',
-                        type: 'applyChanges',
-                        resolve: ({value}) => {
-                            applyChangesRef.current('code', value);
-                            resolve();
-                        },
-                        reject: $void(resolve)
-                    });
-                }));
+                dispatchEditorsState({
+                    target: 'code',
+                    type: 'applyChanges'
+                });
             }
             if (css.enabled) {
-                promises.push(new Promise(resolve => {
-                    dispatchEditorsState({
-                        target: 'css',
-                        type: 'applyChanges',
-                        resolve: ({value}) => {
-                            applyChangesRef.current('css', value);
-                            resolve();
-                        },
-                        reject: $void(resolve)
-                    });
-                }));
+                dispatchEditorsState({
+                    target: 'css',
+                    type: 'applyChanges'
+                });
             }
-            return Promise.allSettled(promises);
         }, [html.enabled, code.enabled, css.enabled]);
+
+        const codeGenerator = useCodeGenerator<[typeof supportsAmbient, typeof supportsIsolated]>(language.name);
+        const [compiledJs, setCompiledJs] = useState('');
+        const codeSource = editorStates.code?.value;
+
+        useEffect(() => {
+            if (codeSource !== undefined) {
+                try {
+                    const compiledJs = codeGenerator.toRunnerCode(codeSource, {
+                        ambient: true,
+                        isolated: true
+                    });
+                    setCompiledJs(compiledJs);
+                }
+                catch (e) {
+                    console.error(e);
+                    setCompiledJs('// compilation error');
+                }
+            }
+        }, [codeSource, codeGenerator]);
 
         const editorPane = useCallback((type: EditorType, language: LanguageDescription) => {
             const editorState = editorStates[type];
@@ -448,7 +303,26 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
             </Card>
         }
         else {
-            iframeOrTestPane = <StretchedIFrame ref={setIframeElt} sandbox="allow-scripts" />;
+            iframeOrTestPane
+                = <ActivityIframe
+                    html={editorStates.html?.value}
+                    js={compiledJs}
+                    css={editorStates.css?.value}
+                    reloadRef={reloadRef}
+                    runTestsRef={runTestsRef}
+                    sx={{
+                        width: "100%",
+                        flexGrow: 1,
+                        border: "none",
+                        borderRadius: "4px"
+                    }} />;
+        }
+
+        function runTests() {
+            if (runTestsRef.current) {
+                openTestsDialog();
+                runTestsRef.current();
+            }
         }
 
         const descriptionPane = <ReflexElement minSize={40} flex={!isLargeOrSmaller ? 2 : undefined}>
@@ -497,7 +371,7 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                 <IconButton onClick={applyAllChanges}><SyncIcon/></IconButton>
             </Tooltip>
             <Tooltip title="Reload">
-                <IconButton onClick={reload}><RefreshIcon/></IconButton>
+                <IconButton onClick={reloadRef.current}><RefreshIcon/></IconButton>
             </Tooltip>
         </Stack>;
 

@@ -1,0 +1,179 @@
+import { styled } from "@mui/material";
+import { nanoid } from "nanoid";
+import { useCallback, useEffect, useRef } from "react";
+import iframeHtml from "raw-loader!./iframe.html";
+import testScaffoldingImpl from "raw-loader!./test-scaffolding-impl.js.raw";
+import transformTestScaffolding from "../../languages/transformers/babel-plugin-transform-test-scaffolding";
+import { Typescript } from "../../languages/typescript";
+import { SxProps } from "@mui/system";
+import { assignRef, SimpleRef } from "../../util/simpleRef";
+
+const Iframe = styled('iframe')``;
+
+type RunTestsCallback = (
+    tests: string,
+    startTests: () => void,
+    finishTests: (errorMessage?: string) => void
+) => Promise<void>;
+
+export interface ActivityIframeProps {
+    htmlTemplate?: string; 
+    html?: string;
+    css?: string;
+    js?: string;
+
+    reloadRef?: SimpleRef<(() => Promise<void>) | undefined>;
+    runTestsRef?: SimpleRef<RunTestsCallback | undefined>;
+
+    sx: SxProps;
+}
+
+export function ActivityIframe({
+    htmlTemplate,
+    html,
+    css,
+    js,
+    reloadRef,
+    runTestsRef,
+    sx
+}: ActivityIframeProps) {
+
+    const iframeRef = useRef<HTMLIFrameElement | null>(null);
+
+    const changeCssRef = useRef<(value: string) => void>(() => {});
+
+    const signatureRef = useRef<string>();
+
+    const reload = useCallback(() => {
+        let isResolved = false;
+
+        return new Promise<void>(resolve => {
+            const iframeElt = iframeRef.current;
+            if (iframeElt) {
+                iframeElt.srcdoc = iframeHtml;
+    
+                const signature = nanoid();
+                signatureRef.current = signature;
+        
+                const listener = (ev: MessageEvent<any>) => {
+                    if (ev.data?.type === 'activity-iframe-loaded') {
+                        window.removeEventListener('message', listener);
+    
+                        if (!iframeElt.contentWindow) {
+                            // iframe is probably gone already
+                            return;
+                        }
+    
+                        iframeElt.contentWindow!.postMessage({
+                            type: 'initialize',
+                            signature,
+                            template: htmlTemplate,
+                            html,
+                            js,
+                            css
+                        }, '*');
+    
+                        const applyChanges = (type: 'html' | 'css' | 'js', value: string) => {
+                            iframeElt!.contentWindow!.postMessage({ type, value, signature }, '*');
+                        };
+    
+                        changeCssRef.current = v => applyChanges('css', v);
+
+                        isResolved = true;
+                        resolve();
+                    }
+                };
+    
+                window.addEventListener('message', listener);
+                setTimeout(() => {
+                    if (!isResolved) {
+                        isResolved = true;
+                        resolve();
+                    }
+                    // Clean up just in case the event listener wasn't removed.
+                    // After 5 seconds it should've loaded already.
+                    // Normal useEffect cleanup doesn't work since the dependencies
+                    // could change before the event listener fires normally.
+                    window.removeEventListener('message', listener);
+                }, 5000);
+            }
+        });
+    }, [htmlTemplate, html, js, css]);
+
+    useEffect(() => {
+        reload();
+    }, [reload, html, js]);
+
+    useEffect(() => {
+        changeCssRef.current(css ?? '');
+    }, [css]);
+
+    const runTests = useCallback<RunTestsCallback>(async (tests, startTests, finishTests) => {
+        const iframeElt = iframeRef.current!;
+        await reload();
+        return new Promise<void>(resolve => {
+            try {
+                const code = testScaffoldingImpl + new Typescript().toRunnerCode(tests, {
+                    ambient: true,
+                    isolated: true,
+                    babelPlugins: [transformTestScaffolding]
+                });
+    
+                iframeElt.contentWindow!.postMessage({ type: 'tests', signature: signatureRef.current, code }, '*');
+    
+                startTests();
+                let finished = false;
+    
+                const testResultsListener = (ev: MessageEvent<any>) => {
+                    const data = ev.data;
+                    if (data?.signature === signatureRef.current && data.type === 'test-results') {
+                        window.removeEventListener('message', testResultsListener);
+                        finished = true;
+                        console.log(data.success ? 'Passed all tests' : 'Failed test');
+                        if (data.success) {
+                            finishTests();
+                        }
+                        else {
+                            console.log(data.message);
+                            finishTests(data.message);
+                        }
+                        reload();
+                        return resolve();
+                    }
+                }
+    
+                window.addEventListener('message', testResultsListener);
+                setTimeout(() => {
+                    if (!finished) {
+                        window.removeEventListener('message', testResultsListener);
+                        finishTests('Tests timed out');
+                        console.log('Tests timed out');
+                        reload();
+                        return resolve();
+                    }
+                }, 10000);
+            }
+            catch (e) {
+                console.log(e);
+            }
+            return resolve();
+        });
+    }, [reload]);
+
+    useEffect(() => {
+        assignRef(reloadRef, reload);
+    }, [reloadRef, reload]);
+    
+    useEffect(() => {
+        assignRef(runTestsRef, runTests);
+    }, [runTestsRef, runTests]);
+
+    const onIframeLoad = useCallback((elt: HTMLIFrameElement | null) => {
+        iframeRef.current = elt;
+        if (elt) {
+            reload();
+        }
+    }, [reload]);
+
+    return <Iframe ref={onIframeLoad} sandbox="allow-scripts" sx={sx} />;
+}

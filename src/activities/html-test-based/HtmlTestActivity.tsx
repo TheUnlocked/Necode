@@ -27,6 +27,7 @@ import PaneEditor from "./PaneEditor";
 import Key from "../../components/Key";
 import { ActivityIframe, RunTestsCallback } from "./ActivityIframe";
 import alpha from "color-alpha";
+import Lazy from "../../components/Lazy";
 
 export interface TestActivityConfig {
     description: string;
@@ -54,6 +55,7 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
         const {
             description,
             tests,
+            hiddenHtml,
             languages: {
                 html,
                 code,
@@ -174,11 +176,15 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                         {hasCheckbox
                             ? <Checkbox sx={{ ml: "-9px", my: "-9px" }}
                                 checked={activityConfig.languages[type as Exclude<EditorType, 'hidden-html'>].enabled}
+                                disabled={!active}
                                 onChange={ev => onActivityConfigChange!({
                                     ...activityConfig,
-                                    [type]: {
-                                        ...activityConfig.languages[type as Exclude<EditorType, 'hidden-html'>],
-                                        enabled: ev.target.checked
+                                    languages: {
+                                        ...activityConfig.languages,
+                                        [type]: {
+                                            ...activityConfig.languages[type as Exclude<EditorType, 'hidden-html'>],
+                                            enabled: ev.target.checked
+                                        }
                                     }
                                 })} />
                             : undefined}
@@ -200,6 +206,16 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                         })}>
                             {content}
                         </ButtonBase>;
+                    }
+                    else {
+                        return <Box sx={{
+                            flexShrink: 0,
+                            borderRadius: "0 0 4px 4px",
+                            mb: 1,
+                            pt: 1
+                        }}>
+                            {content}
+                        </Box>;
                     }
                 }
 
@@ -231,17 +247,22 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                 </>;
             }
 
+            const realType = type;
+            const practicalType = realType === 'hidden-html' || (realType === 'html' && isHiddenHtmlTabActive)
+                ? 'hidden-html'
+                : realType;
+
             const editorValue = isEditor
-                ? type === "code"
-                    ? activityConfig.languages.code.defaultValue![language.name] ?? ""
-                    : type === "hidden-html"
+                ? practicalType === 'code'
+                    ? activityConfig.languages.code.defaultValue![language.name] ?? ''
+                    : practicalType === 'hidden-html'
                     ? activityConfig.hiddenHtml
-                    : activityConfig.languages[type].defaultValue
+                    : activityConfig.languages[practicalType].defaultValue
                 : editorState?.uncommittedValue;
 
             const onChange: OnChange = value => {
                 if (isEditor) {
-                    if (type === "hidden-html") {
+                    if (practicalType === 'hidden-html') {
                         onActivityConfigChange!({
                             ...activityConfig,
                             hiddenHtml: value ?? ''
@@ -252,9 +273,9 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                             ...activityConfig,
                             languages: {
                                 ...activityConfig.languages,
-                                [type]: {
-                                    ...activityConfig.languages[type],
-                                    defaultValue: type === "code"
+                                [practicalType]: {
+                                    ...activityConfig.languages[practicalType],
+                                    defaultValue: practicalType === "code"
                                         ? {
                                             ...activityConfig.languages.code.defaultValue ?? {},
                                             [language.name]: value
@@ -266,8 +287,39 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                     }
                 }
                 else {
-                    dispatchEditorsState({ target: type, type: 'valueChange', value: value ?? '' });
+                    dispatchEditorsState({ target: practicalType, type: 'valueChange', value: value ?? '' });
                 }
+            }
+
+            let editor: JSX.Element;
+
+            if (realType === 'html') {
+                editor = <>
+                    <Lazy show={isHiddenHtmlTabActive}>
+                        <PaneEditor
+                            isConfig={isEditor}
+                            language={htmlDescription}
+                            value={editorValue}
+                            applyChanges={() => applyChanges('hidden-html')}
+                            onChange={onChange} />
+                    </Lazy>
+                    <Lazy show={!isHiddenHtmlTabActive}>
+                        <PaneEditor
+                            isConfig={isEditor}
+                            language={language}
+                            value={editorValue}
+                            applyChanges={() => applyChanges(practicalType)}
+                            onChange={onChange} />
+                    </Lazy>
+                </>;
+            }
+            else {
+                editor = <PaneEditor
+                    isConfig={isEditor}
+                    language={language}
+                    value={editorValue}
+                    applyChanges={() => applyChanges(practicalType)}
+                    onChange={onChange} />;
             }
 
             return <ReflexElement key={language.name} minSize={40}>
@@ -282,12 +334,7 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                         ".monaco-editor .suggest-widget": { zIndex: 101 },
                         ".monaco-hover": { zIndex: 102 },
                     }}>
-                        <PaneEditor
-                            isConfig={isEditor as true | false}
-                            language={language}
-                            value={editorValue}
-                            applyChanges={() => applyChanges(type)}
-                            onChange={onChange} />
+                        {editor}
                     </Box>
                 </Stack>
             </ReflexElement>;
@@ -368,9 +415,10 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
         else {
             iframeOrTestPane
                 = <ActivityIframe
-                    html={editorStates.html?.value}
-                    js={compiledJs}
-                    css={editorStates.css?.value}
+                    htmlTemplate={hiddenHtml}
+                    html={html.enabled ? editorStates.html?.value : undefined}
+                    js={code.enabled ? compiledJs : undefined}
+                    css={css.enabled ? editorStates.css?.value : undefined}
                     reloadRef={reloadRef}
                     runTestsRef={runTestsRef}
                     sx={{

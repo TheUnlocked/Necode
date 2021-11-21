@@ -36,8 +36,14 @@ const testBasedActivityDescription: ActivityDescription<TestActivityConfig, [
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec laoreet maximus mauris at rhoncus. Donec in lacus id tortor fermentum finibus. Nulla leo arcu, porttitor in justo nec, gravida varius mauris. Donec commodo at sapien eu dictum. Quisque arcu nisi, consequat vel turpis luctus, imperdiet cursus diam. Morbi ultrices at arcu quis efficitur. Integer ut vestibulum mi. Donec nec porta ante.
         `,
         hiddenHtml: dedent`
-        <!-- You can put extra HTML here which the student won't be able to touch (e.g. for imports/scripts).
-            If you want to embed the student's code into the hidden HTML, use the user-content tag like so: -->
+        <!-- You can put extra HTML here which the student won't be able to touch.
+            This can be useful for embedding styles/scripts without distracting the student.
+            Note that if they really want to, the student can usually still write code
+            to change anything in the hidden section. -->
+
+        <!-- By default the student's HTML will just be appended to the hidden HTML.
+            If you want to embed the student's HTML into a specific place in the hidden HTML,
+            use the user-content tag like this: -->
         <user-content></user-content>
         `,
         languages: {

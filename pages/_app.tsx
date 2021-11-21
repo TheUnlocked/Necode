@@ -22,6 +22,8 @@ import LoadingContext, { LoadingContextInfo } from '../src/api/client/LoadingCon
 import { callWith } from '../src/util/fp';
 import LoadingSpinners from '../src/components/LoadingSpinners';
 import CustomAdapterLuxon from '../src/util/CustomLuxonAdapter';
+import { ErrorBoundary } from 'react-error-boundary';
+import ErrorBoundaryPage from '../src/components/ErrorBoundaryPage';
 
 function MyApp({ Component, pageProps }: AppProps) {
     const [meta, metaTransformer] = useMergeReducer({
@@ -77,7 +79,9 @@ function MyApp({ Component, pageProps }: AppProps) {
                     flexDirection: "column",
                     minHeight: "calc(100vh - 64px)"
                 } as SxProps}>
-                <Component {...pageProps} />
+                <ErrorBoundary FallbackComponent={ErrorBoundaryPage}>
+                    <Component {...pageProps} />
+                </ErrorBoundary>
                 </Box>
                 <LoadingSpinners />
             </LoadingContext.Provider>

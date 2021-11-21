@@ -156,6 +156,7 @@ export default function ActivityListPane({
                 clearDirty();
                 startUpload();
                 return fetch(`/api/classroom/${classroomId}/lesson/${lessonId}`, { method: 'DELETE' })
+                    .then(() => {})
                     .finally(finishUpload);
             }
             return;
@@ -191,7 +192,10 @@ export default function ActivityListPane({
 
         clearDirty();
         return req
-            .then(x => onLessonChange?.(x.data))
+            .then(x => {
+                onLessonChange?.(x.data);
+                return x.data;
+            })
             .finally(finishUpload);
     }, [date, classroomId, lessonId, displayName, activities, isLoading, onLessonChange, startUpload, finishUpload]);
 
@@ -223,6 +227,20 @@ export default function ActivityListPane({
         markDirty();
     }, [activities]);
 
+    const getRealActivityId = useCallback(async (id: string) => {
+        if (id.startsWith('%local')) {
+            const newData = await save();
+            if (newData) {
+                const index = activities.findIndex(x => x.id === id);
+                return newData.attributes.activities[index].id;
+            }
+            throw new Error('Failed to obtain ID');
+        }
+        else {
+            return id;
+        }
+    }, [save, activities]);
+
     function setActivityConfig(index: number, activityConfig: any) {
         const newActivities = [
             ...activities.slice(0, index),
@@ -252,7 +270,8 @@ export default function ActivityListPane({
                 skeleton={true}
                 classroomId={classroomId}
                 findItem={findItem}
-                moveItem={moveItem} />;
+                moveItem={moveItem}
+                getRealActivityId={getRealActivityId} />;
         }
 
         return <ActivityDragDropBox
@@ -264,7 +283,8 @@ export default function ActivityListPane({
             activityConfig={activityEntity.configuration}
             onActivityConfigChange={x => setActivityConfig(index, x)}
             findItem={findItem}
-            moveItem={moveItem} />;
+            moveItem={moveItem}
+            getRealActivityId={getRealActivityId} />;
     }
 
     return <>

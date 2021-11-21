@@ -1,5 +1,5 @@
 import Editor, { OnChange, useMonaco } from "@monaco-editor/react";
-import { Button, Card, CardContent, Checkbox, IconButton, Stack, styled, Tooltip, Typography } from "@mui/material";
+import { Button, Card, CardContent, Checkbox, IconButton, Stack, styled, Tooltip, Typography, Box, ButtonBase } from "@mui/material";
 import { ReflexContainer, ReflexElement, ReflexSplitter } from "react-reflex";
 import useIsSizeOrSmaller from "../../hooks/ScreenSizeHook";
 import { cssDescription } from "../../languages/css";
@@ -7,7 +7,6 @@ import { htmlDescription } from "../../languages/html";
 import LanguageDescription from "../../languages/LangaugeDescription";
 import { ActivityConfigPageProps, ActivityPageProps } from "../ActivityDescription";
 import { Refresh as RefreshIcon, Sync as SyncIcon } from "@mui/icons-material";
-import { Box } from "@mui/system";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import React from "react";
 import useCodeGenerator from "../../hooks/CodeGeneratorHook";
@@ -27,25 +26,18 @@ import { editorStateReducer, EditorType } from "./editorStateReducer";
 import PaneEditor from "./PaneEditor";
 import Key from "../../components/Key";
 import { ActivityIframe, RunTestsCallback } from "./ActivityIframe";
-
-type OptionalConfig<T>
-    = { enabled: true } & T
-    | { enabled: false } & Partial<T>;
+import alpha from "color-alpha";
 
 export interface TestActivityConfig {
     description: string;
+    hiddenHtml: string;
     tests: string;
-    html: OptionalConfig<{ defaultValue: string }>;
-    code: OptionalConfig<{ defaultValue: { [langName: string]: string } }>;
-    css: OptionalConfig<{ defaultValue: string }>;
+    languages: {
+        html: { enabled: boolean, defaultValue: string };
+        code: { enabled: boolean, defaultValue: { [languageName: string]: string } };
+        css: { enabled: boolean, defaultValue: string };
+    }
 }
-
-const StretchedIFrame = styled("iframe")`
-    width: 100%;
-    flex-grow: 1;
-    border: none;
-    border-radius: 4px;
-`;
 
 export interface HtmlTestActivityMetaProps {
     isEditor: boolean;
@@ -62,9 +54,11 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
         const {
             description,
             tests,
-            html,
-            code,
-            css
+            languages: {
+                html,
+                code,
+                css
+            }
         } = activityConfig;
 
         const isSmallOrSmaller = useIsSizeOrSmaller("sm");
@@ -134,6 +128,8 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
             }
         }, [codeSource, codeGenerator]);
 
+        const [isHiddenHtmlTabActive, setHiddenHtmlTabActive] = useState(false);
+
         const editorPane = useCallback((type: EditorType, language: LanguageDescription) => {
             const editorState = editorStates[type];
 
@@ -141,10 +137,13 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                 if (elt) {
                     if (!editorState) {
                         if (type === 'code') {
-                            dispatchEditorsState({ target: type, type: 'initialize', value: activityConfig.code.defaultValue![language.name] });
+                            dispatchEditorsState({ target: type, type: 'initialize', value: activityConfig.languages.code.defaultValue![language.name] });
+                        }
+                        else if (type === 'hidden-html') {
+                            dispatchEditorsState({ target: type, type: 'initialize', value: activityConfig.hiddenHtml });
                         }
                         else {
-                            dispatchEditorsState({ target: type, type: 'initialize', value: activityConfig[type].defaultValue! });
+                            dispatchEditorsState({ target: type, type: 'initialize', value: activityConfig.languages[type].defaultValue! });
                         }
                     }
                 }
@@ -155,21 +154,67 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
             const showKeybindingHint = !isMediumOrSmaller && editorState?.isDirty;
 
             let toolbarItems: JSX.Element;
+            let tabItems: JSX.Element | undefined = undefined;
 
             if (isEditor) {
                 toolbarItems = <>
-                    <Checkbox sx={{ m: "-9px", mr: 0 }}
-                        checked={activityConfig[type].enabled}
-                        onChange={ev => onActivityConfigChange!({
-                            ...activityConfig,
-                            [type]: {
-                                ...activityConfig[type],
-                                enabled: ev.target.checked
-                            }
-                        })} />
                     {Icon ? <Icon /> : undefined}
-                    <Typography variant="overline" sx={{ ml: 1 }}>{language.displayName}</Typography>
+                    <Typography variant="overline" sx={{ mx: 1, flexGrow: 1 }}>{language.displayName}</Typography>
                 </>;
+
+                function tab(title: string, hasCheckbox: boolean, active: boolean, onClick?: () => void) {
+                    const content = <>
+                        <Typography variant="overline" sx={{
+                            userSelect: "none",
+                            mx: 1,
+                            color: active ? undefined : ({palette}) => palette.text.disabled
+                        }}>
+                            {title}
+                        </Typography>
+                        {hasCheckbox
+                            ? <Checkbox sx={{ ml: "-9px", my: "-9px" }}
+                                checked={activityConfig.languages[type as Exclude<EditorType, 'hidden-html'>].enabled}
+                                onChange={ev => onActivityConfigChange!({
+                                    ...activityConfig,
+                                    [type]: {
+                                        ...activityConfig.languages[type as Exclude<EditorType, 'hidden-html'>],
+                                        enabled: ev.target.checked
+                                    }
+                                })} />
+                            : undefined}
+                    </>;
+
+                    if (onClick) {
+                        return <ButtonBase onClick={onClick} sx={({palette}) => ({
+                            flexShrink: 0,
+                            borderRadius: "0 0 4px 4px",
+                            mb: 1,
+                            pt: 1,
+                            backgroundColor: active ? undefined : palette.background.default,
+                            border: `1px solid ${active ? 'transparent' : palette.divider}`,
+                            borderTop: '1px solid transparent',
+                            cursor: "pointer",
+                            "&:hover": {
+                                backgroundColor: palette.action.hover
+                            }
+                        })}>
+                            {content}
+                        </ButtonBase>;
+                    }
+                }
+
+                if (type === 'html') {
+                    tabItems = <>
+                        {tab('hidden', false, isHiddenHtmlTabActive, () => setHiddenHtmlTabActive(true))}
+                        {tab('starter', true, !isHiddenHtmlTabActive, () => setHiddenHtmlTabActive(false))}
+                    </>;
+                }
+                else if (type === 'hidden-html') {
+                    tabItems = tab('hidden', false, true);
+                }
+                else {
+                    tabItems = tab('starter', true, true);
+                }
             }
             else {
                 toolbarItems = <>
@@ -179,31 +224,46 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                         ? <Typography variant="overline" sx={{ pl: 2, ml: "auto", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                             Press <Key>Ctrl</Key>+<Key>S</Key> to apply changes
                         </Typography> : undefined}
-                    <Button onClick={() => applyChanges(type)} disabled={!editorState?.isDirty}
-                        sx={{ ml: showKeybindingHint ? undefined : "auto", flexShrink: 0 }}>
+                    <Button size="small" onClick={() => applyChanges(type)} disabled={!editorState?.isDirty}
+                        sx={{ ml: showKeybindingHint ? 0.5 : "auto", flexShrink: 0 }}>
                         Apply changes
                     </Button>
                 </>;
             }
 
             const editorValue = isEditor
-                ? type === "code" ? activityConfig.code.defaultValue![language.name] ?? "" : activityConfig[type].defaultValue
+                ? type === "code"
+                    ? activityConfig.languages.code.defaultValue![language.name] ?? ""
+                    : type === "hidden-html"
+                    ? activityConfig.hiddenHtml
+                    : activityConfig.languages[type].defaultValue
                 : editorState?.uncommittedValue;
 
             const onChange: OnChange = value => {
                 if (isEditor) {
-                    onActivityConfigChange!({
-                        ...activityConfig,
-                        [type]: {
-                            ...activityConfig[type],
-                            defaultValue: type === "code"
-                                ? {
-                                    ...activityConfig.code.defaultValue ?? {},
-                                    [language.name]: value
+                    if (type === "hidden-html") {
+                        onActivityConfigChange!({
+                            ...activityConfig,
+                            hiddenHtml: value ?? ''
+                        });
+                    }
+                    else {
+                        onActivityConfigChange!({
+                            ...activityConfig,
+                            languages: {
+                                ...activityConfig.languages,
+                                [type]: {
+                                    ...activityConfig.languages[type],
+                                    defaultValue: type === "code"
+                                        ? {
+                                            ...activityConfig.languages.code.defaultValue ?? {},
+                                            [language.name]: value
+                                        }
+                                        : value
                                 }
-                                : value
-                        }
-                    });
+                            }
+                        });
+                    }
                 }
                 else {
                     dispatchEditorsState({ target: type, type: 'valueChange', value: value ?? '' });
@@ -212,7 +272,10 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
 
             return <ReflexElement key={language.name} minSize={40}>
                 <Stack direction="column" sx={{ height: "100%" }}>
-                    <Stack direction="row" sx={{ m: 1, height: "24px" }}>{toolbarItems}</Stack>
+                    <Stack direction="row">
+                        <Stack direction="row" alignItems="center" sx={{ m: 1, flexGrow: 1, height: "24px" }}>{toolbarItems}</Stack>
+                        {tabItems ? <Stack direction="row" alignItems="center" sx={{ height: "40px" }}>{tabItems}</Stack> : undefined}
+                    </Stack>
                     <Box ref={onEditorContainerRef} sx={{
                         flexGrow: 1,
                         height: "calc(100% - 40px)", // need this because monaco does weird things withou it.
@@ -228,7 +291,7 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                     </Box>
                 </Stack>
             </ReflexElement>;
-        }, [isMediumOrSmaller, editorStates, applyChanges, activityConfig, onActivityConfigChange]);
+        }, [isHiddenHtmlTabActive, isMediumOrSmaller, editorStates, applyChanges, activityConfig, onActivityConfigChange]);
 
         const monaco = useMonaco();
 
@@ -361,7 +424,10 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                                 description: val ?? ""
                             })} />
                         : <CardContent sx={{ pt: 0, flexGrow: 1, overflow: "auto" }}>
-                            <ReactMarkdown rehypePlugins={[rehypeHighlight]} remarkPlugins={[remarkGfm]}>{description}</ReactMarkdown>
+                            <ReactMarkdown
+                                rehypePlugins={[rehypeHighlight]}
+                                remarkPlugins={[remarkGfm]}
+                                linkTarget="_blank">{description}</ReactMarkdown>
                         </CardContent>}
                 </Stack>
             </Card>

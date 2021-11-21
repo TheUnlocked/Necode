@@ -1,5 +1,5 @@
 // Temporary, will be replaced with generalized alternative
-export type EditorType = 'html' | 'css' | 'code';
+export type EditorType = 'html' | 'css' | 'code' | 'hidden-html';
 
 export type EditorStateDispatchAction = { target: EditorType } &
     ( { type: 'initialize', value: string }
@@ -12,11 +12,7 @@ export type EditorState = {
     readonly value: string;
 };
 
-export const editorStateReducer = (state: {
-    html?: EditorState,
-    code?: EditorState,
-    css?: EditorState,
-}, action: EditorStateDispatchAction) => {
+export const editorStateReducer = (state: { [Type in EditorType]?: EditorState }, action: EditorStateDispatchAction) => {
     switch (action.type) {
         case 'initialize':
             return {...state, [action.target]: {

@@ -35,25 +35,32 @@ const testBasedActivityDescription: ActivityDescription<TestActivityConfig, [
         ## Subproblem
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec laoreet maximus mauris at rhoncus. Donec in lacus id tortor fermentum finibus. Nulla leo arcu, porttitor in justo nec, gravida varius mauris. Donec commodo at sapien eu dictum. Quisque arcu nisi, consequat vel turpis luctus, imperdiet cursus diam. Morbi ultrices at arcu quis efficitur. Integer ut vestibulum mi. Donec nec porta ante.
         `,
-        html: { enabled: true, defaultValue: dedent`
-        <meta name="color-scheme" content="dark light" />
+        hiddenHtml: dedent`
+        <!-- You can put extra HTML here which the student won't be able to touch (e.g. for imports/scripts).
+            If you want to embed the student's code into the hidden HTML, use the user-content tag like so: -->
+        <user-content></user-content>
+        `,
+        languages: {
+            html: { enabled: true, defaultValue: dedent`
+            <meta name="color-scheme" content="dark light" />
 
-        <h1>Hello, World!</h1>
-        ` },
-        code: { enabled: true, defaultValue: {} },
-        css: { enabled: true, defaultValue: dedent`
-        /* This makes the iframe look at home on this site,
-         * but it's still just starter code. Feel free to play around! */
-        
-        @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+            <h1>Hello, World!</h1>
+            ` },
+            code: { enabled: true, defaultValue: {} },
+            css: { enabled: true, defaultValue: dedent`
+            /* This makes the iframe look at home on this site,
+             * but it's still just starter code. Feel free to play around! */
+            
+            @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
 
-        body {
-            background-color: #1e1e1e;
-            color: white;
-            font-family: "Roboto", "Helvetica", "Arial", sans-serif;
-            font-weight: 400;
-        }
-        ` },
+            body {
+                background-color: #1e1e1e;
+                color: white;
+                font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+                font-weight: 400;
+            }
+            ` },
+        },
         tests: dedent`
         // Write assertions using check syntax:
         check(1 === 1);

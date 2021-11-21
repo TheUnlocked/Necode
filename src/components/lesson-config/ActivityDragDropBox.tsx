@@ -15,8 +15,9 @@ export type DraggableComponent = ComponentType<ActivityConfigWidgetProps<any>>;
 interface BaseActivityDragDropBoxProps {
     id: string;
     classroomId: string;
-    moveItem: (id: string, to: number) => void,
-    findItem: (id: string) => { index: number },
+    moveItem: (id: string, to: number) => void;
+    findItem: (id: string) => { index: number };
+    getRealActivityId: (id: string) => Promise<string>;
 }
 
 interface SkeletonActivityDragDropBoxProps extends BaseActivityDragDropBoxProps {
@@ -34,7 +35,7 @@ type ActivityDragDropBoxProps<IsSkeleton extends boolean>
     = IsSkeleton extends true ? SkeletonActivityDragDropBoxProps : RealActivityDragDropBoxProps;
 
 export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityDragDropBoxProps<IsSkeleton>) {
-    const { id, classroomId, moveItem, findItem } = props;
+    const { id, classroomId, moveItem, findItem, getRealActivityId } = props;
 
     const router = useRouter();
 
@@ -115,8 +116,8 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
 
     const Widget = activity.configWidget ?? DefaultActivityWidget;
 
-    function goToConfigPage() {
-        router.push({ pathname: `/classroom/${classroomId}/manage/activity/${id}` });
+    async function goToConfigPage() {
+        router.push({ pathname: `/classroom/${classroomId}/manage/activity/${await getRealActivityId(id)}` });
     }
 
     return <Box ref={compose(setBoxRef, drop, dragPreview)} sx={{ opacity: isDragging ? 0 : 1 }}>

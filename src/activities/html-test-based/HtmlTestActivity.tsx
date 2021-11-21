@@ -26,7 +26,7 @@ import TestsDialog from "./TestsDialog";
 import { editorStateReducer, EditorType } from "./editorStateReducer";
 import PaneEditor from "./PaneEditor";
 import Key from "../../components/Key";
-import { ActivityIframe } from "./ActivityIframe";
+import { ActivityIframe, RunTestsCallback } from "./ActivityIframe";
 
 type OptionalConfig<T>
     = { enabled: true } & T
@@ -74,7 +74,7 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
         const [editorStates, dispatchEditorsState] = useReducer(editorStateReducer, {});
 
         const reloadRef = useRef<() => Promise<void>>();
-        const runTestsRef = useRef<() => Promise<void>>();
+        const runTestsRef = useRef<RunTestsCallback>();
 
         const applyChanges = useCallback((type: EditorType) => {
             dispatchEditorsState({
@@ -154,10 +154,10 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
 
             const showKeybindingHint = !isMediumOrSmaller && editorState?.isDirty;
 
-            let toolbarItems = [] as (JSX.Element | undefined)[];
+            let toolbarItems: JSX.Element;
 
             if (isEditor) {
-                toolbarItems.push(
+                toolbarItems = <>
                     <Checkbox sx={{ m: "-9px", mr: 0 }}
                         checked={activityConfig[type].enabled}
                         onChange={ev => onActivityConfigChange!({
@@ -166,24 +166,24 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                                 ...activityConfig[type],
                                 enabled: ev.target.checked
                             }
-                        })} />,
-                    Icon ? <Icon /> : undefined,
+                        })} />
+                    {Icon ? <Icon /> : undefined}
                     <Typography variant="overline" sx={{ ml: 1 }}>{language.displayName}</Typography>
-                );
+                </>;
             }
             else {
-                toolbarItems.push(
-                    Icon ? <Icon /> : undefined,
-                    <Typography variant="overline" sx={{ ml: 1 }}>{language.displayName}</Typography>,
-                    showKeybindingHint
+                toolbarItems = <>
+                    {Icon ? <Icon /> : undefined}
+                    <Typography variant="overline" sx={{ ml: 1 }}>{language.displayName}</Typography>
+                    {showKeybindingHint
                         ? <Typography variant="overline" sx={{ pl: 2, ml: "auto", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                             Press <Key>Ctrl</Key>+<Key>S</Key> to apply changes
-                        </Typography> : undefined,
+                        </Typography> : undefined}
                     <Button onClick={() => applyChanges(type)} disabled={!editorState?.isDirty}
                         sx={{ ml: showKeybindingHint ? undefined : "auto", flexShrink: 0 }}>
                         Apply changes
                     </Button>
-                );
+                </>;
             }
 
             const editorValue = isEditor
@@ -321,7 +321,18 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
         function runTests() {
             if (runTestsRef.current) {
                 openTestsDialog();
-                runTestsRef.current();
+                runTestsRef.current(
+                    tests,
+                    startTests.current,
+                    msg => {
+                        if (msg) {
+                            failTests.current(msg);
+                        }
+                        else {
+                            passTests.current();
+                        }
+                    }
+                );
             }
         }
 

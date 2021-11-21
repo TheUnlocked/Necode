@@ -33,8 +33,8 @@ export default function Header(props: {
             <Breadcrumbs sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}>
                 {props.path.map((x, i) => breadcrumbsLink(x, i, i === props.path.length - 1))}
             </Breadcrumbs>
-            {
-                status === "loading" ? undefined
+            {status === "loading"
+                ? undefined
                 : <Stack direction="row" justifyContent="end" alignItems="baseline" spacing={4}>
                     {session?.user
                         ? <>
@@ -42,8 +42,7 @@ export default function Header(props: {
                             <Button color="inherit" onClick={() => signOut({ redirect: false })}>Sign Out</Button>
                         </>
                         : <Button variant="contained" onClick={() => signIn("wpi", { redirect: false })}>Sign In</Button>}
-                </Stack>
-            }
+                </Stack>}
         </Toolbar>
     </AppBar>;
 }

@@ -3,7 +3,7 @@
     const JS_ELT_ID = '__activity-js-data';
     const CSS_ELT_ID = '__activity-css-data';
     let initialized = false;
-    let signature = Symbol();
+    let signature = '!!SIGNATURE!!';
 
     let htmlTemplate;
 
@@ -36,21 +36,20 @@
     }
 
     window.addEventListener('message', async e => {
+        // verify that the message is being sent by the activity
+        if (e.data.signature !== signature) {
+            return;
+        }
+
         if (e.data.type === 'initialize') {
             if (!initialized) {
                 initialized = true;
-                signature = e.data.signature;
                 htmlTemplate = e.data.template;
                 document.body.innerHTML = htmlTemplate;
                 setHtml(e.data.html);
                 setJs(e.data.js);
                 setCss(e.data.css);
             }
-            return;
-        }
-
-        // verify that the message is being sent by the activity
-        if (e.data.signature !== signature) {
             return;
         }
 
@@ -78,7 +77,7 @@
             }
         }
     });
-    window.parent.postMessage({ type: 'activity-iframe-loaded' }, '*');
+    window.parent.postMessage({ type: 'activity-iframe-loaded', signature }, '*');
     // clean up
     document.currentScript.remove();
 </script><style>

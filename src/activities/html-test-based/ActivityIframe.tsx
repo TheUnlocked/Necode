@@ -10,7 +10,7 @@ import { assignRef, SimpleRef } from "../../util/simpleRef";
 
 const Iframe = styled('iframe')``;
 
-type RunTestsCallback = (
+export type RunTestsCallback = (
     tests: string,
     startTests: () => void,
     finishTests: (errorMessage?: string) => void
@@ -50,13 +50,17 @@ export function ActivityIframe({
         return new Promise<void>(resolve => {
             const iframeElt = iframeRef.current;
             if (iframeElt) {
-                iframeElt.srcdoc = iframeHtml;
-    
                 const signature = nanoid();
                 signatureRef.current = signature;
+                
+                iframeElt.srcdoc = iframeHtml.replace('!!SIGNATURE!!', signature);
         
                 const listener = (ev: MessageEvent<any>) => {
                     if (ev.data?.type === 'activity-iframe-loaded') {
+                        if (ev.data.signature !== signature) {
+                            return;
+                        }
+                        
                         window.removeEventListener('message', listener);
     
                         if (!iframeElt.contentWindow) {

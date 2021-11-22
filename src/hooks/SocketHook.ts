@@ -5,7 +5,7 @@ import useGetRequest from '../api/client/GetRequestHook';
 
 export interface SocketInfo {
     socket: Socket<ServerToClientEventMap, ClientToServerEventMap>;
-    liveActivityInfo: LiveActivityInfo;
+    liveActivityInfo?: LiveActivityInfo;
     getParticipants(): Promise<string[]>;
 }
 
@@ -45,7 +45,7 @@ export default function useSocket(classroomId: string): SocketInfo | undefined {
         }
     }, [socketData]);
 
-    return useMemo(() => socket && liveActivityInfo
+    return useMemo(() => socket
         ? {
             socket: socket,
             liveActivityInfo: liveActivityInfo,

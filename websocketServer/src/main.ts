@@ -42,9 +42,9 @@ const users = new UserManager();
 const rtc = new RtcManager(io);
 const classrooms = new ClassroomManager(io, prisma, users);
 
-function initialize() {
+async function initialize() {
     // purge all live activities
-    prisma.liveActivity.deleteMany();
+    await prisma.liveActivity.deleteMany();
 }
 
 io.on('connection', socket => {
@@ -237,6 +237,7 @@ internalApi.post('/:classroomId/activity', (req, res) => {
 });
 
 internalApi.delete('/:classroomId/activity', (req, res) => {
+    console.log('ended activity');
     const classroom = classrooms.getOrCreate(req.params.classroomId);
     classroom.endActivity();
     res.status(200).send();

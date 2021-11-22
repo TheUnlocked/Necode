@@ -3,6 +3,7 @@ import { endpoint, Status } from "../../../../../src/api/Endpoint";
 import { getRole, isInstructor } from "../../../../../src/api/server/validators";
 import { prisma } from "../../../../../src/db/prisma";
 import { makeLessonEntity } from "../../../../../src/api/entities/LessonEntity";
+import Joi from "joi";
 
 const apiActivityOne = endpoint(makeActivityEntity, ['classroomId', 'activityId', 'include[]'] as const, {
     type: 'entity',
@@ -31,6 +32,32 @@ const apiActivityOne = endpoint(makeActivityEntity, ['classroomId', 'activityId'
                     ? makeLessonEntity(activity.lesson)
                     : role === 'Instructor' ? activity.lessonId : undefined
             }));
+        }
+    },
+    PUT: {
+        loginValidation: true,
+        schema: Joi.object({
+            configuration: Joi.any().optional(),
+            enabledLanguages: Joi.array().items(Joi.string()).optional()
+        }),
+        async handler({ query: { classroomId, activityId }, body, session }, ok, fail) {
+            if (!isInstructor(session!.user.id, classroomId)) {
+                return fail(Status.FORBIDDEN);
+            }
+
+            const activity = await prisma.activity.update({
+                where: { id: activityId },
+                data: {
+                    configuration: body.configuration,
+                    supportedLanguages: body.enabledLanguages
+                }
+            });
+
+            if (!activity) {
+                return fail(Status.NOT_FOUND);
+            }
+
+            return ok(makeActivityEntity(activity));
         }
     },
     DELETE: {

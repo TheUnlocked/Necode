@@ -167,7 +167,7 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                 function tab(title: string, hasCheckbox: boolean, active: boolean, onClick?: () => void) {
                     const content = <>
                         <Typography variant="overline" sx={{
-                            userSelect: "none",
+                            userSelect: onClick ? "none" : undefined,
                             mx: 1,
                             color: active ? undefined : ({palette}) => palette.text.disabled
                         }}>

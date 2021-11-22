@@ -26,7 +26,7 @@ const InternalServerErrorPage: NextPage = () => {
         <Stack direction="column" alignItems="center">
             <Typography variant="h1" fontSize="max(10vw, 6rem)" fontWeight="900">500</Typography>
             <Typography variant="h2" fontSize="max(3vw, 3rem)">Internal Server Error</Typography>
-            <Typography variant="body1" fontSize="max(1vw, 1rem)" my={2}>
+            <Typography variant="body1" fontSize="max(1vw, 1.2rem)" my={2}>
                 Look, a cat! It wants you to <Link href="#" onClick={goBack}>go back</Link>!
             </Typography>
         </Stack>

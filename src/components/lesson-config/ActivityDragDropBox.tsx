@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { ComponentType, useRef } from "react";
 import { ConnectableElement, useDrag, useDrop } from "react-dnd";
 import ActivityDescription, { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
+import { useLoadingContext } from "../../api/client/LoadingContext";
 import { compose } from "../../util/fp";
 import { LocalActivity } from "./ActivityListPane";
 import DefaultActivityWidget from "./DefaultActivityWidget";
@@ -38,6 +39,8 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
     const { id, classroomId, moveItem, findItem, getRealActivityId } = props;
 
     const router = useRouter();
+
+    const { startUpload, finishUpload } = useLoadingContext();
 
     const originalIndex = findItem(id).index;
 
@@ -120,6 +123,16 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
         router.push({ pathname: `/classroom/${classroomId}/manage/activity/${await getRealActivityId(id)}` });
     }
 
+    async function startActivity() {
+        startUpload();
+        await fetch(`/api/classroom/${classroomId}/activity/live`, {
+            method: 'POST',
+            body: JSON.stringify({ id })
+        }).finally(finishUpload);
+
+        router.push(`/classroom/${classroomId}/activity`);
+    }
+
     return <Box ref={compose(setBoxRef, drop, dragPreview)} sx={{ opacity: isDragging ? 0 : 1 }}>
         <Widget
             id={id}
@@ -127,6 +140,7 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
             activity={activity}
             activityConfig={activityConfig}
             onActivityConfigChange={onActivityConfigChange}
+            startActivity={startActivity}
             goToConfigPage={activity.configPage ? goToConfigPage : undefined}
             dragHandle={drag} />
     </Box>;

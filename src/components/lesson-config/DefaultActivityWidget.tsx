@@ -3,6 +3,7 @@ import { ActivityConfigWidgetProps } from "../../activities/ActivityDescription"
 import DragHandle, { dragHandleSelector } from "./DragHandle";
 
 export default function DefaultActivityWidget({
+    startActivity,
     goToConfigPage,
     dragHandle,
     activity
@@ -14,7 +15,7 @@ export default function DefaultActivityWidget({
             <DragHandle innerRef={dragHandle}/>
             <Typography variant="h6" flexGrow={1}>{activity.displayName}</Typography>
             {goToConfigPage ? <Button variant="outlined" onClick={goToConfigPage}>Configure</Button> : undefined}
-            <Button variant="contained">Start Activity</Button>
+            <Button variant="contained" onClick={startActivity}>Start Activity</Button>
         </Stack>
     </Card>;
 }

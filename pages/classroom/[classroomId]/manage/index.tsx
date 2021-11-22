@@ -1,5 +1,5 @@
 import { PickersDay, StaticDatePicker } from "@mui/lab";
-import { Badge, Stack, TextField, Tooltip } from "@mui/material";
+import { Badge, Button, Stack, TextField, Toolbar, Tooltip, Typography } from "@mui/material";
 import { GetServerSideProps, NextPage } from "next";
 import { Dispatch, useCallback, useEffect, useRef, useState } from "react";
 import { Box } from "@mui/system";
@@ -10,6 +10,7 @@ import { fromLuxon, Iso8601Date, iso8601DateRegex, toLuxon } from "../../../../s
 import SkeletonActivityListPane from "../../../../src/components/lesson-config/SkeletonActivityListPane";
 import { DateTime } from "luxon";
 import { useRouter } from "next/router";
+import { useLoadingContext } from "../../../../src/api/client/LoadingContext";
 
 
 function getDateFromPath(path: string) {
@@ -66,47 +67,89 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
         saveLessonRef.current?.();
     }, []);
 
-    return <Stack sx={{ height: 'calc(100vh - var(--header-height))', px: 8, pb: 8, pt: 4 }} direction="row" alignItems="center" spacing={8}>
-        <Box sx={{ pt: 2 }}>
-            <StaticDatePicker
-                value={toLuxon(selectedDate)}
-                onChange={newDate => {
-                    saveLessonRef.current?.();
-                    if (newDate) {
-                        router.push({ hash: fromLuxon(newDate) });
-                    }
-                }}
-                renderInput={params => <TextField {...params} />}
-                displayStaticWrapperAs="desktop"
-                views={["year", "day"]}
-                renderDay={(day, _value, DayComponentProps) => {
-                    const isoDate = fromLuxon(day);
-                    const todayLesson = lessonsByDate[isoDate];
-                    const showsIndicators = isActiveLesson(todayLesson) && !DayComponentProps.selected;
-                    return <Tooltip key={DayComponentProps.key}
-                        title={showsIndicators ? todayLesson!.attributes.displayName : ''}
-                        placement="top" arrow
-                    > 
-                        <Badge key={isoDate}
-                            overlap="circular" variant="dot"
-                            anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-                            componentsProps={{ badge: { style: { right: "50%", pointerEvents: "none" } } }}
-                            color="primary"
-                            invisible={!showsIndicators}
-                        >
-                            <PickersDay {...DayComponentProps} />
-                        </Badge>
-                    </Tooltip>;
-                }} />
-        </Box>
-        {lessons
-            ? <ActivityListPane sx={{ flexGrow: 3, height: "100%", display: "flex", flexDirection: "column" }}
-                classroomId={classroomId}
-                date={selectedDate}
-                onLessonChange={onLessonChange}
-                saveRef={saveLessonRef} />
-            : <SkeletonActivityListPane sx={{ flexGrow: 3, height: "100%", display: "flex", flexDirection: "column" }} />}
-    </Stack>;
+    const { startUpload, finishUpload } = useLoadingContext();
+
+    function endActivity() {
+        startUpload();
+        fetch(`/api/classroom/${classroomId}/activity/live`, { method: 'DELETE' })
+            .then(() => mutate({}, true))
+            .finally(finishUpload);
+    }
+
+    function goToActivity() {
+        router.push(`/classroom/${classroomId}/activity`);
+    }
+
+    const { data: liveActivityData, mutate } = useGetRequest<{
+        live: boolean,
+        server: string,
+        token: string
+    }>(`/api/classroom/${classroomId}/activity/live`);
+
+    const isActivityRunning = liveActivityData?.live;
+
+    return <>
+        {isActivityRunning
+            ? <Toolbar sx={{
+                height: 64,
+                backgroundColor: 'success.dark',
+                justifyContent: "center"
+            }}>
+                <Stack direction="row" spacing={1}>
+                    <Typography variant="h6">
+                        An activity is currently running.    
+                    </Typography>
+                    <Button color="primary" variant="contained" onClick={goToActivity}>Go To Activity</Button>
+                    <Button color="error" variant="contained" onClick={endActivity}>End Activity</Button>
+                </Stack>
+            </Toolbar> : undefined}
+        <Stack sx={{
+            ...{ '--header-height': isActivityRunning ? '128px' : undefined },
+            height: `calc(100vh - var(--header-height))`,
+            px: 8,
+            py: 4
+        }} direction="row" alignItems="center" spacing={8}>
+            <Box sx={{ pt: 2 }}>
+                <StaticDatePicker
+                    value={toLuxon(selectedDate)}
+                    onChange={newDate => {
+                        saveLessonRef.current?.();
+                        if (newDate) {
+                            router.push({ hash: fromLuxon(newDate) });
+                        }
+                    }}
+                    renderInput={params => <TextField {...params} />}
+                    displayStaticWrapperAs="desktop"
+                    views={["year", "day"]}
+                    renderDay={(day, _value, DayComponentProps) => {
+                        const isoDate = fromLuxon(day);
+                        const todayLesson = lessonsByDate[isoDate];
+                        const showsIndicators = isActiveLesson(todayLesson) && !DayComponentProps.selected;
+                        return <Tooltip key={DayComponentProps.key}
+                            title={showsIndicators ? todayLesson!.attributes.displayName : ''}
+                            placement="top" arrow
+                        > 
+                            <Badge key={isoDate}
+                                overlap="circular" variant="dot"
+                                anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+                                componentsProps={{ badge: { style: { right: "50%", pointerEvents: "none" } } }}
+                                color="primary"
+                                invisible={!showsIndicators}
+                            >
+                                <PickersDay {...DayComponentProps} />
+                            </Badge>
+                        </Tooltip>;
+                    }} />
+            </Box>
+            {lessons
+                ? <ActivityListPane sx={{ flexGrow: 3, height: "100%", display: "flex", flexDirection: "column" }}
+                    classroomId={classroomId}
+                    date={selectedDate}
+                    onLessonChange={onLessonChange}
+                    saveRef={saveLessonRef} />
+                : <SkeletonActivityListPane sx={{ flexGrow: 3, height: "100%", display: "flex", flexDirection: "column" }} />}
+        </Stack>
+    </>;
 };
 
 export default Page;

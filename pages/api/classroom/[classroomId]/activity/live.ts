@@ -26,7 +26,12 @@ const apiActivityLive = endpoint(null, ['classroomId'], {
                 return fail(Status.FORBIDDEN);
             }
 
+            const isLive = await prisma.liveActivity.count({
+                where: { classroomId }
+            }) > 0;
+
             return ok({
+                live: isLive,
                 server: process.env.WEBSOCKET_SERVER,
                 token: await makeJwt({
                     purpose: 'socket',
@@ -67,10 +72,11 @@ const apiActivityLive = endpoint(null, ['classroomId'], {
                     data: body.data ?? undefined
                 }
             });
-
-            const response = await fetch(`${process.env.WEBSOCKET_SERVER}/${classroomId}/activity`, {
+            
+            const response = await fetch(`${process.env.WEBSOCKET_SERVER?.replace(/\/$/, '')}/internal/${classroomId}/activity`, {
                 method: 'POST',
                 headers: {
+                    'Content-Type': 'application/json',
                     Authorization: await makeJwt({
                         purpose: 'internal'
                     }, '5s')
@@ -84,7 +90,7 @@ const apiActivityLive = endpoint(null, ['classroomId'], {
             if (!response.ok) {
                 return fail(response.status, await response.text());
             }
-
+            
             return ok(undefined);
         }
     },
@@ -105,9 +111,10 @@ const apiActivityLive = endpoint(null, ['classroomId'], {
                 return fail(Status.NOT_FOUND);
             }
 
-            const response = await fetch(`${process.env.WEBSOCKET_SERVER}/${classroomId}/activity`, {
+            const response = await fetch(`${process.env.WEBSOCKET_SERVER?.replace(/\/$/, '')}/internal/${classroomId}/activity`, {
                 method: 'DELETE',
                 headers: {
+                    'Content-Type': 'application/json',
                     Authorization: await makeJwt({
                         purpose: 'internal'
                     }, '5s')

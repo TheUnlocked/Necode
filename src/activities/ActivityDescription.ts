@@ -29,6 +29,8 @@ export interface ActivityConfigWidgetProps<ConfigData = undefined> extends BaseA
     
     goToConfigPage: (() => void) | undefined;
     
+    startActivity: () => void;
+    
     dragHandle: ConnectDragSource;
 
     activity: ActivityDescription<ConfigData>;

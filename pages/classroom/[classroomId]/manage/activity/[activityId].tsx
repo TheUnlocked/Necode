@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { MetaTransformerContext } from "../../../../../src/contexts/MetaTransformerContext";
 import { Button, Toolbar, Select, MenuItem, Stack, ToggleButton, Skeleton, Paper } from "@mui/material";
-import { ArrowBack, Code } from "@mui/icons-material";
+import { ArrowBack, Code, Save } from "@mui/icons-material";
 import { Box, SxProps } from "@mui/system";
 import allLanguages from "../../../../../src/languages/allLanguages";
 import LanguageDescription from "../../../../../src/languages/LangaugeDescription";
@@ -17,6 +17,10 @@ import { ActivityEntity } from "../../../../../src/api/entities/ActivityEntity";
 import apiClassroomMe from "../../../../api/classroom/[classroomId]/me";
 import apiActivityOne from "../../../../api/classroom/[classroomId]/activity/[activityId]";
 import allActivities from "../../../../../src/activities/allActivities";
+import useDirty from "../../../../../src/hooks/DirtyHook";
+import { useLoadingContext } from "../../../../../src/api/client/LoadingContext";
+import { Response } from "../../../../../src/api/Response";
+import { useSnackbar } from "notistack";
 
 interface StaticProps {
     classroomId: string;
@@ -30,7 +34,7 @@ const Page: NextPage<StaticProps> = ({ classroomId, date, activityId }) => {
 
     useEffect(() => {
         metaTransformer({ path: [
-            { label: 'To Be Named', href: '/' },
+            { label: 'Necode', href: '/' },
             { label: 'Class Name', href: `/classroom/${classroomId}` },
             { label: 'Manage', href: `/classroom/${classroomId}/manage` },
             { label: 'Activity Name', href: location.href }
@@ -56,6 +60,7 @@ const Page: NextPage<StaticProps> = ({ classroomId, date, activityId }) => {
         }
     }, [enabledLanguages, selectedLanguage]);
 
+    const [isDirty, markDirty, clearDirty] = useDirty();
     const [activityConfig, setActivityConfig] = useState(activityEntity?.attributes.configuration);
 
     const [isLoading, setIsLoading] = useState(true);
@@ -83,9 +88,34 @@ const Page: NextPage<StaticProps> = ({ classroomId, date, activityId }) => {
     const [configureLanguagesDialog, openConfigureLanguagesDialog] = useImperativeDialog(ConfigureLanguageDialog, {
         availableLanguages: supportedLanguages,
         enabledLanguages,
-        saveEnabledLanguages: langs => setEnabledLanguages(sortByProperty(langs, "name")),
+        saveEnabledLanguages: langs => {
+            markDirty();
+            setEnabledLanguages(sortByProperty(langs, "name"))
+        },
         unsupportedLanguages: useMemo(() => allLanguages.filter(x => !supportedLanguages.includes(x)), [supportedLanguages])
     });
+
+    const { enqueueSnackbar } = useSnackbar();
+    const { startUpload, finishUpload } = useLoadingContext();
+
+    function save() {
+        startUpload();
+        fetch(`/api/classroom/${classroomId}/activity/${activityId}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+                configuration: activityConfig,
+                enabledLanguages: enabledLanguages.map(x => x.name)
+            })
+        }).then(async res => {
+            const data = await res.json() as Response<any>;
+            if (data.response === 'ok') {
+                clearDirty();
+            }
+            else {
+                enqueueSnackbar(`HTTP ${res.status}: ${data.message}`, { variant: 'error' })
+            }
+        }).finally(finishUpload);
+    }
 
     const [isPreview, setIsPreview] = useState(false);
     
@@ -137,7 +167,9 @@ const Page: NextPage<StaticProps> = ({ classroomId, date, activityId }) => {
             px: "16px !important",
             display: "flex",
             flexDirection: "row",
-            justifyContent: "space-between"
+            "& > * + *": {
+                ml: 1
+            }
         }}>
             <Button size="small" startIcon={<ArrowBack/>}
                 onClick={() => router.push({
@@ -146,7 +178,8 @@ const Page: NextPage<StaticProps> = ({ classroomId, date, activityId }) => {
                 })}>
                 Return to Manage Classroom
             </Button>
-            <Stack direction="row" spacing={1}>
+            <Button size="small" startIcon={<Save/>} onClick={save} disabled={!isDirty}>Save Changes</Button>
+            <Stack direction="row" justifyContent="flex-end" flexGrow={1} spacing={1}>
                 <Button size="small" startIcon={<Code/>} onClick={openConfigureLanguagesDialog}>Configure Languages</Button>
                 <Select size="small" sx={{ height: "32px" }}
                     id="language-select-box"
@@ -183,7 +216,10 @@ const Page: NextPage<StaticProps> = ({ classroomId, date, activityId }) => {
                 <activity.configPage
                     id={""}
                     activityConfig={activityConfig}
-                    onActivityConfigChange={setActivityConfig}
+                    onActivityConfigChange={newConfig => {
+                        markDirty();
+                        setActivityConfig(newConfig);
+                    }}
                     classroomId={classroomId}
                     language={selectedLanguage} />
             </Lazy>

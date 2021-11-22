@@ -15,7 +15,7 @@ module.exports = {
         filename: 'index.js'
     },
     resolve: {
-        extensions: ['.ts', '.tsx', 'js']
+        extensions: ['.ts', '.tsx', '.js']
     },
     module: {
         rules: [
@@ -53,7 +53,8 @@ module.exports = {
     externals: {
         bufferutil: "bufferutil",
         "utf-8-validate": "utf-8-validate",
-        "socket.io": "require('socket.io')"
+        "socket.io": "commonjs socket.io",
+        "_http_common": "commonjs2 _http_common"
     },
     experiments: {
         topLevelAwait: true

@@ -3,13 +3,16 @@ import { useRouter } from "next/router";
 import { useContext, useEffect } from "react";
 import { MetaTransformerContext } from "../../../src/contexts/MetaTransformerContext";
 import { Button, Toolbar } from "@mui/material";
-import { ArrowBack } from "@mui/icons-material";
-import testBasedActivityDescription from "../../../src/activities/html-test-based";
+import { ArrowBack, Close } from "@mui/icons-material";
 import { Box } from "@mui/system";
-import allLanguages from "../../../src/languages/allLanguages";
 import { ClassroomMemberEntity } from "../../../src/api/entities/ClassroomMemberEntity";
 import useGetRequest from "../../../src/api/client/GetRequestHook";
 import useSocket from "../../../src/hooks/SocketHook";
+import StatusPage from "../../../src/components/StatusPage";
+import { useLoadingContext } from "../../../src/api/client/LoadingContext";
+import { ActivityEntity } from "../../../src/api/entities/ActivityEntity";
+import allActivities from "../../../src/activities/allActivities";
+import allLanguages from "../../../src/languages/allLanguages";
 
 interface StaticProps {
     classroomId: string;
@@ -18,14 +21,11 @@ interface StaticProps {
 const Page: NextPage<StaticProps> = ({ classroomId }) => {
     const router = useRouter();
     const metaTransformer = useContext(MetaTransformerContext);
-
-    const activity = testBasedActivityDescription;
-
-    const supportedLanguages = allLanguages.filter(({ features }) => activity.supportedFeatures.every(f => features.includes(f)));
+    const { startUpload, finishUpload } = useLoadingContext();
 
     useEffect(() => {
         metaTransformer({ path: [
-            { label: 'To Be Named', href: '/' },
+            { label: 'Necode', href: '/' },
             { label: 'Class Name', href: `/classroom/${classroomId}` },
             { label: 'Activity Name', href: location.href }
         ] });
@@ -36,14 +36,54 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
 
     const socketInfo = useSocket(classroomId);
 
+    const { data: activityEntity } = useGetRequest<ActivityEntity<{ lesson: 'deep' }>>(
+        socketInfo?.liveActivityInfo
+            ? `/api/classroom/${classroomId}/activity/${socketInfo?.liveActivityInfo.id}?include=lesson`
+            : null
+    );
+
+    const activity = allActivities.find(x => x.id === activityEntity?.attributes.activityType);
+
     if (!socketInfo) {
-        
+        return <StatusPage
+            primary="Loading..."
+        />;
+    }
+
+    if (!activity) {
+        return <StatusPage
+            primary="Not Live"
+            body="Your instructor hasn't started an activity yet."
+        />;
+    }
+
+    const enabledLanguages = activityEntity!.attributes.enabledLanguages.length === 0
+        ? allLanguages.filter(({features}) => activity.supportedFeatures.every(f => features.includes(f)))
+        : allLanguages.filter(x => activityEntity!.attributes.enabledLanguages.includes(x.name));
+
+    function goToManage() {
+        if (activityEntity) {
+            router.push(`/classroom/${classroomId}/manage#${activityEntity?.attributes.lesson.attributes.date}`);
+        }
+        else {
+            router.push(`/classroom/${classroomId}/manage`);
+        }
+    }
+
+    function endActivity() {
+        startUpload();
+        fetch(`/api/classroom/${classroomId}/activity/live`, { method: 'DELETE' })
+            .finally(finishUpload);
+        goToManage();
     }
 
     return <>
         {isInstructor ? <Toolbar variant="dense" sx={{ minHeight: "36px", px: "16px !important" }}>
-            <Button size="small" startIcon={<ArrowBack/>} onClick={() => router.push(`/classroom/${classroomId}/manage`)}>
+            <Button size="small" startIcon={<ArrowBack/>} onClick={goToManage}>
                 Return to Manage Classroom
+            </Button>
+            <Button size="small" color="error" startIcon={<Close/>} onClick={endActivity}>
+                End Activity
             </Button>
         </Toolbar> : null}
         <Box sx={{
@@ -56,10 +96,10 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
             }
         }}>
             <activity.activityPage
-                id={""}
-                activityConfig={activity.defaultConfig}
+                id={activityEntity!.id}
+                activityConfig={activityEntity!.attributes.configuration}
                 classroomId={classroomId}
-                language={supportedLanguages.find(x => x.name === router.query.language) ?? supportedLanguages[0]}
+                language={enabledLanguages[0]}
                 socketInfo={socketInfo} />
         </Box>
     </>;

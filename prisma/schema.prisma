@@ -81,6 +81,13 @@ model Classroom {
   members      ClassroomMembership[]
   lessons      Lesson[]
   liveActivity LiveActivity?
+  joinCode     JoinCode?
+}
+
+model JoinCode {
+  code        String    @unique @db.VarChar(6)
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  classroomId String    @id
 }
 
 enum ClassroomRole {

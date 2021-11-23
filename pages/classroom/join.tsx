@@ -4,7 +4,10 @@ import { useRouter } from "next/dist/client/router";
 import { FormEventHandler, useEffect, useState } from "react";
 import FormPage from "../../src/components/FormPage";
 import { signIn, useSession } from "next-auth/react";
-import { ResponseData200 } from "../api/classroom/join";
+import { ClassroomEntity } from "../../src/api/entities/ClassroomEntity";
+import { Response } from "../../src/api/Response";
+import { useSnackbar } from "notistack";
+
 
 const Join: NextPage = () => {
     const router = useRouter();
@@ -18,6 +21,8 @@ const Join: NextPage = () => {
         }
     }, [router.query.joinCode]);
 
+    const { enqueueSnackbar } = useSnackbar();
+
     if (!session) {
         return <FormPage title="Join a Classroom" error hideSubmit>
             {status === 'loading' ? <Skeleton animation="wave" variant="rectangular" height="56px" sx={{ borderRadius: 1 }} /> : <>
@@ -30,23 +35,32 @@ const Join: NextPage = () => {
     const onSubmit: FormEventHandler<HTMLFormElement> = async e => {
         e.preventDefault();
 
-        const res = await fetch(`/api/classroom/join?joinCode=${joinCode}`, {
-            method: "POST"
+        const res = await fetch('/api/classroom/join', {
+            method: "POST",
+            body: JSON.stringify({ code: joinCode })
         });
 
         if (res.ok) {
-            const data = (await res.json()) as ResponseData200;
-            router.push(`/classroom/${data.classroomId}/`);
+            const data = (await res.json()) as Response<ClassroomEntity>;
+
+            if (data.response === 'ok') {
+                router.push(`/classroom/${data.data.id}/`);
+                enqueueSnackbar(`Successfully joined ${data.data.attributes.displayName}`, { variant: 'success' });
+            }
+            else {
+                enqueueSnackbar('Failed to apply code. Make sure that you entered it correctly.', { variant: 'error' });
+            }
         }
     };
 
     return <FormPage
         title="Join a Classroom"
         submitLabel="Join"
-        error={joinCode === ""} formProps={{ onSubmit }}>
+        error={joinCode.length !== 6} formProps={{ onSubmit }}>
         <TextField
             name="code" label="Join Code" variant="outlined"
-            value={joinCode} onChange={e => setJoinCode(e.target.value)} />
+            value={joinCode} onChange={e => setJoinCode(e.target.value)} 
+            inputProps={{ style: { textTransform: 'lowercase' } }} />
     </FormPage>;
 };
 

@@ -174,27 +174,47 @@ type EndpointResult<P extends string, Endpoints extends Partial<EndpointMap<any>
         : Endpoints[Method]
 };
 
+// Proper typing causes issues with express middleware. While express middleware
+// are not guaranteed to work with nodejs, most of the time they will.
+type Middleware = (req: any, res: any, next: (resultOrError?: any) => void) => void;
+
+function runMiddleware(req: NextApiRequest, res: NextApiResponse, fn: Middleware) {
+    return new Promise((resolve, reject) => {
+        fn(req, res, (result) => {
+            if (result instanceof Error) {
+                return reject(result)
+            }
+    
+            return resolve(result)
+        });
+    });
+}
+
 export function endpoint
     <P extends string, Endpoints extends EntityEndpoints<E, P>, E extends Entity<any, any>>
-    (example: E | ((...args: any[]) => E), mandatoryParams: readonly P[], endpoints: Endpoints): EndpointResult<P, Endpoints>;
+    (example: E | ((...args: any[]) => E), mandatoryParams: readonly P[], endpoints: Endpoints & { middleware?: Middleware[] }): EndpointResult<P, Endpoints>;
 
 export function endpoint
     <P extends string, Endpoints extends EntityTypeEndpoints<E, P>, E extends Entity<any, any>>
-    (example: E | ((...args: any[]) => E), mandatoryParams: readonly P[], endpoints: Endpoints): EndpointResult<P, Endpoints>;
+    (example: E | ((...args: any[]) => E), mandatoryParams: readonly P[], endpoints: Endpoints & { middleware?: Middleware[] }): EndpointResult<P, Endpoints>;
 
 export function endpoint
     <P extends string, Endpoints extends SortableEntityTypeEndpoints<E, P>, E extends Entity<any, any>>
-    (example: E | ((...args: any[]) => E), mandatoryParams: readonly P[], endpoints: Endpoints): EndpointResult<P, Endpoints>;
+    (example: E | ((...args: any[]) => E), mandatoryParams: readonly P[], endpoints: Endpoints & { middleware?: Middleware[] }): EndpointResult<P, Endpoints>;
 
 export function endpoint
     <P extends string, Endpoints extends EndpointMap<P> & { type: 'other' }>
-    (options: any, mandatoryParams: readonly P[], endpoints: Endpoints): EndpointResult<P, Endpoints>;
+    (options: any, mandatoryParams: readonly P[], endpoints: Endpoints & { middleware?: Middleware[] }): EndpointResult<P, Endpoints>;
 
-export function endpoint<P extends string, Endpoints extends EndpointMap<P>>(_: any, mandatoryParams: readonly P[], endpoints: Endpoints) {
+export function endpoint<P extends string, Endpoints extends EndpointMap<P>>(_: any, mandatoryParams: readonly P[], endpoints: Endpoints & { middleware?: Middleware[] }) {
     async function handler(
         req: NextApiRequest,
         res: NextApiResponse<Response<any>>
     ) {
+        for (const middleware of endpoints.middleware ?? []) {
+            await runMiddleware(req, res, middleware);
+        }
+
         function ok(result: any) {
             res.status(Status.OK).send({
                 response: 'ok',

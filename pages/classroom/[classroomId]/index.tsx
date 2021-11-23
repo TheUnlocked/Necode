@@ -13,7 +13,7 @@ export default Page;
 
 export const getServerSideProps: GetServerSideProps = async ({ query: { classroomId }, req }) => {
     if (typeof classroomId === 'string') {
-        const { data } = await apiClassroomMe.GET.execute(req, { query: { classroomId } });
+        const { data } = await apiClassroomMe.GET.execute(req, { query: { classroomId, include: [] } });
 
         if (data?.attributes.role === 'Instructor') {
             return {

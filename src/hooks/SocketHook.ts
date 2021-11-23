@@ -6,7 +6,6 @@ import useGetRequest from '../api/client/GetRequestHook';
 export interface SocketInfo {
     socket: Socket<ServerToClientEventMap, ClientToServerEventMap>;
     liveActivityInfo?: LiveActivityInfo;
-    getParticipants(): Promise<string[]>;
 }
 
 export default function useSocket(classroomId: string): SocketInfo | undefined {
@@ -48,18 +47,7 @@ export default function useSocket(classroomId: string): SocketInfo | undefined {
     return useMemo(() => socket
         ? {
             socket: socket,
-            liveActivityInfo: liveActivityInfo,
-            getParticipants() {
-                return new Promise<string[]>((resolve, reject) => {
-                    if (socket) {
-                        socket.emit('getParticipants', resolve);
-                    }
-                    else {
-                        // ws is not yet established
-                        reject();
-                    }
-                });
-            }
+            liveActivityInfo: liveActivityInfo
         }
         : undefined,
     [liveActivityInfo, socket]);

@@ -1,10 +1,10 @@
 import { ComponentType, useState } from "react";
 
 type HookResult = [
-    JSX.Element,
-    () => void,
-    () => void,
-    boolean
+    dialogElt: JSX.Element,
+    openDialog: () => void,
+    closeDialog: () => void,
+    isOpen: boolean
 ];
 
 export default function useImperativeDialog(

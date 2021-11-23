@@ -67,7 +67,7 @@ const apiLessonAll = endpoint(makeLessonEntity, ['classroomId', 'include[]'] as 
                         activityType: x.activityType,
                         displayName: 'placeholder',
                         configuration: x.configuration,
-                        supportedLanguages: x.enabledLanguages,
+                        enabledLanguages: x.enabledLanguages,
                         order: i
                     }))
                 });

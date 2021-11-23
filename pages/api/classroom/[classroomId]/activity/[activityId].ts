@@ -49,7 +49,7 @@ const apiActivityOne = endpoint(makeActivityEntity, ['classroomId', 'activityId'
                 where: { id: activityId },
                 data: {
                     configuration: body.configuration,
-                    supportedLanguages: body.enabledLanguages
+                    enabledLanguages: body.enabledLanguages
                 }
             });
 

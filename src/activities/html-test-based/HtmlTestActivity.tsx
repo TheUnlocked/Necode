@@ -28,6 +28,8 @@ import Key from "../../components/Key";
 import { ActivityIframe, RunTestsCallback } from "./ActivityIframe";
 import alpha from "color-alpha";
 import Lazy from "../../components/Lazy";
+import { useSnackbar } from "notistack";
+import { useLoadingContext } from "../../api/client/LoadingContext";
 
 export interface TestActivityConfig {
     description: string;
@@ -49,7 +51,10 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
         const {
             language,
             activityConfig,
-            onActivityConfigChange
+            onActivityConfigChange,
+            socketInfo,
+            saveData,
+            onSaveDataChange
         } = props as (typeof props) & Partial<ActivityConfigPageProps<TestActivityConfig> & ActivityPageProps<TestActivityConfig>>;
 
         const {
@@ -69,6 +74,15 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
         
         const [editorStates, dispatchEditorsState] = useReducer(editorStateReducer, {});
 
+        useEffect(() => {
+            if (saveData) {
+                dispatchEditorsState({ type: 'valueChange', target: 'html', value: saveData.data?.html });
+                dispatchEditorsState({ type: 'valueChange', target: 'code', value: saveData.data?.code });
+                dispatchEditorsState({ type: 'valueChange', target: 'css', value: saveData.data?.css });
+                onSaveDataChange?.(undefined);
+            }
+        }, [saveData, onSaveDataChange]);
+
         const reloadRef = useRef<() => Promise<void>>();
         const runTestsRef = useRef<RunTestsCallback>();
 
@@ -79,14 +93,39 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
             });
         }, []);
 
+        const { enqueueSnackbar } = useSnackbar();
+        const { startUpload, finishUpload } = useLoadingContext();
+
         const startTests = useRef(() => {});
         const passTests = useRef(() => {});
         const failTests = useRef((_: string) => {});
 
-        const [testsDialog, openTestsDialog] = useImperativeDialog(TestsDialog, {
+        function makeSubmission() {
+            if (!socketInfo?.socket) {
+                enqueueSnackbar('A network error occurrred. Copy your work to a safe place and refresh the page.', { variant: 'error' });
+                return;
+            }
+            startUpload();
+            socketInfo.socket.emit('submission', {
+                html: editorStates.html?.value,
+                code: editorStates.code?.value,
+                css: editorStates.css?.value
+            }, error => {
+                finishUpload();
+                if (error) {
+                    enqueueSnackbar(error, { variant: 'error' });
+                }
+                else {
+                    closeTestsDialog();
+                }
+            });
+        }
+
+        const [testsDialog, openTestsDialog, closeTestsDialog] = useImperativeDialog(TestsDialog, {
             startRunningRef: f => startTests.current = f,
             successRef: f => passTests.current = f,
             failureRef: f => failTests.current = f,
+            onSubmit: makeSubmission
         });
 
         const applyAllChanges = useCallback(() => {
@@ -140,9 +179,6 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                     if (!editorState) {
                         if (type === 'code') {
                             dispatchEditorsState({ target: type, type: 'initialize', value: activityConfig.languages.code.defaultValue![language.name] });
-                        }
-                        else if (type === 'hidden-html') {
-                            dispatchEditorsState({ target: type, type: 'initialize', value: activityConfig.hiddenHtml });
                         }
                         else {
                             dispatchEditorsState({ target: type, type: 'initialize', value: activityConfig.languages[type].defaultValue! });
@@ -225,9 +261,6 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                         {tab('starter', true, !isHiddenHtmlTabActive, () => setHiddenHtmlTabActive(false))}
                     </>;
                 }
-                else if (type === 'hidden-html') {
-                    tabItems = tab('hidden', false, true);
-                }
                 else {
                     tabItems = tab('starter', true, true);
                 }
@@ -247,22 +280,19 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                 </>;
             }
 
-            const realType = type;
-            const practicalType = realType === 'hidden-html' || (realType === 'html' && isHiddenHtmlTabActive)
-                ? 'hidden-html'
-                : realType;
+            const isHiddenHtmlTab = type === 'html' && isHiddenHtmlTabActive;
 
             const editorValue = isEditor
-                ? practicalType === 'code'
-                    ? activityConfig.languages.code.defaultValue![language.name] ?? ''
-                    : practicalType === 'hidden-html'
+                ? isHiddenHtmlTab
                     ? activityConfig.hiddenHtml
-                    : activityConfig.languages[practicalType].defaultValue
+                    : type === 'code'
+                    ? activityConfig.languages.code.defaultValue![language.name] ?? ''
+                    : activityConfig.languages[type].defaultValue
                 : editorState?.uncommittedValue;
 
             const onChange: OnChange = value => {
                 if (isEditor) {
-                    if (practicalType === 'hidden-html') {
+                    if (isHiddenHtmlTab) {
                         onActivityConfigChange!({
                             ...activityConfig,
                             hiddenHtml: value ?? ''
@@ -273,9 +303,9 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                             ...activityConfig,
                             languages: {
                                 ...activityConfig.languages,
-                                [practicalType]: {
-                                    ...activityConfig.languages[practicalType],
-                                    defaultValue: practicalType === "code"
+                                [type]: {
+                                    ...activityConfig.languages[type],
+                                    defaultValue: type === "code"
                                         ? {
                                             ...activityConfig.languages.code.defaultValue ?? {},
                                             [language.name]: value
@@ -287,20 +317,19 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                     }
                 }
                 else {
-                    dispatchEditorsState({ target: practicalType, type: 'valueChange', value: value ?? '' });
+                    dispatchEditorsState({ target: type, type: 'valueChange', value: value ?? '' });
                 }
             }
 
             let editor: JSX.Element;
 
-            if (realType === 'html') {
+            if (isEditor && type === 'html') {
                 editor = <>
                     <Lazy show={isHiddenHtmlTabActive}>
                         <PaneEditor
                             isConfig={isEditor}
                             language={htmlDescription}
                             value={editorValue}
-                            applyChanges={() => applyChanges('hidden-html')}
                             onChange={onChange} />
                     </Lazy>
                     <Lazy show={!isHiddenHtmlTabActive}>
@@ -308,7 +337,6 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                             isConfig={isEditor}
                             language={language}
                             value={editorValue}
-                            applyChanges={() => applyChanges(practicalType)}
                             onChange={onChange} />
                     </Lazy>
                 </>;
@@ -318,7 +346,7 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                     isConfig={isEditor}
                     language={language}
                     value={editorValue}
-                    applyChanges={() => applyChanges(practicalType)}
+                    applyChanges={() => applyChanges(type)}
                     onChange={onChange} />;
             }
 

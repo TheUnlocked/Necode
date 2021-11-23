@@ -9,7 +9,6 @@ export function useRTC<T>(socketInfo: SocketInfo | undefined, onPeer: (peer: Pee
 
     useEffect(() => {
         onPeerRef.current = onPeer;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [onPeer]);
 
     useEffect(() => {
@@ -66,6 +65,4 @@ export function useRTC<T>(socketInfo: SocketInfo | undefined, onPeer: (peer: Pee
             return () => ws.offTracked();
         }
     }, [socketInfo?.socket]);
-    
-    return socketInfo;
 }

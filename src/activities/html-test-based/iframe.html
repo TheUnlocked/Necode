@@ -45,7 +45,11 @@
             if (!initialized) {
                 initialized = true;
                 htmlTemplate = e.data.template;
+                
                 document.body.innerHTML = htmlTemplate;
+                document.querySelectorAll('style, script')
+                    .forEach(x => document.head.prepend(x));
+
                 setHtml(e.data.html);
                 setJs(e.data.js);
                 setCss(e.data.css);

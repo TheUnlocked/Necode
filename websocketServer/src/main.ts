@@ -13,6 +13,7 @@ import ClassroomManager, { Classroom } from './ClassroomManager';
 import * as express from 'express';
 import { DateTime, Duration } from 'luxon';
 import { makeActivitySubmissionEntity } from '../../src/api/entities/ActivitySubmissionEntity';
+import { makeUserEntity } from '../../src/api/entities/UserEntity';
 
 dotenv.config()
 
@@ -153,7 +154,7 @@ io.on('connection', socket => {
         return callback('An unexpected error occurred');
     });
 
-    socket.on('submit', async (data, callback) => {
+    socket.on('submission', async (data, callback) => {
         if (!classroom.activity) {
             return callback('No activity');
         }
@@ -178,7 +179,7 @@ io.on('connection', socket => {
                     version: 'desc'
                 }
             });
-            if (!lastSubmission || DateTime.fromJSDate(lastSubmission.createdAt).diff(DateTime.now()) < Duration.fromMillis(10000)) {
+            if (lastSubmission && DateTime.fromJSDate(lastSubmission.createdAt).diffNow().negate() < Duration.fromMillis(10000)) {
                 return callback('Submissions can only be made every 10 seconds');
             }
             // TODO: Add check for size limits
@@ -187,14 +188,16 @@ io.on('connection', socket => {
                     userId,
                     activityId: classroom.activity.id,
                     data,
-                    version: lastSubmission.version
-                }
+                    version: (lastSubmission?.version ?? 0) + 1
+                },
+                include: { user: true }
             });
 
             callback();
+            
             io.to(await classroom.getInstructors())
                 .emit('submission', makeActivitySubmissionEntity(submission, {
-                    user: submission.userId
+                    user: makeUserEntity(submission.user)
                 }));
         }
         catch (e) {

@@ -31,7 +31,7 @@ export interface ClientToServerEventMap {
      * @param data the data to send in the request
      */
     request(data: any, callback: (error?: string) => void): void;
-    submit(data: any, callback: (error?: string) => void): void;
+    submission(data: any, callback: (error?: string) => void): void;
 
     provideWebRTCSignal(connId: string, signal: SignalData): void;
 }
@@ -56,7 +56,7 @@ export interface ServerToClientEventMap {
     endActivity(): void;
     command(data: any): void;
     request(data: any): void;
-    submission(entity: ActivitySubmissionEntity<{ user: 'shallow', activity: 'none' }>): void;
+    submission(entity: ActivitySubmissionEntity<{ user: 'deep', activity: 'none' }>): void;
 }
 
 export interface LiveActivityInfo {

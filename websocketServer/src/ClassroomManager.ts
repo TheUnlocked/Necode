@@ -40,6 +40,9 @@ class Classroom {
             this.activity.rtcPolicy?.onUserLeave(socketId);
             this.activity.rtcPolicy?.onUserJoin(socketId);
         }
+        else {
+            this.io.to(socketId).emit('endActivity');
+        }
     }
 
     removeMember(socketId: string) {
@@ -51,8 +54,8 @@ class Classroom {
 
     private async getMembersFromQueryResult(query: () => Promise<{ userId: string }[]>) {
         const partitionedMembers
-            = stream(this.memberSocketIds)
-                .partition(x => this.users.get(x)?.userId);
+            = [...stream(this.memberSocketIds)
+                .partition(x => this.users.get(x)?.userId)];
         
         for (const member of partitionedMembers.find(x => x[0] === undefined)?.[1] ?? []) {
             this.memberSocketIds.delete(member);
@@ -105,6 +108,7 @@ class Classroom {
                 select: { userId: true }
             })
         );
+
         this._instructorsCache = new Set(instructors);
         return instructors;
     }

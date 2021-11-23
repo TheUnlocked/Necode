@@ -103,15 +103,15 @@ model Activity {
   createdAt DateTime @default(now())
   // updatedAt excluded because of order field
 
-  activityType       String
-  lesson             Lesson               @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  lessonId           String
-  displayName        String
-  configuration      Json?
-  supportedLanguages String[]
-  order              Int
-  submissions        ActivitySubmission[]
-  liveInstances      LiveActivity[]
+  activityType     String
+  lesson           Lesson               @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  lessonId         String
+  displayName      String
+  configuration    Json?
+  enabledLanguages String[]
+  order            Int
+  submissions      ActivitySubmission[]
+  liveInstances    LiveActivity[]
 }
 
 model Lesson {
@@ -148,5 +148,5 @@ model ActivitySubmission {
   activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([activityId, userId, version]) // hard-blocks some concurrency bugs
+  @@unique([activityId, userId, version])
 }

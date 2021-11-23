@@ -2,7 +2,6 @@ import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogC
 import { Box } from "@mui/system";
 import { useCallback, useEffect, useState } from "react";
 import useOnOpen from "../../hooks/OnOpenHook";
-import { sequence } from "../../util/fp";
 
 type RunningState 
     = { type: 'pending' }
@@ -25,14 +24,14 @@ function runningStateToString(state: RunningState) {
         case 'submitting':
             return 'Submitting Solution';
     }
-    return 'Unknown State';
 }
 
 interface TestsDialogProps {
     open: boolean;
+    canSubmit?: boolean;
     onClose?(): void;
     onCancel?(): void;
-    onSuccess?(): void;
+    onSubmit?(): void;
     startRunningRef?(callback: () => void): void;
     successRef?(callback: () => void): void;
     failureRef?(callback: (message: string) => void): void;
@@ -42,7 +41,7 @@ export default function TestsDialog({
     open,
     onClose,
     onCancel,
-    onSuccess,
+    onSubmit,
     startRunningRef,
     successRef,
     failureRef
@@ -106,7 +105,7 @@ export default function TestsDialog({
             </DialogContentText>;
             actions = <>
                 <Button onClick={onClose}>Cancel</Button>
-                <Button>Submit Now</Button>
+                <Button onClick={onSubmit}>Submit Now</Button>
             </>;
             break;
         case 'failure':
@@ -116,9 +115,7 @@ export default function TestsDialog({
                 </DialogContentText>
                 <pre>{state.message}</pre>
             </>;
-            actions = <>
-                <Button onClick={onClose}>Ok</Button>
-            </>;
+            actions = <Button onClick={onClose}>Ok</Button>;
             break;
     }
 

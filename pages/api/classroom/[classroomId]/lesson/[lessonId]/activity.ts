@@ -37,7 +37,7 @@ const apiActivityAll = endpoint(makeActivityEntity, ['classroomId', 'lessonId'] 
                     activityType,
                     displayName: 'placeholder',
                     configuration: configuration ?? undefined,
-                    supportedLanguages: [],
+                    enabledLanguages: [],
                     order: await prisma.activity.count({ where: { lessonId } })
                 }
             });

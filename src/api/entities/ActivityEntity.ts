@@ -23,7 +23,7 @@ export function makeActivityEntity<R extends Refs = any>(activity: Activity, rel
         attributes: {
             activityType: activity.activityType,
             configuration: activity.configuration,
-            enabledLanguages: activity.supportedLanguages,
+            enabledLanguages: activity.enabledLanguages,
             lesson: makeEntityReference(EntityType.Lesson, relationships?.lesson)
         }
     };

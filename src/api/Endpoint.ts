@@ -244,7 +244,7 @@ export function endpoint<P extends string, Endpoints extends EndpointMap<P>>(_: 
                             cleanedParams[cleanParam] = value[0];
                         }
                     }
-                    else if (!value.endsWith('?')) {
+                    else if (!param.endsWith('?')) {
                         return fail(Status.BAD_REQUEST, `Missing query or URL parameter ${cleanParam}`);
                     }
                 }

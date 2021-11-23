@@ -108,14 +108,14 @@ const apiLessonOne = endpoint({} as LessonEntity<{ classroom: any, activities: R
                                 activityType: x.activityType,
                                 displayName: 'placeholder',
                                 configuration: x.configuration ?? undefined,
-                                supportedLanguages: x.enabledLanguages,
+                                enabledLanguages: x.enabledLanguages,
                                 order: i
                             },
                             update: {
                                 activityType: x.activityType,
                                 displayName: 'placeholder',
                                 configuration: x.configuration ?? undefined,
-                                supportedLanguages: x.enabledLanguages,
+                                enabledLanguages: x.enabledLanguages,
                                 order: i
                             }
                         }))

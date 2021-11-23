@@ -1,5 +1,5 @@
 // Temporary, will be replaced with generalized alternative
-export type EditorType = 'html' | 'css' | 'code' | 'hidden-html';
+export type EditorType = 'html' | 'css' | 'code';
 
 export type EditorStateDispatchAction = { target: EditorType } &
     ( { type: 'initialize', value: string }
@@ -15,6 +15,7 @@ export type EditorState = {
 export const editorStateReducer = (state: { [Type in EditorType]?: EditorState }, action: EditorStateDispatchAction) => {
     switch (action.type) {
         case 'initialize':
+            console.log('init', action.target, action.value)
             return {...state, [action.target]: {
                 isDirty: false,
                 uncommittedValue: action.value,

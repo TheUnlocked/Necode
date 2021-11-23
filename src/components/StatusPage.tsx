@@ -16,7 +16,11 @@ export default function StatusPage({ primary, secondary, body, children }: Statu
         height: "calc(90vh - var(--header-height))",
         width: "calc(100vw - 64px)",
         mx: 4,
-        textAlign: "center"
+        textAlign: "center",
+        pointerEvents: "none",
+        "> *": {
+            pointerEvents: "auto" 
+        }
     }}>
         {primary ? <Typography variant="h1" fontSize="max(10vw, 6rem)" fontWeight="900">{primary}</Typography> : undefined}
         {secondary ? <Typography variant="h2" fontSize="max(3vw, 3rem)">{secondary}</Typography> : undefined}

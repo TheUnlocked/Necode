@@ -16,6 +16,10 @@ export interface ActivityPageProps<ConfigData = undefined> extends BaseActivityP
     language: LanguageDescription;
 
     socketInfo: SocketInfo | undefined;
+    
+    saveData?: { data: any };
+
+    onSaveDataChange: (newSaveData: { data: any } | undefined) => void;
 }
 
 export interface ActivityConfigPageProps<ConfigData = undefined> extends BaseActivityProps<ConfigData> {

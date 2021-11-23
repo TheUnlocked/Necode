@@ -37,19 +37,17 @@ const Join: NextPage = () => {
 
         const res = await fetch('/api/classroom/join', {
             method: "POST",
-            body: JSON.stringify({ code: joinCode })
+            body: JSON.stringify({ code: joinCode.toLowerCase() })
         });
 
-        if (res.ok) {
-            const data = (await res.json()) as Response<ClassroomEntity>;
+        const data = (await res.json()) as Response<ClassroomEntity>;
 
-            if (data.response === 'ok') {
-                router.push(`/classroom/${data.data.id}/`);
-                enqueueSnackbar(`Successfully joined ${data.data.attributes.displayName}`, { variant: 'success' });
-            }
-            else {
-                enqueueSnackbar('Failed to apply code. Make sure that you entered it correctly.', { variant: 'error' });
-            }
+        if (data.response === 'ok') {
+            router.push(`/classroom/${data.data.id}/`);
+            enqueueSnackbar(`Successfully joined ${data.data.attributes.displayName}! Redirecting...`, { variant: 'success' });
+        }
+        else {
+            enqueueSnackbar('Failed to apply code. Make sure that you entered it correctly.', { variant: 'error' });
         }
     };
 

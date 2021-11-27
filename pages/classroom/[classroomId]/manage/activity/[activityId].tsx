@@ -14,21 +14,38 @@ import Lazy from "../../../../../src/components/Lazy";
 import ConfigureLanguageDialog from "../../../../../src/components/ConfigureLanguageDialog";
 import useGetRequest from "../../../../../src/api/client/GetRequestHook";
 import { ActivityEntity } from "../../../../../src/api/entities/ActivityEntity";
-import apiClassroomMe from "../../../../api/classroom/[classroomId]/me";
-import apiActivityOne from "../../../../api/classroom/[classroomId]/activity/[activityId]";
 import allActivities from "../../../../../src/activities/allActivities";
 import useDirty from "../../../../../src/hooks/DirtyHook";
 import { useLoadingContext } from "../../../../../src/api/client/LoadingContext";
 import { Response } from "../../../../../src/api/Response";
 import { useSnackbar } from "notistack";
+import { ClassroomMemberEntity } from "../../../../../src/api/entities/ClassroomMemberEntity";
+import NotFoundPage from "../../../../404";
 
 interface StaticProps {
     classroomId: string;
     activityId: string;
-    date: string;
 }
 
-const Page: NextPage<StaticProps> = ({ classroomId, date, activityId }) => {
+const Page: NextPage = () => {
+    const router = useRouter();
+    const classroomId = router.query.classroomId;
+    const activityId = router.query.activityId;
+
+    const { data, error, isLoading } = useGetRequest<ClassroomMemberEntity>(classroomId ? `/api/classroom/${classroomId}/me` : null);
+
+    if (!classroomId || !activityId || isLoading) {
+        return null;
+    }
+
+    if (typeof classroomId !== 'string' || typeof activityId !== 'string' || error || data?.attributes.role !== 'Instructor') {
+        return <NotFoundPage />;
+    }
+    
+    return <PageContent classroomId={classroomId} activityId={activityId} />;
+};
+
+const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
     const router = useRouter();
     const metaTransformer = useContext(MetaTransformerContext);
 
@@ -41,8 +58,8 @@ const Page: NextPage<StaticProps> = ({ classroomId, date, activityId }) => {
         ] });
     }, [metaTransformer, classroomId]);
 
-    const activityEndpoint = `/api/classroom/${classroomId}/activity/${activityId}`;
-    const { data: activityEntity } = useGetRequest<ActivityEntity>(activityEndpoint);
+    const activityEndpoint = `/api/classroom/${classroomId}/activity/${activityId}?include=lesson`;
+    const { data: activityEntity } = useGetRequest<ActivityEntity<{ lesson: 'deep' }>>(activityEndpoint);
 
     const activity = useMemo(() => allActivities.find(x => x.id === activityEntity?.attributes.activityType), [activityEntity]);
 
@@ -96,7 +113,7 @@ const Page: NextPage<StaticProps> = ({ classroomId, date, activityId }) => {
     });
 
     const { enqueueSnackbar } = useSnackbar();
-    const { startUpload, finishUpload } = useLoadingContext();
+    const { startUpload, finishUpload, startDownload, finishDownload } = useLoadingContext();
 
     function save() {
         startUpload();
@@ -118,6 +135,28 @@ const Page: NextPage<StaticProps> = ({ classroomId, date, activityId }) => {
     }
 
     const [isPreview, setIsPreview] = useState(false);
+
+    async function returnToManage() {
+        let date = activityEntity?.attributes.lesson.attributes.date;
+        if (!date) {
+            try {
+                startDownload();
+                const result = await fetch(`/api/classroom/${classroomId}/activity/${activityId}?include=lesson`);
+                const data = await result.json() as Response<ActivityEntity<{ lesson: 'deep' }>>;
+                if (data.response === 'ok') {
+                    date = data.data.attributes.lesson.attributes.date;
+                }
+            }
+            catch (e) {}
+            finally {
+                finishDownload();
+            }
+        }
+        router.push({
+            pathname: `/classroom/${classroomId}/manage`,
+            hash: date
+        });
+    }
     
     if (isLoading) {
         return <>
@@ -129,10 +168,7 @@ const Page: NextPage<StaticProps> = ({ classroomId, date, activityId }) => {
                 justifyContent: "space-between"
             }}>
                 <Button size="small" startIcon={<ArrowBack/>}
-                    onClick={() => router.push({
-                        pathname: `/classroom/${classroomId}/manage`,
-                        hash: date
-                    })}>
+                    onClick={returnToManage}>
                     Return to Manage Classroom
                 </Button>
                 <Stack direction="row" spacing={1}>
@@ -172,10 +208,7 @@ const Page: NextPage<StaticProps> = ({ classroomId, date, activityId }) => {
             }
         }}>
             <Button size="small" startIcon={<ArrowBack/>}
-                onClick={() => router.push({
-                    pathname: `/classroom/${classroomId}/manage`,
-                    hash: date
-                })}>
+                onClick={returnToManage}>
                 Return to Manage Classroom
             </Button>
             <Button size="small" startIcon={<Save/>} onClick={save} disabled={!isDirty}>Save Changes</Button>
@@ -227,44 +260,5 @@ const Page: NextPage<StaticProps> = ({ classroomId, date, activityId }) => {
         </Box>
     </>;
 };
-
-export const getServerSideProps: GetServerSideProps<StaticProps> = async ctx => {
-    const classroomId = ctx.params?.classroomId;
-    const activityId = ctx.params?.activityId;
-    
-    if (typeof classroomId !== 'string' || typeof activityId !== 'string') {
-        return {
-            notFound: true
-        };
-    }
-
-    const { data: meData } = await apiClassroomMe.GET.execute(ctx.req, { query: { classroomId, include: [] }, body: undefined });
-
-    if (meData?.attributes.role !== 'Instructor') {
-        return {
-            notFound: true
-        };
-    }
-
-    const { data: activityData } = await apiActivityOne.GET.execute(ctx.req, { query: {
-        activityId,
-        classroomId,
-        include: ['lesson']
-    }, body: undefined }) as { data: ActivityEntity<{ lesson: 'deep' }> };
-
-    if (!activityData) {
-        return {
-            notFound: true
-        };
-    }
-
-    return {
-        props: {
-            classroomId,
-            activityId,
-            date: activityData.attributes.lesson.attributes.date
-        }
-    };
-}
 
 export default Page;

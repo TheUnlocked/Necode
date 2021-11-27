@@ -54,7 +54,7 @@ declare module 'next-auth' {
         user: User;
         expires: ISODateString;
     }
-    interface User extends UserEntity {
+    interface User {
         id: string;
         username: string;
         displayName: string;

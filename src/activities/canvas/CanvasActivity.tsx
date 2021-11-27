@@ -18,7 +18,7 @@ const SharedCanvas = styled('canvas')({
 });
 
 export function CanvasActivity({
-    classroomId, language
+    classroomId, language, socketInfo
 }: ActivityPageProps) {
     // const { data: me } = useSWR<MeResponseData>(`/api/classroom/${classroom}/me`, jsonFetcher);
     // const isInstructor = me?.response === 'ok' && me.data.attributes.role === 'Instructor';
@@ -173,7 +173,7 @@ export function CanvasActivity({
     const sendPeerRef = useRef<Parameters<Parameters<typeof useRTC>[1]>[0]>();
     const recvPeerRef = useRef<Parameters<Parameters<typeof useRTC>[1]>[0]>();
 
-    const rtcContext = useRTC<PeerInfo>(classroomId, useCallback(function onPeer(peer, info) {
+    const rtcContext = useRTC<PeerInfo>(socketInfo, useCallback(function onPeer(peer, info) {
         if (info.role === 'send') {
             if (sendPeerRef.current && !sendPeerRef.current.destroyed) {
                 sendPeerRef.current.destroy();

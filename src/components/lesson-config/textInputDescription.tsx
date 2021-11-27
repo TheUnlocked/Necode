@@ -5,6 +5,7 @@ import TextInputWidget, { TextInputWidgetProps } from "./TextInputWidget";
 /** The "activity" representing a text input. It exists for its utility as a widget. */
 const textInputActivityDescription: ActivityDescription<TextInputWidgetProps> = {
     id: 'text-field',
+    displayName: 'If this text is showing, you have encountered a bug :)',
     supportedFeatures: [],
     defaultConfig: {
         language: null,

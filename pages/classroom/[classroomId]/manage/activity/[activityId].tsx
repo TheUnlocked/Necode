@@ -210,7 +210,8 @@ const Page: NextPage<StaticProps> = ({ classroomId, date, activityId }) => {
                     activityConfig={activityConfig}
                     classroomId={classroomId}
                     language={selectedLanguage}
-                    socketInfo={undefined} />
+                    socketInfo={undefined}
+                    onSaveDataChange={() => {}} />
             </Lazy>
             <Lazy show={!isPreview}>
                 <activity.configPage

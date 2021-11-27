@@ -26,6 +26,7 @@ export default function SkeletonActivityListPane({
                 .map((_, i) =>
                     <ActivityDragDropBox key={i}
                         id={`${i}`}
+                        getRealActivityId={() => Promise.resolve(`${i}`)}
                         skeleton={true}
                         classroomId={''}
                         findItem={() => ({ index: i })}

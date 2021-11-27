@@ -29,7 +29,8 @@ interface StaticProps {
 const Page: NextPage = () => {
     const router = useRouter();
     const classroomId = router.query.classroomId;
-    if (classroomId !== 'string') {
+    
+    if (typeof classroomId !== 'string') {
         return <NotFoundPage />;
     }
     return <PageContent classroomId={classroomId} />;

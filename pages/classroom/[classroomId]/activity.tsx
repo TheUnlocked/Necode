@@ -30,6 +30,10 @@ const Page: NextPage = () => {
 
     const { data, error } = useGetRequest<ClassroomMemberEntity>(classroomId ? `/api/classroom/${classroomId}/me` : null);
 
+    if (!classroomId) {
+        return null;
+    }
+
     if (typeof classroomId !== 'string' || error) {
         return <NotFoundPage />;
     }

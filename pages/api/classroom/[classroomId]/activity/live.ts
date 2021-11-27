@@ -87,6 +87,8 @@ const apiActivityLive = endpoint(null, ['classroomId'], {
                 })
             });
 
+            // TODO: If fails to send, should also fail to start activity
+
             if (!response.ok) {
                 return fail(response.status, await response.text());
             }

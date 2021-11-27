@@ -1,6 +1,6 @@
 import { PickersDay, StaticDatePicker } from "@mui/lab";
 import { Badge, Button, Card, CardContent, Paper, Skeleton, Stack, TextField, Toolbar, Tooltip, Typography } from "@mui/material";
-import { GetServerSideProps, NextPage } from "next";
+import { GetServerSideProps, GetStaticPaths, NextPage } from "next";
 import { Dispatch, useCallback, useEffect, useRef, useState } from "react";
 import { Box } from "@mui/system";
 import ActivityListPane from "../../../../src/components/lesson-config/ActivityListPane";
@@ -23,7 +23,7 @@ function getDateFromPath(path: string) {
 }
 
 interface StaticProps {
-    classroomId: string;
+    classroomId?: string;
 }
 
 const Page: NextPage<StaticProps> = ({ classroomId }) => {
@@ -34,7 +34,7 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
     const [joinCode, setJoinCode] = useState<string>();
 
     useEffect(() => {
-        if (joinCode === undefined) {
+        if (classroomId && joinCode === undefined) {
             startUpload();
             fetch(`/api/classroom/${classroomId}/join-code`, { method: 'POST' })
                 .then(res => res.json() as Promise<Response<string>>)
@@ -101,7 +101,7 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
         live: boolean,
         server: string,
         token: string
-    }>(`/api/classroom/${classroomId}/activity/live`);
+    }>(classroomId ? `/api/classroom/${classroomId}/activity/live` : null);
 
     const isActivityRunning = liveActivityData?.live;
 
@@ -170,7 +170,7 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
             </Stack>
             {lessons
                 ? <ActivityListPane sx={{ flexGrow: 3, height: "100%", display: "flex", flexDirection: "column" }}
-                    classroomId={classroomId}
+                    classroomId={classroomId!}
                     date={selectedDate}
                     onLessonChange={onLessonChange}
                     saveRef={saveLessonRef} />
@@ -181,7 +181,7 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
 
 export default Page;
 
-export const getServerSideProps: GetServerSideProps<StaticProps> = async ctx => {
+export const getStaticProps: GetServerSideProps<StaticProps> = async ctx => {
     if (typeof ctx.params?.classroomId !== 'string') {
         return {
             notFound: true
@@ -192,5 +192,12 @@ export const getServerSideProps: GetServerSideProps<StaticProps> = async ctx => 
         props: {
             classroomId: ctx.params.classroomId
         }
+    };
+};
+
+export const getStaticPaths: GetStaticPaths = async ctx => {
+    return {
+        paths: [],
+        fallback: true
     };
 };

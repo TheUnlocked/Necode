@@ -1,8 +1,4 @@
 import { GetServerSideProps, NextPage } from "next";
-import { useRouter } from "next/router";
-import useSWR from 'swr';
-import { ClassroomMemberEntity } from "../../../src/api/entities/ClassroomMemberEntity";
-import { Response } from "../../../src/api/Response";
 import apiClassroomMe from "../../api/classroom/[classroomId]/me";
 
 const Page: NextPage = () => {

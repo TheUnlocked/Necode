@@ -1,8 +1,8 @@
-import { GetServerSideProps, NextPage } from "next";
+import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useContext, useEffect, useState } from "react";
 import { MetaTransformerContext } from "../../../src/contexts/MetaTransformerContext";
-import { Badge, Button, Chip, Stack, Toolbar } from "@mui/material";
+import { Button, Chip, Stack, Toolbar } from "@mui/material";
 import { ArrowBack, AssignmentTurnedIn, Close } from "@mui/icons-material";
 import { Box } from "@mui/system";
 import { ClassroomMemberEntity } from "../../../src/api/entities/ClassroomMemberEntity";
@@ -14,16 +14,30 @@ import { ActivityEntity } from "../../../src/api/entities/ActivityEntity";
 import allActivities from "../../../src/activities/allActivities";
 import allLanguages from "../../../src/languages/allLanguages";
 import { useSubmissions } from "../../../src/hooks/SubmissionHook";
-import { getRole } from "../../../src/api/server/validators";
-import { getSession } from "next-auth/react";
 import useImperativeDialog from "../../../src/hooks/ImperativeDialogHook";
 import SubmissionsDialog from "../../../src/components/SubmissionsDialog";
+import { ClassroomRole } from ".prisma/client";
+import NotFoundPage from "../../404";
 
 interface StaticProps {
     classroomId: string;
+    role?: ClassroomRole;
 }
 
-const Page: NextPage<StaticProps> = ({ classroomId }) => {
+const Page: NextPage = () => {
+    const router = useRouter();
+    const classroomId = router.query.classroomId;
+
+    const { data, error } = useGetRequest<ClassroomMemberEntity>(classroomId ? `/api/classroom/${classroomId}/me` : null);
+
+    if (classroomId !== 'string' || error) {
+        return <NotFoundPage />;
+    }
+    
+    return <PageContent classroomId={classroomId} role={data?.attributes.role} />;
+};
+
+const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
     const router = useRouter();
     const metaTransformer = useContext(MetaTransformerContext);
     const { startUpload, finishUpload } = useLoadingContext();
@@ -36,8 +50,7 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
         ] });
     }, [metaTransformer, classroomId]);
 
-    const { data: me } = useGetRequest<ClassroomMemberEntity>(`/api/classroom/${classroomId}/me`);
-    const isInstructor = me?.attributes.role === 'Instructor';
+    const isInstructor = role === 'Instructor';
 
     const socketInfo = useSocket(classroomId);
 
@@ -156,27 +169,6 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
                 onSaveDataChange={setSaveData} />
         </Box>
     </>;
-};
-
-export const getServerSideProps: GetServerSideProps<StaticProps> = async ctx => {
-    if (typeof ctx.params?.classroomId !== 'string') {
-        return {
-            notFound: true
-        };
-    }
-
-    const session = await getSession({ ctx });
-    if (!session || !await getRole(session.user.id, ctx.params.classroomId)) {
-        return {
-            notFound: true
-        };
-    }
-
-    return {
-        props: {
-            classroomId: ctx.params.classroomId
-        }
-    };
 };
 
 export default Page;

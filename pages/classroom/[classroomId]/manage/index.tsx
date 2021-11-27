@@ -1,8 +1,7 @@
 import { PickersDay, StaticDatePicker } from "@mui/lab";
 import { Badge, Button, Card, CardContent, Paper, Skeleton, Stack, TextField, Toolbar, Tooltip, Typography } from "@mui/material";
-import { GetServerSideProps, GetStaticPaths, NextPage } from "next";
+import { NextPage } from "next";
 import { Dispatch, useCallback, useEffect, useRef, useState } from "react";
-import { Box } from "@mui/system";
 import ActivityListPane from "../../../../src/components/lesson-config/ActivityListPane";
 import { LessonEntity } from "../../../../src/api/entities/LessonEntity";
 import useGetRequest from "../../../../src/api/client/GetRequestHook";
@@ -12,6 +11,7 @@ import { DateTime } from "luxon";
 import { useRouter } from "next/router";
 import { useLoadingContext } from "../../../../src/api/client/LoadingContext";
 import { Response } from "../../../../src/api/Response";
+import NotFoundPage from "../../../404";
 
 
 function getDateFromPath(path: string) {
@@ -26,7 +26,16 @@ interface StaticProps {
     classroomId?: string;
 }
 
-const Page: NextPage<StaticProps> = ({ classroomId }) => {
+const Page: NextPage = () => {
+    const router = useRouter();
+    const classroomId = router.query.classroomId;
+    if (classroomId !== 'string') {
+        return <NotFoundPage />;
+    }
+    return <PageContent classroomId={classroomId} />;
+}
+
+const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
     const router = useRouter();
 
     const { startUpload, finishUpload } = useLoadingContext();
@@ -180,24 +189,3 @@ const Page: NextPage<StaticProps> = ({ classroomId }) => {
 };
 
 export default Page;
-
-export const getStaticProps: GetServerSideProps<StaticProps> = async ctx => {
-    if (typeof ctx.params?.classroomId !== 'string') {
-        return {
-            notFound: true
-        };
-    }
-
-    return {
-        props: {
-            classroomId: ctx.params.classroomId
-        }
-    };
-};
-
-export const getStaticPaths: GetStaticPaths = async ctx => {
-    return {
-        paths: [],
-        fallback: true
-    };
-};

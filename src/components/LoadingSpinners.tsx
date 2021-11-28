@@ -25,10 +25,10 @@ export default function LoadingSpinners() {
     const { palette } = useTheme();
 
     return <>
-        <Box sx={{ height: "64px", width: "64px", position: "absolute", right: "32px", bottom: "32px" }}>
+        <Box sx={{ height: "64px", width: "64px", position: "fixed", right: "32px", bottom: "32px" }}>
             <Spinner visible={downloaders > 0} color={palette.primary.main} />
         </Box>
-        <Box sx={{ height: "64px", width: "64px", position: "absolute", right: "32px", bottom: "32px" }}>
+        <Box sx={{ height: "64px", width: "64px", position: "fixed", right: "32px", bottom: "32px" }}>
             <Spinner visible={uploaders > 0} color={palette.secondary.main} offsetRatio={1 / 2} />
         </Box>
     </>;

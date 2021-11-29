@@ -1,6 +1,6 @@
 import { NextPage } from "next";
 import { useRouter } from "next/router";
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { MetaTransformerContext } from "../../../../../src/contexts/MetaTransformerContext";
 import { Button, Toolbar, Select, MenuItem, Stack, ToggleButton, Skeleton, Paper } from "@mui/material";
 import { ArrowBack, Code, Save } from "@mui/icons-material";
@@ -133,6 +133,30 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
             }
         }).finally(finishUpload);
     }
+
+    const unsavedWarnMessage = 'Changes you made may not be saved.';
+
+    const beforeUnloadHandler = useCallback((e: BeforeUnloadEvent) => {
+        e.preventDefault();
+        e.returnValue = unsavedWarnMessage;
+        return unsavedWarnMessage;
+    }, []);
+    const routeChangeStartHandler = useCallback((path: string) => {
+        if (!confirm(unsavedWarnMessage)) {
+            throw 'Cancel route change';
+        }
+    }, []);
+
+    useEffect(() => {
+        if (isDirty) {
+            window.addEventListener('beforeunload', beforeUnloadHandler);
+            router.events.on('routeChangeStart', routeChangeStartHandler);
+            return () => {
+                window.removeEventListener('beforeunload', beforeUnloadHandler);
+                router.events.off('routeChangeStart', routeChangeStartHandler);
+            };
+        }
+    }, [isDirty, router, beforeUnloadHandler, routeChangeStartHandler]);
 
     const [isPreview, setIsPreview] = useState(false);
     const unloadPreviewRef = useRef<() => void>(() => {});

@@ -41,7 +41,7 @@ export default function Header(props: {
                     {session
                         ? <>
                             <Typography>Signed in as <strong>{session.attributes.username}</strong></Typography>
-                            <Button color="inherit" onClick={() => signOut({ redirect: false })}>Sign Out</Button>
+                            <Button color="inherit" onClick={() => signOut({ redirect: true })}>Sign Out</Button>
                         </>
                         : <Button variant="contained" onClick={() => signIn("wpi", { redirect: false })}>Sign In</Button>}
                 </Stack>}

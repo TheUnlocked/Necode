@@ -80,7 +80,7 @@ export default function TextInputWidget({
                 height={editorHeight}
                 value={value} onChange={x => onValueChange(x ?? "")}
                 onMount={editor => {
-                    updateHeight(editor);
+                    updateHeight(editor)();
                     editor.onDidContentSizeChange(updateHeight(editor));
                 }}
                 theme="vs-dark"

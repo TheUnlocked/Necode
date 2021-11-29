@@ -343,11 +343,15 @@ export default function ActivityListPane({
                         <IconButton onClick={() => addActivity(textInputActivityDescription)}><TextFields/></IconButton>
                     </Tooltip>
                     <Stack direction="row" justifyContent="end" spacing={1} flexGrow={1}>
-                        <Button ref={trashDrop}
-                            variant="contained"
-                            disabled={!isDragging}
-                            color="error" disableRipple
-                            startIcon={<Delete/>}>Delete</Button>
+                        <Tooltip title="Drag a widget here to delete it">
+                            <div>
+                                <Button ref={trashDrop}
+                                    variant="contained"
+                                    disabled={!isDragging}
+                                    color="error" disableRipple
+                                    startIcon={<Delete/>}>Delete</Button>
+                            </div>
+                        </Tooltip>
                     </Stack>
                 </Stack>
             </Box>

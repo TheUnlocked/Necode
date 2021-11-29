@@ -4,7 +4,7 @@ import { NextPage } from "next";
 import { Dispatch, useCallback, useEffect, useRef, useState } from "react";
 import ActivityListPane from "../../../../src/components/lesson-config/ActivityListPane";
 import { LessonEntity } from "../../../../src/api/entities/LessonEntity";
-import { useGetRequest } from "../../../../src/api/client/GetRequestHook";
+import { useGetRequest, useGetRequestImmutable } from "../../../../src/api/client/GetRequestHook";
 import { fromLuxon, Iso8601Date, iso8601DateRegex, toLuxon } from "../../../../src/util/iso8601";
 import SkeletonActivityListPane from "../../../../src/components/lesson-config/SkeletonActivityListPane";
 import { DateTime } from "luxon";
@@ -12,6 +12,7 @@ import { useRouter } from "next/router";
 import { useLoadingContext } from "../../../../src/api/client/LoadingContext";
 import { Response } from "../../../../src/api/Response";
 import NotFoundPage from "../../../404";
+import { ClassroomMemberEntity } from "../../../../src/api/entities/ClassroomMemberEntity";
 
 
 function getDateFromPath(path: string) {
@@ -30,11 +31,13 @@ const Page: NextPage = () => {
     const router = useRouter();
     const classroomId = router.query.classroomId;
 
-    if (!classroomId) {
+    const { data, error, isLoading } = useGetRequestImmutable<ClassroomMemberEntity>(classroomId ? `/api/classroom/${classroomId}/me` : null);
+
+    if (!classroomId || isLoading) {
         return null;
     }
 
-    if (typeof classroomId !== 'string') {
+    if (typeof classroomId !== 'string' || error) {
         return <NotFoundPage />;
     }
     return <PageContent classroomId={classroomId} />;
@@ -43,13 +46,13 @@ const Page: NextPage = () => {
 const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
     const router = useRouter();
 
-    const { startUpload, finishUpload } = useLoadingContext();
+    const { startUpload, finishUpload, startDownload, finishDownload } = useLoadingContext();
 
     const [joinCode, setJoinCode] = useState<string>();
 
     useEffect(() => {
         if (classroomId && joinCode === undefined) {
-            startUpload();
+            startDownload();
             fetch(`/api/classroom/${classroomId}/join-code`, { method: 'POST' })
                 .then(res => res.json() as Promise<Response<string>>)
                 .then(res => {
@@ -57,9 +60,9 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
                         setJoinCode(res.data);
                     }
                 })
-                .finally(finishUpload);
+                .finally(finishDownload);
         }
-    }, [joinCode, classroomId, startUpload, finishUpload]);
+    }, [joinCode, classroomId, startDownload, finishDownload]);
 
     // Normally fromLuxon uses UTC, but for the default we want "today" in the user's timezone
     const [selectedDate, setSelectedDate] = useState(fromLuxon(DateTime.now(), false));

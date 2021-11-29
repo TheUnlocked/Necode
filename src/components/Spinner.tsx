@@ -25,8 +25,7 @@ const SpinnerCircle = styled('circle')<{ gradientId: string, visible: boolean }>
     opacity: ${props => props.visible ? 1 : 0};
     animation: 1s linear infinite both ${spinnerAnimation};
     transform-origin: 50% 50%;
-    cursor: grab;
-    /* pointer-events: none; */
+    pointer-events: none;
 `;
 
 export interface SpinnerProps {

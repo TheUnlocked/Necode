@@ -109,12 +109,22 @@ export default function TestsDialog({
             </>;
             break;
         case 'failure':
-            content = <>
-                <DialogContentText>
-                    Your code failed a test:
-                </DialogContentText>
-                <pre>{state.message}</pre>
-            </>;
+            if (state.message.startsWith('%SOURCE%')) {
+                content = <>
+                    <DialogContentText>
+                        Your code failed to satisfy this condition:
+                    </DialogContentText>
+                    <pre>{state.message.slice('%SOURCE%'.length)}</pre>
+                </>;
+            }
+            else {
+                content = <>
+                    <DialogContentText>
+                        Your code failed a test:
+                    </DialogContentText>
+                    <p>{state.message}</p>
+                </>;
+            }
             actions = <Button onClick={onClose}>Ok</Button>;
             break;
     }

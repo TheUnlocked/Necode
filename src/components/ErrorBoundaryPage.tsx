@@ -8,9 +8,14 @@ export default function ErrorBoundaryPage() {
         window.history.back();
     }
 
+    function refresh(e: MouseEvent) {
+        e.preventDefault();
+        window.location.reload();
+    }
+
     return <StatusPage
         primary="-1"
         secondary="Runtime Error"
-        body={<>Something broke. You may want to <Link href="#" onClick={goBack}>go back</Link>.</>}
+        body={<>Something broke. You may want to <Link href="#" onClick={refresh}>refresh</Link>, or possibly to <Link href="#" onClick={goBack}>go back</Link>.</>}
     />;
 }

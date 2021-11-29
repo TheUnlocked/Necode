@@ -7,7 +7,7 @@ import { useDrop } from "react-dnd";
 import ActivityDescription from "../../activities/ActivityDescription";
 import allActivities from "../../activities/allActivities";
 import testBasedActivityDescription from "../../activities/html-test-based";
-import useGetRequest from "../../api/client/GetRequestHook";
+import { useGetRequest } from "../../api/client/GetRequestHook";
 import { useLoadingContext } from "../../api/client/LoadingContext";
 import { ActivityEntity } from "../../api/entities/ActivityEntity";
 import { LessonEntity } from "../../api/entities/LessonEntity";

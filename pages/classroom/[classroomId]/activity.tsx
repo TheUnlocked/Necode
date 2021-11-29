@@ -6,7 +6,7 @@ import { Button, Chip, Stack, Toolbar } from "@mui/material";
 import { ArrowBack, AssignmentTurnedIn, Close } from "@mui/icons-material";
 import { Box } from "@mui/system";
 import { ClassroomMemberEntity } from "../../../src/api/entities/ClassroomMemberEntity";
-import useGetRequest from "../../../src/api/client/GetRequestHook";
+import { useGetRequest, useGetRequestImmutable } from "../../../src/api/client/GetRequestHook";
 import useSocket from "../../../src/hooks/SocketHook";
 import StatusPage from "../../../src/components/StatusPage";
 import { useLoadingContext } from "../../../src/api/client/LoadingContext";
@@ -28,7 +28,7 @@ const Page: NextPage = () => {
     const router = useRouter();
     const classroomId = router.query.classroomId;
 
-    const { data, error } = useGetRequest<ClassroomMemberEntity>(classroomId ? `/api/classroom/${classroomId}/me` : null);
+    const { data, error } = useGetRequestImmutable<ClassroomMemberEntity>(classroomId ? `/api/classroom/${classroomId}/me` : null);
 
     if (!classroomId) {
         return null;

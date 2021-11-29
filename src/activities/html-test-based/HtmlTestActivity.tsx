@@ -26,10 +26,10 @@ import { editorStateReducer, EditorType } from "./editorStateReducer";
 import PaneEditor from "./PaneEditor";
 import Key from "../../components/Key";
 import { ActivityIframe, RunTestsCallback } from "./ActivityIframe";
-import alpha from "color-alpha";
 import Lazy from "../../components/Lazy";
 import { useSnackbar } from "notistack";
 import { useLoadingContext } from "../../api/client/LoadingContext";
+import { debounce } from "lodash";
 
 export interface TestActivityConfig {
     description: string;
@@ -201,6 +201,7 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                 </>;
 
                 function tab(title: string, hasCheckbox: boolean, active: boolean, onClick?: () => void) {
+                    const langConfig = activityConfig.languages[type as Exclude<EditorType, 'hidden-html'>];
                     const content = <>
                         <Typography variant="overline" sx={{
                             userSelect: onClick ? "none" : undefined,
@@ -211,14 +212,14 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                         </Typography>
                         {hasCheckbox
                             ? <Checkbox sx={{ ml: "-9px", my: "-9px" }}
-                                checked={activityConfig.languages[type as Exclude<EditorType, 'hidden-html'>].enabled}
+                                checked={langConfig.enabled}
                                 disabled={!active}
-                                onChange={ev => onActivityConfigChange!({
+                                onChange={ev => ev.target.checked === langConfig.enabled ? undefined : onActivityConfigChange!({
                                     ...activityConfig,
                                     languages: {
                                         ...activityConfig.languages,
                                         [type]: {
-                                            ...activityConfig.languages[type as Exclude<EditorType, 'hidden-html'>],
+                                            ...langConfig,
                                             enabled: ev.target.checked
                                         }
                                     }
@@ -280,25 +281,24 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                 </>;
             }
 
-            const isHiddenHtmlTab = type === 'html' && isHiddenHtmlTabActive;
-
             const editorValue = isEditor
-                ? isHiddenHtmlTab
-                    ? activityConfig.hiddenHtml
-                    : type === 'code'
+                ? type === 'code'
                     ? activityConfig.languages.code.defaultValue![language.name] ?? ''
                     : activityConfig.languages[type].defaultValue
                 : editorState?.uncommittedValue;
 
+            const onHiddenHtmlChange: OnChange = value => {
+                if (activityConfig.hiddenHtml !== value) {
+                    onActivityConfigChange!({
+                        ...activityConfig,
+                        hiddenHtml: value ?? ''
+                    });
+                }
+            };
+
             const onChange: OnChange = value => {
                 if (isEditor) {
-                    if (isHiddenHtmlTab) {
-                        onActivityConfigChange!({
-                            ...activityConfig,
-                            hiddenHtml: value ?? ''
-                        });
-                    }
-                    else {
+                    if (editorValue !== value) {
                         onActivityConfigChange!({
                             ...activityConfig,
                             languages: {
@@ -324,17 +324,19 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
             let editor: JSX.Element;
 
             if (isEditor && type === 'html') {
+                // Want to load both editors to preserve scroll.
+                // Plus it simplifies some of the logic.
                 editor = <>
                     <Lazy show={isHiddenHtmlTabActive}>
                         <PaneEditor
-                            isConfig={isEditor}
+                            isConfig={true}
                             language={htmlDescription}
-                            value={editorValue}
-                            onChange={onChange} />
+                            value={activityConfig.hiddenHtml}
+                            onChange={onHiddenHtmlChange} />
                     </Lazy>
                     <Lazy show={!isHiddenHtmlTabActive}>
                         <PaneEditor
-                            isConfig={isEditor}
+                            isConfig={true}
                             language={language}
                             value={editorValue}
                             onChange={onChange} />
@@ -358,7 +360,7 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                     </Stack>
                     <Box ref={onEditorContainerRef} sx={{
                         flexGrow: 1,
-                        height: "calc(100% - 40px)", // need this because monaco does weird things withou it.
+                        height: "calc(100% - 40px)", // need this because monaco does weird things without it.
                         ".monaco-editor .suggest-widget": { zIndex: 101 },
                         ".monaco-hover": { zIndex: 102 },
                     }}>
@@ -383,30 +385,36 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
 
         const [testsCompileError, setTestsCompileError] = useState<Error | undefined>();
 
-        useEffect(() => {
-            if (isEditor) {
-                try {
-                    new Typescript().toRunnerCode(tests, {
-                        ambient: true,
-                        isolated: true,
-                        throwAllCompilerErrors: true,
-                        babelPlugins: [transformTestScaffolding]
-                    });
-                    setTestsCompileError(undefined);
+        // Be very careful when editing this function, since exaustive-deps is disabled.
+        // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps
+        const validateTests = useCallback(debounce((tests: string) => {
+            try {
+                new Typescript().toRunnerCode(tests, {
+                    ambient: true,
+                    isolated: true,
+                    throwAllCompilerErrors: true,
+                    babelPlugins: [transformTestScaffolding]
+                });
+                setTestsCompileError(undefined);
+            }
+            catch (e) {
+                if (e instanceof Error) {
+                    if (e.message.startsWith('unknown: ')) {
+                        e.message = e.message.slice(9);
+                    }
+                    setTestsCompileError(e);
                 }
-                catch (e) {
-                    if (e instanceof Error) {
-                        if (e.message.startsWith('unknown: ')) {
-                            e.message = e.message.slice(9);
-                        }
-                        setTestsCompileError(e);
-                    }
-                    else {
-                        setTestsCompileError(new Error(`${e}`));
-                    }
+                else {
+                    setTestsCompileError(new Error(`${e}`));
                 }
             }
-        }, [tests]);
+        }, 300), []);
+
+        useEffect(() => {
+            if (isEditor) {
+                validateTests(tests);
+            }
+        }, [tests, validateTests]);
 
         let iframeOrTestPane: JSX.Element;
 
@@ -431,7 +439,7 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                             }}
                             language="typescript"
                             value={tests}
-                            onChange={val => onActivityConfigChange!({
+                            onChange={val => tests === val ? undefined : onActivityConfigChange!({
                                 ...activityConfig,
                                 tests: val ?? ""
                             })} />
@@ -495,13 +503,13 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                             }}
                             language="markdown"
                             value={description}
-                            onChange={val => onActivityConfigChange!({
+                            onChange={val => description === val ? undefined : onActivityConfigChange!({
                                 ...activityConfig,
                                 description: val ?? ""
                             })} />
                         : <CardContent sx={{ pt: 0, flexGrow: 1, overflow: "auto" }}>
                             <ReactMarkdown
-                                rehypePlugins={[rehypeHighlight]}
+                                rehypePlugins={[[rehypeHighlight, {ignoreMissing: true}]]}
                                 remarkPlugins={[remarkGfm]}
                                 linkTarget="_blank">{description}</ReactMarkdown>
                         </CardContent>}

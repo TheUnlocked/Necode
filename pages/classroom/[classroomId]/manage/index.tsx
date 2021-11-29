@@ -4,7 +4,7 @@ import { NextPage } from "next";
 import { Dispatch, useCallback, useEffect, useRef, useState } from "react";
 import ActivityListPane from "../../../../src/components/lesson-config/ActivityListPane";
 import { LessonEntity } from "../../../../src/api/entities/LessonEntity";
-import useGetRequest from "../../../../src/api/client/GetRequestHook";
+import { useGetRequest } from "../../../../src/api/client/GetRequestHook";
 import { fromLuxon, Iso8601Date, iso8601DateRegex, toLuxon } from "../../../../src/util/iso8601";
 import SkeletonActivityListPane from "../../../../src/components/lesson-config/SkeletonActivityListPane";
 import { DateTime } from "luxon";

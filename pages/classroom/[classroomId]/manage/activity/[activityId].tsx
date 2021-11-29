@@ -1,6 +1,6 @@
-import { GetServerSideProps, NextPage } from "next";
+import { NextPage } from "next";
 import { useRouter } from "next/router";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { MetaTransformerContext } from "../../../../../src/contexts/MetaTransformerContext";
 import { Button, Toolbar, Select, MenuItem, Stack, ToggleButton, Skeleton, Paper } from "@mui/material";
 import { ArrowBack, Code, Save } from "@mui/icons-material";
@@ -12,7 +12,7 @@ import sortByProperty from "../../../../../src/util/sortByProperty";
 import { flip, make } from "../../../../../src/util/fp";
 import Lazy from "../../../../../src/components/Lazy";
 import ConfigureLanguageDialog from "../../../../../src/components/ConfigureLanguageDialog";
-import useGetRequest from "../../../../../src/api/client/GetRequestHook";
+import { useGetRequest, useGetRequestImmutable } from "../../../../../src/api/client/GetRequestHook";
 import { ActivityEntity } from "../../../../../src/api/entities/ActivityEntity";
 import allActivities from "../../../../../src/activities/allActivities";
 import useDirty from "../../../../../src/hooks/DirtyHook";
@@ -32,7 +32,7 @@ const Page: NextPage = () => {
     const classroomId = router.query.classroomId;
     const activityId = router.query.activityId;
 
-    const { data, error, isLoading } = useGetRequest<ClassroomMemberEntity>(classroomId ? `/api/classroom/${classroomId}/me` : null);
+    const { data, error, isLoading } = useGetRequestImmutable<ClassroomMemberEntity>(classroomId ? `/api/classroom/${classroomId}/me` : null);
 
     if (!classroomId || !activityId || isLoading) {
         return null;
@@ -135,6 +135,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
     }
 
     const [isPreview, setIsPreview] = useState(false);
+    const unloadPreviewRef = useRef<() => void>(() => {});
 
     async function returnToManage() {
         let date = activityEntity?.attributes.lesson.attributes.date;
@@ -237,7 +238,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
                 overflow: "hidden"
             }
         } as SxProps}>
-            <Lazy show={isPreview} keepInDom>
+            <Lazy show={isPreview} keepInDom unloadRef={unloadPreviewRef}>
                 <activity.activityPage
                     id={""}
                     activityConfig={activityConfig}
@@ -252,6 +253,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
                     activityConfig={activityConfig}
                     onActivityConfigChange={newConfig => {
                         markDirty();
+                        unloadPreviewRef.current();
                         setActivityConfig(newConfig);
                     }}
                     classroomId={classroomId}

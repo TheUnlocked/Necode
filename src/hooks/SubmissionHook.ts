@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import useGetRequest from "../api/client/GetRequestHook";
+import { useGetRequest } from "../api/client/GetRequestHook";
 import { ActivitySubmissionEntity } from "../api/entities/ActivitySubmissionEntity";
 import tracked from "../util/trackedEventEmitter";
 import { SocketInfo } from "./SocketHook";

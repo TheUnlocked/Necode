@@ -42,7 +42,7 @@ export default function TextInputWidget({
     }
 
     const [editorHeight, setEditorHeight] = useState(20);
-    const updateHeight = (editor: Parameters<NonNullable<Parameters<typeof Editor>[0]['onMount']>>[0]) => () => {
+    const updateHeight = (editor: editor.IStandaloneCodeEditor) => () => {
         const contentHeight = Math.max(20, Math.min(200, editor.getContentHeight()));
         setEditorHeight(contentHeight);
         editor.layout({ height: contentHeight, width: editor.getLayoutInfo().width })
@@ -80,7 +80,8 @@ export default function TextInputWidget({
                 height={editorHeight}
                 value={value} onChange={x => onValueChange(x ?? "")}
                 onMount={editor => {
-                    editor.onDidContentSizeChange(updateHeight(editor))
+                    updateHeight(editor);
+                    editor.onDidContentSizeChange(updateHeight(editor));
                 }}
                 theme="vs-dark"
                 language={languageDescription?.monacoName}

@@ -39,7 +39,7 @@ export default function Spinner({ visible = true, color, offsetRatio = 0 }: Spin
 
     if (!gradientId) return null;
 
-    return <svg viewBox={`0 0 ${svgSize} ${svgSize}`} xmlns="http://www.w3.org/2000/svg" style={{ transform: `rotate(${360 * offsetRatio}deg)`, cursor: 'grab' }}>
+    return <svg viewBox={`0 0 ${svgSize} ${svgSize}`} xmlns="http://www.w3.org/2000/svg" style={{ transform: `rotate(${360 * offsetRatio}deg)` }}>
         <defs>
             <linearGradient id={gradientId}>
                 <stop offset="0%" stopColor={color} />

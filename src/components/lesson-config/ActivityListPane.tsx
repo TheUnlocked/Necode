@@ -77,6 +77,11 @@ export default function ActivityListPane({
     
     const [isDirty, markDirty, clearDirty, dirtyCounter] = useDirty();
 
+    const isDirtyRef = useRef(false);
+    useEffect(() => {
+        isDirtyRef.current = isDirty;
+    }, [isDirty]);
+
     const [, drop] = useDrop(() => ({ accept: activityDragDropType }));
 
     const [{ isDragging }, trashDrop] = useDrop(() => ({
@@ -203,7 +208,11 @@ export default function ActivityListPane({
     useEffect(() => {
         saveRef.current = save;
         if (foreignSaveRef) {
-            foreignSaveRef.current = save;
+            foreignSaveRef.current = () => {
+                if (isDirtyRef.current) {
+                    save();
+                }
+            }
         }
     }, [save, foreignSaveRef]);
 

@@ -117,6 +117,25 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
         token: string
     }>(classroomId ? `/api/classroom/${classroomId}/activity/live` : null);
 
+    useEffect(() => {
+        function visibilityChangeHandler() {
+            if (document.visibilityState === 'hidden') {
+                saveLessonRef.current?.();
+            }
+        }
+
+        document.addEventListener('visibilitychange', visibilityChangeHandler);
+
+        return () => {
+            document.removeEventListener('visibilitychange', visibilityChangeHandler);
+
+            // Save on page unload
+            // Linter is warning that saveLessonRef.current will have changed since when the effect ran.
+            // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps
+            saveLessonRef.current?.();
+        }
+    }, []);
+
     const isActivityRunning = liveActivityData?.live;
 
     return <>

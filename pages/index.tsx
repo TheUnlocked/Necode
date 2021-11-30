@@ -2,7 +2,7 @@ import { Container, Stack, Typography, styled, ToggleButtonGroup, ToggleButton }
 import { Box } from '@mui/system';
 import type { NextPage } from 'next';
 import { PropsWithChildren, ReactNode, useState } from 'react';
-import { useGetRequest } from '../src/api/client/GetRequestHook';
+import { useGetRequest, useGetRequestImmutable } from '../src/api/client/GetRequestHook';
 import { UserEntity } from '../src/api/entities/UserEntity';
 import Footer from '../src/components/Footer';
 import NecodeLogo from '../src/components/NecodeLogo';
@@ -20,7 +20,7 @@ function InfoSection({ title, omitParagraph = false, children }: PropsWithChildr
 }
 
 const Home: NextPage = () => {
-    const { data: meInfo } = useGetRequest<UserEntity<{ classes: 'deep' }>>('/api/me?include=classes');
+    const { data: meInfo } = useGetRequestImmutable<UserEntity<{ classes: 'deep' }>>('/api/me?include=classes');
 
     const [infoCategory, setInfoCategory] = useState('general');
 

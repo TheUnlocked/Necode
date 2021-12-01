@@ -1,10 +1,10 @@
 import ActivityDescription from "./ActivityDescription";
 import canvasActivityDescription from "./canvas";
-import testBasedActivityDescription from "./html-test-based";
+import testDomActivityDescription from "./test-dom";
 
 const allActivities = [
     canvasActivityDescription,
-    testBasedActivityDescription
+    testDomActivityDescription
 ] as ActivityDescription<any>[];
 
 export default allActivities;

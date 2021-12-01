@@ -1,20 +1,30 @@
-import ActivityDescription from "../ActivityDescription";
-// import { CreateTestActivity } from "./TestActivityConfigPage";
-import { TestActivity, TestActivityConfigPage, TestActivityConfig } from "./HtmlTestActivity";
+import { activityDescription } from "../ActivityDescription";
+import createTestActivityPage from "../html-test-activity-base/HtmlTestActivity";
 import supportsAmbient from "../../languages/features/supportsAmbient";
 import supportsIsolated from "../../languages/features/supportsIsolated";
 import dedent from "dedent-js";
 
-const testBasedActivityDescription: ActivityDescription<TestActivityConfig, [
-    typeof supportsAmbient,
-    typeof supportsIsolated
-]> = {
-    id: 'testbased:html',
+interface DomTestActivityConfig {
+    description: string;
+    hiddenHtml: string;
+    tests: string;
+    languages: {
+        html?: { enabled: boolean, defaultValue: string };
+        code?: { enabled: boolean, defaultValue: { [languageName: string]: string } };
+        css?: { enabled: boolean, defaultValue: string };
+    }
+}
+
+const TestActivity = createTestActivityPage({ isEditor: false, activityTypeOptions: {} });
+const TestActivityConfigPage = createTestActivityPage({ isEditor: true, activityTypeOptions: {} });
+
+const testDomActivityDescription = activityDescription({
+    id: 'core/test-dom',
     displayName: 'DOM Programming',
     supportedFeatures: [
         supportsAmbient,
         supportsIsolated
-    ],
+    ] as const,
     configPage: TestActivityConfigPage,
     activityPage: TestActivity,
     defaultConfig: {
@@ -137,7 +147,7 @@ const testBasedActivityDescription: ActivityDescription<TestActivityConfig, [
             'The element took too long to appear!'
         );
         `
-    }
-};
+    } as DomTestActivityConfig
+});
 
-export default testBasedActivityDescription;
+export default testDomActivityDescription;

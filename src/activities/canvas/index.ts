@@ -1,17 +1,15 @@
 import supportsEntryPoint from "../../languages/features/supportsEntryPoint";
-import ActivityDescription from "../ActivityDescription";
+import { activityDescription } from "../ActivityDescription";
 import { CanvasActivity } from "./CanvasActivity";
 
-const canvasActivityDescription: ActivityDescription<undefined, [
-    typeof supportsEntryPoint
-]> = {
-    id: 'canvas:ring',
+const canvasActivityDescription = activityDescription({
+    id: 'core/canvas-ring',
     displayName: 'Canvas Ring',
     supportedFeatures: [
         supportsEntryPoint
-    ],
+    ] as const,
     activityPage: CanvasActivity,
     defaultConfig: undefined
-};
+});
 
 export default canvasActivityDescription;

@@ -31,23 +31,39 @@ import { useSnackbar } from "notistack";
 import { useLoadingContext } from "../../api/client/LoadingContext";
 import { debounce } from "lodash";
 
-export interface TestActivityConfig {
+export interface HtmlTestActivityBaseConfig {
     description: string;
     hiddenHtml: string;
     tests: string;
     languages: {
-        html: { enabled: boolean, defaultValue: string };
-        code: { enabled: boolean, defaultValue: { [languageName: string]: string } };
-        css: { enabled: boolean, defaultValue: string };
+        html?: { enabled: boolean, defaultValue: string };
+        code?: { enabled: boolean, defaultValue: { [languageName: string]: string } };
+        css?: { enabled: boolean, defaultValue: string };
     }
 }
 
 export interface HtmlTestActivityMetaProps {
     isEditor: boolean;
+    activityTypeOptions: {
+        hasTests?: boolean;
+        hasHtml?: boolean;
+        hasCss?: boolean;
+        hasCode?: boolean;
+        hiddenHtml?: { configurable: true } | { configurable: false, value?: string };
+    };
 }
 
-function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
-    return function (props: ActivityConfigPageProps<TestActivityConfig> | ActivityPageProps<TestActivityConfig>) {
+export default function createTestActivityPage({
+    isEditor,
+    activityTypeOptions: {
+        hasTests: activityTypeHasTests = true,
+        hasHtml: activityTypeHasHtml = true,
+        hasCss: activityTypeHasCss = true,
+        hasCode: activityTypeHasCode = true,
+        hiddenHtml: activityTypeHiddenHtml = { configurable: true }
+    }
+}: HtmlTestActivityMetaProps) {
+    return function (props: ActivityConfigPageProps<HtmlTestActivityBaseConfig> | ActivityPageProps<HtmlTestActivityBaseConfig>) {
         const {
             language,
             activityConfig,
@@ -55,7 +71,7 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
             socketInfo,
             saveData,
             onSaveDataChange
-        } = props as (typeof props) & Partial<ActivityConfigPageProps<TestActivityConfig> & ActivityPageProps<TestActivityConfig>>;
+        } = props as (typeof props) & Partial<ActivityConfigPageProps<HtmlTestActivityBaseConfig> & ActivityPageProps<HtmlTestActivityBaseConfig>>;
 
         const {
             description,
@@ -603,6 +619,3 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
         </>;
     }
 }
-
-export const TestActivity = createTestActivityPage({ isEditor: false });
-export const TestActivityConfigPage = createTestActivityPage({ isEditor: true });

@@ -7,7 +7,18 @@
 
     let htmlTemplate;
 
+    function loadHtmlTemplate() {
+        document.head.innerHTML = '';
+        document.body.innerHTML = htmlTemplate;
+
+        document.body.querySelectorAll('style, script').forEach(elt => {
+            document.head.prepend(elt);
+        });
+    }
+
     function setHtml(data) {
+        loadHtmlTemplate();
+
         const userContentElts = document.getElementsByTagName('user-content');
         if (userContentElts.length > 0) {
             for (const elt of userContentElts) {
@@ -15,8 +26,17 @@
             }
         }
         else {
-            document.body.innerHTML = htmlTemplate + (data ?? '');
+            document.body.innerHTML += (data ?? '');
         }
+
+        document.querySelectorAll('script').forEach(elt => {
+            const newScript = document.createElement('script');
+            for (const attribute of elt.attributes) {
+                newScript.setAttribute(attribute.name, attribute.value);
+            }
+            elt.insertAdjacentElement('beforebegin', newScript);
+            elt.remove();
+        });
     }
 
     function setJs(data) {
@@ -45,10 +65,6 @@
             if (!initialized) {
                 initialized = true;
                 htmlTemplate = e.data.template;
-                
-                document.body.innerHTML = htmlTemplate;
-                document.querySelectorAll('style, script')
-                    .forEach(x => document.head.prepend(x));
 
                 setHtml(e.data.html);
                 setJs(e.data.js);

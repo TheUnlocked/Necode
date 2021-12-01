@@ -37,7 +37,7 @@ export default function Lazy({ show, children, keepInDom = false, unloadRef }: L
             if (show) {
                 return <div style={{ display: "contents" }}>{children}</div>;
             }
-            return <div style={{ visibility: "hidden", position: "absolute" }}>{children}</div>;
+            return <div style={{ visibility: "hidden", position: "absolute", height: "inherit" }}>{children}</div>;
         }
         return <div style={{ display: show ? "contents" : "none" }}>{children}</div>;
     }

@@ -5,6 +5,7 @@ import { htmlDescription } from "./html";
 import { javascriptDescription } from "./javascript";
 import LanguageDescription from "./LangaugeDescription";
 import { markdownDescription } from "./markdown";
+import { plainTextDescription } from "./plaintext";
 import { pythonDescription } from "./python3";
 import { typescriptDescription } from "./typescript";
 
@@ -16,6 +17,7 @@ const allLanguages = sortByProperty([
     cssDescription,
     markdownDescription,
     glslDescription,
+    plainTextDescription,
 ], 'name') as LanguageDescription[];
 
 export default allLanguages;

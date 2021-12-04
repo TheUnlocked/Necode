@@ -1,5 +1,6 @@
 import sortByProperty from "../util/sortByProperty";
 import { cssDescription } from "./css";
+import { glslDescription } from "./glsl";
 import { htmlDescription } from "./html";
 import { javascriptDescription } from "./javascript";
 import LanguageDescription from "./LangaugeDescription";
@@ -14,6 +15,7 @@ const allLanguages = sortByProperty([
     htmlDescription,
     cssDescription,
     markdownDescription,
+    glslDescription,
 ], 'name') as LanguageDescription[];
 
 export default allLanguages;

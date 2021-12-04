@@ -34,6 +34,7 @@
             for (const attribute of elt.attributes) {
                 newScript.setAttribute(attribute.name, attribute.value);
             }
+            newScript.text = elt.text;
             elt.insertAdjacentElement('beforebegin', newScript);
             elt.remove();
         });
@@ -43,7 +44,7 @@
         document.getElementById(JS_ELT_ID)?.remove();
         const scriptElt = document.createElement('script');
         scriptElt.id = JS_ELT_ID;
-        scriptElt.innerHTML = data ?? '';
+        scriptElt.text = data ?? '';
         document.head.appendChild(scriptElt);
     }
 

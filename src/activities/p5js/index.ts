@@ -1,10 +1,10 @@
 import { activityDescription } from "../ActivityDescription";
-import createTestActivityPages from "../html-test-activity-base/HtmlTestActivity";
+import createTestActivityPages, { HtmlTestActivityBaseConfig } from "../html-test-activity-base/HtmlTestActivity";
 import supportsAmbient from "../../languages/features/supportsAmbient";
 import supportsIsolated from "../../languages/features/supportsIsolated";
 import dedent from "dedent-js";
 
-interface P5ActivityConfig {
+interface P5ActivityConfig extends HtmlTestActivityBaseConfig {
     description: string;
     hiddenHtml: string;
     languages: {
@@ -80,7 +80,7 @@ const [activityPage, configPage] = createTestActivityPages({
 
 const p5jsActivityDescription = activityDescription({
     id: 'core/p5js',
-    displayName: 'p5.js',
+    displayName: 'p5.js Playground',
     supportedFeatures: [
         supportsAmbient,
         supportsIsolated

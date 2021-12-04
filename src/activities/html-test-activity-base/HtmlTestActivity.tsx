@@ -575,10 +575,10 @@ export function createTestActivityPage({
         }
 
         function runTests() {
-            if (testsSource !== undefined && runTestsRef.current) {
+            if (activityTypeHasTests && runTestsRef.current) {
                 openTestsDialog();
                 runTestsRef.current(
-                    testsSource,
+                    testsSource ?? '',
                     startTests.current,
                     msg => {
                         if (msg) {

@@ -635,7 +635,7 @@ export function createTestActivityPage({
         ];
 
         const controls = isEditor ? null : <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: "6px" }}>
-            {activityTypeHasTests
+            {activityTypeHasTests && testsSource
                 ? <Button variant="contained" onClick={runTests}>Run tests</Button>
                 : <Button variant="contained" onClick={makeSubmission}>Submit</Button>}
             <Box sx={{ flexGrow: 1 }} />

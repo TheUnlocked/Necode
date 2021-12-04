@@ -92,7 +92,7 @@ export default function ConfigureLanguageDialog(props: ConfigureLanguageDialogPr
         </DialogContent>
         <List>
             {transientAvailableLanguages.map(getMenuItem)}
-            {unsupportedLanguages.length > 0 ? <>
+            {/* {unsupportedLanguages.length > 0 ? <>
                 <Divider>Unsupported Languages</Divider>
                 {unsupportedLanguages.map(language => <ListItem key={language.name}>
                     <ListItemIcon>
@@ -105,7 +105,7 @@ export default function ConfigureLanguageDialog(props: ConfigureLanguageDialogPr
                         color: ({ palette }) => palette.text.disabled
                     }} />
                 </ListItem>)}
-            </> : undefined}
+            </> : undefined} */}
         </List>
         <DialogActions>
             <Button onClick={close}>Cancel</Button>

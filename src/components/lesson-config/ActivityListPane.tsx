@@ -6,7 +6,7 @@ import { Dispatch, MutableRefObject, useCallback, useEffect, useRef, useState } 
 import { useDrop } from "react-dnd";
 import ActivityDescription from "../../activities/ActivityDescription";
 import allActivities from "../../activities/allActivities";
-import testBasedActivityDescription from "../../activities/html-test-based";
+import testDomActivityDescription from "../../activities/test-dom";
 import { useGetRequest } from "../../api/client/GetRequestHook";
 import { useLoadingContext } from "../../api/client/LoadingContext";
 import { ActivityEntity } from "../../api/entities/ActivityEntity";

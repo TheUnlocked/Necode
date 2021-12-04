@@ -2,9 +2,13 @@ export type NewType<T, Name extends string | symbol> = Name extends string
     ? (T & { [_ in `__${Name}__`]: never }) | { [_ in `__${Name}__`]: never }
     : (T & { [_ in Name]: never }) | { [_ in Name]: never };
 
+export type ImplicitNewType<T, Name extends string | symbol> = Name extends string
+    ? T | { [_ in `__${Name}__`]: never }
+    : T | { [_ in Name]: never };
+
 export type Nominal<T, Name extends string | symbol> = Name extends string
-    ? (T & { [_ in `__${Name}__`]: never })
-    : (T & { [_ in Name]: never });
+    ? T & { [_ in `__${Name}__`]: never }
+    : T & { [_ in Name]: never };
 
 export type Explicit<T> = { [K in keyof T]: T[K] };
 
@@ -17,3 +21,17 @@ export type UndefinedIsOptional<T> = Explicit<{
 export type Awaitable<T> = T | PromiseLike<T>;
 
 export type IfAny<T, A, B> = Omit<{ a: any, b: any }, T extends never ? 'a' : 'b'> extends { a: any } ? B : A;
+
+export type NonStrictDisjunction<A, B>
+    // The simple implementation doesn't work because of https://github.com/microsoft/TypeScript/issues/46976
+    // = (A & Partial<B>) | (B & Partial<A>);
+    = {
+        [Key in keyof A | keyof B]:
+            Key extends keyof A
+                ? Key extends keyof B
+                    ? A[Key] & B[Key]
+                    : A[Key] | undefined
+                : Key extends keyof B
+                    ? B[Key] | undefined
+                    : undefined
+    }

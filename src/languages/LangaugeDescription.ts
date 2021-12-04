@@ -1,6 +1,7 @@
 import { SvgIconProps } from "@mui/material";
 import { ComponentType } from "react";
 import FeatureDescription, { ConstraintsOf } from "./features/FeatureDescription";
+import isLanguage from "./features/isLanguage";
 
 export default interface LanguageDescription<Features extends readonly FeatureDescription<any>[] = readonly FeatureDescription<any>[]> {
     readonly name: string;
@@ -16,6 +17,7 @@ export function languageDescription(
     desc: Omit<LanguageDescription<readonly FeatureDescription<any>[]>, 'features'> & { features?: readonly FeatureDescription<any>[] }
 ) {
     desc.features ??= [];
+    desc.features = [...desc.features, isLanguage(desc)]
     return desc;
 }
 

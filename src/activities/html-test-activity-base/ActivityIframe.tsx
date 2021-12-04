@@ -71,7 +71,7 @@ export function ActivityIframe({
                         iframeElt.contentWindow!.postMessage({
                             type: 'initialize',
                             signature,
-                            template: htmlTemplate,
+                            template: htmlTemplate ?? '',
                             html,
                             js,
                             css

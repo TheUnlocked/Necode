@@ -4,12 +4,6 @@ window.GLSL_SHADER_CODE = new (class GlslShaderCode {
     }
 
     define(defines) {
-        let definesSource = '';
-        let count = 0;
-        for (const name in defines) {
-            definesSource += `#define ${name} ${defines[name]}\n`;
-            count++;
-        }
         return this.prepend(Object.entries(defines).map(([name, value]) => `#define ${name} ${value}`).join('\n'));
     }
 

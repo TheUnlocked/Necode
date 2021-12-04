@@ -1,5 +1,6 @@
-import RunnableLanguage from "./RunnableLanguage";
-import { FeatureOptionsOf, languageDescription } from "./LangaugeDescription";
+import RunnableLanguage from "../RunnableLanguage";
+import { FeatureOptionsOf, languageDescription } from "../LangaugeDescription";
+import injectionCode from "raw-loader!./inject.js.raw";
 
 export const glslDescription = languageDescription({
     name: 'glsl',
@@ -9,6 +10,6 @@ export const glslDescription = languageDescription({
 
 export class GLSL implements RunnableLanguage<typeof glslDescription> {
     toRunnerCode(code: string, options: FeatureOptionsOf<typeof glslDescription>) {
-        return `window.GLSL_SHADER_CODE=${JSON.stringify(code)};`;
+        return injectionCode.replace('__GLSL_USER_INPUT_SOURCE__', JSON.stringify(code));
     }
 }

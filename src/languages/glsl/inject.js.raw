@@ -1,0 +1,27 @@
+window.GLSL_SHADER_CODE = new (class GlslShaderCode {
+    constructor(code) {
+        this._code = code;
+    }
+
+    define(defines) {
+        let definesSource = '';
+        let count = 0;
+        for (const name in defines) {
+            definesSource += `#define ${name} ${defines[name]}\n`;
+            count++;
+        }
+        return this.prepend(Object.entries(defines).map(([name, value]) => `#define ${name} ${value}`).join('\n'));
+    }
+
+    prepend(str) {
+        return new GlslShaderCode(`${str}\n#line 1\n${this._code}`);
+    }
+
+    append(str) {
+        return new GlslShaderCode(`${this._code}\n${str}`);
+    }
+
+    toString() {
+        return this._code;
+    }
+})(__GLSL_USER_INPUT_SOURCE__);

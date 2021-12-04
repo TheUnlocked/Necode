@@ -42,7 +42,6 @@ export default function PaneEditor(props: PaneEditorProps) {
             options={{
                 minimap: { enabled: false },
                 "semanticHighlighting.enabled": true,
-                automaticLayout: true,
                 fixedOverflowWidgets: true
             }}
             language={props.language.monacoName}

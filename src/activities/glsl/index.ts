@@ -100,17 +100,17 @@ const glslActivityDescription = activityDescription({
                 gl.bufferData(gl.ARRAY_BUFFER, triangles, gl.STATIC_DRAW);
             
                 const vertexShader = gl.createShader(gl.VERTEX_SHADER);
-                gl.shaderSource(vertexShader, \`
-                attribute vec2 a_position;
-            
-                void main() {
-                    gl_Position = vec4( a_position, 0., 1. );
-                }
-                \`);
+                gl.shaderSource(vertexShader, GLSL_SHADER_CODE.define({ IS_VERTEX_SHADER: 1 }));
                 gl.compileShader(vertexShader);
+
+                const vertexShaderLog = gl.getShaderInfoLog(vertexShader);
+                if (vertexShaderLog.length > 0) {
+                    showError(vertexShaderLog);
+                    return;
+                }
             
                 const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-                gl.shaderSource(fragmentShader, GLSL_SHADER_CODE);
+                gl.shaderSource(fragmentShader, GLSL_SHADER_CODE.define({ IS_FRAGMENT_SHADER: 1 }));
                 gl.compileShader(fragmentShader);
 
                 const fragmentShaderLog = gl.getShaderInfoLog(fragmentShader);
@@ -154,10 +154,11 @@ const glslActivityDescription = activityDescription({
                 #ifdef GL_ES
                 precision mediump float;
                 #endif
-                
+
                 uniform mediump float time;
                 uniform mediump vec2 resolution;
-                
+
+                #ifdef IS_FRAGMENT_SHADER
                 void main() {
                     gl_FragColor = vec4( 
                         gl_FragCoord.x / resolution.x, 
@@ -166,6 +167,16 @@ const glslActivityDescription = activityDescription({
                         1.0 
                     );
                 }
+                #endif
+
+
+                #ifdef IS_VERTEX_SHADER
+                attribute vec2 a_position;
+
+                void main() {
+                    gl_Position = vec4( a_position, 0., 1. );
+                }
+                #endif
                 `
             } },
         },

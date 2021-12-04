@@ -518,9 +518,9 @@ export function createTestActivityPage({
                                 <TypescriptIcon />
                                 <Typography variant="overline" sx={{ ml: 1 }}>Tests</Typography>
                             </Stack>
-                            <Stack direction="row" sx={{ m: 1, height: "24px", alignItems: "center", overflow: "hidden" }}>
+                            <Stack direction="row" sx={{ m: 1, mr: 0, height: "24px", alignItems: "center", overflowX: "clip" }}>
                                 <Typography variant="overline" sx={{ mr: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Require checks to submit</Typography>
-                                <Checkbox sx={{ m: "-9px" }} checked={mustPassToSubmit}
+                                <Checkbox sx={{ m: "-9px", mr: 0 }} checked={mustPassToSubmit}
                                     onChange={ev => ev.target.checked === mustPassToSubmit ? null : onActivityConfigChange!({
                                         ...activityConfig,
                                         tests: {
@@ -539,7 +539,6 @@ export function createTestActivityPage({
                                 options={{
                                     minimap: { enabled: false },
                                     "semanticHighlighting.enabled": true,
-                                    automaticLayout: true,
                                     fixedOverflowWidgets: true,
                                 }}
                                 language="typescript"
@@ -604,7 +603,6 @@ export function createTestActivityPage({
                             options={{
                                 minimap: { enabled: false },
                                 "semanticHighlighting.enabled": true,
-                                automaticLayout: true,
                                 fixedOverflowWidgets: true,
                                 lineNumbers: "off",
                                 lineDecorationsWidth: 0,

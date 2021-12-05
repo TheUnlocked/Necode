@@ -108,10 +108,8 @@ const generalInfo = <>
         <SubtleLink href="mailto:cdroberts@wpi.edu">cdroberts@wpi.edu</SubtleLink>.
     </InfoSection>
     <InfoSection title="I don't teach a class, but I'm still interested in Necode. Can I try it out?">
-        Currently no, unfortunately. While we&apos;d love to have a demo for guests to play around with Necode,
-        that&apos;s just not the best use of our limited development resources right now. We do plan to make Necode
-        open source in the near future though, so if you&apos;re willing to put in a bit of effort to get it running
-        on your local machine, you&apos;ll be able to use Necode as much as you want!
+        Currently no, unfortunately. However, if you&apos;re willing to put in a bit of effort to get it running
+        on your local machine, the source code for Necode is available on <SubtleLink target="_blank" rel="noopener" href="https://github.com/TheUnlocked/Necode">GitHub</SubtleLink>.
     </InfoSection>
     <InfoSection title="Is there a paper I can read?">
         Not yet, but assuming everything goes to plan, one should be available in early March, 2022.

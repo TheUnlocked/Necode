@@ -13,7 +13,7 @@ import { UserEntity } from "../../src/api/entities/UserEntity";
 
 const Join: NextPage = () => {
     const router = useRouter();
-    const { data: session, isLoading } = useGetRequestImmutable<UserEntity>('/api/me');
+    const { data: me, isLoading } = useGetRequestImmutable<UserEntity>('/api/me');
 
     const [joinCode, setJoinCode] = useState("");
 
@@ -25,7 +25,7 @@ const Join: NextPage = () => {
 
     const { enqueueSnackbar } = useSnackbar();
 
-    if (!session) {
+    if (!me) {
         return <FormPage title="Join a Classroom" error hideSubmit>
             {isLoading ? <Skeleton animation="wave" variant="rectangular" height="56px" sx={{ borderRadius: 1 }} /> : <>
                 <Typography>You must sign in before you can join a classroom.</Typography>

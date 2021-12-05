@@ -1,5 +1,5 @@
-import { Divider, Link, List, ListItem, Stack, styled } from "@mui/material";
-import { Box } from "@mui/system";
+import { GitHub } from "@mui/icons-material";
+import { Divider, Link, List, ListItem, ListItemIcon, Stack, styled } from "@mui/material";
 
 const RealFooter = styled("footer")`
     flex-grow: 1;
@@ -19,7 +19,10 @@ export default function Footer() {
         }}>
             <Stack component="article" direction="column" spacing={1}>
                 <List>
-                    <ListItem>Github Link Here</ListItem>
+                    <ListItem>
+                        <ListItemIcon><GitHub/></ListItemIcon>
+                        <Link color="inherit" fontWeight="500" href="https://github.com/TheUnlocked/Necode">View it on GitHub</Link>
+                    </ListItem>
                 </List>
             </Stack>
             <Stack component="article" direction="column" spacing={1}>

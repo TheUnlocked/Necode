@@ -4,7 +4,7 @@ import { ConnectionInfo, RtcPolicy, RtcPolicySettings, rtcPolicy } from './RtcPo
 
 @rtcPolicy
 export class RingPolicy implements RtcPolicy {
-    public policyId = 'ring';
+    public static policyId = 'ring';
 
     private ring: AutoRing<string>;
     private connectionMap = new ArrayKeyMap<[string, string], ConnectionInfo>();

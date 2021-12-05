@@ -1,6 +1,6 @@
 import { Card, Typography } from "@mui/material";
 import { Box, styled } from "@mui/system";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ReflexContainer, ReflexElement, ReflexSplitter } from "react-reflex";
 import { useRTC } from "../../hooks/WebRtcHook";
 import { BrowserRunner } from "../../runner/BrowserRunner";
@@ -10,6 +10,7 @@ import useCodeGenerator from "../../hooks/CodeGeneratorHook";
 import { ActivityPageProps } from "../ActivityDescription";
 import useIsSizeOrSmaller from "../../hooks/ScreenSizeHook";
 import CodeAlert from "../../components/CodeAlert";
+import SimplePeer from "simple-peer";
 
 const SharedCanvas = styled('canvas')({
     maxWidth: "100%",
@@ -18,11 +19,8 @@ const SharedCanvas = styled('canvas')({
 });
 
 export function CanvasActivity({
-    classroomId, language, socketInfo
+    language, socketInfo
 }: ActivityPageProps) {
-    // const { data: me } = useSWR<MeResponseData>(`/api/classroom/${classroom}/me`, jsonFetcher);
-    // const isInstructor = me?.response === 'ok' && me.data.attributes.role === 'Instructor';
-
     const [debugMsg, setDebugMsg] = useState("No debug message");
 
     const frameRate = 10;
@@ -30,8 +28,8 @@ export function CanvasActivity({
 
     const [context2d, setContext2d] = useState<CanvasRenderingContext2D | null>(null);
     const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
-    const [outboundMediaStream, setOutboundMediaStream] = useState<MediaStream>();
-    const lastOutboundMediaStreamRef = useRef<MediaStream>();
+    const [outboundMediaStream, setOutboundMediaStream] = useState<{ stream: MediaStream }>();
+    const lastOutboundMediaStreamRef = useRef<[SimplePeer.Instance, MediaStream]>();
     const [inboundMediaStream, setInboundMediaStream] = useState<MediaStream>();
 
     // const [participants, setParticipants] = useState(new Set<string>());
@@ -59,26 +57,25 @@ export function CanvasActivity({
                     throw new Error("For your own safety, reassigning the methods of `ctx` is forbidden. " +
                         `If you really want to reassign \`ctx.${k}\`, look into \`Object.defineProperty\`.` +
                         (["fill", "stroke"].includes(k) ? `\n\nDid you mean \`ctx.${k}Style\`?` : ""));
-                }
+                },
+                configurable: true
             } as PropertyDescriptor])));
 
             Object.defineProperty(ctx, 'canvas', {
                 get() {
                     throw new Error("For your own safety, `ctx.canvas` is forbidden. " +
                         'If you really want to access the `HTMLCanvasElement` object, it has id `"canvas-activity--canvas"`.');
-                }
+                },
+                configurable: true
             });
 
             setContext2d(ctx);
             setCanvas(canvas);
             
             const canvasMediaStream = canvas.captureStream(frameRate);
-            console.log('outgoing', canvasMediaStream.getTracks());
-            setOutboundMediaStream(canvasMediaStream);
+            setOutboundMediaStream({ stream: canvasMediaStream });
         }
     }, []);
-
-    //#region Editor and Code Running
 
     const defaultCode = useMemo(() => ({
         javascript: dedent `/**
@@ -164,54 +161,50 @@ export function CanvasActivity({
         }
     }, [context2d, inboundVideoElt, runner]);
 
-    //#endregion
-
-    //#region Websocket and WebRTC
-
     type PeerInfo = { role: 'send' | 'recv' };
 
-    const sendPeerRef = useRef<Parameters<Parameters<typeof useRTC>[1]>[0]>();
-    const recvPeerRef = useRef<Parameters<Parameters<typeof useRTC>[1]>[0]>();
+    const [sendPeer, setSendPeer] = useState<SimplePeer.Instance>();
 
-    const rtcContext = useRTC<PeerInfo>(socketInfo, useCallback(function onPeer(peer, info) {
+    useRTC<PeerInfo>(socketInfo, (peer, info) => {
+        console.log('useRTC', info.role);
         if (info.role === 'send') {
-            if (sendPeerRef.current && !sendPeerRef.current.destroyed) {
-                sendPeerRef.current.destroy();
-            }
-            sendPeerRef.current = peer;
-            lastOutboundMediaStreamRef.current = undefined;
-
-            if (canvas) {
-                const canvasMediaStream = canvas.captureStream(frameRate);
-                console.log('outgoing', canvasMediaStream.getTracks());
-                setOutboundMediaStream(canvasMediaStream);
-            }
+            setSendPeer(peer);
         }
         else {
-            if (recvPeerRef.current && !recvPeerRef.current.destroyed) {
-                recvPeerRef.current.destroy();
-            }
             peer.on('stream', stream => {
                 setInboundMediaStream(stream);
             });
         }
-    }, [canvas]));
+    });
+
+    useEffect(() => {
+        if (canvas && sendPeer) {
+            const canvasMediaStream = canvas.captureStream(frameRate);
+            setOutboundMediaStream({ stream: canvasMediaStream });
+        }
+    }, [canvas, sendPeer]);
 
     useEffect(() => {
         if (inboundVideoElt && inboundMediaStream) {
             console.log('incoming', inboundMediaStream.getTracks());
             setDebugMsg('Recieved but not playing');
             try {
-                inboundVideoElt.srcObject = null;
-                inboundVideoElt.load(); // need to refresh stuff, errors happen if this isn't run.
-                inboundVideoElt.srcObject = inboundMediaStream;
                 inboundVideoElt.muted = true;
-                inboundVideoElt.play().then(() => {
-                    setDebugMsg('Playing');
-                }).catch((e: Error) => {
-                    console.log(e);
-                    setDebugMsg(`${e.name}: ${e.message}`);
-                });
+                inboundVideoElt.srcObject = inboundMediaStream;
+                (async () => {
+                    for (let i = 0; i < 10; i++) {
+                        try {
+                            await inboundVideoElt.play();
+                            setDebugMsg('Playing');
+                            return;
+                        }
+                        catch (e: any) {
+                            setDebugMsg(`${e.name}: ${e.message}`);
+                            inboundVideoElt.srcObject = inboundMediaStream;
+                            inboundVideoElt.load();
+                        }
+                    }
+                })();
             }
             catch (e) {
                 if (e instanceof Error) {
@@ -222,45 +215,44 @@ export function CanvasActivity({
         }
         else {
             if (inboundVideoElt) {
-                setDebugMsg('<video> element not loaded');
+                setDebugMsg('No incoming media stream');
             }
             else {
-                setDebugMsg('No incoming media stream');
+                setDebugMsg('<video> element not loaded');
             }
         }
     }, [inboundVideoElt, inboundMediaStream]);
 
     useEffect(() => {
-        if (sendPeerRef.current && outboundMediaStream) {
-            if (lastOutboundMediaStreamRef.current) {
-                sendPeerRef.current.replaceTrack(
-                    lastOutboundMediaStreamRef.current.getVideoTracks()[0],
-                    outboundMediaStream.getVideoTracks()[0],
-                    lastOutboundMediaStreamRef.current
-                );
+        if (sendPeer && outboundMediaStream) {
+            if (lastOutboundMediaStreamRef.current?.[0] === sendPeer) {
+                const oldTrack = lastOutboundMediaStreamRef.current[1].getVideoTracks()[0];
+                const newTrack = outboundMediaStream.stream.getVideoTracks()[0];
+                try {
+                    if (oldTrack !== newTrack) {
+                        sendPeer.replaceTrack(
+                            oldTrack,
+                            newTrack,
+                            lastOutboundMediaStreamRef.current[1]
+                        );
+                        console.log('sent stream', outboundMediaStream);
+                    }
+                    else {
+                        console.log('stream already attached', outboundMediaStream);
+                    }
+                }
+                catch (e) {
+                    sendPeer.addStream(outboundMediaStream.stream);
+                    console.log('sent stream', outboundMediaStream);
+                }
             }
             else {
-                sendPeerRef.current.addStream(outboundMediaStream);
+                sendPeer.addStream(outboundMediaStream.stream);
+                console.log('sent stream', outboundMediaStream);
             }
-            lastOutboundMediaStreamRef.current = outboundMediaStream;
+            lastOutboundMediaStreamRef.current = [sendPeer, outboundMediaStream.stream];
         }
-    }, [outboundMediaStream]);
-
-    // useEffect(() => {
-    //     if (me?.response === 'ok' && rtcContext && rtcContext.authLevel >= AuthLevel.Instructor) {
-    //         const ws = tracked(rtcContext.ws);
-    //         ws.on('userJoin', user => {
-    //             setParticipants(p => p.add(user as string));
-    //         });
-    //         ws.on('userLeave', user => {
-    //             setParticipants(p => (p.delete(user as string), p));
-    //         });
-    //         rtcContext.getParticipants().then(x => setParticipants(new Set(x as string[])));
-    //         return () => ws.offTracked();
-    //     }
-    // }, [rtcContext, me]);
-
-    //#endregion
+    }, [outboundMediaStream, sendPeer]);
 
     const isSmallScreen = useIsSizeOrSmaller("sm");
 
@@ -268,7 +260,7 @@ export function CanvasActivity({
         <ReflexElement flex={2}>
             <Card sx={{ height: "100%", flexGrow: 1, display: "flex", flexDirection: "column" }}>
                 <Typography variant="body1" component="div" sx={{ pl: 2, pr: 1, py: 1 }}>Write code to modify the canvas!</Typography>
-                <Typography>{debugMsg}</Typography>
+                {/* <Typography>{debugMsg}</Typography> */}
                 <Box sx={{
                     flexGrow: 1,
                     overflow: "hidden" }}>

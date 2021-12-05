@@ -9,6 +9,7 @@ const canvasActivityDescription = activityDescription({
         supportsEntryPoint
     ] as const,
     activityPage: CanvasActivity,
+    rtcPolicy: 'ring',
     defaultConfig: undefined
 });
 

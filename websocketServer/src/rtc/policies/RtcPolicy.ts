@@ -12,10 +12,10 @@ export interface RtcPolicySettings {
 
 export interface RtcPolicyConstructor {
     new(users: Iterable<string>, settings: RtcPolicySettings): RtcPolicy;
+    readonly policyId: string;
 }
 
 export interface RtcPolicy {
-    readonly policyId: string;
     onUserJoin(user: string): void;
     /**
      * Must be a no-op if the user is not already connected

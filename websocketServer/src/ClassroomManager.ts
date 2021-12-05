@@ -1,7 +1,7 @@
 import { PrismaClient } from ".prisma/client";
 import { stream } from "../../src/util/iterables/Stream";
 import { isNotNull } from "../../src/util/typeguards";
-import { RtcPolicy } from "./rtc/protocols/RtcPolicy";
+import { RtcPolicy } from "./rtc/policies/RtcPolicy";
 import { IOServer } from "./types";
 import UserManager from "./UserManager";
 
@@ -37,8 +37,6 @@ class Classroom {
         
         if (this.activity) {
             this.io.to(socketId).emit('startActivity', { id: this.activity.id, info: this.activity.info });
-            this.activity.rtcPolicy?.onUserLeave(socketId);
-            this.activity.rtcPolicy?.onUserJoin(socketId);
         }
         else {
             this.io.to(socketId).emit('endActivity');

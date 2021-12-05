@@ -49,6 +49,8 @@ interface ActivityDescription<ConfigData, Features extends readonly FeatureDescr
 
     defaultConfig: ConfigData;
 
+    rtcPolicy?: string;
+
     configWidget?: ComponentType<ActivityConfigWidgetProps<ConfigData>>;
 
     configPage?: ComponentType<ActivityConfigPageProps<ConfigData>>;

@@ -127,7 +127,7 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
         startUpload();
         await fetch(`/api/classroom/${classroomId}/activity/live`, {
             method: 'POST',
-            body: JSON.stringify({ id })
+            body: JSON.stringify({ id, rtcPolicy: activity.rtcPolicy } as LiveActivityInfo)
         }).finally(finishUpload);
 
         router.push(`/classroom/${classroomId}/activity`);

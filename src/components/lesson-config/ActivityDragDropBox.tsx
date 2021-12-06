@@ -2,6 +2,7 @@ import { Box } from "@mui/system";
 import { useRouter } from "next/router";
 import { ComponentType, useRef } from "react";
 import { ConnectableElement, useDrag, useDrop } from "react-dnd";
+import { LiveActivityInfo } from "../../../websocketServer/src/types";
 import ActivityDescription, { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
 import { useLoadingContext } from "../../api/client/LoadingContext";
 import { compose } from "../../util/fp";

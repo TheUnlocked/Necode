@@ -1,8 +1,8 @@
-import { Container, Stack, Typography, styled, ToggleButtonGroup, ToggleButton } from '@mui/material';
+import { Container, Stack, Typography, styled, ToggleButtonGroup, ToggleButton, Tooltip } from '@mui/material';
 import { Box } from '@mui/system';
 import type { NextPage } from 'next';
 import { PropsWithChildren, ReactNode, useState } from 'react';
-import { useGetRequest } from '../src/api/client/GetRequestHook';
+import { useGetRequest, useGetRequestImmutable } from '../src/api/client/GetRequestHook';
 import { UserEntity } from '../src/api/entities/UserEntity';
 import Footer from '../src/components/Footer';
 import NecodeLogo from '../src/components/NecodeLogo';
@@ -20,7 +20,7 @@ function InfoSection({ title, omitParagraph = false, children }: PropsWithChildr
 }
 
 const Home: NextPage = () => {
-    const { data: meInfo } = useGetRequest<UserEntity<{ classes: 'deep' }>>('/api/me?include=classes');
+    const { data: meInfo } = useGetRequestImmutable<UserEntity<{ classes: 'deep' }>>('/api/me?include=classes');
 
     const [infoCategory, setInfoCategory] = useState('general');
 
@@ -71,7 +71,7 @@ const generalInfo = <>
     </InfoSection>
     <InfoSection omitParagraph title="What makes Necode special?">
         <p>
-            Rather than creating a specific kind of interactive activity, for a specific programming language,
+            Rather than creating a specific kind of interactive activity for a specific programming language,
             Necode is designed to allow activities to be implemented independently of language implementations.
             Activities specify what features they require a language implementation to support,
             and language implementations specify what features they do support.
@@ -108,10 +108,8 @@ const generalInfo = <>
         <SubtleLink href="mailto:cdroberts@wpi.edu">cdroberts@wpi.edu</SubtleLink>.
     </InfoSection>
     <InfoSection title="I don't teach a class, but I'm still interested in Necode. Can I try it out?">
-        Currently no, unfortunately. While we&apos;d love to have a demo for guests to play around with Necode,
-        that&apos;s just not the best use of our limited development resources right now. We do plan to make Necode
-        open source in the near future though, so if you&apos;re willing to put in a bit of effort to get it running
-        on your local machine, you&apos;ll be able to use Necode as much as you want!
+        Currently no, unfortunately. However, if you&apos;re willing to put in a bit of effort to get it running
+        on your local machine, the source code for Necode is available on <SubtleLink target="_blank" rel="noopener" href="https://github.com/TheUnlocked/Necode">GitHub</SubtleLink>.
     </InfoSection>
     <InfoSection title="Is there a paper I can read?">
         Not yet, but assuming everything goes to plan, one should be available in early March, 2022.
@@ -135,6 +133,16 @@ const instructorInfo = (me: UserEntity<{ classes: 'deep' }> | undefined) => <>
         that you write would be both viewable and bypassable by an intrepid student. In fact, students can submit solutions
         without even running the test cases if they make direct API calls instead of using Necode&apos;s UI. The most
         Necode should ever be involved with grades is being used to determine student participation, and even that is discouarged.
+    </InfoSection>
+    <InfoSection title="Can I use Necode for ungraded assignments?">
+        Necode is primarily intended for in-class use, and it is not intended to be a replacement for
+        an <Tooltip title="e.g. Canvas, Google Classroom, etc." color="#000000">
+            <SubtleLink target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Learning_management_system">LMS</SubtleLink>
+        </Tooltip>.
+        While the submission system included in some activities may technically allow for homework submission,
+        that is not a supported use case. Even if it works now, there is no guarantee that it always will, and a change to Necode
+        which breaks that use case will not be considered a bug. Just use Canvas, or whatever else you would use for submitting
+        assignments if you didn&apos;t have Necode.
     </InfoSection>
     <InfoSection title="Can my students use Necode on their phones?">
         {canIUsePhoneText}

@@ -4,7 +4,7 @@ import TextInputWidget, { TextInputWidgetProps } from "./TextInputWidget";
 
 /** The "activity" representing a text input. It exists for its utility as a widget. */
 const textInputActivityDescription: ActivityDescription<TextInputWidgetProps> = {
-    id: 'text-field',
+    id: 'core/noop/text-field',
     displayName: 'If this text is showing, you have encountered a bug :)',
     supportedFeatures: [],
     defaultConfig: {

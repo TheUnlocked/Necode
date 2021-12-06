@@ -6,6 +6,7 @@ export type IOServer = Server<ClientToServerEventMap, ServerToClientEventMap>;
 
 export interface ClientToServerEventMap {
     join(jwt: string, callback: (ok: boolean) => void): void;
+    joinRtc(): void;
     
     getParticipants(callback: (participants: string[]) => void): void;
     getActivity(callback: (liveActivityInfo: LiveActivityInfo) => void): void;
@@ -61,5 +62,6 @@ export interface ServerToClientEventMap {
 
 export interface LiveActivityInfo {
     id: string;
-    info: any;
+    info?: any;
+    rtcPolicy?: string;
 }

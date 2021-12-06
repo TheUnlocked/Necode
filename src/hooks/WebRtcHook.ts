@@ -16,53 +16,53 @@ export function useRTC<T>(socketInfo: SocketInfo | undefined, onPeer: (peer: Pee
             return;
         }
 
-        const ws = socketInfo?.socket ? tracked(socketInfo.socket) : undefined;
+        const ws = tracked(socketInfo.socket);
         
-        if (ws) {
-            let peers = [] as Peer.Instance[];
+        let peers = [] as Peer.Instance[];
 
-            ws.on('connect', () => {
-                peers.forEach(p => p.destroy());
-                peers = [];
+        ws.on('connect', () => {
+            peers.forEach(p => p.destroy());
+            peers = [];
+        });
+        
+        ws.on('createWebRTCConnection', (initiator, connectionId, info) => {
+            const peer = new Peer({
+                initiator,
+            });
+            peers.push(peer);
+            console.log('created peer', initiator, connectionId, info);
+            
+            onPeerRef.current(peer, info);
+            
+            const peerTrackedWs = tracked(ws);
+
+            peer.on('error', err => console.log('peer error', err))
+            
+            peer.on('signal', data => {
+                // console.log('signal to peer', connectionId);
+                ws.emit('provideWebRTCSignal', connectionId, data);
+            });
+            peerTrackedWs.on('signalWebRTCConnection', (conn, signal) => {
+                if (conn === connectionId) {
+                    console.log('recieved signal from peer', conn);
+                    peer.signal(signal);
+                }
             });
 
-            ws.on('createWebRTCConnection', (initiator, connectionId, info) => {
-                const peer = new Peer({
-                    initiator,
-                });
-                peers.push(peer);
-                let notifiedPeer = false;
-                console.log('created peer', initiator, connectionId, info);
-                
-                const peerTrackedWs = tracked(ws);
-
-                peer.on('error', err => console.log('peer error', err))
-                
-                peer.on('signal', data => {
-                    // console.log('signal to peer', connectionId);
-                    ws.emit('provideWebRTCSignal', connectionId, data);
-                });
-                peerTrackedWs.on('signalWebRTCConnection', (conn, signal) => {
-                    if (conn === connectionId) {
-                        console.log('recieved signal from peer', conn);
-                        peer.signal(signal);
-                        if (!notifiedPeer) {
-                            notifiedPeer = true;
-                            onPeerRef.current(peer, info);
-                        }
-                    }
-                });
-
-                peerTrackedWs.on('killWebRTCConnection', (conn) => {
-                    if (conn === connectionId) {
-                        console.log('killed connection', conn);
-                        peer.destroy();
-                    }
-                });
-                peer.on('close', () => peerTrackedWs.offTracked());
+            peerTrackedWs.on('killWebRTCConnection', (conn) => {
+                if (conn === connectionId) {
+                    console.log('killed connection', conn);
+                    peer.destroy();
+                }
             });
+            peer.on('close', () => peerTrackedWs.offTracked());
+        });
 
-            return () => ws.offTracked();
-        }
+        ws.emit('joinRtc');
+
+        return () => {
+            peers.forEach(x => x.destroy());
+            ws.offTracked();
+        };
     }, [socketInfo?.socket]);
 }

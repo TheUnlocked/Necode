@@ -21,6 +21,8 @@ import { Response } from "../../../../../src/api/Response";
 import { useSnackbar } from "notistack";
 import { ClassroomMemberEntity } from "../../../../../src/api/entities/ClassroomMemberEntity";
 import NotFoundPage from "../../../../404";
+import supportsLanguage from "../../../../../src/activities/supportsLanguage";
+import { curry } from "lodash";
 
 interface StaticProps {
     classroomId: string;
@@ -64,7 +66,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
     const activity = useMemo(() => allActivities.find(x => x.id === activityEntity?.attributes.activityType), [activityEntity]);
 
     const supportedLanguages = useMemo(
-        () => allLanguages.filter(({ features }) => activity?.supportedFeatures.every(f => features.includes(f))),
+        () => activity ? allLanguages.filter(curry(supportsLanguage)(activity)) : allLanguages,
         [activity]
     );
 
@@ -142,10 +144,10 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
         return unsavedWarnMessage;
     }, []);
     const routeChangeStartHandler = useCallback((path: string) => {
-        if (!confirm(unsavedWarnMessage)) {
+        if (router.asPath !== path && !confirm(unsavedWarnMessage)) {
             throw 'Cancel route change';
         }
-    }, []);
+    }, [router]);
 
     useEffect(() => {
         if (isDirty) {

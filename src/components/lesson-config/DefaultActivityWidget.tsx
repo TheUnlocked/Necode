@@ -8,7 +8,7 @@ export default function DefaultActivityWidget({
     dragHandle,
     activity
 }: ActivityConfigWidgetProps) {
-    return <Card elevation={2} sx={{ p: 1, [`&:hover ${dragHandleSelector}`]: {
+    return <Card sx={{ p: 1, [`&:hover ${dragHandleSelector}`]: {
         visibility: "visible"
     } }}>
         <Stack direction="row" spacing={1} alignItems="center">

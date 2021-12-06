@@ -1,10 +1,17 @@
 // @ts-ignore
 type Awaitable<T> = T | PromiseLike<T>;
 
+/**
+ * **THIS IS ONLY FOR USE IN TESTS.**  
+ * **Do not use this value in starter code, it will not work.**
+ */
 // @ts-ignore
 declare const SHOW_TEST: unique symbol;
 
 /**
+ * **THIS IS ONLY FOR USE IN TESTS.**  
+ * **Do not use this function in starter code, it will not work.**
+ * 
  * @param assertion
  *      The assertion to be run. Assertion conditions are automatically transformed
  *      into lambdas before being run, so you do not need to write your own error handling code.
@@ -20,6 +27,9 @@ declare function check(
 ): void;
 
 /**
+ * **THIS IS ONLY FOR USE IN TESTS.**  
+ * **Do not use this function in starter code, it will not work.**
+ * 
  * @param shouldFail
  *    The code to be run, which should throw an error. The code is automatically transformed
  *    into a lambda before being run, so you are not required to use a lambda in this parameter.
@@ -40,12 +50,18 @@ declare function checkError(
 ): void;
 
 /**
+ * **THIS IS ONLY FOR USE IN TESTS.**  
+ * **Do not use this function in starter code, it will not work.**
+ * 
  * @param ms Number of milliseconds to wait. Max: 500ms
  */
 // @ts-ignore
 declare function wait(ms: number): void;
 
 /**
+ * **THIS IS ONLY FOR USE IN TESTS.**  
+ * **Do not use this function in starter code, it will not work.**
+ * 
  * Wait for a condition to be satisfied. 
  * @param condition A condition which will trigger the wait to end
  * @param timeoutMs Number of milliseconds to wait before terminating the wait. Max: 500ms, default: 100ms

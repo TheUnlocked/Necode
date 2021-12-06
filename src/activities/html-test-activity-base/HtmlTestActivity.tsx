@@ -30,24 +30,53 @@ import Lazy from "../../components/Lazy";
 import { useSnackbar } from "notistack";
 import { useLoadingContext } from "../../api/client/LoadingContext";
 import { debounce } from "lodash";
+import { ImplicitNewType, NonStrictDisjunction } from "../../util/types";
 
-export interface TestActivityConfig {
-    description: string;
-    hiddenHtml: string;
-    tests: string;
+export interface HtmlTestActivityBaseConfig {
+    description?: string;
+    hiddenHtml?: string;
+    tests?: {
+        source: string,
+        mustPassToSubmit: boolean
+    };
     languages: {
-        html: { enabled: boolean, defaultValue: string };
-        code: { enabled: boolean, defaultValue: { [languageName: string]: string } };
-        css: { enabled: boolean, defaultValue: string };
+        html?: { enabled: boolean, defaultValue: string };
+        code?: { enabled: boolean, defaultValue: { [languageName: string]: string } };
+        css?: { enabled: boolean, defaultValue: string };
     }
 }
 
-export interface HtmlTestActivityMetaProps {
+type URLString = ImplicitNewType<string, 'URLString'>;
+
+export interface HtmlTestActivityOptions {
+    hasTests?: boolean;
+    hasHtml?: boolean;
+    hasCss?: boolean;
+    hasCode?: boolean;
+    hiddenHtml?: { configurable: true } | { configurable: false, value?: string };
+
+    typeDeclarations?: string | URLString[];
+} 
+
+interface HtmlTestActivityMetaProps {
     isEditor: boolean;
+    options: HtmlTestActivityOptions;
 }
 
-function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
-    return function (props: ActivityConfigPageProps<TestActivityConfig> | ActivityPageProps<TestActivityConfig>) {
+export function createTestActivityPage({
+    isEditor,
+    options: {
+        hasTests: activityTypeHasTests = true,
+        hasHtml: activityTypeHasHtml = true,
+        hasCss: activityTypeHasCss = true,
+        hasCode: activityTypeHasCode = true,
+        hiddenHtml: activityTypeHiddenHtml = { configurable: true },
+        typeDeclarations: typeDeclarationsSource
+    }
+}: HtmlTestActivityMetaProps) {
+    const hasTypeDeclarations = Boolean(typeDeclarationsSource);
+
+    return function <Config extends HtmlTestActivityBaseConfig>(props: ActivityConfigPageProps<Config> | ActivityPageProps<Config>) {
         const {
             language,
             activityConfig,
@@ -55,11 +84,14 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
             socketInfo,
             saveData,
             onSaveDataChange
-        } = props as (typeof props) & Partial<ActivityConfigPageProps<TestActivityConfig> & ActivityPageProps<TestActivityConfig>>;
+        } = props as NonStrictDisjunction<ActivityConfigPageProps<Config>, ActivityPageProps<Config>>;
 
         const {
             description,
-            tests,
+            tests: {
+                source: testsSource,
+                mustPassToSubmit
+            } = {},
             hiddenHtml,
             languages: {
                 html,
@@ -68,9 +100,15 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
             }
         } = activityConfig;
 
-        const isSmallOrSmaller = useIsSizeOrSmaller("sm");
-        const isMediumOrSmaller = useIsSizeOrSmaller("md");
-        const isLargeOrSmaller = useIsSizeOrSmaller("lg");
+        const isHtmlEnabled = activityTypeHasHtml && (isEditor || html?.enabled);
+        const isCodeEnabled = activityTypeHasCode && (isEditor || code?.enabled);
+        const isCssEnabled = activityTypeHasCss && (isEditor || css?.enabled);
+
+        const showIframeTestPane = !isEditor || activityTypeHasTests;
+
+        const isSmallLayout = useIsSizeOrSmaller("sm");
+        const isThinner = useIsSizeOrSmaller("md");
+        const isMediumLayout = useIsSizeOrSmaller("lg") && showIframeTestPane;
         
         const [editorStates, dispatchEditorsState] = useReducer(editorStateReducer, {});
 
@@ -122,6 +160,7 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
         }
 
         const [testsDialog, openTestsDialog, closeTestsDialog] = useImperativeDialog(TestsDialog, {
+            mustPassToSubmit,
             startRunningRef: f => startTests.current = f,
             successRef: f => passTests.current = f,
             failureRef: f => failTests.current = f,
@@ -129,25 +168,25 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
         });
 
         const applyAllChanges = useCallback(() => {
-            if (html.enabled) {
+            if (isHtmlEnabled) {
                 dispatchEditorsState({
                     target: 'html',
                     type: 'applyChanges'
                 });
             }
-            if (code.enabled) {
+            if (isCodeEnabled) {
                 dispatchEditorsState({
                     target: 'code',
                     type: 'applyChanges'
                 });
             }
-            if (css.enabled) {
+            if (isCssEnabled) {
                 dispatchEditorsState({
                     target: 'css',
                     type: 'applyChanges'
                 });
             }
-        }, [html.enabled, code.enabled, css.enabled]);
+        }, [isHtmlEnabled, isCodeEnabled, isCssEnabled]);
 
         const codeGenerator = useCodeGenerator<[typeof supportsAmbient, typeof supportsIsolated]>(language.name);
         const [compiledJs, setCompiledJs] = useState('');
@@ -169,27 +208,26 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
             }
         }, [codeSource, codeGenerator]);
 
-        const [isHiddenHtmlTabActive, setHiddenHtmlTabActive] = useState(false);
+        const [isHiddenHtmlTabActive, setHiddenHtmlTabActive] = useState(!activityTypeHasHtml);
 
         const editorPane = useCallback((type: EditorType, language: LanguageDescription) => {
+            const isHiddenHtmlOnly = type === 'html' && !activityTypeHasHtml;
             const editorState = editorStates[type];
 
             const onEditorContainerRef = (elt: HTMLDivElement) => {
-                if (elt) {
-                    if (!editorState) {
-                        if (type === 'code') {
-                            dispatchEditorsState({ target: type, type: 'initialize', value: activityConfig.languages.code.defaultValue![language.name] });
-                        }
-                        else {
-                            dispatchEditorsState({ target: type, type: 'initialize', value: activityConfig.languages[type].defaultValue! });
-                        }
+                if (elt && !isEditor && !editorState) {
+                    if (type === 'code') {
+                        dispatchEditorsState({ target: type, type: 'initialize', value: activityConfig.languages.code!.defaultValue![language.name] });
+                    }
+                    else {
+                        dispatchEditorsState({ target: type, type: 'initialize', value: activityConfig.languages[type]!.defaultValue! });
                     }
                 }
             }
 
             const Icon = language.icon;
 
-            const showKeybindingHint = !isMediumOrSmaller && editorState?.isDirty;
+            const showKeybindingHint = !isThinner && editorState?.isDirty;
 
             let toolbarItems: JSX.Element;
             let tabItems: JSX.Element | undefined = undefined;
@@ -212,9 +250,9 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                         </Typography>
                         {hasCheckbox
                             ? <Checkbox sx={{ ml: "-9px", my: "-9px" }}
-                                checked={langConfig.enabled}
+                                checked={langConfig!.enabled}
                                 disabled={!active}
-                                onChange={ev => ev.target.checked === langConfig.enabled ? undefined : onActivityConfigChange!({
+                                onChange={ev => ev.target.checked === langConfig!.enabled ? undefined : onActivityConfigChange!({
                                     ...activityConfig,
                                     languages: {
                                         ...activityConfig.languages,
@@ -257,10 +295,15 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                 }
 
                 if (type === 'html') {
-                    tabItems = <>
-                        {tab('hidden', false, isHiddenHtmlTabActive, () => setHiddenHtmlTabActive(true))}
-                        {tab('starter', true, !isHiddenHtmlTabActive, () => setHiddenHtmlTabActive(false))}
-                    </>;
+                    if (isHiddenHtmlOnly) {
+                        tabItems = tab('hidden', false, true);
+                    }
+                    else {
+                        tabItems = <>
+                            {tab('hidden', false, isHiddenHtmlTabActive, () => setHiddenHtmlTabActive(true))}
+                            {tab('starter', true, !isHiddenHtmlTabActive, () => setHiddenHtmlTabActive(false))}
+                        </>;
+                    }
                 }
                 else {
                     tabItems = tab('starter', true, true);
@@ -282,9 +325,11 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
             }
 
             const editorValue = isEditor
-                ? type === 'code'
-                    ? activityConfig.languages.code.defaultValue![language.name] ?? ''
-                    : activityConfig.languages[type].defaultValue
+                ? isHiddenHtmlOnly
+                    ? ''
+                : type === 'code'
+                    ? activityConfig.languages.code!.defaultValue![language.name] ?? ''
+                    : activityConfig.languages[type]!.defaultValue
                 : editorState?.uncommittedValue;
 
             const onHiddenHtmlChange: OnChange = value => {
@@ -307,7 +352,7 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                                     ...activityConfig.languages[type],
                                     defaultValue: type === "code"
                                         ? {
-                                            ...activityConfig.languages.code.defaultValue ?? {},
+                                            ...activityConfig.languages.code!.defaultValue ?? {},
                                             [language.name]: value
                                         }
                                         : value
@@ -323,7 +368,14 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
 
             let editor: JSX.Element;
 
-            if (isEditor && type === 'html') {
+            if (isHiddenHtmlOnly) {
+                editor = <PaneEditor
+                    isConfig={true}
+                    language={htmlDescription}
+                    value={activityConfig.hiddenHtml}
+                    onChange={onHiddenHtmlChange} />
+            }
+            else if (isEditor && type === 'html') {
                 // Want to load both editors to preserve scroll.
                 // Plus it simplifies some of the logic.
                 editor = <>
@@ -368,20 +420,59 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                     </Box>
                 </Stack>
             </ReflexElement>;
-        }, [isHiddenHtmlTabActive, isMediumOrSmaller, editorStates, applyChanges, activityConfig, onActivityConfigChange]);
+        }, [isHiddenHtmlTabActive, isThinner, editorStates, applyChanges, activityConfig, onActivityConfigChange]);
 
         const monaco = useMonaco();
 
-        useEffect(() => {
-            if (monaco && isEditor) {
-                const lib = monaco.languages.typescript.typescriptDefaults.addExtraLib(
-                    testScaffoldingTypes,
-                    "test-scaffolding.d.ts"
-                );
-        
-                return () => lib.dispose();
+        const [typeDeclarationFiles, setTypeDeclarationFiles] = useState<{ content: string, filePath?: string }[]>();
+
+        if (typeDeclarationsSource && typeDeclarationFiles === undefined) {
+            if (typeof typeDeclarationsSource === 'string') {
+                setTypeDeclarationFiles([{
+                    content: typeDeclarationsSource,
+                    filePath: 'activity-declarations.d.ts'
+                }]);
             }
-        }, [monaco]);
+            else {
+                setTypeDeclarationFiles(x => x ?? []);
+                Promise.allSettled(typeDeclarationsSource.map(url => fetch(url as string).then(x => x.text()).then(x => [x, url as string])))
+                    .then(results => results
+                        .filter((x): x is PromiseFulfilledResult<[string, string]> => x.status === 'fulfilled')
+                        .map(x => x.value)
+                        .map(([ content, filePath ]) => ({ content, filePath })))
+                    .then(setTypeDeclarationFiles);
+            }
+        }
+
+        useEffect(() => {
+            if (monaco) {
+                monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+                    ...monaco.languages.typescript.javascriptDefaults.getCompilerOptions(),
+                    moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs
+                });
+                monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+                    ...monaco.languages.typescript.typescriptDefaults.getCompilerOptions(),
+                    moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs
+                });
+
+                const tsLibs = [] as { content: string, filePath?: string }[];
+                const jsLibs = [] as { content: string, filePath?: string }[];
+
+                if (isEditor && activityTypeHasTests) {
+                    tsLibs.push({
+                        content: testScaffoldingTypes,
+                        filePath: 'test-scaffolding.d.ts'
+                    });
+                }
+                if (hasTypeDeclarations && typeDeclarationFiles) {
+                    jsLibs.push(...typeDeclarationFiles);
+                    tsLibs.push(...typeDeclarationFiles);
+                }
+                
+                if (jsLibs.length > 0) monaco.languages.typescript.javascriptDefaults.setExtraLibs(jsLibs);
+                if (tsLibs.length > 0) monaco.languages.typescript.typescriptDefaults.setExtraLibs(tsLibs);
+            }
+        }, [monaco, typeDeclarationFiles]);
 
         const [testsCompileError, setTestsCompileError] = useState<Error | undefined>();
 
@@ -411,65 +502,82 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
         }, 300), []);
 
         useEffect(() => {
-            if (isEditor) {
-                validateTests(tests);
+            if (isEditor && testsSource !== undefined) {
+                validateTests(testsSource);
             }
-        }, [tests, validateTests]);
+        }, [testsSource, validateTests]);
 
-        let iframeOrTestPane: JSX.Element;
+        let iframeOrTestPane: JSX.Element = <></>;
 
-        if (isEditor) {
-            iframeOrTestPane = <Card sx={{ height: "100%" }}>
-                <Stack direction="column" sx={{ height: "100%" }}>
-                    <Stack direction="row" sx={{ m: 1, height: "24px" }}>
-                        <TypescriptIcon />
-                        <Typography variant="overline" sx={{ ml: 1 }}>Tests</Typography>
+        if (showIframeTestPane) {
+            if (isEditor) {
+                iframeOrTestPane = <Card sx={{ height: "100%" }}>
+                    <Stack direction="column" sx={{ height: "100%" }}>
+                        <Stack direction="row" justifyContent="space-between">
+                            <Stack direction="row" sx={{ m: 1, height: "24px", alignItems: "center", flexShrink: 0 }}>
+                                <TypescriptIcon />
+                                <Typography variant="overline" sx={{ ml: 1 }}>Tests</Typography>
+                            </Stack>
+                            <Stack direction="row" sx={{ m: 1, mr: 0, height: "24px", alignItems: "center", overflowX: "clip" }}>
+                                <Typography variant="overline" sx={{ mr: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Require checks to submit</Typography>
+                                <Checkbox sx={{ m: "-9px", mr: 0 }} checked={mustPassToSubmit}
+                                    onChange={ev => ev.target.checked === mustPassToSubmit ? null : onActivityConfigChange!({
+                                        ...activityConfig,
+                                        tests: {
+                                            source: testsSource,
+                                            mustPassToSubmit: ev.target.checked
+                                        }
+                                    })} />
+                            </Stack>
+                        </Stack>
+                        <Box sx={{
+                            overflow: "hidden",
+                            flexGrow: 1
+                        }}>
+                            <Editor
+                                theme="vs-dark"
+                                options={{
+                                    minimap: { enabled: false },
+                                    "semanticHighlighting.enabled": true,
+                                    fixedOverflowWidgets: true,
+                                }}
+                                language="typescript"
+                                value={testsSource}
+                                onChange={val => testsSource === val ? undefined : onActivityConfigChange!({
+                                    ...activityConfig,
+                                    tests: {
+                                        source: val ?? "",
+                                        mustPassToSubmit
+                                    }
+                                })} />
+                        </Box>
+                        <CodeAlert error={testsCompileError} successMessage="Your tests compiled successfully!" />
                     </Stack>
-                    <Box sx={{
-                        overflow: "hidden",
-                        flexGrow: 1
-                    }}>
-                        <Editor
-                            theme="vs-dark"
-                            options={{
-                                minimap: { enabled: false },
-                                "semanticHighlighting.enabled": true,
-                                automaticLayout: true,
-                                fixedOverflowWidgets: true,
-                            }}
-                            language="typescript"
-                            value={tests}
-                            onChange={val => tests === val ? undefined : onActivityConfigChange!({
-                                ...activityConfig,
-                                tests: val ?? ""
-                            })} />
-                    </Box>
-                    <CodeAlert error={testsCompileError} successMessage="Your tests compiled successfully!" />
-                </Stack>
-            </Card>
-        }
-        else {
-            iframeOrTestPane
-                = <ActivityIframe
-                    htmlTemplate={hiddenHtml}
-                    html={html.enabled ? editorStates.html?.value : undefined}
-                    js={code.enabled ? compiledJs : undefined}
-                    css={css.enabled ? editorStates.css?.value : undefined}
-                    reloadRef={reloadRef}
-                    runTestsRef={runTestsRef}
-                    sx={{
-                        width: "100%",
-                        flexGrow: 1,
-                        border: "none",
-                        borderRadius: "4px"
-                    }} />;
+                </Card>
+            }
+            else {
+                iframeOrTestPane
+                    = <ActivityIframe
+                        htmlTemplate={activityTypeHiddenHtml.configurable ? hiddenHtml : activityTypeHiddenHtml.value}
+                        html={isHtmlEnabled ? editorStates.html?.value : undefined}
+                        js={isCodeEnabled ? compiledJs : undefined}
+                        css={isCssEnabled ? editorStates.css?.value : undefined}
+                        reloadRef={reloadRef}
+                        runTestsRef={runTestsRef}
+                        sx={{
+                            width: "100%",
+                            flexGrow: 1,
+                            border: "none",
+                            borderRadius: "4px"
+                        }} />;
+            }
         }
 
         function runTests() {
-            if (runTestsRef.current) {
+            if (activityTypeHasTests && runTestsRef.current) {
                 openTestsDialog();
                 runTestsRef.current(
-                    tests,
+                    testsSource ?? '',
                     startTests.current,
                     msg => {
                         if (msg) {
@@ -483,19 +591,18 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
             }
         }
 
-        const descriptionPane = <ReflexElement minSize={40} flex={!isLargeOrSmaller ? 2 : undefined}>
+        const descriptionPane = description ? <ReflexElement minSize={40} flex={!isMediumLayout ? 2 : undefined}>
             <Card sx={{ height: "100%" }}>
                 <Stack direction="column" sx={{ height: "100%" }}>
-                    <Stack direction="row" sx={{ m: 1, height: "24px" }}>
+                    <Stack direction="row" sx={{ m: 1, height: "24px", alignItems: "center", flexShrink: 0 }}>
                         <Typography variant="overline" sx={{ ml: 1 }}>Instructions</Typography>
                     </Stack>
                     {isEditor
-                        ? <Editor
+                        ? <Box sx={{ flexGrow: 1 }}><Editor
                             theme="vs-dark"
                             options={{
                                 minimap: { enabled: false },
                                 "semanticHighlighting.enabled": true,
-                                automaticLayout: true,
                                 fixedOverflowWidgets: true,
                                 lineNumbers: "off",
                                 lineDecorationsWidth: 0,
@@ -506,7 +613,7 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                             onChange={val => description === val ? undefined : onActivityConfigChange!({
                                 ...activityConfig,
                                 description: val ?? ""
-                            })} />
+                            })} /></Box>
                         : <CardContent sx={{ pt: 0, flexGrow: 1, overflow: "auto" }}>
                             <ReactMarkdown
                                 rehypePlugins={[[rehypeHighlight, {ignoreMissing: true}]]}
@@ -515,18 +622,20 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                         </CardContent>}
                 </Stack>
             </Card>
-        </ReflexElement>;
+        </ReflexElement> : null;
 
         const codeEditors = [
-            isEditor || html.enabled ? editorPane('html', htmlDescription) : undefined,
-            isEditor || html.enabled && (code.enabled || css.enabled) ? <ReflexSplitter propagate={true} /> : undefined,
-            isEditor || code.enabled ? editorPane('code', language) : undefined,
-            isEditor || code.enabled && css.enabled ? <ReflexSplitter propagate={true} /> : undefined,
-            isEditor || css.enabled ? editorPane('css', cssDescription) : undefined,
+            (isEditor && activityTypeHiddenHtml.configurable) || isHtmlEnabled ? editorPane('html', htmlDescription) : undefined,
+            (isEditor && activityTypeHiddenHtml.configurable) || isHtmlEnabled && (isCodeEnabled || isCssEnabled) ? <ReflexSplitter propagate={true} /> : undefined,
+            isCodeEnabled ? editorPane('code', language) : undefined,
+            isCodeEnabled && isCssEnabled ? <ReflexSplitter propagate={true} /> : undefined,
+            isCssEnabled ? editorPane('css', cssDescription) : undefined,
         ];
 
         const controls = isEditor ? null : <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: "6px" }}>
-            <Button variant="contained" onClick={runTests}>Run tests</Button>
+            {activityTypeHasTests && testsSource
+                ? <Button variant="contained" onClick={runTests}>Run tests</Button>
+                : <Button variant="contained" onClick={makeSubmission}>Submit</Button>}
             <Box sx={{ flexGrow: 1 }} />
             <Tooltip title="Apply all changes">
                 <IconButton onClick={applyAllChanges}><SyncIcon/></IconButton>
@@ -538,7 +647,7 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
 
         let layout: JSX.Element;
 
-        if (isSmallOrSmaller) {
+        if (isSmallLayout) {
             layout = <>
                 {controls}
                 <Card sx={{ height: "calc(100% - 36px)", flexGrow: 1, display: "flex", flexDirection: "column" }}>
@@ -548,17 +657,17 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
                         descriptionPane,
                         <ReflexSplitter propagate={true} />,
                         ...codeEditors,
-                        <ReflexSplitter propagate={true} />,
-                        <ReflexElement>
+                        showIframeTestPane ? <ReflexSplitter propagate={true} /> : null,
+                        showIframeTestPane ? <ReflexElement>
                             <Stack direction="column" sx={{ height: "100%" }}>
                                 {iframeOrTestPane}
                             </Stack>
-                        </ReflexElement>
+                        </ReflexElement> : null
                     )}
                 </Card>
             </>;
         }
-        else if (isLargeOrSmaller) {
+        else if (isMediumLayout && showIframeTestPane) {
             layout = <ReflexContainer orientation="vertical">
                 <ReflexElement minSize={40}>
                     <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -582,18 +691,18 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
             layout = <ReflexContainer orientation="vertical">
                 {descriptionPane}
                 <ReflexSplitter propagate={true} />
-                <ReflexElement minSize={40} flex={3}>
+                <ReflexElement minSize={40} flex={showIframeTestPane ? 3 : 5}>
                     <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
                         {React.createElement(ReflexContainer, {}, ...codeEditors)}
                     </Card>
                 </ReflexElement>
-                <ReflexSplitter propagate={true} />
-                <ReflexElement minSize={isEditor ? 40 : 250} flex={2}>
+                {showIframeTestPane ? <ReflexSplitter propagate={true} /> : null}
+                {showIframeTestPane ? <ReflexElement minSize={isEditor ? 40 : 250} flex={2}>
                     <Stack direction="column" sx={{ height: "100%" }}>
                         {controls}
                         {iframeOrTestPane}
                     </Stack>
-                </ReflexElement>
+                </ReflexElement> : null}
             </ReflexContainer>;
         }
 
@@ -604,5 +713,12 @@ function createTestActivityPage({ isEditor }: HtmlTestActivityMetaProps) {
     }
 }
 
-export const TestActivity = createTestActivityPage({ isEditor: false });
-export const TestActivityConfigPage = createTestActivityPage({ isEditor: true });
+export default function createTestActivityPages<Config extends HtmlTestActivityBaseConfig>(options: HtmlTestActivityOptions = {}): [
+    activityPage: (props: ActivityPageProps<Config>) => JSX.Element,
+    configPage: (props: ActivityConfigPageProps<Config>) => JSX.Element
+] {
+    const activityPage = createTestActivityPage({ isEditor: false, options });
+    const configPage = createTestActivityPage({ isEditor: true, options });
+
+    return [activityPage, configPage];
+}

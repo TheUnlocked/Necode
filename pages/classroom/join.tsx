@@ -3,15 +3,17 @@ import { NextPage } from "next";
 import { useRouter } from "next/dist/client/router";
 import { FormEventHandler, useEffect, useState } from "react";
 import FormPage from "../../src/components/FormPage";
-import { signIn, useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { ClassroomEntity } from "../../src/api/entities/ClassroomEntity";
 import { Response } from "../../src/api/Response";
 import { useSnackbar } from "notistack";
+import { useGetRequestImmutable } from "../../src/api/client/GetRequestHook";
+import { UserEntity } from "../../src/api/entities/UserEntity";
 
 
 const Join: NextPage = () => {
     const router = useRouter();
-    const { data: session, status } = useSession();
+    const { data: me, isLoading } = useGetRequestImmutable<UserEntity>('/api/me');
 
     const [joinCode, setJoinCode] = useState("");
 
@@ -23,9 +25,9 @@ const Join: NextPage = () => {
 
     const { enqueueSnackbar } = useSnackbar();
 
-    if (!session) {
+    if (!me) {
         return <FormPage title="Join a Classroom" error hideSubmit>
-            {status === 'loading' ? <Skeleton animation="wave" variant="rectangular" height="56px" sx={{ borderRadius: 1 }} /> : <>
+            {isLoading ? <Skeleton animation="wave" variant="rectangular" height="56px" sx={{ borderRadius: 1 }} /> : <>
                 <Typography>You must sign in before you can join a classroom.</Typography>
                 <Button variant="contained" onClick={() => signIn("wpi")}>Sign In</Button>
             </>}

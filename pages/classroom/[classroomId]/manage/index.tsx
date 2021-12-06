@@ -187,18 +187,20 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
                             const isoDate = fromLuxon(day);
                             const todayLesson = lessonsByDate[isoDate];
                             const showsIndicators = isActiveLesson(todayLesson) && !DayComponentProps.selected;
-                            return <Tooltip key={DayComponentProps.key}
-                                title={showsIndicators ? todayLesson!.attributes.displayName : ''}
-                                placement="top" arrow
-                            > 
-                                <Badge key={isoDate}
-                                    overlap="circular" variant="dot"
-                                    anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-                                    componentsProps={{ badge: { style: { right: "50%", pointerEvents: "none" } } }}
-                                    color="primary"
-                                    invisible={!showsIndicators}
-                                >
-                                    <PickersDay {...DayComponentProps} />
+                            return DayComponentProps.outsideCurrentMonth
+                                ? <PickersDay {...DayComponentProps} />
+                                : <Tooltip key={DayComponentProps.key}
+                                    title={showsIndicators ? todayLesson!.attributes.displayName : ''}
+                                    placement="top" arrow
+                                > 
+                                    <Badge key={isoDate}
+                                        overlap="circular" variant="dot"
+                                        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+                                        componentsProps={{ badge: { style: { right: "50%", pointerEvents: "none" } } }}
+                                        color="primary"
+                                        invisible={!showsIndicators}
+                                    >
+                                        <PickersDay {...DayComponentProps} />
                                 </Badge>
                             </Tooltip>;
                         }} />

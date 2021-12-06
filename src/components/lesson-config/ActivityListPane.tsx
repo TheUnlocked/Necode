@@ -6,7 +6,7 @@ import { Dispatch, MutableRefObject, useCallback, useEffect, useRef, useState } 
 import { useDrop } from "react-dnd";
 import ActivityDescription from "../../activities/ActivityDescription";
 import allActivities from "../../activities/allActivities";
-import testBasedActivityDescription from "../../activities/html-test-based";
+import testDomActivityDescription from "../../activities/test-dom";
 import { useGetRequest } from "../../api/client/GetRequestHook";
 import { useLoadingContext } from "../../api/client/LoadingContext";
 import { ActivityEntity } from "../../api/entities/ActivityEntity";
@@ -298,7 +298,7 @@ export default function ActivityListPane({
 
     return <>
         {selectActivityDialog}
-        <Card sx={sx}>
+        <Card variant="outlined" sx={sx}>
             <CardContent>
                 <TextField placeholder="New Lesson"
                     variant="standard"
@@ -334,8 +334,8 @@ export default function ActivityListPane({
                 <Typography variant="body2" component="span">{toLuxon(date).toFormat("DDDD")}</Typography>
             </CardContent>
             <Divider />
-            <Box sx={{ backgroundColor: ({palette}) => palette.background.default, p: 1 }}>
-                <Stack direction="row" spacing={1}>
+            <Box sx={{ m: 1 }}>
+                <Stack direction="row" alignItems="center" spacing={1}>
                     <Tooltip title="Add Activity">
                         <IconButton onClick={openSelectActivityDialog}><Add/></IconButton>
                     </Tooltip>
@@ -355,7 +355,7 @@ export default function ActivityListPane({
                     </Stack>
                 </Stack>
             </Box>
-            <Stack ref={drop} sx={{ p: 1, overflow: "auto" }} spacing={1}>
+            <Stack ref={drop} sx={{ m: 1, mt: 0, overflow: "auto" }} spacing={1}>
                 {activities.map(makeWidget)}
             </Stack>
         </Card>

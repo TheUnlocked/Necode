@@ -11,7 +11,6 @@ import { MetaInfo, MetaTransformerContext } from '../src/contexts/MetaTransforme
 import { useMergeReducer } from '../src/hooks/MergeReducerHook';
 import Editor from './editor';
 import editorTheme from '../src/themes/editorTheme';
-import { SessionProvider } from 'next-auth/react';
 import Header from '../src/components/Header';
 import { SnackbarProvider } from 'notistack';
 import { LocalizationProvider } from '@mui/lab';
@@ -70,7 +69,6 @@ function MyApp({ Component, pageProps }: AppProps) {
             <LocalizationProvider dateAdapter={CustomAdapterLuxon}>
             <SnackbarProvider hideIconVariant>
             <DndProvider backend={HTML5Backend}>
-            <SessionProvider session={pageProps.session}>
             <LoadingContext.Provider value={loadingContext}>
                 <Header path={meta.path} />
                 <Box sx={{
@@ -85,7 +83,6 @@ function MyApp({ Component, pageProps }: AppProps) {
                 </Box>
                 <LoadingSpinners />
             </LoadingContext.Provider>
-            </SessionProvider>
             </DndProvider>
             </SnackbarProvider>
             </LocalizationProvider>

@@ -9,7 +9,7 @@ const apiClassroomAll = endpoint(makeClassroomEntity, [], {
     POST: {
         requiresLogin: true,
         schema: Joi.object({
-            displayName: Joi.string()
+            displayName: Joi.string().min(8).max(100)
         }),
         async handler({ body, session }, ok, fail) {
             if (session?.user.rights === 'Admin') {

@@ -1,8 +1,8 @@
 import { ClickAwayListener, Grow, IconButton, MenuItem, MenuList, Paper, Popper, Stack, TextField, Theme } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SxProps } from "@mui/system";
 import { Code as CodeIcon, TextFields as TextFieldsIcon } from "@mui/icons-material";
-import Editor from "@monaco-editor/react";
+import Editor, { useMonaco } from "@monaco-editor/react";
 import { usePopupState, bindTrigger, bindPopper } from "material-ui-popup-state/hooks";
 import DragHandle, { dragHandleClass, dragHandleSelector } from "./DragHandle";
 import type { editor } from "monaco-editor";
@@ -62,6 +62,21 @@ export default function TextInputWidget({
         })
     } as SxProps<Theme>;
 
+    const monaco = useMonaco();
+
+    useEffect(() => {
+        if (monaco) {
+            monaco.editor.defineTheme('vs-black', {
+                base: 'vs-dark',
+                inherit: true,
+                rules: [],
+                colors: {
+                    'editor.background': '#121212'
+                }
+            });
+        }
+    });
+
     if (language !== null) {
         return <Stack direction="row" alignItems="center" spacing={0.5} sx={{
             px: 1,
@@ -83,7 +98,7 @@ export default function TextInputWidget({
                     updateHeight(editor)();
                     editor.onDidContentSizeChange(updateHeight(editor));
                 }}
-                theme="vs-dark"
+                theme="vs-black"
                 language={languageDescription?.monacoName}
                 options={{
                     minimap: { enabled: false },

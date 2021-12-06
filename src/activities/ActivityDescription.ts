@@ -40,7 +40,7 @@ export interface ActivityConfigWidgetProps<ConfigData = undefined> extends BaseA
     activity: ActivityDescription<ConfigData>;
 }
 
-interface ActivityDescription<ConfigData, Features extends FeatureDescription<any>[] = FeatureDescription<any>[]> {
+interface ActivityDescription<ConfigData, Features extends readonly FeatureDescription<any>[] = readonly FeatureDescription<any>[]> {
     id: string;
 
     displayName: string;
@@ -49,11 +49,17 @@ interface ActivityDescription<ConfigData, Features extends FeatureDescription<an
 
     defaultConfig: ConfigData;
 
+    rtcPolicy?: string;
+
     configWidget?: ComponentType<ActivityConfigWidgetProps<ConfigData>>;
 
     configPage?: ComponentType<ActivityConfigPageProps<ConfigData>>;
 
     activityPage: ComponentType<ActivityPageProps<ConfigData>>;
+}
+
+export function activityDescription<ConfigData, Features extends readonly FeatureDescription<any>[]>(desc: ActivityDescription<ConfigData, Features>) {
+    return desc;
 }
 
 export default ActivityDescription;

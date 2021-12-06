@@ -9,7 +9,7 @@ interface SkeletonActivityListPaneProps {
 export default function SkeletonActivityListPane({
     sx,
 }: SkeletonActivityListPaneProps) {
-    return <Card sx={sx}>
+    return <Card variant="outlined" sx={sx}>
         <CardContent>
             <Typography variant="h6" component="span"><Skeleton variant="text" sx={{ py: `${9.75 / 2}px` }} /></Typography>
             <Typography variant="body2" component="span"><Skeleton variant="text" width="150px" /></Typography>

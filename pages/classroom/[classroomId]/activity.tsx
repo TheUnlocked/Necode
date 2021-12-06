@@ -18,6 +18,8 @@ import useImperativeDialog from "../../../src/hooks/ImperativeDialogHook";
 import SubmissionsDialog from "../../../src/components/SubmissionsDialog";
 import { ClassroomRole } from ".prisma/client";
 import NotFoundPage from "../../404";
+import supportsLanguage from "../../../src/activities/supportsLanguage";
+import { curry } from "lodash";
 
 interface StaticProps {
     classroomId: string;
@@ -131,7 +133,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
     }
 
     const enabledLanguages = activityEntity!.attributes.enabledLanguages.length === 0
-        ? allLanguages.filter(({features}) => activity.supportedFeatures.every(f => features.includes(f)))
+        ? allLanguages.filter(curry(supportsLanguage)(activity))
         : allLanguages.filter(x => activityEntity!.attributes.enabledLanguages.includes(x.name));
 
     function goToManage() {

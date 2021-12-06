@@ -28,7 +28,7 @@ function runningStateToString(state: RunningState) {
 
 interface TestsDialogProps {
     open: boolean;
-    canSubmit?: boolean;
+    mustPassToSubmit?: boolean;
     onClose?(): void;
     onCancel?(): void;
     onSubmit?(): void;
@@ -39,6 +39,7 @@ interface TestsDialogProps {
 
 export default function TestsDialog({
     open,
+    mustPassToSubmit = true,
     onClose,
     onCancel,
     onSubmit,
@@ -105,16 +106,22 @@ export default function TestsDialog({
             </DialogContentText>;
             actions = <>
                 <Button onClick={onClose}>Cancel</Button>
-                <Button onClick={onSubmit}>Submit Now</Button>
+                <Button variant="contained" onClick={onSubmit}>Submit Now</Button>
             </>;
             break;
         case 'failure':
+            const encouragement = mustPassToSubmit ? null : <DialogContentText>
+                Your instructor allows you to submit even if your solution hasn&apos;t passed all of the tests.
+                If you choose to submit now, you can still keep working on it and submit a new version later.
+            </DialogContentText>;
+
             if (state.message.startsWith('%SOURCE%')) {
                 content = <>
                     <DialogContentText>
                         Your code failed to satisfy this condition:
                     </DialogContentText>
                     <pre>{state.message.slice('%SOURCE%'.length)}</pre>
+                    {encouragement}
                 </>;
             }
             else {
@@ -123,13 +130,22 @@ export default function TestsDialog({
                         Your code failed a test:
                     </DialogContentText>
                     <p>{state.message}</p>
+                    {encouragement}
                 </>;
             }
-            actions = <Button onClick={onClose}>Ok</Button>;
+            if (mustPassToSubmit) {
+                actions = <Button onClick={onClose}>Ok</Button>;
+            }
+            else {
+                actions = <>
+                    <Button onClick={onClose}>Cancel</Button>
+                    <Button onClick={onSubmit}>Submit Now</Button>
+                </>;
+            }
             break;
     }
 
-    return <Dialog open={open}>
+    return <Dialog open={open} fullWidth>
         <DialogTitle>{runningStateToString(state)}</DialogTitle>
         <DialogContent>{content}</DialogContent>
         <DialogActions>{actions}</DialogActions>

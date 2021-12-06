@@ -1,8 +1,10 @@
 import { Code } from "@mui/icons-material";
 import { Dialog, DialogTitle, List, ListItemButton, ListItemIcon, ListItemSecondaryAction, ListItemText, Stack, Tooltip } from "@mui/material";
 import { Box } from "@mui/system";
+import { curry } from "lodash";
 import ActivityDescription from "../../activities/ActivityDescription";
 import allActivities from "../../activities/allActivities";
+import supportsLanguage from "../../activities/supportsLanguage";
 import allLanguages from "../../languages/allLanguages";
 
 interface SelectActivityDialogProps {
@@ -13,9 +15,7 @@ interface SelectActivityDialogProps {
 
 const supportedLanguagesByActivity = Object.fromEntries(allActivities.map(a => [
     a.id,
-    allLanguages.filter(l =>
-        a.supportedFeatures.every(f =>
-            l.features.map(x => x.name).includes(f.name)))
+    allLanguages.filter(curry(supportsLanguage)(a))
 ]));
 
 export default function SelectActivityDialog({

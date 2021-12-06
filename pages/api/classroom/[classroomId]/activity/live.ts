@@ -5,6 +5,7 @@ import SignJWT from "jose/jwt/sign";
 import { endpoint, Status } from "../../../../../src/api/Endpoint";
 import { isInClass, isInstructor } from "../../../../../src/api/server/validators";
 import { prisma } from "../../../../../src/db/prisma";
+import { LiveActivityInfo } from "../../../../../websocketServer/src/types";
 
 async function makeJwt(content: { [propName: string]: unknown }, expireIn: string) {
     const keyObj = JSON.parse(process.env.JWT_SIGNING_PRIVATE_KEY!);
@@ -45,7 +46,8 @@ const apiActivityLive = endpoint(null, ['classroomId'], {
         loginValidation: true,
         schema: Joi.object({
             id: Joi.string(),
-            data: Joi.any().optional()
+            clientInformation: Joi.any().optional(),
+            rtcPolicy: Joi.string().optional()
         }),
         async handler({ query: { classroomId }, body, session }, ok, fail) {
             if (!isInstructor(session?.user.id, classroomId)) {
@@ -83,8 +85,9 @@ const apiActivityLive = endpoint(null, ['classroomId'], {
                 },
                 body: JSON.stringify({
                     id: body.id,
-                    data: body.data ?? undefined
-                })
+                    info: body.info,
+                    rtcPolicy: body.rtcPolicy
+                } as LiveActivityInfo)
             });
 
             // TODO: If fails to send, should also fail to start activity

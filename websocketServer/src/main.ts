@@ -1,5 +1,5 @@
 import { Server } from 'socket.io';
-import { IOServer } from './types';
+import { IOServer, LiveActivityInfo } from './types';
 import jwtVerify from 'jose/jwt/verify';
 import parseJwk from 'jose/jwk/parse';
 import * as dotenv from 'dotenv';
@@ -14,6 +14,8 @@ import * as express from 'express';
 import { DateTime, Duration } from 'luxon';
 import { makeActivitySubmissionEntity } from '../../src/api/entities/ActivitySubmissionEntity';
 import { makeUserEntity } from '../../src/api/entities/UserEntity';
+import allPolicies from './rtc/policies/allPolicies';
+import { RtcPolicy } from './rtc/policies/RtcPolicy';
 
 dotenv.config()
 
@@ -110,6 +112,13 @@ io.on('connection', socket => {
         }
         catch (e) { }
         return callback(false);
+    });
+
+    socket.on('joinRtc', async () => {
+        if (classroom.activity?.rtcPolicy) {
+            classroom.activity.rtcPolicy.onUserLeave(socketId);
+            classroom.activity.rtcPolicy.onUserJoin(socketId);
+        }
     });
 
     socket.on('disconnecting', reason => {
@@ -233,9 +242,14 @@ internalApi.use(async (req, res, next) => {
     return res.status(403).send();
 });
 
-internalApi.post('/:classroomId/activity', (req, res) => {
+internalApi.post('/:classroomId/activity', async (req, res) => {
     const classroom = classrooms.getOrCreate(req.params.classroomId);
-    classroom.startActivity(req.body.id, req.body.data);
+    const body: LiveActivityInfo = req.body;
+
+    const policyConstructor = allPolicies.find(x => x.policyId === body.rtcPolicy);
+    
+    classroom.startActivity(body.id, body.info, policyConstructor ? new policyConstructor(await classroom.getMembers(), { rtc }) : undefined);
+
     res.status(200).send();
 });
 

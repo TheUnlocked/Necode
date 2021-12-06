@@ -20,15 +20,5 @@ module.exports = withTM({
         // new BundleAnalyzerPlugin()
       ]
     });
-  },
-  async rewrites() {
-    return {
-      beforeFiles: [
-        {
-          source: '/dev/:path*',
-          destination: process.env.Node_ENV === 'development' ? '/dev/:path*' : '/404'
-        }
-      ]
-    };
   }
 });

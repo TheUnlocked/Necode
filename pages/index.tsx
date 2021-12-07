@@ -90,7 +90,7 @@ const generalInfo = <>
     </InfoSection>
     <InfoSection omitParagraph title="What can do I do with Necode?">
         <p>
-            As for what <em>you</em> can do, Necode is currently in development, and access is be limited to a few professors
+            As for what <em>you</em> can do, Necode is currently in development, and access is limited to a few professors
             at Worcester Polytechnic Institute who have graciously agreed to use Necode in their classes, as well as the students who will be
             using Necode in those classes. If you are not in one of those groups, the only feature available to you is viewing this landing page.
         </p>

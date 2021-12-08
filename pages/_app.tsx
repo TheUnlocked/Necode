@@ -27,7 +27,7 @@ import ErrorBoundaryPage from '../src/components/ErrorBoundaryPage';
 function MyApp({ Component, pageProps }: AppProps) {
     const [meta, metaTransformer] = useMergeReducer({
         title: "Necode",
-        path: [{ label: "Necode" }]
+        path: [{ label: "Necode", href: "/" }]
     } as MetaInfo);
 
     const loadingInfoRef = useRef({

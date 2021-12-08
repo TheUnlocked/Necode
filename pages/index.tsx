@@ -66,7 +66,7 @@ const generalInfo = <>
         Neh-code. Like the &quot;ne&quot; in &quot;network&quot; and then &quot;code.&quot;
         Like &quot;<SubtleLink target="_blank" rel="noopener" href="https://translate.google.com/?sl=ja&tl=en&text=%E7%8C%AB&op=translate">neko</SubtleLink>&quot;
         but if the &quot;ko&quot; was &quot;code.&quot;
-        If you can read IPA, /nɛkoʊd/ (assuming a GenAm accent).
+        If you can read IPA, /nɛkoʊd/ (assuming an American accent).
         It is NOT knee-code or neh-ko-deh or anything like that.
     </InfoSection>
     <InfoSection omitParagraph title="What makes Necode special?">

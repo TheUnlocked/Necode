@@ -1,5 +1,5 @@
 import { PickersDay, StaticDatePicker } from "@mui/lab";
-import { Badge, Button, Card, CardContent, Paper, Skeleton, Stack, TextField, Toolbar, Tooltip, Typography } from "@mui/material";
+import { Badge, Button, Card, CardActions, CardContent, IconButton, Paper, Skeleton, Stack, TextField, Toolbar, Tooltip, Typography } from "@mui/material";
 import { NextPage } from "next";
 import { Dispatch, useCallback, useEffect, useRef, useState } from "react";
 import ActivityListPane from "../../../../src/components/lesson-config/ActivityListPane";
@@ -13,6 +13,8 @@ import { useLoadingContext } from "../../../../src/api/client/LoadingContext";
 import { Response } from "../../../../src/api/Response";
 import NotFoundPage from "../../../404";
 import { ClassroomMemberEntity } from "../../../../src/api/entities/ClassroomMemberEntity";
+import { ContentCopy, Share } from "@mui/icons-material";
+import { useSnackbar } from "notistack";
 
 
 function getDateFromPath(path: string) {
@@ -139,6 +141,24 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
         }
     }, []);
 
+    const { enqueueSnackbar } = useSnackbar();
+
+    function copyJoinCodeToKeyboard() {
+        if (joinCode) {
+            navigator.clipboard.writeText(joinCode)
+                .then(() => enqueueSnackbar('Copied join code to clipboard', { variant: 'success' }))
+                .catch(() => enqueueSnackbar('Failed to copy to clipboard', { variant: 'error' }));
+        }
+    }
+
+    function copyJoinLinkToKeyboard() {
+        if (joinCode) {
+            navigator.clipboard.writeText(`${location.origin}/classroom/join?joinCode=${joinCode}`)
+                .then(() => enqueueSnackbar('Copied join link to clipboard', { variant: 'success' }))
+                .catch(() => enqueueSnackbar('Failed to copy to clipboard', { variant: 'error' }));
+        }
+    }
+
     const isActivityRunning = liveActivityData?.live;
 
     return <>
@@ -164,12 +184,18 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
         }} direction="row" spacing={8}>
             <Stack spacing={4}>
                 <Card variant="outlined">
-                    <CardContent sx={{ px: 3, pt: 3 }}>
-                        <Typography variant="body1">Join Code</Typography>
-                        {joinCode
-                            ? <Typography variant="h3" component="div" sx={{ mt: 1 }}>{joinCode}</Typography>
-                            : <Typography variant="h3" component="div" sx={{ mt: 1 }}><Skeleton /></Typography>}
-                    </CardContent>
+                    <Stack direction="row">
+                        <CardContent sx={{ px: 3, pt: 3, flexGrow: 1 }}>
+                            <Typography variant="body1">Join Code</Typography>
+                            {joinCode
+                                ? <Typography variant="h3" component="div" sx={{ mt: 1 }}>{joinCode}</Typography>
+                                : <Typography variant="h3" component="div" sx={{ mt: 1 }}><Skeleton /></Typography>}
+                        </CardContent>
+                        {joinCode ? <Stack direction="column" justifyContent="flex-end" spacing={1} sx={{ p: 1 }}>
+                            <Tooltip title="Copy Join Code" disableInteractive><IconButton onClick={copyJoinCodeToKeyboard}><ContentCopy/></IconButton></Tooltip>
+                            <Tooltip title="Copy Join Link" disableInteractive><IconButton onClick={copyJoinLinkToKeyboard}><Share/></IconButton></Tooltip>
+                        </Stack> : undefined}
+                    </Stack>
                 </Card>
                 <Paper variant="outlined" sx={{ pt: 2 }}>
                     <StaticDatePicker
@@ -192,6 +218,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
                                 : <Tooltip key={DayComponentProps.key}
                                     title={showsIndicators ? todayLesson!.attributes.displayName : ''}
                                     placement="top" arrow
+                                    disableInteractive
                                 > 
                                     <Badge key={isoDate}
                                         overlap="circular" variant="dot"

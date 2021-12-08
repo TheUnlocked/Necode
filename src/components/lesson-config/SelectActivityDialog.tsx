@@ -36,7 +36,7 @@ export default function SelectActivityDialog({
                         <Box key={language.name} height="32px">
                             <Tooltip title={language.displayName} placement="top" arrow componentsProps={{
                                 tooltip: { sx: { mb: "10px !important" } }
-                            }}>
+                            }} disableInteractive>
                                 <Box sx={{ my: 0.5 }}>
                                     {language.icon ? <language.icon /> : <Code />}
                                 </Box>

@@ -637,10 +637,10 @@ export function createTestActivityPage({
                 ? <Button variant="contained" onClick={runTests}>Run tests</Button>
                 : <Button variant="contained" onClick={makeSubmission}>Submit</Button>}
             <Box sx={{ flexGrow: 1 }} />
-            <Tooltip title="Apply all changes">
+            <Tooltip title="Apply all changes" disableInteractive>
                 <IconButton onClick={applyAllChanges}><SyncIcon/></IconButton>
             </Tooltip>
-            <Tooltip title="Reload">
+            <Tooltip title="Reload" disableInteractive>
                 <IconButton onClick={reloadRef.current}><RefreshIcon/></IconButton>
             </Tooltip>
         </Stack>;

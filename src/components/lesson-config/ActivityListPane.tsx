@@ -336,14 +336,14 @@ export default function ActivityListPane({
             <Divider />
             <Box sx={{ m: 1 }}>
                 <Stack direction="row" alignItems="center" spacing={1}>
-                    <Tooltip title="Add Activity">
+                    <Tooltip title="Add Activity" disableInteractive>
                         <IconButton onClick={openSelectActivityDialog}><Add/></IconButton>
                     </Tooltip>
-                    <Tooltip title="Add Text/Code">
+                    <Tooltip title="Add Text/Code" disableInteractive>
                         <IconButton onClick={() => addActivity(textInputActivityDescription)}><TextFields/></IconButton>
                     </Tooltip>
                     <Stack direction="row" justifyContent="end" spacing={1} flexGrow={1}>
-                        <Tooltip title="Drag a widget here to delete it">
+                        <Tooltip title="Drag a widget here to delete it" disableInteractive>
                             <div>
                                 <Button ref={trashDrop}
                                     variant="contained"

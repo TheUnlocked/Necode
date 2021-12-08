@@ -41,8 +41,7 @@ export default function PaneEditor(props: PaneEditorProps) {
             theme="vs-dark"
             options={{
                 minimap: { enabled: false },
-                "semanticHighlighting.enabled": true,
-                fixedOverflowWidgets: true
+                "semanticHighlighting.enabled": true
             }}
             language={props.language.monacoName}
             onMount={onMount}

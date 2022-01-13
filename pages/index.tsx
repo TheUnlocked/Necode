@@ -136,7 +136,7 @@ const instructorInfo = (me: UserEntity<{ classes: 'deep' }> | undefined) => <>
     </InfoSection>
     <InfoSection title="Can I use Necode for ungraded assignments?">
         Necode is primarily intended for in-class use, and it is not intended to be a replacement for
-        an <Tooltip title="e.g. Canvas, Google Classroom, etc." color="#000000">
+        an <Tooltip title="e.g. Canvas, Google Classroom, etc." disableInteractive>
             <SubtleLink target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Learning_management_system">LMS</SubtleLink>
         </Tooltip>.
         While the submission system included in some activities may technically allow for homework submission,

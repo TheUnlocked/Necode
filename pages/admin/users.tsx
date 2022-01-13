@@ -81,17 +81,22 @@ const Page: NextPage = () => {
         }
     };
 
+    const [hiddenCols, setHiddenCols] = useState({
+        id: true,
+        displayName: true
+    } as { [field: string]: boolean });
+
     if (!me || me.attributes.rights !== 'Admin') {
         return isLoading
                 ? <FullPageLoader />
                 : <AdminPageAlert />;
     }
 
-    return <Container maxWidth="md" sx={{ flexGrow: 1, display: "flex", flexDirection: "column", mb: 8 }}>
+    return <Container maxWidth="lg" sx={{ flexGrow: 1, display: "flex", flexDirection: "column", mb: 6 }}>
         <DataGrid
             sx={{ flexGrow: 1 }}
             loading={loading}
-            rowsPerPageOptions={[10, 25, 50]}
+            rowsPerPageOptions={[2, 10, 25, 50]}
             isRowSelectable={constant(false)}
             pageSize={rowsPerPage}
             onPageSizeChange={handleRowsPerPageChange}
@@ -102,14 +107,19 @@ const Page: NextPage = () => {
             page={page}
             onPageChange={handlePageChange}
             onCellEditCommit={handleCellEdited}
-            columns={[
-                { field: 'id', headerName: 'ID', flex: 1 },
-                { field: 'username', headerName: 'Username', flex: 1 },
+            onColumnVisibilityChange={info => setHiddenCols(x => ({ ...x, [info.field]: !info.isVisible }))}
+            columns={([
+                { field: 'id', headerName: 'ID' },
+                { field: 'username', headerName: 'Username' },
+                { field: 'lastName', headerName: 'Last Name', editable: true },
+                { field: 'firstName', headerName: 'First Name', editable: true },
+                { field: 'displayName', headerName: 'Display Name', editable: true },
+                { field: 'email', headerName: 'Email' },
                 { field: 'rights', headerName: 'Rights', editable: true, type: 'singleSelect', valueOptions: [
                     { label: 'Admin', value: 'Admin' },
                     { label: 'None', value: 'None' },
-                ], flex: 1 },
-            ]} />
+                ] },
+            ] as GridColDef[]).map(x => ({ ...x, flex: 1, filterable: false, sortable: false, hide: hiddenCols[x.field] }))} />
     </Container>;
 };
 

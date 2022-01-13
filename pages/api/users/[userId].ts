@@ -1,11 +1,9 @@
-import { SitewideRights, User } from "@prisma/client";
+import { SitewideRights } from "@prisma/client";
 import Joi from "joi";
 import { endpoint, Status } from "../../../src/api/Endpoint";
 import { makeUserEntity } from "../../../src/api/entities/UserEntity";
-import { paginationParams } from "../../../src/api/server/standardParams";
 import { isAdmin } from "../../../src/api/server/validators";
 import { prisma } from "../../../src/db/prisma";
-import { singleArg } from "../../../src/util/typeguards";
 
 const apiUsers = endpoint(makeUserEntity, ['userId'], {
     type: 'entity',

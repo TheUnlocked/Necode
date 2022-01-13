@@ -92,7 +92,7 @@ const Page: NextPage = () => {
                 : <AdminPageAlert />;
     }
 
-    return <Container maxWidth="lg" sx={{ flexGrow: 1, display: "flex", flexDirection: "column", mb: 8 }}>
+    return <Container maxWidth="lg" sx={{ flexGrow: 1, display: "flex", flexDirection: "column", mb: 6 }}>
         <DataGrid
             sx={{ flexGrow: 1 }}
             loading={loading}

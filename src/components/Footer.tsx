@@ -10,7 +10,7 @@ const RealFooter = styled("footer")`
 `;
 
 export default function Footer() {
-    return <RealFooter style={{ flexGrow: 1 }}>
+    return <RealFooter>
         <Divider />
         <Stack component="section" spacing={6} direction="row" sx={{
             margin: ({spacing}) => `${spacing(4)} auto`,

@@ -2,7 +2,7 @@ import { Schema } from "joi";
 import { NextApiHandler, NextApiRequest, NextApiResponse } from "next";
 import { getSession } from "next-auth/react";
 import { Entity } from "./entities/Entity";
-import { Response } from "./Response";
+import { Response, ResponsePaginationPart } from "./Response";
 import { IncomingMessage } from "http";
 import { Session } from "next-auth";
 import { IfAny, UndefinedIsOptional } from "../util/types";
@@ -30,7 +30,21 @@ const defaultStatusMessages: { [Code in Status]: string } = {
     [Status.NOT_IMPLEMENTED]: 'Not Yet Implemented',
 };
 
-type okCallback<T> = (x: T) => void;
+interface OkOptions {
+    pagination?: ({
+        cursor: string,
+        index?: number
+    } | {
+        cursor?: undefined,
+        index: number
+    }) & {
+        count?: number,
+        pages: number,
+        total: number
+    };
+}
+
+type okCallback<T> = (x: T, options?: OkOptions) => void;
 type failCallback = (type: Status, message?: string) => void;
 
 
@@ -215,10 +229,59 @@ export function endpoint<P extends string, Endpoints extends EndpointMap<P>>(_: 
             await runMiddleware(req, res, middleware);
         }
 
-        function ok(result: any) {
+        function ok(result: any, options?: OkOptions) {
+            let pagination: ResponsePaginationPart | undefined = undefined;
+
+            if (options?.pagination) {
+                if (!(result instanceof Array)) {
+                    throw new Error('Pagination result must be an array');
+                }
+
+                const nextPageUrl = new URL(req.url!, `https://${req.headers.host}`);
+                const prevPageUrl = new URL(req.url!, `https://${req.headers.host}`);
+
+                let showNextPageUrl
+                    = result.length > 0
+                    && (!options.pagination.index || options.pagination.index < options.pagination.pages);
+
+                for (const url of [nextPageUrl, prevPageUrl]) {
+                    url.searchParams.delete('page:index');
+                    url.searchParams.delete('page:from');
+                    url.searchParams.delete('page:count');
+                }
+
+                if (options.pagination.index !== undefined) {
+                    nextPageUrl.searchParams.set('page:index', `${options.pagination.index + 1}`);
+                    if (options.pagination.index > 1) {
+                        prevPageUrl.searchParams.set('page:index', `${options.pagination.index - 1}`);
+                    }
+                }
+                if (options.pagination.cursor !== undefined) {
+                    nextPageUrl.searchParams.set('page:from', options.pagination.cursor);
+                }
+                if (options.pagination.count !== undefined) {
+                    nextPageUrl.searchParams.set('page:count', `${options.pagination.count}`);
+                    prevPageUrl.searchParams.set('page:count', `${options.pagination.count}`);
+                }
+
+                pagination = {
+                    next: showNextPageUrl
+                        ? nextPageUrl.toString().replace(/%3A/g, ':')
+                        : undefined,
+                    prev: prevPageUrl.searchParams.has('page:index')
+                        ? prevPageUrl.toString().replace(/%3A/g, ':')
+                        : undefined,
+                    
+                    count: result.length,
+                    pages: options.pagination.pages,
+                    total: options.pagination.total
+                };
+            }
+
             res.status(Status.OK).send({
                 response: 'ok',
-                data: result
+                data: result,
+                pagination
             });
         }
 

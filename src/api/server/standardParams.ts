@@ -1,0 +1,1 @@
+export const paginationParams = ['page:index?', 'page:from?', 'page:count?'] as const;

@@ -118,7 +118,7 @@ export function ActivityIframe({
         return new Promise<void>(resolve => {
             try {
                 const code = testScaffoldingImpl + new Typescript().toRunnerCode(tests, {
-                    ambient: true,
+                    global: true,
                     isolated: true,
                     babelPlugins: [transformTestScaffolding]
                 });

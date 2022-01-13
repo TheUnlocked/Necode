@@ -10,7 +10,7 @@ import { Refresh as RefreshIcon, Sync as SyncIcon } from "@mui/icons-material";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import React from "react";
 import useCodeGenerator from "../../hooks/CodeGeneratorHook";
-import supportsAmbient from "../../languages/features/supportsAmbient";
+import supportsGlobal from "../../languages/features/supportsGlobal";
 import supportsIsolated from "../../languages/features/supportsIsolated";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm';
@@ -188,7 +188,7 @@ export function createTestActivityPage({
             }
         }, [isHtmlEnabled, isCodeEnabled, isCssEnabled]);
 
-        const codeGenerator = useCodeGenerator<[typeof supportsAmbient, typeof supportsIsolated]>(language.name);
+        const codeGenerator = useCodeGenerator<[typeof supportsGlobal, typeof supportsIsolated]>(language.name);
         const [compiledJs, setCompiledJs] = useState('');
         const codeSource = editorStates.code?.value;
 
@@ -196,7 +196,7 @@ export function createTestActivityPage({
             if (codeSource !== undefined) {
                 try {
                     const compiledJs = codeGenerator.toRunnerCode(codeSource, {
-                        ambient: true,
+                        global: true,
                         isolated: true
                     });
                     setCompiledJs(compiledJs);
@@ -481,7 +481,7 @@ export function createTestActivityPage({
         const validateTests = useCallback(debounce((tests: string) => {
             try {
                 new Typescript().toRunnerCode(tests, {
-                    ambient: true,
+                    global: true,
                     isolated: true,
                     throwAllCompilerErrors: true,
                     babelPlugins: [transformTestScaffolding]

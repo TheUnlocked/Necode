@@ -1,6 +1,6 @@
 import { activityDescription } from "../ActivityDescription";
 import createTestActivityPages, { HtmlTestActivityBaseConfig } from "../html-test-activity-base/HtmlTestActivity";
-import supportsAmbient from "../../languages/features/supportsAmbient";
+import supportsGlobal from "../../languages/features/supportsGlobal";
 import supportsIsolated from "../../languages/features/supportsIsolated";
 import dedent from "dedent-js";
 
@@ -22,7 +22,7 @@ const testDomActivityDescription = activityDescription({
     id: 'core/test-dom',
     displayName: 'DOM Programming',
     supportedFeatures: [
-        supportsAmbient,
+        supportsGlobal,
         supportsIsolated
     ] as const,
     activityPage,

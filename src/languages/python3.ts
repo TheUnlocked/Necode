@@ -7,7 +7,7 @@ import brythonRaw from 'raw-loader!brython/brython.js';
 import brythonStdlibRaw from 'raw-loader!brython/brython_stdlib.js'; 
 import { FeatureOptionsOf, languageDescription } from './LangaugeDescription';
 import PythonIcon from '../util/icons/PythonIcon';
-import supportsAmbient from "./features/supportsAmbient";
+import supportsGlobal from "./features/supportsGlobal";
 import supportsEntryPoint from "./features/supportsEntryPoint";
 import supportsIsolated from './features/supportsIsolated';
 
@@ -18,7 +18,7 @@ export const pythonDescription = languageDescription({
     icon: PythonIcon,
     features: [
         supportsEntryPoint,
-        supportsAmbient,
+        supportsGlobal,
         supportsIsolated
     ] as const
 });
@@ -49,7 +49,7 @@ export class Python3 implements RunnableLanguage<typeof pythonDescription> {
     toRunnerCode(code: string, options: FeatureOptionsOf<typeof pythonDescription>) {
         let result: string;
 
-        if (options.ambient) {
+        if (options.global) {
             try {
                 result = 'const $locals_ = globalThis;' + __BRYTHON__.py2js(code, '', '').to_js();
             }
@@ -95,7 +95,7 @@ export class Python3 implements RunnableLanguage<typeof pythonDescription> {
             result = js;
         }
         else {
-            throw new Error('Python 3 code must be generated in either ambient or entryPoint mode');
+            throw new Error('Python 3 code must be generated in either global or entryPoint mode');
         }
 
         if (options.isolated) {

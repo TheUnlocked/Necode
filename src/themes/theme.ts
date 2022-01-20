@@ -20,6 +20,15 @@ export default createTheme({
     components: {
         MuiCssBaseline: {
             styleOverrides: `
+                /* Make sure that anchor links scroll to the right place */
+                :target {
+                    scroll-margin-top: calc(var(--header-height) + 16px);
+                }
+
+                .monaco-hover {
+                    z-index: 2000 !important;
+                }
+
                 .reflex-container {
                     && > .reflex-splitter {
                         background-color: ${splitterCore};

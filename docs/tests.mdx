@@ -1,0 +1,277 @@
+# Writing Tests
+
+## Table of Contents
+
+## Checks
+
+Tests in Necode use a TypeScript DSL, and run alongside the global environment.
+In order to write tests (or assertions), use the `check` syntax:
+
+```ts
+check(1 === 1);
+```
+
+Oftentimes you will want to access functions or variables created by the student
+in the global environment. If you try to access these directly however, red squiggles
+will appear telling you that the variable is not defined. You can tell Necode that
+the function/variable should exist by using [TypeScript's `declare` syntax](https://www.typescriptlang.org/docs/handbook/declaration-files/by-example.html#global-variables):
+
+```ts
+declare function square(n);
+check(square(3) === 9);
+```
+
+Because this is TypeScript, you may optionally annotate these declarations with types.
+Keep in mind however, that these type annotations do not perform any runtime checks,
+and exist solely to help catch simple bugs in the test code you write.
+
+```ts
+declare function square(n: number): number;
+check(square(3) === '9');
+//    ^ Error
+// This condition will always return 'false' since the types 'number' and 'string' have no overlap.
+```
+
+If students don't need to write a function but instead need to do something in the DOM,
+you can also query that in test code, and use it in a `check` statement as you would expect. 
+
+```ts
+check(document.getElementById('counter').innerText === '5');
+```
+
+By default, if a student fails to pass a check, a message like this will appear.
+
+<Card elevation={24}>
+    <DialogTitle>Test Failure</DialogTitle>
+    <DialogContent>
+        <DialogContentText>Your code failed a test:</DialogContentText>
+        <p>Your code failed a secret test :(</p>
+    </DialogContent>
+    <DialogActions>
+        <button>Ok</button>
+    </DialogActions>
+</Card>
+
+You can give more informative message by putting a hint message in the
+second argument of a `check` statement. In most cases, especially for simpler
+tests, it's strongly recommended to use hint messages in order to avoid students
+getting confused and frustrated.
+
+```ts
+check(square(4) === 16, 'You can use * to multiply two numbers!');
+```
+
+<Card elevation={24}>
+    <DialogTitle>Test Failure</DialogTitle>
+    <DialogContent>
+        <DialogContentText>Your code failed a test:</DialogContentText>
+        <p>You can use * to multiply two numbers!</p>
+    </DialogContent>
+    <DialogActions>
+        <button>Ok</button>
+    </DialogActions>
+</Card>
+
+Writing hint messages can be hard work though, and sometimes you just want to
+show the student what check they failed. The `SHOW_TEST` symbol exists for this purpose.
+Use it instead of a string to show the source code of the check that failed.
+
+```ts
+check(square(1) === 1, SHOW_TEST);
+```
+
+<Card elevation={24}>
+    <DialogTitle>Test Failure</DialogTitle>
+    <DialogContent>
+        <DialogContentText>Your code failed to satisfy this condition:</DialogContentText>
+        <pre>square(1) === 1</pre>
+    </DialogContent>
+    <DialogActions>
+        <button>Ok</button>
+    </DialogActions>
+</Card>
+
+<p><Alert severity="warning">
+Necode uses compiler transformations to detect <code>SHOW_TEST</code> as well as to modify the call
+signature of <code>check</code> and other testing DSL builtins. Something like this:
+
+```ts
+const MY_SHOW_TEST = SHOW_TEST;
+check(square(1) === 1, MY_SHOW_TEST);
+```
+
+Might seem like it should work, but it will actually break the tests! Make sure to always
+use the names of functions and variables provided in the testing DSL as they appear in the
+documentation, and don't try to overload or shadow those names with any other values in your
+testing code.
+</Alert></p>
+
+### Error Handling
+
+You may be inclined to write error checking around your check statements, for example to
+make sure that the function `square` exists before you try to invoke it in your check statement.
+However, this is unnecessary. Due to a clever compiler transformation, all conditions in check
+statements are automatically wrapped in a closure and given proper error checking.
+If an error occurs while carrying out a check, it will fail just as if the condition had been false.
+
+For example, this is completely safe.
+
+```ts
+function throwIfNotZero(n: number) {
+    if (n === 0) {
+        return true;
+    }
+    throw new Error('Gave non-zero argument');
+}
+
+check(throwIfNotZero(1), 'Caught the error, like expected.');
+```
+
+<Card elevation={24}>
+    <DialogTitle>Test Failure</DialogTitle>
+    <DialogContent>
+        <DialogContentText>Your code failed a test:</DialogContentText>
+        <p>Caught the error, like expected.</p>
+    </DialogContent>
+    <DialogActions>
+        <button>Ok</button>
+    </DialogActions>
+</Card>
+
+You may sometimes also want to assert that a student's code _does_ throw an error.
+In order to do this, use `checkError`. All the special stuff about `check` also applies to `checkError`,
+except that it will succeed only if an error is detected, and not if the condition is true.
+
+```ts
+checkError(throwIfNotZero(1), 'This check always passes');
+```
+
+If you're looking for a student's code to throw a _specific_ error, you can add a callback as the
+third argument, which will be invoked if the student's code throws an error. If your callback returns
+`true` (or a truthy value), the check will pass. Otherwise, it will fail. Like before, if this callback
+throws an error, the check will also fail.
+
+```ts
+checkError(throwIfNotZero(1), 'Whoops, wrong error message!', err => {
+    return err.message === 'Gave zero argument';
+});
+```
+
+## Waits
+
+Sometimes, student code may depend on time, and you may want to wait a brief amount of time before or
+between checks. For this, use the `wait` function. This call will wait for 200 milliseconds before continuing.
+
+```ts
+wait(200);
+```
+
+<Alert severity="warning">
+    There is an imposed limit of at most 500 milliseconds per call to any kind of wait function.
+    While you can circumvent this by repeatedly calling <code>wait</code> multiple times, it is not recommended.
+    In order to maintain responsiveness, tests will automatically time out after ten seconds,
+    and that length of time cannot be configured.
+</Alert>
+
+Sometimes you may want to wait for a particular condition to be met, such as for a particular element to enter the DOM.
+For this, use `waitFor`. `waitFor` takes a predicate that will automatically be run every 10 milliseconds,
+as well as a timeout to stop after if the predicate never returns a truthy value in that time.
+If no timeout duration is provided, it will default to 100 milliseconds.
+
+```ts
+waitFor(() => document.getElementById('my-elt'), 100);
+```
+
+`waitFor` will return `true` if the condition is met before the timeout, and `false` if it is not.
+This can make it very effective to use in conjunction with a `check` statement.
+
+```ts
+check(
+    waitFor(() => document.getElementById('my-elt'), 100),
+    'The element took too long to appear!'
+);
+```
+
+## Notes
+
+### Disabling Required Checks
+
+By default all check statements must pass in order for a student to be allowed to submit
+their code, but this can be disabled with a checkbox in the Tests tab.
+Try toggling the checkbox below to see how it changes the dialog.
+
+<WithState initialState={true}>{(state, setState) => <>
+    <p>
+        <Typography variant="overline">Require checks to submit</Typography>
+        <Checkbox checked={state} onChange={ev => setState(ev.target.checked)} />
+    </p>
+    <Card elevation={24}>
+        <DialogTitle>Test Failure</DialogTitle>
+        <DialogContent>
+            <DialogContentText>Your code failed a test:</DialogContentText>
+            <p>Your code failed a secret test :(</p>
+            {state
+                ? undefined
+                : <DialogContentText>
+                    Your instructor allows you to submit even if your solution hasn't passed all of the tests.
+                    If you choose to submit now, you can still keep working on it and submit a new version later.
+                </DialogContentText>}
+        </DialogContent>
+        <DialogActions>
+            {state
+                ? <button>Ok</button>
+                : <>
+                    <button>Cancel</button>
+                    <button>Submit Now</button>
+                </>}
+        </DialogActions>
+    </Card>
+</>}</WithState>
+
+### `check` With Arrow Functions
+
+While check statements automatically create a closure around their condition, you can also
+make this closure explicit using an arrow function. If present, Necode will treat it as a
+sign to not perform the transformation on that condition.
+
+```ts
+// These are the same
+check(1 === 1);
+check(() => 1 === 1);
+```
+
+Note however, that Necode can only do this when some kind of lambda expression is used. For example,
+this check will pass since the `alwaysFail` function object itself is truthy.
+
+```ts
+function alwaysFail() {
+    return false;
+}
+
+check(alwaysFail, 'This check passes');
+```
+
+Instead, make sure to invoke the function in the check statement.
+
+```ts
+check(alwaysFail(), 'This check fails');
+```
+
+### `check`/`wait` in a Function
+
+`check` and `wait`-family functions can only be used within `async` functions, or in the global scope.
+While there are compiler transformations to automatically await these calls for you, they still require
+an async context to be awaited, and automatically converting functions to be async is not
+possible in the general case. Fortunately, Necode _can_ detect a violation of this rule, and will report
+it with an error. If you see this error, please respect it.
+
+```ts
+function runCheck() {
+    check(square(3) === 9);
+}
+```
+
+<Alert severity="error">
+    SyntaxTransformError: <code>check</code> cannot be used in a synchronous context.
+    Add the <code>async</code> keyword to the surrounding function.
+</Alert>

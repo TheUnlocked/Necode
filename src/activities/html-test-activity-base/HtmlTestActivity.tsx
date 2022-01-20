@@ -31,6 +31,7 @@ import { useSnackbar } from "notistack";
 import { useLoadingContext } from "../../api/client/LoadingContext";
 import { debounce } from "lodash";
 import { ImplicitNewType, NonStrictDisjunction } from "../../util/types";
+import SubtleLink from "../../components/SubtleLink";
 
 export interface HtmlTestActivityBaseConfig {
     description?: string;
@@ -516,7 +517,11 @@ export function createTestActivityPage({
                         <Stack direction="row" justifyContent="space-between">
                             <Stack direction="row" sx={{ m: 1, height: "24px", alignItems: "center", flexShrink: 0 }}>
                                 <TypescriptIcon />
-                                <Typography variant="overline" sx={{ ml: 1 }}>Tests</Typography>
+                                
+                                <Typography variant="overline" sx={{ ml: 1 }}>
+                                    Tests
+                                    <SubtleLink href="/docs/tests" target="_blank"><sup>?</sup></SubtleLink>
+                                </Typography>
                             </Stack>
                             <Stack direction="row" sx={{ m: 1, mr: 0, height: "24px", alignItems: "center", overflowX: "clip" }}>
                                 <Typography variant="overline" sx={{ mr: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Require checks to submit</Typography>

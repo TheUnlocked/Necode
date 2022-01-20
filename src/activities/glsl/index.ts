@@ -182,7 +182,14 @@ const glslActivityDescription = activityDescription({
         },
         tests: {
             mustPassToSubmit: true,
-            source: `check(false, "Tests haven't been configured yet.");`
+            source: dedent`
+            // ^
+            // Click the ? in the top-left corner of this pane
+            // to learn about how to write tests in Necode.
+
+            check(false, "Tests haven't been configured yet.");
+
+            `
         }
     } as GLSLActivityConfig
 });

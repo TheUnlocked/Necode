@@ -3,7 +3,7 @@ import Joi from "joi";
 import parseJwk from "jose/jwk/parse";
 import SignJWT from "jose/jwt/sign";
 import { endpoint, Status } from "../../../../../src/api/Endpoint";
-import { isInClass, isInstructor } from "../../../../../src/api/server/validators";
+import { hasScope } from "../../../../../src/api/server/scopes";
 import { prisma } from "../../../../../src/db/prisma";
 import { LiveActivityInfo } from "../../../../../websocketServer/src/types";
 
@@ -23,7 +23,7 @@ const apiActivityLive = endpoint(null, ['classroomId'], {
     GET: {
         loginValidation: true,
         async handler({ query: { classroomId }, session }, ok, fail) {
-            if (!isInClass(session!.user.id, classroomId)) {
+            if (!await hasScope(session!.user.id, 'activity:view', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
 
@@ -50,7 +50,7 @@ const apiActivityLive = endpoint(null, ['classroomId'], {
             rtcPolicy: Joi.string().optional()
         }),
         async handler({ query: { classroomId }, body, session }, ok, fail) {
-            if (!isInstructor(session?.user.id, classroomId)) {
+            if (!hasScope(session!.user.id, 'activity:run', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
 
@@ -102,7 +102,7 @@ const apiActivityLive = endpoint(null, ['classroomId'], {
     DELETE: {
         loginValidation: true,
         async handler({ query: { classroomId }, session }, ok, fail) {
-            if (!isInstructor(session?.user.id, classroomId)) {
+            if (!hasScope(session!.user.id, 'activity:run', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
 

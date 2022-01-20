@@ -10,6 +10,9 @@ import { useGetRequestImmutable } from "../../src/api/client/GetRequestHook";
 import { UserEntity } from "../../src/api/entities/UserEntity";
 import AdminPageAlert from "../../src/components/AdminPageAlert";
 
+const MIN_NAME_LENGTH = 6;
+const MAX_NAME_LENGTH = 100;
+
 const Page: NextPage = () => {
     const router = useRouter();
     const { data: me, isLoading } = useGetRequestImmutable<UserEntity>('/api/me');
@@ -50,12 +53,12 @@ const Page: NextPage = () => {
     return <FormPage
         title="Create Classroom"
         submitLabel="Create"
-        formProps={{ onSubmit }} error={!displayName || displayName.length < 8 || displayName.length > 100}>
+        formProps={{ onSubmit }} error={!displayName || displayName.length < MIN_NAME_LENGTH || displayName.length > MAX_NAME_LENGTH}>
         <TextField name="displayName" label="Display Name" variant="outlined"
-            error={displayName !== undefined && (displayName.length < 8 || displayName.length > 100)}
+            error={displayName !== undefined && (displayName.length < MIN_NAME_LENGTH || displayName.length > MAX_NAME_LENGTH)}
             helperText={
-                !displayName || displayName.length < 8 ? "The display name must be at least 8 characters"
-                : displayName.length > 100 ? "The display name can be at most 100 characters"
+                !displayName || displayName.length < MIN_NAME_LENGTH ? `The display name must be at least ${MIN_NAME_LENGTH} characters`
+                : displayName.length > MAX_NAME_LENGTH ? `The display name can be at most ${MAX_NAME_LENGTH} characters`
                 : 'Looks good!'
             }
             onChange={x => setDisplayName(x.target.value)} />

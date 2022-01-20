@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { endpoint, Status } from "../../../../../../src/api/Endpoint";
 import { ActivityEntity, makeActivityEntity } from "../../../../../../src/api/entities/ActivityEntity";
-import { isInstructor } from "../../../../../../src/api/server/validators";
+import { hasScope } from "../../../../../../src/api/server/scopes";
 import { prisma } from "../../../../../../src/db/prisma";
 
 const apiActivityAll = endpoint(makeActivityEntity, ['classroomId', 'lessonId'] as const, {
@@ -9,7 +9,7 @@ const apiActivityAll = endpoint(makeActivityEntity, ['classroomId', 'lessonId'] 
     GET: {
         loginValidation: true,
         async handler({ query: { classroomId, lessonId }, session }, ok, fail) {
-            if (!await isInstructor(session!.user.id, classroomId)) {
+            if (!await hasScope(session!.user.id, 'classroom:view', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
 
@@ -27,7 +27,7 @@ const apiActivityAll = endpoint(makeActivityEntity, ['classroomId', 'lessonId'] 
             configuration: Joi.any(),
         }),
         async handler({ query: { classroomId, lessonId }, body: { activityType, configuration }, session }, ok, fail) {
-            if (!await isInstructor(session!.user.id, classroomId)) {
+            if (!await hasScope(session!.user.id, 'classroom:edit', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
 

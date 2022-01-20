@@ -2,7 +2,7 @@ import { User } from "@prisma/client";
 import { endpoint, Status } from "../../../src/api/Endpoint";
 import { makeUserEntity } from "../../../src/api/entities/UserEntity";
 import { paginationParams } from "../../../src/api/server/standardParams";
-import { isAdmin } from "../../../src/api/server/validators";
+import { hasScope } from "../../../src/api/server/scopes";
 import { prisma } from "../../../src/db/prisma";
 import { singleArg } from "../../../src/util/typeguards";
 
@@ -15,7 +15,7 @@ const apiUsers = endpoint(makeUserEntity, paginationParams, {
             'page:from': from,
             'page:count': recordsPerPage = 10
         } }, ok, fail) {
-            if (!await isAdmin(session!.user.id)) {
+            if (!await hasScope(session!.user.id, 'users:view')) {
                 return fail(Status.FORBIDDEN);
             }
 

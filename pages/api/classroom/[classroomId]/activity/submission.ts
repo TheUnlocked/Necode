@@ -4,22 +4,24 @@ import { makeActivityEntity } from "../../../../../src/api/entities/ActivityEnti
 import { makeActivitySubmissionEntity } from "../../../../../src/api/entities/ActivitySubmissionEntity";
 import { EntityType } from "../../../../../src/api/entities/Entity";
 import { makeUserEntity } from "../../../../../src/api/entities/UserEntity";
-import { getRole, isInstructor } from "../../../../../src/api/server/validators";
+import { hasScope } from "../../../../../src/api/server/scopes";
 import { prisma } from "../../../../../src/db/prisma";
 
 const apiActivitySubmissionAll = endpoint(makeActivitySubmissionEntity, ['classroomId', 'activityId?', 'userId?', 'version?', 'include[]'], {
     type: 'entityType',
     GET: {
         loginValidation: true,
-        async handler({ query: { classroomId, activityId, userId, version, include }, body, session }, ok, fail) {
+        async handler({ query: { classroomId, activityId, userId, version, include }, session }, ok, fail) {
             if (version && !/^(?:[0-9]+|all|latest)$/.test(version)) {
                 return fail(Status.BAD_REQUEST, `Invalid version number '${version}', must be a positive integer, 'all', or 'latest'`);
             }
-
-            const role = await getRole(session!.user.id, classroomId);
-            const isInstructor = role === 'Instructor'
             
-            if (!role || (!isInstructor && userId !== session!.user.id)) {
+            if (!userId && !await hasScope(session!.user.id, 'submissions:view:all', { classroomId })) {
+                // If a user without submissions:view:all is querying this endpoint, they should get their own data.
+                userId = session!.user.id;
+            }
+
+            if (userId && !await hasScope(session!.user.id, 'submissions:view', { classroomId, userId })) {
                 return fail(Status.FORBIDDEN);
             }
 

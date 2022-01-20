@@ -35,6 +35,12 @@ const Page: NextPage = () => {
 
     const { data, error, isLoading } = useGetRequestImmutable<ClassroomMemberEntity>(classroomId ? `/api/classroom/${classroomId}/me` : null);
 
+    useEffect(() => {
+        if (data?.attributes.role === 'Student') {
+            router.replace(`/classroom/${classroomId}/activity`);
+        }
+    }, [data, router, classroomId]);
+
     if (!classroomId || isLoading) {
         return null;
     }
@@ -42,6 +48,7 @@ const Page: NextPage = () => {
     if (typeof classroomId !== 'string' || error) {
         return <NotFoundPage />;
     }
+
     return <PageContent classroomId={classroomId} />;
 }
 

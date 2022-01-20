@@ -2,7 +2,7 @@ import Joi from "joi";
 import { endpoint, Status } from "../../../../../src/api/Endpoint";
 import { ActivityEntity, makeActivityEntity } from "../../../../../src/api/entities/ActivityEntity";
 import { LessonEntity, makeLessonEntity } from "../../../../../src/api/entities/LessonEntity";
-import { isInstructor } from "../../../../../src/api/server/validators";
+import { hasScope } from "../../../../../src/api/server/scopes";
 import { prisma } from "../../../../../src/db/prisma";
 import { iso8601DateRegex } from "../../../../../src/util/iso8601";
 import { singleArg } from "../../../../../src/util/typeguards";
@@ -12,7 +12,7 @@ const apiLessonAll = endpoint(makeLessonEntity, ['classroomId', 'include[]'] as 
     GET: {
         loginValidation: true,
         async handler({ query: { classroomId, include }, session }, ok, fail) {
-            if (!await isInstructor(session!.user.id, classroomId)) {
+            if (!await hasScope(session!.user.id, 'classroom:view', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
 
@@ -44,7 +44,7 @@ const apiLessonAll = endpoint(makeLessonEntity, ['classroomId', 'include[]'] as 
                 .optional()
         }),
         async handler({ query: { classroomId }, body: { date, displayName, activities }, session }, ok, fail) {
-            if (!await isInstructor(session!.user.id, classroomId)) {
+            if (!await hasScope(session!.user.id, 'classroom:edit', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
 

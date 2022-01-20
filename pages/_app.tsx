@@ -73,7 +73,6 @@ function MyApp({ Component, pageProps }: AppProps) {
                 <Header path={meta.path} />
                 <Box sx={{
                     "--header-height": "64px",
-                    scrollMarginTop: "var(--header-height)",
                     display: "flex",
                     flexDirection: "column",
                     minHeight: "calc(100vh - 64px)"

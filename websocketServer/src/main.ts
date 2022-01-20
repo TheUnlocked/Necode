@@ -16,6 +16,7 @@ import { makeActivitySubmissionEntity } from '../../src/api/entities/ActivitySub
 import { makeUserEntity } from '../../src/api/entities/UserEntity';
 import allPolicies from './rtc/policies/allPolicies';
 import { RtcPolicy } from './rtc/policies/RtcPolicy';
+import { hasScope } from '../../src/api/server/scopes';
 
 dotenv.config()
 
@@ -55,13 +56,6 @@ io.on('connection', socket => {
     let userId: string;
     let socketId = socket.id;
     let classroom: Classroom;
-
-    async function getRoleInClass() {
-        return (await prisma.classroomMembership.findFirst({
-            where: { classroomId, userId },
-            select: { role: true }
-        }))?.role;
-    }
 
     async function connect() {
         console.log(userId, 'connected to with id', socketId);
@@ -104,7 +98,7 @@ io.on('connection', socket => {
                 userId = jwtData.userId;
                 classroomId = jwtData.classroomId;
 
-                if (await getRoleInClass() !== undefined) {
+                if (await hasScope(userId, 'activity:view', { classroomId })) {
                     connect();
                     return callback(true);
                 }
@@ -126,12 +120,7 @@ io.on('connection', socket => {
     });
 
     socket.on('getParticipants', async (callback) => {
-        const role = await getRoleInClass();
-        if (!role) {
-            // this request is complete garbage, forcefully disconnect
-            return socket.disconnect();
-        }
-        else if (role !== 'Instructor') {
+        if (!await hasScope(userId, 'classroom:view', { classroomId })) {
             // request likely sent by accident or out of curiosity, just send nothing
             return callback([]);
         }
@@ -141,7 +130,7 @@ io.on('connection', socket => {
     });
 
     socket.on('command', async (to, data, callback) => {
-        if (await getRoleInClass() === 'Instructor') {
+        if (await hasScope(userId, 'activity:run', { classroomId })) {
             if (to === undefined) {
                 to = [...classroom.membersCache];
             }
@@ -155,7 +144,7 @@ io.on('connection', socket => {
     });
 
     socket.on('request', async (data, callback) => {
-        if (await getRoleInClass()) {
+        if (await hasScope(userId, 'activity:view', { classroomId })) {
             io.to([...classroom.instructorsCache])
                 .emit('request', data);
             return callback();
@@ -167,12 +156,13 @@ io.on('connection', socket => {
         if (!classroom.activity) {
             return callback('No activity');
         }
-        const role = await getRoleInClass();
-        if (!role) {
-            return callback('Not logged in');
-        }
-        if (role === 'Instructor') {
+        
+        if (await hasScope(userId, 'activity:run', { classroomId })) {
             return callback('Instructors cannot make submissions');
+        }
+
+        if (!await hasScope(userId, 'submissions:create', { classroomId })) {
+            return callback('Something went wrong (missing submissions:create scope)');
         }
 
         try {

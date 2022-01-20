@@ -5,7 +5,7 @@ import { ActivityEntity, makeActivityEntity } from "../../../../../../src/api/en
 import { makeClassroomEntity } from "../../../../../../src/api/entities/ClassroomEntity";
 import { ReferenceDepth } from "../../../../../../src/api/entities/EntityReference";
 import { LessonEntity, makeLessonEntity } from "../../../../../../src/api/entities/LessonEntity";
-import { isInstructor } from "../../../../../../src/api/server/validators";
+import { hasScope } from "../../../../../../src/api/server/scopes";
 import { prisma } from "../../../../../../src/db/prisma";
 import { isIso8601Date, iso8601DateRegex } from "../../../../../../src/util/iso8601";
 import { singleArg } from "../../../../../../src/util/typeguards";
@@ -31,7 +31,7 @@ const apiLessonOne = endpoint({} as LessonEntity<{ classroom: any, activities: R
     GET: {
         loginValidation: true,
         async handler({ query: { classroomId, lessonId, include }, session }, ok, fail) {
-            if (!isInstructor(session?.user.id, classroomId)) {
+            if (!await hasScope(session!.user.id, 'classroom:view', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
 
@@ -80,7 +80,7 @@ const apiLessonOne = endpoint({} as LessonEntity<{ classroom: any, activities: R
                 }))
         }),
         async handler({ query: { classroomId, lessonId }, body: { date, displayName, activities }, session }, ok, fail) {
-            if (!isInstructor(session?.user.id, classroomId)) {
+            if (!await hasScope(session!.user.id, 'classroom:edit', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
 
@@ -112,10 +112,7 @@ const apiLessonOne = endpoint({} as LessonEntity<{ classroom: any, activities: R
                                 order: i
                             },
                             update: {
-                                activityType: x.activityType,
                                 displayName: 'placeholder',
-                                configuration: x.configuration ?? undefined,
-                                enabledLanguages: x.enabledLanguages,
                                 order: i
                             }
                         }))
@@ -129,7 +126,7 @@ const apiLessonOne = endpoint({} as LessonEntity<{ classroom: any, activities: R
     DELETE: {
         loginValidation: true,
         async handler({ query: { lessonId, classroomId }, session }, ok, fail) {
-            if (!isInstructor(session?.user.id, classroomId)) {
+            if (!await hasScope(session!.user.id, 'classroom:edit', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
 

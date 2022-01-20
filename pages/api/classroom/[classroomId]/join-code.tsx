@@ -1,5 +1,5 @@
 import { endpoint, Status } from '../../../../src/api/Endpoint';
-import { isInstructor } from '../../../../src/api/server/validators';
+import { hasScope } from '../../../../src/api/server/scopes';
 import { prisma } from '../../../../src/db/prisma';
 
 const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -12,7 +12,7 @@ const apiJoinCode = endpoint(null, ['classroomId'], {
     POST: {
         loginValidation: true,
         async handler({ query: { classroomId }, session }, ok, fail) {
-            if (!await isInstructor(session!.user.id, classroomId)) {
+            if (!await hasScope(session!.user.id, 'classroom:invite', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
 
@@ -45,7 +45,7 @@ const apiJoinCode = endpoint(null, ['classroomId'], {
     DELETE: {
         loginValidation: true,
         async handler({ query: { classroomId }, session }, ok, fail) {
-            if (!await isInstructor(session!.user.id, classroomId)) {
+            if (!await hasScope(session!.user.id, 'classroom:invite:refresh', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
 

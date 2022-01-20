@@ -2,7 +2,7 @@ import { SitewideRights } from "@prisma/client";
 import Joi from "joi";
 import { endpoint, Status } from "../../../src/api/Endpoint";
 import { makeUserEntity } from "../../../src/api/entities/UserEntity";
-import { isAdmin } from "../../../src/api/server/validators";
+import { hasScope } from "../../../src/api/server/scopes";
 import { prisma } from "../../../src/db/prisma";
 
 const apiUsers = endpoint(makeUserEntity, ['userId'], {
@@ -10,7 +10,7 @@ const apiUsers = endpoint(makeUserEntity, ['userId'], {
     GET: {
         loginValidation: true,
         async handler({ session, query: { userId } }, ok, fail) {
-            if (userId !== session!.user.id && !await isAdmin(session!.user.id)) {
+            if (!await hasScope(session!.user.id, 'user:view', { userId })) {
                 return fail(Status.FORBIDDEN);
             }
 
@@ -36,7 +36,7 @@ const apiUsers = endpoint(makeUserEntity, ['userId'], {
             ).optional()
         }),
         async handler({ session, query: { userId }, body }, ok, fail) {
-            if (!await isAdmin(session!.user.id)) {
+            if (!await hasScope(session!.user.id, 'user:edit', { userId })) {
                 return fail(Status.FORBIDDEN);
             }
 

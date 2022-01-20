@@ -96,7 +96,7 @@ const Page: NextPage = () => {
         <DataGrid
             sx={{ flexGrow: 1 }}
             loading={loading}
-            rowsPerPageOptions={[2, 10, 25, 50]}
+            rowsPerPageOptions={[10, 25, 50]}
             isRowSelectable={constant(false)}
             pageSize={rowsPerPage}
             onPageSizeChange={handleRowsPerPageChange}

@@ -44,7 +44,7 @@ declare function check(
  */
 // @ts-ignore
 declare function checkError(
-    shouldFail: boolean | (() => Awaitable<boolean>),
+    shouldFail: any | (() => Awaitable<any>),
     display?: typeof SHOW_TEST | string,
     validateError?: (error: any) => boolean
 ): void;

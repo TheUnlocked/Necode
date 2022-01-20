@@ -16,6 +16,11 @@ window.GLSL_SHADER_CODE = new (class GlslShaderCode {
     }
 
     toString() {
+        if (!this._code.endsWith('\n')) {
+            // Add trailing newline because ending a glsl file with a compiler directive
+            // without a trailing newline can cause problems on some platforms.
+            return this._code + '\n';
+        }
         return this._code;
     }
 })(__GLSL_USER_INPUT_SOURCE__);

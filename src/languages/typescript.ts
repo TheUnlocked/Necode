@@ -5,7 +5,7 @@ import transformTypescript from "@babel/plugin-transform-typescript";
 import { transformSync } from '@babel/core';
 import { FeatureOptionsOf, languageDescription } from "./LangaugeDescription";
 import TypescriptIcon from "../util/icons/TypescriptIcon";
-import supportsAmbient from "./features/supportsAmbient";
+import supportsGlobal from "./features/supportsGlobal";
 import supportsIsolated from "./features/supportsIsolated";
 import supportsEntryPoint from "./features/supportsEntryPoint";
 import supportsBabelPlugins from "./features/supportsBabelPlugins";
@@ -17,7 +17,7 @@ export const typescriptDescription = languageDescription({
     icon: TypescriptIcon,
     features: [
         supportsEntryPoint,
-        supportsAmbient,
+        supportsGlobal,
         supportsIsolated,
         supportsBabelPlugins
     ] as const
@@ -34,13 +34,13 @@ export class Typescript implements RunnableLanguage<typeof typescriptDescription
                 ]
             });
 
-            if (options.ambient) {
+            if (options.global) {
                 return result!.code!;
             }
             if (typeof options.entryPoint === 'string') {
                 return `const entry = new Function(${JSON.stringify(`${result!.code}\nreturn ${options.entryPoint};`)})();`;
             }
-            throw new Error('Typescript code must be generated in either ambient or entryPoint mode');
+            throw new Error('Typescript code must be generated in either global or entryPoint mode');
         }
         catch (e: any) {
             if (options.throwAllCompilerErrors) {

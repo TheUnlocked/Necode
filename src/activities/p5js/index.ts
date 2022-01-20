@@ -1,6 +1,6 @@
 import { activityDescription } from "../ActivityDescription";
 import createTestActivityPages, { HtmlTestActivityBaseConfig } from "../html-test-activity-base/HtmlTestActivity";
-import supportsAmbient from "../../languages/features/supportsAmbient";
+import supportsGlobalContext from "../../languages/features/supportsGlobal";
 import supportsIsolated from "../../languages/features/supportsIsolated";
 import dedent from "dedent-js";
 
@@ -82,7 +82,7 @@ const p5jsActivityDescription = activityDescription({
     id: 'core/p5js',
     displayName: 'p5.js Playground',
     supportedFeatures: [
-        supportsAmbient,
+        supportsGlobalContext,
         supportsIsolated
     ] as const,
     activityPage,

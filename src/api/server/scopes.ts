@@ -30,6 +30,8 @@ export interface Scopes {
     'classroom:invite': { classroomId: string };
     'classroom:invite:refresh': { classroomId: string };
     'classroom:view': { classroomId: string };
+    'classroom:view:member': { classroomId: string, userId: string };
+    'classroom:edit:member': { classroomId: string, userId: string };
     'activity:view': { classroomId: string };
     'activity:run': { classroomId: string };
     'submissions:view:all': { classroomId: string };
@@ -51,12 +53,14 @@ export async function hasScope(userId: string, ...info: ScopeArgumentTuples): Pr
             return userId === info[1].userId || await isAdmin(userId);
         case 'classroom:view':
         case 'classroom:edit':
+        case 'classroom:edit:member':
         case 'classroom:invite':
         case 'classroom:invite:refresh':
         case 'submissions:view:all':
             return await isAdmin(userId) || await getRoleInClass(userId, info[1].classroomId) === 'Instructor';
         case 'activity:run':
             return await getRoleInClass(userId, info[1].classroomId) === 'Instructor';
+        case 'classroom:view:member':
         case 'submissions:view':
             return await isAdmin(userId) || await prisma.classroomMembership.count({
                 where: {

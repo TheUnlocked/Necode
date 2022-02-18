@@ -57,7 +57,7 @@ export interface HtmlTestActivityOptions {
     hiddenHtml?: { configurable: true } | { configurable: false, value?: string };
 
     typeDeclarations?: string | URLString[];
-} 
+}
 
 interface HtmlTestActivityMetaProps {
     isEditor: boolean;
@@ -77,7 +77,7 @@ export function createTestActivityPage({
 }: HtmlTestActivityMetaProps) {
     const hasTypeDeclarations = Boolean(typeDeclarationsSource);
 
-    return function <Config extends HtmlTestActivityBaseConfig>(props: ActivityConfigPageProps<Config> | ActivityPageProps<Config>) {
+    return function TestActivityPage<Config extends HtmlTestActivityBaseConfig>(props: ActivityConfigPageProps<Config> | ActivityPageProps<Config>) {
         const {
             language,
             activityConfig,
@@ -86,7 +86,7 @@ export function createTestActivityPage({
             saveData,
             onSaveDataChange
         } = props as NonStrictDisjunction<ActivityConfigPageProps<Config>, ActivityPageProps<Config>>;
-
+        
         const {
             description,
             tests: {

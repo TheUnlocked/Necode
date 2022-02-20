@@ -57,7 +57,7 @@ export interface HtmlTestActivityOptions {
     hiddenHtml?: { configurable: true } | { configurable: false, value?: string };
 
     typeDeclarations?: string | URLString[];
-} 
+}
 
 interface HtmlTestActivityMetaProps {
     isEditor: boolean;
@@ -77,7 +77,7 @@ export function createTestActivityPage({
 }: HtmlTestActivityMetaProps) {
     const hasTypeDeclarations = Boolean(typeDeclarationsSource);
 
-    return function <Config extends HtmlTestActivityBaseConfig>(props: ActivityConfigPageProps<Config> | ActivityPageProps<Config>) {
+    return function TestActivityPage<Config extends HtmlTestActivityBaseConfig>(props: ActivityConfigPageProps<Config> | ActivityPageProps<Config>) {
         const {
             language,
             activityConfig,
@@ -86,7 +86,7 @@ export function createTestActivityPage({
             saveData,
             onSaveDataChange
         } = props as NonStrictDisjunction<ActivityConfigPageProps<Config>, ActivityPageProps<Config>>;
-
+        
         const {
             description,
             tests: {
@@ -596,7 +596,7 @@ export function createTestActivityPage({
             }
         }
 
-        const descriptionPane = description ? <ReflexElement minSize={40} flex={!isMediumLayout ? 2 : undefined}>
+        const descriptionPane = description != null ? <ReflexElement minSize={40} flex={!isMediumLayout ? 2 : undefined}>
             <Card sx={{ height: "100%" }}>
                 <Stack direction="column" sx={{ height: "100%" }}>
                     <Stack direction="row" sx={{ m: 1, height: "24px", alignItems: "center", flexShrink: 0 }}>

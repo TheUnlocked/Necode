@@ -44,7 +44,7 @@ export function ActivityIframe({
 
     const signatureRef = useRef<string>();
 
-    const reload = useCallback(() => {
+    const reload = useCallback((options?: { html?: string, js?: string, css?: string }) => {
         let isResolved = false;
 
         return new Promise<void>(resolve => {
@@ -72,9 +72,9 @@ export function ActivityIframe({
                             type: 'initialize',
                             signature,
                             template: htmlTemplate ?? '',
-                            html,
-                            js,
-                            css
+                            html: options?.html ?? html,
+                            js: options?.js ?? js,
+                            css: options?.css ?? css
                         }, '*');
     
                         const applyChanges = (type: 'html' | 'css' | 'js', value: string) => {
@@ -104,9 +104,16 @@ export function ActivityIframe({
         });
     }, [htmlTemplate, html, js, css]);
 
+    const internalReloadRef = useRef(reload);
+
     useEffect(() => {
-        reload();
-    }, [reload, html, js]);
+        internalReloadRef.current = reload;
+    }, [reload])
+
+    useEffect(() => {
+        debugger;
+        internalReloadRef.current({ html, js });
+    }, [html, js]);
 
     useEffect(() => {
         changeCssRef.current(css ?? '');
@@ -173,8 +180,8 @@ export function ActivityIframe({
     }, [runTestsRef, runTests]);
 
     const onIframeLoad = useCallback((elt: HTMLIFrameElement | null) => {
-        iframeRef.current = elt;
-        if (elt) {
+        if (elt && iframeRef.current !== elt) {
+            iframeRef.current = elt;
             reload();
         }
     }, [reload]);

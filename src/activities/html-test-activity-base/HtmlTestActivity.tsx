@@ -596,7 +596,7 @@ export function createTestActivityPage({
             }
         }
 
-        const descriptionPane = description ? <ReflexElement minSize={40} flex={!isMediumLayout ? 2 : undefined}>
+        const descriptionPane = description != null ? <ReflexElement minSize={40} flex={!isMediumLayout ? 2 : undefined}>
             <Card sx={{ height: "100%" }}>
                 <Stack direction="column" sx={{ height: "100%" }}>
                     <Stack direction="row" sx={{ m: 1, height: "24px", alignItems: "center", flexShrink: 0 }}>

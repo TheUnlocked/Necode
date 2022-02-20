@@ -2,6 +2,9 @@
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  * Copyright (c) 2017, Amjad Masad
+ * 
+ * React: https://github.com/facebook/react/blob/main/scripts/babel/transform-prevent-infinite-loops.js
+ * CodeSandbox: https://github.com/codesandbox/codesandbox-client/blob/master/packages/app/src/sandbox/eval/transpilers/babel/worker/plugins/babel-plugin-transform-prevent-infinite-loops.ts
  * Some additional changes were made for this project.
  *
  * This source code is licensed under the MIT license found in the

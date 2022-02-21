@@ -8,7 +8,8 @@
     "build:next": "cross-env NODE_ENV=production next build",
     "build:wsserver": "cross-env NODE_ENV=production webpack --config ./websocketServer/webpack.config.js",
     "start": "cross-env NODE_ENV=production node run-production.js",
-    "lint": "next lint",
+    "lint": "next lint && npm run typecheck",
+    "typecheck": "tsc --noemit",
     "wsserver": "webpack --watch --config ./websocketServer/webpack.config.js",
     "test": "mocha"
   },

@@ -81,7 +81,7 @@ const [activityPage, configPage] = createTestActivityPages({
 const p5jsActivityDescription = activityDescription({
     id: 'core/p5js',
     displayName: 'p5.js Playground',
-    supportedFeatures: [
+    requiredFeatures: [
         supportsGlobalContext,
         supportsIsolated
     ] as const,

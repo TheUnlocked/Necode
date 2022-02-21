@@ -6,7 +6,7 @@ import TextInputWidget, { TextInputWidgetProps } from "./TextInputWidget";
 const textInputActivityDescription: ActivityDescription<TextInputWidgetProps> = {
     id: 'core/noop/text-field',
     displayName: 'If this text is showing, you have encountered a bug :)',
-    supportedFeatures: [],
+    requiredFeatures: [],
     defaultConfig: {
         language: null,
         value: 'Write lesson notes here...'

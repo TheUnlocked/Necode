@@ -43,7 +43,7 @@ function activityEntityToLocal(entity: ActivityEntity): LocalActivity {
             id: entity.attributes.activityType,
             displayName: 'Unknown Activity',
             defaultConfig: undefined,
-            supportedFeatures: [],
+            requiredFeatures: [],
             activityPage: NoopActivity,
             configWidget: BrokenWidget
         };

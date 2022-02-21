@@ -45,7 +45,7 @@ interface ActivityDescription<ConfigData, Features extends readonly FeatureDescr
 
     displayName: string;
     
-    supportedFeatures: Features;
+    requiredFeatures: Features;
 
     defaultConfig: ConfigData;
 

@@ -1,7 +1,7 @@
 import { PrismaClient } from ".prisma/client";
 import { stream } from "../../src/util/iterables/Stream";
 import { isNotNull } from "../../src/util/typeguards";
-import { RtcPolicy } from "./rtc/policies/RtcPolicy";
+import { RtcCoordinator } from "./rtc/policies/RtcPolicy";
 import { IOServer } from "./types";
 import UserManager from "./UserManager";
 
@@ -18,7 +18,7 @@ class Classroom {
         return this._activity;
     }
 
-    startActivity(activityId: string, activityInfo: any, rtcPolicy?: RtcPolicy) {
+    startActivity(activityId: string, activityInfo: any, rtcPolicy?: RtcCoordinator) {
         this._activity = {
             id: activityId,
             info: activityInfo,
@@ -117,7 +117,7 @@ export type { Classroom };
 export interface Activity {
     id: string;
     info: any;
-    rtcPolicy?: RtcPolicy;
+    rtcPolicy?: RtcCoordinator;
 }
 
 export default class ClassroomManager {

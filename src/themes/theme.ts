@@ -29,6 +29,10 @@ export default createTheme({
                     z-index: 2000 !important;
                 }
 
+                .monaco-editor .suggest-widget {
+                    z-index: 1900 !important;
+                }
+
                 .reflex-container {
                     && > .reflex-splitter {
                         background-color: ${splitterCore};

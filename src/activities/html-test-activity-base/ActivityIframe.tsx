@@ -111,7 +111,6 @@ export function ActivityIframe({
     }, [reload])
 
     useEffect(() => {
-        debugger;
         internalReloadRef.current({ html, js });
     }, [html, js]);
 

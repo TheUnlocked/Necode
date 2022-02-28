@@ -1,6 +1,6 @@
 import { Activity } from "@prisma/client";
 import Joi from "joi";
-import { endpoint, Status } from "../../../../../../src/api/Endpoint";
+import { AttributesOf, endpoint, Status } from "../../../../../../src/api/Endpoint";
 import { ActivityEntity, makeActivityEntity } from "../../../../../../src/api/entities/ActivityEntity";
 import { makeClassroomEntity } from "../../../../../../src/api/entities/ClassroomEntity";
 import { ReferenceDepth } from "../../../../../../src/api/entities/EntityReference";
@@ -72,12 +72,18 @@ const apiLessonOne = endpoint({} as LessonEntity<{ classroom: any, activities: R
             date: Joi.string().regex(iso8601DateRegex),
             displayName: Joi.string().allow('').max(100),
             activities: Joi.array()
-                .items(Joi.object<ActivityEntity['attributes'] & { id: string }>({
-                    id: Joi.string().optional(),
-                    activityType: Joi.string(),
-                    configuration: Joi.any().optional(),
-                    enabledLanguages: Joi.array().items(Joi.string())
-                }))
+                .items(Joi.alt(
+                    Joi.object<AttributesOf<ActivityEntity>>({
+                        activityType: Joi.string(),
+                        configuration: Joi.any().optional(),
+                        enabledLanguages: Joi.array().items(Joi.string()).optional()
+                    }),
+                    Joi.object<AttributesOf<ActivityEntity> & { id: string }>({
+                        id: Joi.string(),
+                        configuration: Joi.any().optional(),
+                        enabledLanguages: Joi.array().items(Joi.string()).optional()
+                    }),
+                ))
         }),
         async handler({ query: { classroomId, lessonId }, body: { date, displayName, activities }, session }, ok, fail) {
             if (!await hasScope(session!.user.id, 'classroom:edit', { classroomId })) {
@@ -105,15 +111,17 @@ const apiLessonOne = endpoint({} as LessonEntity<{ classroom: any, activities: R
                         upsert: (activities as unknown as (ActivityEntity['attributes'] & { id?: string })[]).map((x, i) => ({
                             where: { id: x.id ?? '' },
                             create: {
-                                activityType: x.activityType,
+                                activityType: x.activityType ?? 'core/unknown',
                                 displayName: 'placeholder',
                                 configuration: x.configuration ?? undefined,
-                                enabledLanguages: x.enabledLanguages,
+                                enabledLanguages: x.enabledLanguages ?? [],
                                 order: i
                             },
                             update: {
                                 displayName: 'placeholder',
-                                order: i
+                                order: i,
+                                ...(x.configuration ? { configuration: x.configuration } : {}),
+                                ...(x.enabledLanguages ? { enabledLanguages: x.enabledLanguages } : {})
                             }
                         }))
                     }

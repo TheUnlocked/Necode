@@ -21,7 +21,7 @@ const [activityPage, configPage] = createTestActivityPages();
 const testDomActivityDescription = activityDescription({
     id: 'core/test-dom',
     displayName: 'DOM Programming',
-    supportedFeatures: [
+    requiredFeatures: [
         supportsGlobal,
         supportsIsolated
     ] as const,

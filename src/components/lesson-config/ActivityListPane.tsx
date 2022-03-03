@@ -6,7 +6,6 @@ import { Dispatch, MutableRefObject, useCallback, useEffect, useRef, useState } 
 import { useDrop } from "react-dnd";
 import ActivityDescription from "../../activities/ActivityDescription";
 import allActivities from "../../activities/allActivities";
-import testDomActivityDescription from "../../activities/test-dom";
 import { useGetRequest } from "../../api/client/GetRequestHook";
 import { useLoadingContext } from "../../api/client/LoadingContext";
 import { ActivityEntity } from "../../api/entities/ActivityEntity";
@@ -22,7 +21,7 @@ import NoopActivity from "./NoopActivity";
 import textInputActivityDescription from "./textInputDescription";
 import useImperativeDialog from "../../hooks/ImperativeDialogHook";
 import SelectActivityDialog from "./SelectActivityDialog";
-import { AttributesOf } from "../../api/Endpoint";
+import { AttributesOf, PartialAttributesOf } from "../../api/Endpoint";
 
 export interface LocalActivity {
     id: string;
@@ -43,7 +42,7 @@ function activityEntityToLocal(entity: ActivityEntity): LocalActivity {
             id: entity.attributes.activityType,
             displayName: 'Unknown Activity',
             defaultConfig: undefined,
-            supportedFeatures: [],
+            requiredFeatures: [],
             activityPage: NoopActivity,
             configWidget: BrokenWidget
         };
@@ -142,6 +141,8 @@ export default function ActivityListPane({
         }
     }, [lessonEntity, lessonEntityError]);
 
+    const [activityConfigDeltas, setActivityConfigDeltas] = useState({} as { [activityId: string]: any });
+
     const { startUpload, finishUpload } = useLoadingContext();
 
     const save = useCallback(() => {
@@ -172,12 +173,27 @@ export default function ActivityListPane({
         const body = JSON.stringify({
             date,
             displayName,
-            activities: activities.map(x => ({
-                id: x.id.startsWith('%local') ? undefined : x.id,
-                activityType: x.activityType?.id,
-                configuration: x.configuration,
-                enabledLanguages: x.enabledLanguages
-            }))
+            activities: activities.map<PartialAttributesOf<ActivityEntity>>(x => {
+                const isLocal = x.id.startsWith('%local');
+                if (isLocal) {
+                    return {
+                        activityType: x.activityType?.id,
+                        configuration: x.configuration,
+                        enabledLanguages: x.enabledLanguages
+                    };
+                }
+                else if (x.id in activityConfigDeltas) {
+                    return {
+                        id: x.id,
+                        configuration: activityConfigDeltas[x.id]
+                    };
+                }
+                else {
+                    return {
+                        id: x.id
+                    };
+                }
+            })
         } as AttributesOf<LessonEntity<{ activities: 'deep' }>>);
 
         let req: Promise<Response<LessonEntity<{ activities: 'deep', classroom: 'shallow' }>>>;
@@ -195,6 +211,7 @@ export default function ActivityListPane({
             }).then(x => x.json());
         }
 
+        setActivityConfigDeltas({});
         clearDirty();
         return req
             .then(x => {
@@ -202,7 +219,7 @@ export default function ActivityListPane({
                 return x.data;
             })
             .finally(finishUpload);
-    }, [date, classroomId, lessonId, displayName, activities, isLoading, onLessonChange, startUpload, finishUpload]);
+    }, [date, classroomId, lessonId, displayName, activities, activityConfigDeltas, isLoading, onLessonChange, startUpload, finishUpload]);
 
     const saveRef = useRef(save);
     useEffect(() => {
@@ -290,7 +307,10 @@ export default function ActivityListPane({
             activity={activityEntity.activityType}
             classroomId={classroomId}
             activityConfig={activityEntity.configuration}
-            onActivityConfigChange={x => setActivityConfig(index, x)}
+            onActivityConfigChange={x => {
+                setActivityConfig(index, x);
+                setActivityConfigDeltas({ ...activityConfigDeltas, [activityEntity.id]: x });
+            }}
             findItem={findItem}
             moveItem={moveItem}
             getRealActivityId={getRealActivityId} />;

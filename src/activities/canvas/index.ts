@@ -5,7 +5,7 @@ import { CanvasActivity } from "./CanvasActivity";
 const canvasActivityDescription = activityDescription({
     id: 'core/canvas-ring',
     displayName: 'Canvas Ring',
-    supportedFeatures: [
+    requiredFeatures: [
         supportsEntryPoint
     ] as const,
     activityPage: CanvasActivity,

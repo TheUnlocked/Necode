@@ -74,6 +74,7 @@ export default function TextInputWidget({
                     'editor.background': '#121212'
                 }
             });
+            monaco.editor.setTheme('vs-black');
         }
     });
 

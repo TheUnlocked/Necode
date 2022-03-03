@@ -184,6 +184,12 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
             hash: date
         });
     }
+
+    const handleActivityConfigChange = useCallback((newConfig: any) => {
+        markDirty();
+        unloadPreviewRef.current();
+        setActivityConfig(newConfig);
+    }, []);
     
     if (isLoading) {
         return <>
@@ -277,11 +283,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
                 <activity.configPage
                     id={""}
                     activityConfig={activityConfig}
-                    onActivityConfigChange={newConfig => {
-                        markDirty();
-                        unloadPreviewRef.current();
-                        setActivityConfig(newConfig);
-                    }}
+                    onActivityConfigChange={handleActivityConfigChange}
                     classroomId={classroomId}
                     language={selectedLanguage} />
             </Lazy>

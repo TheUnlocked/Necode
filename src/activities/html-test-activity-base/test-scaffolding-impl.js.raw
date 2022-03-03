@@ -34,21 +34,28 @@ function wait(ms) {
 
 function waitFor(condition, timeoutMs) {
     timeoutMs = Math.min(timeoutMs ?? 100, 500);
-    return new Promise(resolve => {
-        if (condition()) {
-            resolve(true);
-            return;
+    return new Promise(async resolve => {
+        try {
+            if (await condition()) {
+                resolve(true);
+                return;
+            }
         }
+        catch (e) {}
+
         const startTime = performance.now();
         const interval = setInterval(async () => {
             if (performance.now() - startTime >= timeoutMs) {
                 clearInterval(interval);
                 resolve(false);
             }
-            if (await condition()) {
-                clearInterval(interval);
-                resolve(true);
+            try {
+                if (await condition()) {
+                    clearInterval(interval);
+                    resolve(true);
+                }
             }
+            catch (e) {}
         }, Math.min(10, timeoutMs));
     });
 }

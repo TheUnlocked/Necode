@@ -1,8 +1,8 @@
 import { RingPolicy } from "./RingPolicy";
-import { RtcPolicyConstructor } from "./RtcPolicy";
+import { RtcPolicy } from "./RtcPolicy";
 
 const allPolicies = [
     RingPolicy
-] as RtcPolicyConstructor[];
+] as RtcPolicy[];
 
 export default allPolicies;

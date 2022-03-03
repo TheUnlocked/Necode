@@ -15,7 +15,7 @@ import { DateTime, Duration } from 'luxon';
 import { makeActivitySubmissionEntity } from '../../src/api/entities/ActivitySubmissionEntity';
 import { makeUserEntity } from '../../src/api/entities/UserEntity';
 import allPolicies from './rtc/policies/allPolicies';
-import { RtcPolicy } from './rtc/policies/RtcPolicy';
+import { RtcCoordinator } from './rtc/policies/RtcPolicy';
 import { hasScope } from '../../src/api/server/scopes';
 
 dotenv.config()

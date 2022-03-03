@@ -28,7 +28,7 @@ const [activityPage, configPage] = createTestActivityPages({
 const glslActivityDescription = activityDescription({
     id: 'core/glsl',
     displayName: 'GLSL Playground',
-    supportedFeatures: [isLanguage(glslDescription)] as const,
+    requiredFeatures: [isLanguage(glslDescription)] as const,
     activityPage,
     configPage,
     defaultConfig: {

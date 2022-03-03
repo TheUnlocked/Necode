@@ -10,12 +10,12 @@ export interface RtcPolicySettings {
     rtc: RtcManager;
 }
 
-export interface RtcPolicyConstructor {
-    new(users: Iterable<string>, settings: RtcPolicySettings): RtcPolicy;
+export interface RtcPolicy {
+    new(users: Iterable<string>, settings: RtcPolicySettings): RtcCoordinator;
     readonly policyId: string;
 }
 
-export interface RtcPolicy {
+export interface RtcCoordinator {
     onUserJoin(user: string): void;
     /**
      * Must be a no-op if the user is not already connected
@@ -25,4 +25,4 @@ export interface RtcPolicy {
 }
 
 /** Static typing decorator since TS doesn't have a syntax for implementing a static member interface  */
-export function rtcPolicy<U extends RtcPolicyConstructor>(_: U) {}
+export function rtcPolicy<U extends RtcPolicy>(_: U) {}

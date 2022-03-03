@@ -1,9 +1,9 @@
 import AutoRing from '../../../../src/util/AutoRing';
 import { ArrayKeyMap } from '../../../../src/util/maps/ArrayKeyMap';
-import { ConnectionInfo, RtcPolicy, RtcPolicySettings, rtcPolicy } from './RtcPolicy';
+import { ConnectionInfo, RtcCoordinator, RtcPolicySettings, rtcPolicy } from './RtcPolicy';
 
 @rtcPolicy
-export class RingPolicy implements RtcPolicy {
+export class RingPolicy implements RtcCoordinator {
     public static policyId = 'ring';
 
     private ring: AutoRing<string>;

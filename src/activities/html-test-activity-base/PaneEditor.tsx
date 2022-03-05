@@ -27,14 +27,7 @@ export default function PaneEditor(props: PaneEditorProps) {
     }
     else {
         const onMount: OnMount = (editor, monaco) => {
-            editor.addAction({
-                id: 'apply-changes',
-                label: 'Apply Changes',
-                keybindings: [
-                    monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S
-                ],
-                run: props.applyChanges!
-            });
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, props.applyChanges!);
         };
 
         return <Editor

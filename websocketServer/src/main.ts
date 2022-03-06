@@ -207,6 +207,8 @@ io.on('connection', socket => {
     });
 });
 
+restApp.get('/', (_, res) => res.redirect(process.env.FRONTEND_SERVER!));
+
 const internalApi = express();
 restApp.use('/internal', internalApi);
 

@@ -37,7 +37,8 @@ else {
 
 const io: IOServer = new Server(server, {
     cors: {
-        origin: "*", // dev only
+        // Trim trailing slash
+        origin: process.env.FRONTEND_ORIGIN!.replace(/\/$/, ''),
         methods: ["GET", "POST"]
     }
 });
@@ -207,7 +208,7 @@ io.on('connection', socket => {
     });
 });
 
-restApp.get('/', (_, res) => res.redirect(process.env.FRONTEND_SERVER!));
+restApp.get('/', (_, res) => res.redirect(process.env.FRONTEND_ORIGIN!));
 
 const internalApi = express();
 restApp.use('/internal', internalApi);

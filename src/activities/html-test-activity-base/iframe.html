@@ -7,12 +7,14 @@
 
     let htmlTemplate;
 
+    let scriptsLoadedPromise = Promise.resolve();
+
     function loadHtmlTemplate() {
         document.head.innerHTML = '';
         document.body.innerHTML = htmlTemplate;
 
         document.body.querySelectorAll('style, script').forEach(elt => {
-            document.head.prepend(elt);
+            document.head.append(elt);
         });
     }
 
@@ -29,19 +31,36 @@
             document.body.innerHTML += (data ?? '');
         }
 
-        document.querySelectorAll('script').forEach(elt => {
+        let previousScriptLoaded = Promise.resolve();
+
+        document.querySelectorAll('script').forEach(async (elt, i) => {
             const newScript = document.createElement('script');
+
             for (const attribute of elt.attributes) {
                 newScript.setAttribute(attribute.name, attribute.value);
             }
             newScript.text = elt.text;
+
+            if (!newScript.hasAttribute('async')) {
+                newScript.async = false;
+                const barrier = previousScriptLoaded;
+                previousScriptLoaded = new Promise(async resolve => {
+                    newScript.onload = resolve;
+                });
+    
+                await barrier;
+            }
+            
             elt.insertAdjacentElement('beforebegin', newScript);
             elt.remove();
         });
+
+        scriptsLoadedPromise = previousScriptLoaded;
     }
 
-    function setJs(data) {
+    async function setJs(data) {
         document.getElementById(JS_ELT_ID)?.remove();
+        await scriptsLoadedPromise;
         const scriptElt = document.createElement('script');
         scriptElt.id = JS_ELT_ID;
         scriptElt.text = data ?? '';

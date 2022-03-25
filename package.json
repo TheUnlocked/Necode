@@ -39,9 +39,9 @@
     "luxon": "^1.28.0",
     "material-ui-popup-state": "^2.0.0-beta.1",
     "nanoid": "^3.2.0",
-    "next": "^12.0.7",
+    "next": "^12.1.0",
     "next-auth": "^4.0.0-beta.2",
-    "next-mdx-remote": "^3.0.8",
+    "next-mdx-remote": "^4.0.0",
     "notistack": "^2.0.2",
     "react": "^17.0.2",
     "react-dnd": "^14.0.4",
@@ -58,7 +58,8 @@
     "simple-peer": "^9.11.0",
     "socket.io": "^4.3.2",
     "socket.io-client": "^4.3.2",
-    "swr": "^1.0.1"
+    "swr": "^1.0.1",
+    "unist-util-visit": "^4.1.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.15.6",
@@ -75,7 +76,7 @@
     "chai": "^4.3.4",
     "cross-env": "^7.0.3",
     "eslint": "7.32.0",
-    "eslint-config-next": "^12.0.7",
+    "eslint-config-next": "^12.1.0",
     "mocha": "^9.1.2",
     "monaco-editor": "^0.29.1",
     "next-transpile-modules": "^9.0.0",
@@ -86,6 +87,7 @@
     "ts-node": "^10.2.1",
     "typed-emitter": "^1.3.1",
     "typescript": "^4.4.4",
+    "unified": "^10.1.2",
     "webpack": "^5.57.0",
     "webpack-bundle-analyzer": "^4.5.0",
     "webpack-cli": "^4.8.0"

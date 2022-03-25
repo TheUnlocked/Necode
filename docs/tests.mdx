@@ -48,7 +48,7 @@ By default, if a student fails to pass a check, a message like this will appear.
         <p>Your code failed a secret test :(</p>
     </DialogContent>
     <DialogActions>
-        <button>Ok</button>
+        <Button>Ok</Button>
     </DialogActions>
 </Card>
 
@@ -68,7 +68,7 @@ check(square(4) === 16, 'You can use * to multiply two numbers!');
         <p>You can use * to multiply two numbers!</p>
     </DialogContent>
     <DialogActions>
-        <button>Ok</button>
+        <Button>Ok</Button>
     </DialogActions>
 </Card>
 
@@ -87,24 +87,24 @@ check(square(1) === 1, SHOW_TEST);
         <pre>square(1) === 1</pre>
     </DialogContent>
     <DialogActions>
-        <button>Ok</button>
+        <Button>Ok</Button>
     </DialogActions>
 </Card>
+<br />
+<Alert severity="warning">
+    Necode uses compiler transformations to detect `SHOW_TEST` as well as to modify the call
+    signature of `check` and other testing DSL builtins. Something like this:
 
-<p><Alert severity="warning">
-Necode uses compiler transformations to detect <code>SHOW_TEST</code> as well as to modify the call
-signature of <code>check</code> and other testing DSL builtins. Something like this:
+    ```ts
+    const MY_SHOW_TEST = SHOW_TEST;
+    check(square(1) === 1, MY_SHOW_TEST);
+    ```
 
-```ts
-const MY_SHOW_TEST = SHOW_TEST;
-check(square(1) === 1, MY_SHOW_TEST);
-```
-
-Might seem like it should work, but it will actually break the tests! Make sure to always
-use the names of functions and variables provided in the testing DSL as they appear in the
-documentation, and don't try to overload or shadow those names with any other values in your
-testing code.
-</Alert></p>
+    Might seem like it should work, but it will actually break the tests! Make sure to always
+    use the names of functions and variables provided in the testing DSL as they appear in the
+    documentation, and don't try to overload or shadow those names with any other values in your
+    testing code.
+</Alert>
 
 ### Error Handling
 
@@ -134,7 +134,7 @@ check(throwIfNotZero(1), 'Caught the error, like expected.');
         <p>Caught the error, like expected.</p>
     </DialogContent>
     <DialogActions>
-        <button>Ok</button>
+        <Button>Ok</Button>
     </DialogActions>
 </Card>
 
@@ -168,7 +168,7 @@ wait(200);
 
 <Alert severity="warning">
     There is an imposed limit of at most 500 milliseconds per call to any kind of wait function.
-    While you can circumvent this by repeatedly calling <code>wait</code> multiple times, it is not recommended.
+    While you can circumvent this by repeatedly calling `wait` multiple times, it is not recommended.
     In order to maintain responsiveness, tests will automatically time out after ten seconds,
     and that length of time cannot be configured.
 </Alert>
@@ -200,7 +200,9 @@ By default all check statements must pass in order for a student to be allowed t
 their code, but this can be disabled with a checkbox in the Tests tab.
 Try toggling the checkbox below to see how it changes the dialog.
 
-<WithState initialState={true}>{(state, setState) => <>
+const isRequireChecksEnabled = useState(true);
+
+{<WithState initialState={true}>{(state, setState) => <>
     <p>
         <Typography variant="overline">Require checks to submit</Typography>
         <Checkbox checked={state} onChange={ev => setState(ev.target.checked)} />
@@ -219,14 +221,14 @@ Try toggling the checkbox below to see how it changes the dialog.
         </DialogContent>
         <DialogActions>
             {state
-                ? <button>Ok</button>
+                ? <Button>Ok</Button>
                 : <>
-                    <button>Cancel</button>
-                    <button>Submit Now</button>
+                    <Button>Cancel</Button>
+                    <Button>Submit Now</Button>
                 </>}
         </DialogActions>
     </Card>
-</>}</WithState>
+</>}</WithState>}
 
 ### `check` With Arrow Functions
 
@@ -272,6 +274,6 @@ function runCheck() {
 ```
 
 <Alert severity="error">
-    SyntaxTransformError: <code>check</code> cannot be used in a synchronous context.
-    Add the <code>async</code> keyword to the surrounding function.
+    SyntaxTransformError: `check` cannot be used in a synchronous context.
+    Add the `async` keyword to the surrounding function.
 </Alert>

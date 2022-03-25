@@ -185,5 +185,5 @@ export function ActivityIframe({
         }
     }, [reload]);
 
-    return <Iframe ref={onIframeLoad} sandbox="allow-scripts" sx={sx} />;
+    return <Iframe ref={onIframeLoad} sandbox="allow-scripts" allow="cross-origin-isolated" sx={sx} />;
 }

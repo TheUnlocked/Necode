@@ -20,5 +20,16 @@ module.exports = withTM({
         // new BundleAnalyzerPlugin()
       ]
     });
+  },
+  async headers() {
+    return [
+      {
+        source: '/:any*',
+        headers: [
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+          { key: 'Cross-Origin-Embedder-Policy', value: 'credentialless' },
+        ]
+      }
+    ];
   }
 });

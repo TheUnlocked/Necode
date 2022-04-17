@@ -23,6 +23,7 @@ import { ClassroomMemberEntity } from "../../../../../src/api/entities/Classroom
 import NotFoundPage from "../../../../404";
 import supportsLanguage from "../../../../../src/activities/supportsLanguage";
 import { curry } from "lodash";
+import fetch from '../../../../../src/util/fetch';
 
 interface StaticProps {
     classroomId: string;

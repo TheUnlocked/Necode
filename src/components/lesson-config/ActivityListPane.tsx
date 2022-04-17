@@ -22,6 +22,7 @@ import textInputActivityDescription from "./textInputDescription";
 import useImperativeDialog from "../../hooks/ImperativeDialogHook";
 import SelectActivityDialog from "./SelectActivityDialog";
 import { AttributesOf, PartialAttributesOf } from "../../api/Endpoint";
+import fetch from '../../util/fetch';
 
 export interface LocalActivity {
     id: string;

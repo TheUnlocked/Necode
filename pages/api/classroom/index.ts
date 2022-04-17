@@ -13,7 +13,7 @@ const apiClassroomAll = endpoint(makeClassroomEntity, [], {
             displayName: Joi.string().min(6).max(100)
         }),
         async handler({ body, session }, ok, fail) {
-            if (!await hasScope(session!.user.id, 'classrooms:create')) {
+            if (!await hasScope(session!.user.id, 'classroom:create')) {
                 return fail(Status.FORBIDDEN);
             }
 

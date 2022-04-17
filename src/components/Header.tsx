@@ -5,6 +5,7 @@ import { MetaInfo } from "../contexts/MetaTransformerContext";
 import NextLink, { LinkProps } from "next/link";
 import { UserEntity } from "../api/entities/UserEntity";
 import { useGetRequestImmutable } from "../api/client/GetRequestHook";
+import { setImpersonation, useImpersonation } from '../hooks/ImpersonationHook';
 
 export default function Header(props: {
     path: MetaInfo['path']
@@ -16,10 +17,12 @@ export default function Header(props: {
 
     const { data: session, isLoading } = useGetRequestImmutable<UserEntity>('/api/me');
 
+    const isImpersonating = Boolean(useImpersonation());
+
     function breadcrumbsLink(link: { label: string, href?: LinkProps['href'] }, index: number, isLast: boolean) {
         if (link.href) {
-            return <NextLink href={link.href} key={index}>
-                <Link href={link.href.toString()} onClick={() => false}
+            return <NextLink href={link.href} passHref key={index}>
+                <Link onClick={() => false}
                     variant="h6" noWrap
                     underline="hover" color={isLast ? "text.primary" : "inherit"}>{link.label}</Link>
             </NextLink>;
@@ -40,8 +43,16 @@ export default function Header(props: {
                 : <Stack direction="row" justifyContent="end" alignItems="baseline" spacing={4}>
                     {session
                         ? <>
-                            <Typography>Signed in as <strong>{session.attributes.username}</strong></Typography>
-                            <Button color="inherit" onClick={() => signOut({ redirect: true })}>Sign Out</Button>
+                            {isImpersonating
+                                ? <>
+                                    <Typography>Impersonating <strong>{session.attributes.username}</strong></Typography>
+                                    <Button color="warning" variant="contained" onClick={() => setImpersonation(undefined)}>Stop Impersonation</Button>
+                                </>
+                                : <>
+                                    <Typography>Signed in as <strong>{session.attributes.username}</strong></Typography>
+                                    <Button color="inherit" onClick={() => setImpersonation(prompt() ?? undefined)}>Impersonate (DEV)</Button>
+                                    <Button color="inherit" onClick={() => signOut({ redirect: true })}>Sign Out</Button>
+                                </>}
                         </>
                         : <Button variant="contained" onClick={() => signIn("wpi", { redirect: false })}>Sign In</Button>}
                 </Stack>}

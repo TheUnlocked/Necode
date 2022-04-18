@@ -36,7 +36,6 @@ function makeUseGetRequest(immutable: boolean) {
 
         useEffect(() => {
             if (isImpersonatingAndMeEndpointChanged) {
-                console.log('revalidate')
                 mutate();
             }
         }, [isImpersonatingAndMeEndpointChanged, mutate])

@@ -25,15 +25,12 @@ const apiUsers = endpoint(makeUserEntity, ['userId'], {
     PATCH: {
         loginValidation: true,
         schema: Joi.object({
-            username: Joi.string().optional(),
+            // username: Joi.string().optional(),
             displayName: Joi.string().optional(),
             email: Joi.string().optional(),
             firstName: Joi.string().optional(),
             lastName: Joi.string().optional(),
-            rights: Joi.alternatives(
-                SitewideRights.None,
-                SitewideRights.Admin,
-            ).optional()
+            rights: Joi.alternatives(Object.values(SitewideRights)).optional()
         }),
         async handler({ session, query: { userId }, body }, ok, fail) {
             if (!await hasScope(session!.user.id, 'user:edit', { userId })) {

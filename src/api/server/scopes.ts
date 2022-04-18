@@ -8,6 +8,13 @@ async function isAdmin(user: string) {
     } }) > 0;
 }
 
+async function isAdminOrFaculty(user: string) {
+    return await prisma.user.count({ where: {
+        id: user,
+        OR: [{ rights: 'Admin' }, { rights: 'Faculty' }]
+    } }) > 0;
+}
+
 async function getSitewideRights(user: string) {
     return (await prisma.user.findUnique({ select: { rights: true }, where: {
         id: user
@@ -56,9 +63,9 @@ export async function hasScope<Scope extends keyof Scopes>(userId: string, scope
 export async function hasScope(userId: string, ...[scope, data]: ScopeArgumentTuples): Promise<boolean> {
     switch (scope) {
         case 'user:all:view':
-        case 'user:edit':
-        case 'classroom:create':
             return isAdmin(userId);
+        case 'classroom:create':
+            return isAdminOrFaculty(userId);
         case 'user:view':
         case 'user:detailed:view':
             return userId === data.userId || await isAdmin(userId);
@@ -71,6 +78,14 @@ export async function hasScope(userId: string, ...[scope, data]: ScopeArgumentTu
             }
             return false;
         case 'user:impersonate':
+            if (userId === data.userId) {
+                return false;
+            }
+            // Intentional fallthrough
+        case 'user:edit':
+            // Summary of logic:
+            //      Admin can edit/impersonate anyone, assuming that user exists
+            //      Faculty can only edit/impersonate their own simulated users
             return (await prisma.$queryRaw<[]>`
                 SELECT 1
                 FROM "User"
@@ -93,9 +108,8 @@ export async function hasScope(userId: string, ...[scope, data]: ScopeArgumentTu
         case 'classroom:invite':
         case 'classroom:invite:refresh':
         case 'submission:all:view':
-            return await isAdmin(userId) || await getRoleInClass(userId, data.classroomId) === 'Instructor';
         case 'activity:run':
-            return await getRoleInClass(userId, data.classroomId) === 'Instructor';
+            return await isAdmin(userId) || await getRoleInClass(userId, data.classroomId) === 'Instructor';
         case 'classroom:member:view':
         case 'submission:user:view':
             return await isAdmin(userId) || await prisma.classroomMembership.count({
@@ -109,6 +123,6 @@ export async function hasScope(userId: string, ...[scope, data]: ScopeArgumentTu
             }) > 0;
         case 'activity:view':
         case 'submission:create':
-            return isInClass(userId, data.classroomId);
+            return await isAdmin(userId) || isInClass(userId, data.classroomId);
     }
 }

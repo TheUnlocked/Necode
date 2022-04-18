@@ -15,7 +15,7 @@ import allActivities from "../../../src/activities/allActivities";
 import allLanguages from "../../../src/languages/allLanguages";
 import { useSubmissions } from "../../../src/hooks/SubmissionHook";
 import useImperativeDialog from "../../../src/hooks/ImperativeDialogHook";
-import SubmissionsDialog from "../../../src/components/SubmissionsDialog";
+import SubmissionsDialog from "../../../src/components/dialogs/SubmissionsDialog";
 import { ClassroomRole } from ".prisma/client";
 import NotFoundPage from "../../404";
 import supportsLanguage from "../../../src/activities/supportsLanguage";

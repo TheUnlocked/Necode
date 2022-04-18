@@ -1,5 +1,5 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, List, ListItemButton, ListItemText } from "@mui/material";
-import { ActivitySubmissionEntity } from "../api/entities/ActivitySubmissionEntity";
+import { ActivitySubmissionEntity } from "../../api/entities/ActivitySubmissionEntity";
 
 interface SubmissionsDialogProps {
     open: boolean;

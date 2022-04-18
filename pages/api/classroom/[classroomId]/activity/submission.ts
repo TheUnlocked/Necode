@@ -89,7 +89,8 @@ const apiActivitySubmissionAll = endpoint(makeActivitySubmissionEntity, ['classr
                                 firstName: x.firstName,
                                 lastName: x.lastName,
                                 rights: x.rights,
-                                classes: undefined
+                                classes: undefined,
+                                simulatedUsers: undefined,
                             }
                         } : x.userId,
                     activity: includeActivity

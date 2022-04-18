@@ -11,7 +11,8 @@
     "lint": "next lint && npm run typecheck",
     "typecheck": "tsc --noemit",
     "wsserver": "webpack --watch --config ./websocketServer/webpack.config.js",
-    "test": "mocha"
+    "test": "mocha",
+    "vercel-build": "prisma generate && prisma migrate deploy && next build"
   },
   "dependencies": {
     "@babel/core": "^7.15.5",

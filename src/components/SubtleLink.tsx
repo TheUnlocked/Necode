@@ -1,8 +1,13 @@
+import NextLink, { LinkProps } from "next/link";
 import { Link, styled } from "@mui/material";
 
-const SubtleLink = styled(Link)(({ theme }) => `
+const MuiSubtleLink = styled(Link)(({ theme }) => `
     color: ${theme.palette.text.primary};
     text-decoration-color: ${theme.palette.text.primary};
 `);
 
-export default SubtleLink;
+export default function SubtleLink(props: Parameters<typeof Link>[0] & { href: string }) {
+    return <NextLink href={props.href} passHref>
+        <MuiSubtleLink {...props}></MuiSubtleLink>
+    </NextLink>;
+}

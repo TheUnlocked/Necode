@@ -88,8 +88,8 @@ const Page: NextPage = () => {
 
     if (!me || me.attributes.rights !== 'Admin') {
         return isLoading
-                ? <FullPageLoader />
-                : <AdminPageAlert />;
+            ? <FullPageLoader />
+            : <AdminPageAlert />;
     }
 
     return <Container maxWidth="lg" sx={{ flexGrow: 1, display: "flex", flexDirection: "column", mb: 6 }}>
@@ -117,6 +117,7 @@ const Page: NextPage = () => {
                 { field: 'email', headerName: 'Email' },
                 { field: 'rights', headerName: 'Rights', editable: true, type: 'singleSelect', valueOptions: [
                     { label: 'Admin', value: 'Admin' },
+                    { label: 'Faculty', value: 'Faculty' },
                     { label: 'None', value: 'None' },
                 ] },
             ] as GridColDef[]).map(x => ({ ...x, flex: 1, filterable: false, sortable: false, hide: hiddenCols[x.field] }))} />

@@ -5,6 +5,7 @@ import SignJWT from "jose/jwt/sign";
 import { endpoint, Status } from "../../../../../src/api/Endpoint";
 import { hasScope } from "../../../../../src/api/server/scopes";
 import { prisma } from "../../../../../src/db/prisma";
+import fetch from '../../../../../src/util/fetch';
 import { LiveActivityInfo } from "../../../../../websocketServer/src/types";
 
 async function makeJwt(content: { [propName: string]: unknown }, expireIn: string) {

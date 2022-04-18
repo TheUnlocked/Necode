@@ -9,6 +9,7 @@ import { useRouter } from "next/router";
 import { useGetRequestImmutable } from "../../src/api/client/GetRequestHook";
 import { UserEntity } from "../../src/api/entities/UserEntity";
 import AdminPageAlert from "../../src/components/AdminPageAlert";
+import fetch from '../../src/util/fetch';
 
 const MIN_NAME_LENGTH = 6;
 const MAX_NAME_LENGTH = 100;

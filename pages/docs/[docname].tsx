@@ -12,15 +12,16 @@ import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 import remarkToc from "remark-toc";
 import WithState from "../../src/components/WithState";
+import remarkUnwrapMdx from '../../src/remark/remark-unwrap-mdx';
 
-const h1 = (props: TypographyProps<'h1'>) => <>
+const h1 = (props: PropsWithChildren<{}>) => <>
     <Typography sx={{ marginTop: 6 }} variant="h3" fontWeight="500" {...props} component="h1" />
     <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
 </>;
 
-const h2 = (props: TypographyProps<'h2'>) => <Typography sx={{ mt: 4, mb: 2 }} variant="h4" {...props} component="h2" />;
-const h3 = (props: TypographyProps<'h3'>) => <Typography sx={{ mt: 4, mb: 2 }} variant="h5" {...props} component="h3" />;
-const h4 = (props: TypographyProps<'h4'>) => <Typography sx={{ mt: 4, mb: 2 }} variant="h6" {...props} component="h4" />;
+const h2 = (props: PropsWithChildren<{}>) => <Typography sx={{ mt: 4, mb: 2 }} variant="h4" {...props} component="h2" />;
+const h3 = (props: PropsWithChildren<{}>) => <Typography sx={{ mt: 4, mb: 2 }} variant="h5" {...props} component="h3" />;
+const h4 = (props: PropsWithChildren<{}>) => <Typography sx={{ mt: 4, mb: 2 }} variant="h6" {...props} component="h4" />;
 
 const DocsPage: NextPage<{ source: MDXRemoteSerializeResult }> = ({ source }) => {
     return <>
@@ -29,7 +30,7 @@ const DocsPage: NextPage<{ source: MDXRemoteSerializeResult }> = ({ source }) =>
                 WithState,
                 h1, h2, h3, h4,
                 Typography,
-                button: Button, Checkbox,
+                Button, Checkbox,
                 Card, DialogTitle, DialogContent, DialogContentText, DialogActions,
                 Alert
             }} />
@@ -52,6 +53,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
                     ],
                     remarkPlugins: [
                         remarkGfm,
+                        remarkUnwrapMdx,
                         [remarkToc, { tight: true }],
                     ]
                 }

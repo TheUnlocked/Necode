@@ -32,6 +32,7 @@ import { useLoadingContext } from "../../api/client/LoadingContext";
 import { debounce } from "lodash";
 import { ImplicitNewType, NonStrictDisjunction } from "../../util/types";
 import SubtleLink from "../../components/SubtleLink";
+import fetch from '../../util/fetch';
 
 export interface HtmlTestActivityBaseConfig {
     description?: string;

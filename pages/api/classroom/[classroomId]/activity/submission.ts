@@ -16,12 +16,12 @@ const apiActivitySubmissionAll = endpoint(makeActivitySubmissionEntity, ['classr
                 return fail(Status.BAD_REQUEST, `Invalid version number '${version}', must be a positive integer, 'all', or 'latest'`);
             }
             
-            if (!userId && !await hasScope(session!.user.id, 'submissions:view:all', { classroomId })) {
-                // If a user without submissions:view:all is querying this endpoint, they should get their own data.
+            if (!userId && !await hasScope(session!.user.id, 'submission:all:view', { classroomId })) {
+                // If a user without submission:all:view is querying this endpoint, they should get their own data.
                 userId = session!.user.id;
             }
 
-            if (userId && !await hasScope(session!.user.id, 'submissions:view', { classroomId, userId })) {
+            if (userId && !await hasScope(session!.user.id, 'submission:user:view', { classroomId, userId })) {
                 return fail(Status.FORBIDDEN);
             }
 
@@ -89,7 +89,8 @@ const apiActivitySubmissionAll = endpoint(makeActivitySubmissionEntity, ['classr
                                 firstName: x.firstName,
                                 lastName: x.lastName,
                                 rights: x.rights,
-                                classes: undefined
+                                classes: undefined,
+                                simulatedUsers: undefined,
                             }
                         } : x.userId,
                     activity: includeActivity

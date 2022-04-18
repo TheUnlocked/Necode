@@ -7,6 +7,7 @@ import { IncomingMessage } from "http";
 import { Session } from "next-auth";
 import { IfAny, UndefinedIsOptional } from "../util/types";
 import { EntityReference, EntityReferenceArray, ReferenceDepth } from "./entities/EntityReference";
+import getIdentity from './server/identity';
 
 export enum Status {
     OK = 200,
@@ -299,10 +300,14 @@ export function endpoint<P extends string, Endpoints extends EndpointMap<P>>(_: 
             let session: Session | undefined;
 
             if (endpoint.loginValidation !== false) {
-                session = await getSession({ req }) ?? undefined;
-                if (!session) {
-                    return fail(Status.UNAUTHORIZED, 'Not logged in');
+                const identityResult = await getIdentity(req);
+                switch (identityResult) {
+                    case 'not-logged-in':
+                        return fail(Status.UNAUTHORIZED, 'Not logged in');
+                    case 'cannot-impersonate':
+                        return fail(Status.UNAUTHORIZED, 'Either you do not have the rights to impersonate that user, or the Impersonate header is invalid');
                 }
+                session = identityResult;
             }
 
             const cleanedParams = {} as any;

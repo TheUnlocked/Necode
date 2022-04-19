@@ -43,13 +43,13 @@ async function hasControlOver(controllerId: string, otherId: string) {
         SELECT 1
         FROM "User"
         WHERE
-            id = ${controllerId} AND
+            id = ${otherId} AND
             (
-                "simulatedById" = ${otherId} OR
+                "simulatedById" = ${controllerId} OR
                 EXISTS (
                     SELECT NULL
                     FROM "User"
-                    WHERE id = ${otherId} AND rights = ${SitewideRights.Admin}
+                    WHERE id = ${controllerId} AND rights = ${SitewideRights.Admin}
                     LIMIT 1
                 )
             )

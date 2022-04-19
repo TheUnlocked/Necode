@@ -1,11 +1,9 @@
-import { Prisma } from ".prisma/client";
 import Joi from "joi";
 import parseJwk from "jose/jwk/parse";
 import SignJWT from "jose/jwt/sign";
 import { endpoint, Status } from "../../../../../src/api/Endpoint";
 import { hasScope } from "../../../../../src/api/server/scopes";
 import { prisma } from "../../../../../src/db/prisma";
-import fetch from '../../../../../src/util/fetch';
 import { LiveActivityInfo } from "../../../../../websocketServer/src/types";
 
 async function makeJwt(content: { [propName: string]: unknown }, expireIn: string) {
@@ -76,7 +74,7 @@ const apiActivityLive = endpoint(null, ['classroomId'], {
                 }
             });
             
-            const response = await fetch(`${process.env.WEBSOCKET_SERVER?.replace(/\/$/, '')}/internal/${classroomId}/activity`, {
+            const response = await fetch<true>(`${process.env.WEBSOCKET_SERVER?.replace(/\/$/, '')}/internal/${classroomId}/activity`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -117,7 +115,7 @@ const apiActivityLive = endpoint(null, ['classroomId'], {
                 return fail(Status.NOT_FOUND);
             }
 
-            const response = await fetch(`${process.env.WEBSOCKET_SERVER?.replace(/\/$/, '')}/internal/${classroomId}/activity`, {
+            const response = await fetch<true>(`${process.env.WEBSOCKET_SERVER?.replace(/\/$/, '')}/internal/${classroomId}/activity`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',

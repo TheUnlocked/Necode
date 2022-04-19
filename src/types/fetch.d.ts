@@ -1,7 +1,7 @@
 declare namespace globalThis {
     /**
-     * @deprecated Use {@link import('../util/fetch').default} instead.
-     * If using the native fetch is important, use {@link import('../util/fetch').nativeFetch}.
+     * Use {@link import('../util/fetch').default} instead.
+     * If using the native fetch is important, `fetch<true>`.
      */
-    function fetch(...args: any): never;
+    function fetch<T = false>(...args: T extends true ? Parameters<Window['fetch']> : any): T extends true ? ReturnType<Window['fetch']> : never;
 }

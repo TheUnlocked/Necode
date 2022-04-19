@@ -35,11 +35,34 @@ async function getRoleInClass(user: string, classroom: string) {
     } }))?.role;
 }
 
+async function hasControlOver(controllerId: string, otherId: string) {
+    // Summary of logic:
+    //      Admin has permission for anyone, assuming that user exists
+    //      Faculty only has permission for their own simulated users
+    return (await prisma.$queryRaw<[]>`
+        SELECT 1
+        FROM "User"
+        WHERE
+            id = ${controllerId} AND
+            (
+                "simulatedById" = ${otherId} OR
+                EXISTS (
+                    SELECT NULL
+                    FROM "User"
+                    WHERE id = ${otherId} AND rights = ${SitewideRights.Admin}
+                    LIMIT 1
+                )
+            )
+        LIMIT 1
+    `).length > 0;
+}
+
 export interface Scopes {
     'user:all:view': undefined;
     'user:view': { userId: string };
     'user:detailed:view': { userId: string }; // Currently unused, see #30
     'user:edit': { userId: string };
+    'user:rights:edit': { userId: string, rights: SitewideRights };
     'user:impersonate': { userId: string };
     'user:simulated:create': { rights: SitewideRights };
     'classroom:create': undefined;
@@ -77,31 +100,18 @@ export async function hasScope(userId: string, ...[scope, data]: ScopeArgumentTu
                     return data.rights === 'None';
             }
             return false;
+        case 'user:rights:edit':
+            if (data.rights !== 'None' && !await isAdmin(userId)) {
+                return true;
+            }
+            return hasControlOver(userId, data.userId);
         case 'user:impersonate':
             if (userId === data.userId) {
                 return false;
             }
-            // Intentional fallthrough
+            return hasControlOver(userId, data.userId);
         case 'user:edit':
-            // Summary of logic:
-            //      Admin can edit/impersonate anyone, assuming that user exists
-            //      Faculty can only edit/impersonate their own simulated users
-            return (await prisma.$queryRaw<[]>`
-                SELECT 1
-                FROM "User"
-                WHERE
-                    id = ${data.userId} AND
-                    (
-                        "simulatedById" = ${userId} OR
-                        EXISTS (
-                            SELECT NULL
-                            FROM "User"
-                            WHERE id = ${userId} AND rights = ${SitewideRights.Admin}
-                            LIMIT 1
-                        )
-                    )
-                LIMIT 1
-            `).length > 0;
+            return hasControlOver(userId, data.userId);
         case 'classroom:view':
         case 'classroom:edit':
         case 'classroom:member:edit':

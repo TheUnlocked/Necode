@@ -43,7 +43,7 @@ const Page: NextPage = () => {
     }, [displayName, enqueueSnackbar, router]);
 
 
-    if (!me || me.attributes.rights !== 'Admin') {
+    if (!me || !(me.attributes.rights == 'Admin' || me.attributes.rights == 'Faculty')) {
         return <FormPage title="Create Classroom" error hideSubmit>
             {isLoading
                 ? <Skeleton animation="wave" variant="rectangular" height="56px" sx={{ borderRadius: 1 }} />

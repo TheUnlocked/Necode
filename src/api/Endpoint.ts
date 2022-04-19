@@ -305,7 +305,7 @@ export function endpoint<P extends string, Endpoints extends EndpointMap<P>>(_: 
                     case 'not-logged-in':
                         return fail(Status.UNAUTHORIZED, 'Not logged in');
                     case 'cannot-impersonate':
-                        return fail(Status.UNAUTHORIZED, 'Either you do not have the rights to impersonate that user, or the Impersonate header is invalid');
+                        return fail(Status.FORBIDDEN, 'Either you do not have the rights to impersonate that user, or the Impersonate header is invalid');
                 }
                 session = identityResult;
             }

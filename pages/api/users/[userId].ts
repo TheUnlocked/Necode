@@ -36,6 +36,9 @@ const apiUsers = endpoint(makeUserEntity, ['userId'], {
             if (!await hasScope(session!.user.id, 'user:edit', { userId })) {
                 return fail(Status.FORBIDDEN);
             }
+            if (body.rights && !await hasScope(session!.user.id, 'user:rights:edit', { userId, rights: body.rights })) {
+                return fail(Status.FORBIDDEN);
+            }
 
             const user = await prisma.user.update({
                 where: { id: userId },

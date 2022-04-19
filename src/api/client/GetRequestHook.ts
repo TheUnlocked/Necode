@@ -7,8 +7,8 @@ import fetch from '../../util/fetch';
 import { Response } from "../Response";
 import LoadingContext from "./LoadingContext";
 
-function isMeEndpoint(endpoint: Key) {
-    const regex = /(?:\/|^)me(?:\/|\?|$)/;
+function isVolatileEndpoint(endpoint: Key) {
+    const regex = /(?:\/|^)(?:me|live)(?:\/|\?|$)/;
     if (typeof endpoint === 'function') {
         endpoint = endpoint();
     }
@@ -32,13 +32,13 @@ function makeUseGetRequest(immutable: boolean) {
             .finally(finishDownload);
         }, options);
         
-        const isImpersonatingAndMeEndpointChanged = useChanged(Boolean(useImpersonation()) && isMeEndpoint(endpoint));
+        const volatileEndpointAndImpersonatingChanged = useChanged(Boolean(useImpersonation()) && isVolatileEndpoint(endpoint));
 
         useEffect(() => {
-            if (isImpersonatingAndMeEndpointChanged) {
+            if (volatileEndpointAndImpersonatingChanged) {
                 mutate();
             }
-        }, [isImpersonatingAndMeEndpointChanged, mutate])
+        }, [volatileEndpointAndImpersonatingChanged, mutate])
     
         return {
             data: data?.data,

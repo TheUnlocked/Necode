@@ -112,7 +112,7 @@ const generalInfo = <>
         on your local machine, the source code for Necode is available on <SubtleLink target="_blank" rel="noopener" href="https://github.com/TheUnlocked/Necode">GitHub</SubtleLink>.
     </InfoSection>
     <InfoSection title="Is there a paper I can read?">
-        Not yet, but assuming everything goes to plan, one should be available in early March, 2022.
+        <SubtleLink target="_blank" rel="noopener" href="https://digital.wpi.edu/show/6h440w69h">Yes!</SubtleLink>
     </InfoSection>
 </>;
 

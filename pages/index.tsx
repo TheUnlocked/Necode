@@ -103,7 +103,7 @@ const generalInfo = <>
         on your local machine, the source code for Necode is available on <SubtleLink target="_blank" rel="noopener" href="https://github.com/TheUnlocked/Necode">GitHub</SubtleLink>.
     </InfoSection>
     <InfoSection title="I'm a developer and I want to build my own components for Necode. Are the APIs stable?">
-        Not currently, but API stability and third-party development documentation is a goal for the upcoming year.
+        Not currently, but API stability and third-party developer documentation is a goal for the upcoming year.
     </InfoSection>
 </>;
 

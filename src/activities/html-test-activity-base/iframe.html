@@ -7,7 +7,8 @@
 
     let htmlTemplate;
 
-    let scriptsLoadedPromise = Promise.resolve();
+    let scriptsLoadedResolver;
+    let scriptsLoadedPromise = new Promise(resolve => scriptsLoadedResolver = resolve);
 
     function loadHtmlTemplate() {
         document.head.innerHTML = '';
@@ -18,7 +19,7 @@
         });
     }
 
-    function setHtml(data) {
+    async function setHtml(data) {
         loadHtmlTemplate();
 
         const userContentElts = document.getElementsByTagName('user-content');
@@ -31,9 +32,7 @@
             document.body.innerHTML += (data ?? '');
         }
 
-        let previousScriptLoaded = Promise.resolve();
-
-        document.querySelectorAll('script').forEach(async (elt, i) => {
+        for (const elt of [...document.querySelectorAll('script')]) {
             const newScript = document.createElement('script');
 
             for (const attribute of elt.attributes) {
@@ -41,21 +40,22 @@
             }
             newScript.text = elt.text;
 
-            if (!newScript.hasAttribute('async')) {
+            let barrier = Promise.resolve();
+
+            if (!newScript.hasAttribute('async') && newScript.src) {
                 newScript.async = false;
-                const barrier = previousScriptLoaded;
-                previousScriptLoaded = new Promise(async resolve => {
-                    newScript.onload = resolve;
+                barrier = new Promise(async resolve => {
+                    newScript.addEventListener('load', resolve);
+                    newScript.addEventListener('error', resolve);
                 });
-    
-                await barrier;
             }
             
             elt.insertAdjacentElement('beforebegin', newScript);
             elt.remove();
-        });
+            await barrier;
+        }
 
-        scriptsLoadedPromise = previousScriptLoaded;
+        scriptsLoadedResolver();
     }
 
     async function setJs(data) {

@@ -105,6 +105,7 @@
             }
             case 'tests': {
                 try {
+                    await scriptsLoadedPromise;
                     const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
                     console.debug(e.data.code);
                     await AsyncFunction(e.data.code)();

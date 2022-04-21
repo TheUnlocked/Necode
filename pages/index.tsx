@@ -66,8 +66,7 @@ const generalInfo = <>
         Neh-code. Like the &quot;ne&quot; in &quot;network&quot; and then &quot;code.&quot;
         Like &quot;<SubtleLink target="_blank" rel="noopener" href="https://translate.google.com/?sl=ja&tl=en&text=%E7%8C%AB&op=translate">neko</SubtleLink>&quot;
         but if the &quot;ko&quot; was &quot;code.&quot;
-        If you can read IPA, /nɛkoʊd/ (assuming an American accent).
-        It is NOT knee-code or neh-ko-deh or anything like that.
+        If you can read IPA, /nɛkoʊd/.
     </InfoSection>
     <InfoSection omitParagraph title="What makes Necode special?">
         <p>
@@ -88,31 +87,23 @@ const generalInfo = <>
             </ul>
         </p>
     </InfoSection>
-    <InfoSection omitParagraph title="What can do I do with Necode?">
-        <p>
-            As for what <em>you</em> can do, Necode is currently in development, and access is limited to a few professors
-            at Worcester Polytechnic Institute who have graciously agreed to use Necode in their classes, as well as the students who will be
-            using Necode in those classes. If you are not in one of those groups, the only feature available to you is viewing this landing page.
-        </p>
-        <p>
-            As for what Necode can do in general, the activity which is the closest to being production-ready allows for DOM programming in a manner
-            similar to websites like <SubtleLink target="_blank" rel="noopener" href="https://codesandbox.io/">CodeSandbox</SubtleLink>{' '}
-            or <SubtleLink target="_blank" rel="noopener" href="https://codepen.io/">CodePen</SubtleLink>, but it also supports
-            automated tests which can be written by the instructor using a custom TypeScript DSL, as well as the ability for
-            students to write in Python or TypeScript instead of JavaScript, depending on what the instructor is trying to teach.
-        </p>
+    <InfoSection title="Is there a paper I can read?">
+        <SubtleLink target="_blank" rel="noopener" href="https://digital.wpi.edu/show/6h440w69h">Yes!</SubtleLink>{' '}
+        It doesn&apos;t contain a comprehensive list of features, but it is fairly thorough and gives a good idea of what
+        Necode is capable of, at least as of March 2022.
     </InfoSection>
     <InfoSection title="I'd like to evaluate Necode for use in my class. How should I get in touch?">
         Thank you very much for your interest! Feel free to shoot an email to Trevor at{' '}
         <SubtleLink href="mailto:tmpaley@wpi.edu">tmpaley@wpi.edu</SubtleLink>, and cc Charlie at{' '}
-        <SubtleLink href="mailto:cdroberts@wpi.edu">cdroberts@wpi.edu</SubtleLink>.
+        <SubtleLink href="mailto:cdroberts@wpi.edu">cdroberts@wpi.edu</SubtleLink>. We&apos;ll give you a tour
+        and help you get acquianted with the software in case you choose to use it.
     </InfoSection>
     <InfoSection title="I don't teach a class, but I'm still interested in Necode. Can I try it out?">
         Currently no, unfortunately. However, if you&apos;re willing to put in a bit of effort to get it running
         on your local machine, the source code for Necode is available on <SubtleLink target="_blank" rel="noopener" href="https://github.com/TheUnlocked/Necode">GitHub</SubtleLink>.
     </InfoSection>
-    <InfoSection title="Is there a paper I can read?">
-        <SubtleLink target="_blank" rel="noopener" href="https://digital.wpi.edu/show/6h440w69h">Yes!</SubtleLink>
+    <InfoSection title="I'm a developer and I want to build my own components for Necode. Are the APIs stable?">
+        Not currently, but API stability and third-party development documentation is a goal for the upcoming year.
     </InfoSection>
 </>;
 

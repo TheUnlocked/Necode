@@ -646,7 +646,7 @@ export function createTestActivityPage({
                 <IconButton onClick={applyAllChanges}><SyncIcon/></IconButton>
             </Tooltip>
             <Tooltip title="Reload" disableInteractive>
-                <IconButton onClick={() => reloadRef.current()}><RefreshIcon/></IconButton>
+                <IconButton onClick={() => reloadRef.current?.()}><RefreshIcon/></IconButton>
             </Tooltip>
         </Stack>;
 

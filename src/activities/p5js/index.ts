@@ -94,7 +94,7 @@ const p5jsActivityDescription = activityDescription({
         Text
         `,
         hiddenHtml: dedent`
-        <script src="https://cdn.jsdelivr.net/npm/p5@1.4.0/lib/p5.js"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/p5@1.4.0/lib/p5.js"></script>
 
         <style>
             body {

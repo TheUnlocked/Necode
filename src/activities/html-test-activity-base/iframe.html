@@ -9,6 +9,7 @@
 
     let scriptsLoadedResolver;
     let scriptsLoadedPromise = new Promise(resolve => scriptsLoadedResolver = resolve);
+    let deferredScripts = [];
 
     function loadHtmlTemplate() {
         document.head.innerHTML = '';
@@ -17,6 +18,33 @@
         document.body.querySelectorAll('style, script').forEach(elt => {
             document.head.append(elt);
         });
+    }
+
+    function duplicateScript(elt) {
+        const newScript = document.createElement('script');
+
+        for (const attribute of elt.attributes) {
+            newScript.setAttribute(attribute.name, attribute.value);
+        }
+        newScript.text = elt.text;
+
+        return newScript;
+    }
+    
+    async function loadSyncScript(elt) {
+        const newScript = duplicateScript(elt);
+
+        let barrier;
+        if (newScript.src) {
+            barrier = new Promise(async resolve => {
+                newScript.addEventListener('load', resolve);
+                newScript.addEventListener('error', resolve);
+            });
+        }
+        
+        elt.insertAdjacentElement('beforebegin', newScript);
+        elt.remove();
+        await barrier;
     }
 
     async function setHtml(data) {
@@ -32,30 +60,33 @@
             document.body.innerHTML += (data ?? '');
         }
 
-        for (const elt of [...document.querySelectorAll('script')]) {
-            const newScript = document.createElement('script');
+        deferredScripts = [];
 
-            for (const attribute of elt.attributes) {
-                newScript.setAttribute(attribute.name, attribute.value);
-            }
-            newScript.text = elt.text;
+        const asyncScripts = [...document.querySelectorAll('script[async]')];
+        const syncScripts = [...document.querySelectorAll('script:not([async])')];
 
-            let barrier = Promise.resolve();
-
-            if (!newScript.hasAttribute('async') && newScript.src) {
-                newScript.async = false;
-                barrier = new Promise(async resolve => {
-                    newScript.addEventListener('load', resolve);
-                    newScript.addEventListener('error', resolve);
-                });
-            }
-            
+        for (const elt of asyncScripts) {
+            const newScript = duplicateScript(elt);
             elt.insertAdjacentElement('beforebegin', newScript);
             elt.remove();
-            await barrier;
+        }
+
+        for (const elt of syncScripts) {
+            if (elt.hasAttribute('defer')) {
+                deferredScripts.push(elt);
+            }
+            else {
+                await loadSyncScript(elt);
+            }
         }
 
         scriptsLoadedResolver();
+    }
+
+    async function loadDeferredScripts() {
+        for (const elt of deferredScripts) {
+            await loadSyncScript(elt);
+        }
     }
 
     async function setJs(data) {
@@ -65,6 +96,8 @@
         scriptElt.id = JS_ELT_ID;
         scriptElt.text = data ?? '';
         document.head.appendChild(scriptElt);
+
+        loadDeferredScripts();
     }
 
     function setCss(data) {

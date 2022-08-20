@@ -1,7 +1,5 @@
-import { Prisma } from ".prisma/client";
 import Joi from "joi";
-import parseJwk from "jose/jwk/parse";
-import SignJWT from "jose/jwt/sign";
+import { importJWK, SignJWT } from "jose";
 import { endpoint, Status } from "../../../../../src/api/Endpoint";
 import { hasScope } from "../../../../../src/api/server/scopes";
 import { prisma } from "../../../../../src/db/prisma";
@@ -9,7 +7,7 @@ import { LiveActivityInfo } from "../../../../../websocketServer/src/types";
 
 async function makeJwt(content: { [propName: string]: unknown }, expireIn: string) {
     const keyObj = JSON.parse(process.env.JWT_SIGNING_PRIVATE_KEY!);
-    const key = await parseJwk(keyObj);
+    const key = await importJWK(keyObj);
     const jwt = await new SignJWT(content)
         .setProtectedHeader({ alg: keyObj.alg })
         .setIssuedAt()

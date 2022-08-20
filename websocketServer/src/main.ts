@@ -1,7 +1,6 @@
 import { Server } from 'socket.io';
 import { IOServer, LiveActivityInfo } from './types';
-import jwtVerify from 'jose/jwt/verify';
-import parseJwk from 'jose/jwk/parse';
+import { jwtVerify, importJWK } from 'jose';
 import * as dotenv from 'dotenv';
 import { isNotNull } from '../../src/util/typeguards';
 import UserManager from './UserManager';
@@ -89,7 +88,7 @@ io.on('connection', socket => {
     }
 
     socket.on('join', async (jwt, callback) => {
-        const jwtPrivateKey = await parseJwk(JSON.parse(process.env.JWT_SIGNING_PRIVATE_KEY!));
+        const jwtPrivateKey = await importJWK(JSON.parse(process.env.JWT_SIGNING_PRIVATE_KEY!));
         try {
             const result = await jwtVerify(jwt, jwtPrivateKey);
 
@@ -222,7 +221,7 @@ internalApi.use(async (req, res, next) => {
         return res.status(403).send();
     }
 
-    const jwtPrivateKey = await parseJwk(JSON.parse(process.env.JWT_SIGNING_PRIVATE_KEY!));
+    const jwtPrivateKey = await importJWK(JSON.parse(process.env.JWT_SIGNING_PRIVATE_KEY!));
     try {
         const result = await jwtVerify(jwt, jwtPrivateKey);
 

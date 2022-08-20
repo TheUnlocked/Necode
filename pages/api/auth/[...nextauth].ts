@@ -1,37 +1,15 @@
 import NextAuth, { ISODateString } from "next-auth";
-import { OAuthConfig, Provider } from "next-auth/providers";
-import GithubProvider from "next-auth/providers/github"
 import { SitewideRights } from "@prisma/client";
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import { prisma } from "../../../src/db/prisma";
 import Email from "next-auth/providers/email";
+import AzureADProvider from "next-auth/providers/azure-ad";
 
 const WPI_TENANT_ID = process.env.MSAL_TENANT_ID;
 
-const WPIProvider: OAuthConfig<{
-    id: string,
-    displayName: string,
-    givenName: string,
-    surname: string,
-    mail: string
-}> = {
+const WPIProvider = AzureADProvider({
     id: 'wpi',
     name: 'WPI Microsoft Login',
-    type: 'oauth',
-    version: '2.0',
-    authorization: {
-        url: `https://login.microsoftonline.com/${WPI_TENANT_ID}/oauth2/v2.0/authorize?response_type=code&response_mode=query`,
-        params: {
-            scope: 'https://graph.microsoft.com/user.read',
-        },
-    },
-    token: {
-        url: `https://login.microsoftonline.com/${WPI_TENANT_ID}/oauth2/v2.0/token`,
-        params: {
-            grant_type: 'authorization_code'
-        },
-    },
-    userinfo: 'https://graph.microsoft.com/v1.0/me/',
     profile(profile) {
         return {
             id: profile.id,
@@ -46,7 +24,7 @@ const WPIProvider: OAuthConfig<{
     clientId: process.env.MSAL_APPLICATION_ID!,
     clientSecret: process.env.MSAL_CLIENT_SECRET!,
     tenantId: WPI_TENANT_ID
-};
+});
 
 declare module 'next-auth' {
     interface Session {
@@ -66,29 +44,11 @@ declare module 'next-auth' {
 
 export default NextAuth({
     providers: [
-        [WPIProvider as Provider],
+        WPIProvider,
         process.env.APP_ENV === 'development' ? [
             Email({
                 sendVerificationRequest: async ({ url }) => {
                     console.log(url);
-                }
-            }),
-            GithubProvider({
-                clientId: process.env.GITHUB_ID,
-                clientSecret: process.env.GITHUB_SECRET,
-                profile(profile: {}) {
-                    // ts type assertion
-                    function _(_: any): asserts _ is { id: string, name?: string, login: string, email: string, image: string } {};
-                    _(profile);
-                    return {
-                        id: profile.id,
-                        username: profile.login,
-                        displayName: profile.name || profile.login,
-                        firstName: "Github",
-                        lastName: profile.login,
-                        email: profile.email || `${profile.login}@example.edu`,
-                        rights: "None",
-                    };
                 }
             })
         ] : []
@@ -109,12 +69,9 @@ export default NextAuth({
         return adapter;
     })(),
     session: {
-        jwt: false,
+        strategy: 'database',
         maxAge: 30 * 24 * 60 * 60, // 30 days
         updateAge: 24 * 60 * 60, // 24 hours
-    },
-    jwt: {
-        signingKey: process.env.JWT_SIGNING_PRIVATE_KEY
     },
     callbacks: {
         // async jwt({ token, user }) {

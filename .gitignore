@@ -4,5 +4,7 @@ node_modules
 .env
 .dev-ssl-certs
 
+tsconfig.tsbuildinfo
+
 # exclude websocket builds
 websocketServer/dist

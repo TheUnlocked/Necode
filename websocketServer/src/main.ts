@@ -15,7 +15,6 @@ import { DateTime, Duration } from 'luxon';
 import { makeActivitySubmissionEntity } from '../../src/api/entities/ActivitySubmissionEntity';
 import { makeUserEntity } from '../../src/api/entities/UserEntity';
 import allPolicies from './rtc/policies/allPolicies';
-import { RtcCoordinator } from './rtc/policies/RtcPolicy';
 import { hasScope } from '../../src/api/server/scopes';
 
 dotenv.config()
@@ -37,8 +36,9 @@ else {
 
 const io: IOServer = new Server(server, {
     cors: {
-        // Trim trailing slash
-        origin: process.env.FRONTEND_ORIGIN!.replace(/\/$/, ''),
+        origin: process.env.WEBSOCKET_CORS_REGEX !== undefined
+            ? RegExp(process.env.WEBSOCKET_CORS_REGEX.toString())
+            : process.env.FRONTEND_ORIGIN,
         methods: ["GET", "POST"]
     }
 });

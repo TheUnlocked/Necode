@@ -1,9 +1,8 @@
-import NextAuth, { ISODateString, User } from "next-auth";
-import { CredentialInput, CredentialsConfig, OAuthConfig, Provider } from "next-auth/providers";
+import NextAuth, { ISODateString } from "next-auth";
+import { OAuthConfig, Provider } from "next-auth/providers";
 import GithubProvider from "next-auth/providers/github"
 import { SitewideRights } from "@prisma/client";
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
-import { nanoid } from "nanoid";
 import { prisma } from "../../../src/db/prisma";
 import Email from "next-auth/providers/email";
 
@@ -24,7 +23,7 @@ const WPIProvider: OAuthConfig<{
         url: `https://login.microsoftonline.com/${WPI_TENANT_ID}/oauth2/v2.0/authorize?response_type=code&response_mode=query`,
         params: {
             scope: 'https://graph.microsoft.com/user.read',
-        }
+        },
     },
     token: {
         url: `https://login.microsoftonline.com/${WPI_TENANT_ID}/oauth2/v2.0/token`,
@@ -68,8 +67,8 @@ declare module 'next-auth' {
 export default NextAuth({
     providers: [
         [WPIProvider as Provider],
-        process.env.NODE_ENV === 'development' ? [
-            Email({ 
+        process.env.APP_ENV === 'development' ? [
+            Email({
                 sendVerificationRequest: async ({ url }) => {
                     console.log(url);
                 }
@@ -99,7 +98,7 @@ export default NextAuth({
         const adapter = PrismaAdapter(prisma);
         const createUser = adapter.createUser;
         adapter.createUser = function(user) {
-            if (process.env.NODE_ENV === 'development') {
+            if (process.env.APP_ENV === 'development') {
                 user.username ??= (user.email as string).split('@', 1)[0];
                 user.displayName ??= user.username;
                 user.firstName ??= 'dev';

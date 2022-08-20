@@ -43,7 +43,7 @@ export default function Header(props: {
                             <Typography>Signed in as <strong>{session.attributes.username}</strong></Typography>
                             <Button color="inherit" onClick={() => signOut({ redirect: true })}>Sign Out</Button>
                         </>
-                        : <Button variant="contained" onClick={() => signIn("wpi", { redirect: false })}>Sign In</Button>}
+                        : <Button variant="contained" onClick={() => signIn(process.env.NEXT_PUBLIC_APP_ENV === 'production' ? "wpi" : undefined, { redirect: false })}>Sign In</Button>}
                 </Stack>}
         </Toolbar>
     </AppBar>;

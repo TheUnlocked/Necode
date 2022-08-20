@@ -29,7 +29,7 @@ const Join: NextPage = () => {
         return <FormPage title="Join a Classroom" error hideSubmit>
             {isLoading ? <Skeleton animation="wave" variant="rectangular" height="56px" sx={{ borderRadius: 1 }} /> : <>
                 <Typography>You must sign in before you can join a classroom.</Typography>
-                <Button variant="contained" onClick={() => signIn("wpi")}>Sign In</Button>
+                <Button variant="contained" onClick={() => signIn(process.env.NEXT_PUBLIC_APP_ENV === 'production' ? "wpi" : undefined)}>Sign In</Button>
             </>}
         </FormPage>;
     }

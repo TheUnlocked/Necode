@@ -20,7 +20,7 @@
     "experimentalDecorators": true,
     "removeComments": true,
     "importHelpers": true,
-    "incremental": true
+    "incremental": true,
   },
   "include": [
     "next-env.d.ts",

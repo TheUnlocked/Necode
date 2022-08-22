@@ -54,7 +54,8 @@ module.exports = {
         bufferutil: "bufferutil",
         "utf-8-validate": "utf-8-validate",
         "socket.io": "commonjs socket.io",
-        "_http_common": "commonjs2 _http_common"
+        "_http_common": "commonjs2 _http_common",
+        encoding: "commonjs2 encoding",
     },
     experiments: {
         topLevelAwait: true

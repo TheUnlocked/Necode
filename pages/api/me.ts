@@ -9,12 +9,16 @@ const apiMe = endpoint(makeUserEntity, ['include[]'], {
         requiresLogin: true,
         handler: async ({ query: { include }, session }, ok, fail) => {
             const includeClasses = include.includes('classes');
+            const includeSimulatedUsers = include.includes('simulatedUsers');
 
             const user = await prisma.user.findFirst({
                 include: {
                     classes: {
                         include: { classroom: includeClasses }
-                    }
+                    },
+                    ownsSimulated: includeSimulatedUsers ? {
+                        orderBy: { id: 'asc' }
+                    } : undefined
                 },
                 where: {
                     id: session!.user.id
@@ -28,7 +32,10 @@ const apiMe = endpoint(makeUserEntity, ['include[]'], {
             return ok(makeUserEntity(user, {
                 classes: includeClasses
                     ? user.classes.map(x => makeClassroomEntity(x.classroom))
-                    : user.classes.map(x => x.classroomId)
+                    : user.classes.map(x => x.classroomId),
+                simulatedUsers: includeSimulatedUsers
+                    ? user.ownsSimulated.map(x => makeUserEntity(x))
+                    : undefined,
             }));
         }
     }

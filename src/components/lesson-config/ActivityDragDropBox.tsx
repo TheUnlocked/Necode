@@ -5,6 +5,7 @@ import { ConnectableElement, useDrag, useDrop } from "react-dnd";
 import { LiveActivityInfo } from "../../../websocketServer/src/types";
 import ActivityDescription, { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
 import { useLoadingContext } from "../../api/client/LoadingContext";
+import fetch from '../../util/fetch';
 import { compose } from "../../util/fp";
 import { LocalActivity } from "./ActivityListPane";
 import DefaultActivityWidget from "./DefaultActivityWidget";

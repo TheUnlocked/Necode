@@ -73,7 +73,7 @@ const apiActivityLive = endpoint(null, ['classroomId'], {
                 }
             });
             
-            const response = await fetch(`${process.env.WEBSOCKET_SERVER?.replace(/\/$/, '')}/internal/${classroomId}/activity`, {
+            const response = await fetch<true>(`${process.env.WEBSOCKET_SERVER?.replace(/\/$/, '')}/internal/${classroomId}/activity`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -114,7 +114,7 @@ const apiActivityLive = endpoint(null, ['classroomId'], {
                 return fail(Status.NOT_FOUND);
             }
 
-            const response = await fetch(`${process.env.WEBSOCKET_SERVER?.replace(/\/$/, '')}/internal/${classroomId}/activity`, {
+            const response = await fetch<true>(`${process.env.WEBSOCKET_SERVER?.replace(/\/$/, '')}/internal/${classroomId}/activity`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',

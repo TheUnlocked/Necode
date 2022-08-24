@@ -15,7 +15,7 @@ const apiUsers = endpoint(makeUserEntity, paginationParams, {
             'page:from': from,
             'page:count': recordsPerPage = 10
         } }, ok, fail) {
-            if (!await hasScope(session!.user.id, 'users:view')) {
+            if (!await hasScope(session!.user.id, 'user:all:view')) {
                 return fail(Status.FORBIDDEN);
             }
 

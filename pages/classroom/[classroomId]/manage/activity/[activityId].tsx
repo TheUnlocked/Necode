@@ -11,7 +11,7 @@ import useImperativeDialog from "../../../../../src/hooks/ImperativeDialogHook";
 import sortByProperty from "../../../../../src/util/sortByProperty";
 import { flip, make } from "../../../../../src/util/fp";
 import Lazy from "../../../../../src/components/Lazy";
-import ConfigureLanguageDialog from "../../../../../src/components/ConfigureLanguageDialog";
+import ConfigureLanguageDialog from "../../../../../src/components/dialogs/ConfigureLanguageDialog";
 import { useGetRequest, useGetRequestImmutable } from "../../../../../src/api/client/GetRequestHook";
 import { ActivityEntity } from "../../../../../src/api/entities/ActivityEntity";
 import allActivities from "../../../../../src/activities/allActivities";
@@ -23,6 +23,7 @@ import { ClassroomMemberEntity } from "../../../../../src/api/entities/Classroom
 import NotFoundPage from "../../../../404";
 import supportsLanguage from "../../../../../src/activities/supportsLanguage";
 import { curry } from "lodash";
+import fetch from '../../../../../src/util/fetch';
 
 interface StaticProps {
     classroomId: string;

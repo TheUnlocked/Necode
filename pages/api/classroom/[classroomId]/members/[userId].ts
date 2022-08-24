@@ -10,7 +10,7 @@ const apiUsers = endpoint(makeClassroomMemberEntity, ['userId', 'classroomId'], 
     GET: {
         loginValidation: true,
         async handler({ session, query: { classroomId, userId } }, ok, fail) {
-            if (!await hasScope(session!.user.id, 'classroom:view:member', { classroomId, userId })) {
+            if (!await hasScope(session!.user.id, 'classroom:member:view', { classroomId, userId })) {
                 return fail(Status.FORBIDDEN);
             }
 
@@ -35,7 +35,7 @@ const apiUsers = endpoint(makeClassroomMemberEntity, ['userId', 'classroomId'], 
             ] as ClassroomRole[]).optional()
         }),
         async handler({ session, query: { classroomId, userId }, body }, ok, fail) {
-            if (!await hasScope(session!.user.id, 'classroom:edit:member', { classroomId, userId })) {
+            if (!await hasScope(session!.user.id, 'classroom:member:edit', { classroomId, userId })) {
                 return fail(Status.FORBIDDEN);
             }
 
@@ -58,11 +58,11 @@ const apiUsers = endpoint(makeClassroomMemberEntity, ['userId', 'classroomId'], 
         loginValidation: true,
         async handler({ session, query: { classroomId, userId } }, ok, fail) {
 
-            // Requires both classroom:edit and classroom:edit:member, since
+            // Requires both classroom:edit and classroom:member:edit, since
             // students cannot (currently) remove themselves from classrooms.
 
             if (!await hasScope(session!.user.id, 'classroom:edit', { classroomId }) ||
-                !await hasScope(session!.user.id, 'classroom:edit:member', { classroomId, userId })) {
+                !await hasScope(session!.user.id, 'classroom:member:edit', { classroomId, userId })) {
                 return fail(Status.FORBIDDEN);
             }
 

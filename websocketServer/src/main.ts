@@ -161,8 +161,8 @@ io.on('connection', socket => {
             return callback('Instructors cannot make submissions');
         }
 
-        if (!await hasScope(userId, 'submissions:create', { classroomId })) {
-            return callback('Something went wrong (missing submissions:create scope)');
+        if (!await hasScope(userId, 'submission:create', { classroomId })) {
+            return callback('Something went wrong (missing submission:create scope)');
         }
 
         try {

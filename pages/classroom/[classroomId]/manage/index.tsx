@@ -15,6 +15,7 @@ import NotFoundPage from "../../../404";
 import { ClassroomMemberEntity } from "../../../../src/api/entities/ClassroomMemberEntity";
 import { ContentCopy, Share } from "@mui/icons-material";
 import { useSnackbar } from "notistack";
+import fetch from '../../../../src/util/fetch';
 
 
 function getDateFromPath(path: string) {

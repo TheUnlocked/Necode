@@ -9,6 +9,7 @@ import { Response } from "../../src/api/Response";
 import { useSnackbar } from "notistack";
 import { useGetRequestImmutable } from "../../src/api/client/GetRequestHook";
 import { UserEntity } from "../../src/api/entities/UserEntity";
+import fetch from '../../src/util/fetch';
 
 
 const Join: NextPage = () => {

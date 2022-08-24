@@ -1,7 +1,6 @@
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { MetaTransformerContext } from "../../../../../src/contexts/MetaTransformerContext";
 import { Button, Toolbar, Select, MenuItem, Stack, ToggleButton, Skeleton, Paper } from "@mui/material";
 import { ArrowBack, Code, Save } from "@mui/icons-material";
 import { Box, SxProps } from "@mui/system";
@@ -50,16 +49,6 @@ const Page: NextPage = () => {
 
 const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
     const router = useRouter();
-    const metaTransformer = useContext(MetaTransformerContext);
-
-    useEffect(() => {
-        metaTransformer({ path: [
-            { label: 'Necode', href: '/' },
-            { label: 'Class Name', href: `/classroom/${classroomId}` },
-            { label: 'Manage', href: `/classroom/${classroomId}/manage` },
-            { label: 'Activity Name', href: location.href }
-        ] });
-    }, [metaTransformer, classroomId]);
 
     const activityEndpoint = `/api/classroom/${classroomId}/activity/${activityId}?include=lesson`;
     const { data: activityEntity } = useGetRequest<ActivityEntity<{ lesson: 'deep' }>>(activityEndpoint);

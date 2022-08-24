@@ -7,10 +7,6 @@ import React, { useMemo, useRef } from 'react';
 import theme from '../src/themes/theme';
 import { CssBaseline, ThemeProvider } from '@mui/material';
 import Head from 'next/head';
-import { MetaInfo, MetaTransformerContext } from '../src/contexts/MetaTransformerContext';
-import { useMergeReducer } from '../src/hooks/MergeReducerHook';
-import Editor from './editor';
-import editorTheme from '../src/themes/editorTheme';
 import Header from '../src/components/Header';
 import { SnackbarProvider } from 'notistack';
 import { LocalizationProvider } from '@mui/x-date-pickers';
@@ -23,13 +19,9 @@ import LoadingSpinners from '../src/components/LoadingSpinners';
 import CustomAdapterLuxon from '../src/util/CustomLuxonAdapter';
 import { ErrorBoundary } from 'react-error-boundary';
 import ErrorBoundaryPage from '../src/components/ErrorBoundaryPage';
+import usePageTitle from '../src/hooks/PageTitleHook';
 
 function MyApp({ Component, pageProps }: AppProps) {
-    const [meta, metaTransformer] = useMergeReducer({
-        title: "Necode",
-        path: [{ label: "Necode", href: "/" }]
-    } as MetaInfo);
-
     const loadingInfoRef = useRef({
         downloads: 0,
         uploads: 0,
@@ -50,27 +42,26 @@ function MyApp({ Component, pageProps }: AppProps) {
             loadingInfoRef.current.uploadListeners.indexOf(listener), 1),
     } as LoadingContextInfo), []);
 
-    if (Component === Editor) {
-        return <ThemeProvider theme={editorTheme}>
-            <CssBaseline />
-            <Component {...pageProps} />
-        </ThemeProvider>;
-    }
+    // if (Component === Editor) {
+    //     return <ThemeProvider theme={editorTheme}>
+    //         <CssBaseline />
+    //         <Component {...pageProps} />
+    //     </ThemeProvider>;
+    // }
 
     return <>
         <Head>
-            <title>{meta.title}</title>
+            <title>{usePageTitle()}</title>
             <meta name="viewport" content="initial-scale=1, width=device-width" />
             <meta name="color-scheme" content="dark light" />
         </Head>
         <ThemeProvider theme={theme}>
             <CssBaseline />
-            <MetaTransformerContext.Provider value={metaTransformer}>
             <LocalizationProvider dateAdapter={CustomAdapterLuxon}>
             <SnackbarProvider hideIconVariant>
             <DndProvider backend={HTML5Backend}>
             <LoadingContext.Provider value={loadingContext}>
-                <Header path={meta.path} />
+                <Header />
                 <Box sx={{
                     "--header-height": "64px",
                     display: "flex",
@@ -86,7 +77,6 @@ function MyApp({ Component, pageProps }: AppProps) {
             </DndProvider>
             </SnackbarProvider>
             </LocalizationProvider>
-            </MetaTransformerContext.Provider>
         </ThemeProvider>
     </>;
 }

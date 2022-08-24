@@ -1,7 +1,6 @@
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useContext, useEffect, useState } from "react";
-import { MetaTransformerContext } from "../../../src/contexts/MetaTransformerContext";
 import { Button, Chip, Stack, Toolbar } from "@mui/material";
 import { ArrowBack, AssignmentTurnedIn, Close } from "@mui/icons-material";
 import { Box } from "@mui/system";
@@ -46,16 +45,7 @@ const Page: NextPage = () => {
 
 const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
     const router = useRouter();
-    const metaTransformer = useContext(MetaTransformerContext);
     const { startUpload, finishUpload } = useLoadingContext();
-
-    useEffect(() => {
-        metaTransformer({ path: [
-            { label: 'Necode', href: '/' },
-            { label: 'Class Name', href: `/classroom/${classroomId}` },
-            { label: 'Activity Name', href: location.href }
-        ] });
-    }, [metaTransformer, classroomId]);
 
     const isInstructor = role === 'Instructor';
 

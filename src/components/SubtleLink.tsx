@@ -1,4 +1,4 @@
-import NextLink, { LinkProps } from "next/link";
+import NextLink from "next/link";
 import { Link, styled } from "@mui/material";
 
 const MuiSubtleLink = styled(Link)(({ theme }) => `

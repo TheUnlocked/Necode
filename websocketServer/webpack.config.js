@@ -56,6 +56,7 @@ module.exports = {
         "socket.io": "commonjs socket.io",
         "_http_common": "commonjs2 _http_common",
         encoding: "commonjs2 encoding",
+        "util/types": "commonjs2 util/types"
     },
     experiments: {
         topLevelAwait: true

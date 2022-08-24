@@ -6,14 +6,15 @@ import { hasScope } from "../../../src/api/server/scopes";
 import { prisma } from "../../../src/db/prisma";
 import { singleArg } from "../../../src/util/typeguards";
 
-const apiUsers = endpoint(makeUserEntity, paginationParams, {
+const apiUsers = endpoint(makeUserEntity, [...paginationParams, 'includeSimulated?'], {
     type: 'entityType',
     GET: {
         loginValidation: true,
         async handler({ session, query: {
             'page:index': _pageIndex,
             'page:from': from,
-            'page:count': recordsPerPage = 10
+            'page:count': recordsPerPage = 10,
+            includeSimulated: includeSimulatedText,
         } }, ok, fail) {
             if (!await hasScope(session!.user.id, 'user:all:view')) {
                 return fail(Status.FORBIDDEN);
@@ -34,6 +35,8 @@ const apiUsers = endpoint(makeUserEntity, paginationParams, {
                 }
             }
 
+            const includeSimulated = includeSimulatedText === 'true' ? true : false;
+
             let users: User[];
 
             if (from) {
@@ -45,6 +48,9 @@ const apiUsers = endpoint(makeUserEntity, paginationParams, {
                     },
                     orderBy: {
                         id: 'asc'
+                    },
+                    where: {
+                        simulatedBy: includeSimulated ? undefined : null
                     }
                 });
             }
@@ -55,6 +61,9 @@ const apiUsers = endpoint(makeUserEntity, paginationParams, {
                     take: recordsPerPage,
                     orderBy: {
                         id: 'asc'
+                    },
+                    where: {
+                        simulatedBy: includeSimulated ? undefined : null
                     }
                 });
             }

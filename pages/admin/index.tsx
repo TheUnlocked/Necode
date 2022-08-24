@@ -4,7 +4,8 @@ import Footer from "../../src/components/Footer";
 
 const pages = [
     '/admin/createClassroom',
-    '/admin/users'
+    '/admin/users',
+    '/admin/simulation',
 ].sort();
 
 export default function AdminPage() {

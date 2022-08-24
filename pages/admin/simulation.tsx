@@ -1,7 +1,9 @@
-import { Alert, Button, Container } from "@mui/material";
-import { DataGrid, GridColDef, GridEventListener, GridEvents, GridToolbarContainer } from "@mui/x-data-grid";
+import { DeleteForever } from '@mui/icons-material';
+import { Alert, Button, Container, IconButton, Stack } from "@mui/material";
+import { DataGrid, GridColDef, GridEventListener, GridEvents, GridSelectionModel, GridToolbarContainer } from "@mui/x-data-grid";
 import { SitewideRights } from '@prisma/client';
-import { constant } from "lodash";
+import { groupBy } from 'lodash';
+import { useConfirm } from 'material-ui-confirm';
 import { nanoid } from 'nanoid';
 import { NextPage } from "next";
 import { useSnackbar } from "notistack";
@@ -17,9 +19,14 @@ import { useImpersonation } from '../../src/hooks/ImpersonationHook';
 function SimulationToolbar(props: {
     onCreateSimulatedUser: () => void;
     createSimulatedUserDisabled: boolean;
+    anySelected: boolean;
+    onDeleteSelectedUsers: () => void;
 }) {
-    return <GridToolbarContainer>
+    return <GridToolbarContainer sx={{ justifyContent: 'space-between' }}>
         <Button variant="outlined" disabled={props.createSimulatedUserDisabled} onClick={props.onCreateSimulatedUser}>Create Simulated User</Button>
+        <Stack direction="row">
+            <IconButton onClick={props.onDeleteSelectedUsers} disabled={!props.anySelected} color="error"><DeleteForever /></IconButton>
+        </Stack>
     </GridToolbarContainer>;
 }
 
@@ -76,11 +83,49 @@ const Page: NextPage = () => {
         setPerformingAction(false);
     }
 
+    const confirm = useConfirm();
+
+    async function handleDeleteSelectedUsers() {
+        try {
+            await confirm({ description: `Are you sure you want to delete ${selectedUsers.length} simulated user(s)?` });
+        }
+        catch (e) { return }
+
+        const result = await Promise.allSettled(
+            selectedUsers.map(id =>
+                upload(`/api/users/${id}`, { method: 'DELETE' })
+                    .then(x => new Promise<void>((resolve, reject) => x.ok ? resolve() : reject())))
+        );
+        console.log('a')
+
+        const { rejected = [], fulfilled = [] } = groupBy(result, x => x.status);
+
+        if (rejected.length === 0) {
+            enqueueSnackbar(`Successfully deleted ${fulfilled.length} user(s)`, {
+                variant: 'success',
+            });
+        }
+        else if (fulfilled.length === 0) {
+            enqueueSnackbar(`Failed to delete ${rejected.length} user(s)`, {
+                variant: 'error',
+            });
+        }
+        else {
+            enqueueSnackbar(`Failed to delete ${rejected.length} user(s) (successfully deleted ${fulfilled.length})`, {
+                variant: 'error',
+            });
+        }
+
+        mutate();
+    }
+
     const [hiddenCols, setHiddenCols] = useState({
         email: true,
         firstName: true,
         lastName: true
     } as { [field: string]: boolean });
+
+    const [selectedUsers, setSelectedUsers] = useState([] as GridSelectionModel);
 
     const rows = useMemo(() => data?.attributes.simulatedUsers.map(x => ({ id: x.id, ...x.attributes })) ?? [], [data]);
 
@@ -103,10 +148,12 @@ const Page: NextPage = () => {
         <DataGrid
             sx={{ flexGrow: 1 }}
             loading={isLoading}
-            isRowSelectable={constant(false)}
             rows={rows}
             onCellEditCommit={handleCellEdited}
             onColumnVisibilityChange={info => setHiddenCols(x => ({ ...x, [info.field]: !info.isVisible }))}
+            checkboxSelection={true}
+            selectionModel={selectedUsers}
+            onSelectionModelChange={setSelectedUsers}
             columns={([
                 { field: 'id', headerName: 'ID' },
                 { field: 'username', headerName: 'Username' },
@@ -124,7 +171,9 @@ const Page: NextPage = () => {
             componentsProps={{
                 toolbar: {
                     onCreateSimulatedUser: handleCreateSimulatedUser,
-                    createSimulatedUserDisabled: performingAction
+                    onDeleteSelectedUsers: handleDeleteSelectedUsers,
+                    createSimulatedUserDisabled: performingAction,
+                    anySelected: selectedUsers.length > 0,
                 }
             }} />
     </Container>;

@@ -58,7 +58,18 @@ const apiUsers = endpoint(makeUserEntity, ['userId'], {
             
             return fail(Status.NOT_FOUND);
         }
-    }
+    },
+    DELETE: {
+        loginValidation: true,
+        async handler({ session, query: { userId } }, ok, fail) {
+            if (!await hasScope(session!.user.id, 'user:delete', { userId })) {
+                return fail(Status.FORBIDDEN);
+            }
+
+            await prisma.user.delete({ where: { id: userId } });
+            ok();
+        }
+    },
 });
 
 export default apiUsers;

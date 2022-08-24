@@ -20,6 +20,7 @@ import CustomAdapterLuxon from '../src/util/CustomLuxonAdapter';
 import { ErrorBoundary } from 'react-error-boundary';
 import ErrorBoundaryPage from '../src/components/ErrorBoundaryPage';
 import usePageTitle from '../src/hooks/PageTitleHook';
+import { ConfirmProvider } from 'material-ui-confirm';
 
 function MyApp({ Component, pageProps }: AppProps) {
     const loadingInfoRef = useRef({
@@ -58,6 +59,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         <ThemeProvider theme={theme}>
             <CssBaseline />
             <LocalizationProvider dateAdapter={CustomAdapterLuxon}>
+            <ConfirmProvider defaultOptions={{ confirmationText: "Yes, I'm sure", cancellationButtonProps: { variant: 'contained' } }}>
             <SnackbarProvider hideIconVariant>
             <DndProvider backend={HTML5Backend}>
             <LoadingContext.Provider value={loadingContext}>
@@ -76,6 +78,7 @@ function MyApp({ Component, pageProps }: AppProps) {
             </LoadingContext.Provider>
             </DndProvider>
             </SnackbarProvider>
+            </ConfirmProvider>
             </LocalizationProvider>
         </ThemeProvider>
     </>;

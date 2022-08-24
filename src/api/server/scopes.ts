@@ -39,8 +39,8 @@ async function hasControlOver(controllerId: string, otherId: string) {
     // Summary of logic:
     //      Admin has permission for anyone, assuming that user exists
     //      Faculty only has permission for their own simulated users
-    return (await prisma.$queryRaw<[]>`
-        SELECT 1
+    return (await prisma.$queryRaw<{ ct: number }[]>`
+        SELECT COUNT(*) as ct
         FROM "User"
         WHERE
             id = ${otherId} AND
@@ -49,12 +49,12 @@ async function hasControlOver(controllerId: string, otherId: string) {
                 EXISTS (
                     SELECT NULL
                     FROM "User"
-                    WHERE id = ${controllerId} AND rights = ${SitewideRights.Admin}
+                    WHERE id = ${controllerId} AND rights = ${SitewideRights.Admin}::"SitewideRights"
                     LIMIT 1
                 )
             )
         LIMIT 1
-    `).length > 0;
+    `)[0].ct > 0;
 }
 
 export interface Scopes {
@@ -63,6 +63,7 @@ export interface Scopes {
     'user:detailed:view': { userId: string }; // Currently unused, see #30
     'user:edit': { userId: string };
     'user:rights:edit': { userId: string, rights: SitewideRights };
+    'user:delete': { userId: string };
     'user:impersonate': { userId: string };
     'user:simulated:create': { rights: SitewideRights };
     'classroom:create': undefined;
@@ -105,6 +106,7 @@ export async function hasScope(userId: string, ...[scope, data]: ScopeArgumentTu
                 return true;
             }
             return hasControlOver(userId, data.userId);
+        case 'user:delete':
         case 'user:impersonate':
             if (userId === data.userId) {
                 return false;

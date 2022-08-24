@@ -1,4 +1,4 @@
-import AdapterLuxon from "@mui/lab/AdapterLuxon";
+import { AdapterLuxon } from "@mui/x-date-pickers/AdapterLuxon";
 import { DateTime } from "luxon";
 
 // Luxon weeks start on Monday, so this custom adapter shifts it so that

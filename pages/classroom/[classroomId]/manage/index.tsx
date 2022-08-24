@@ -1,4 +1,4 @@
-import { PickersDay, StaticDatePicker } from "@mui/lab";
+import { PickersDay, StaticDatePicker } from "@mui/x-date-pickers";
 import { Badge, Button, Card, CardActions, CardContent, IconButton, Paper, Skeleton, Stack, TextField, Toolbar, Tooltip, Typography } from "@mui/material";
 import { NextPage } from "next";
 import { Dispatch, useCallback, useEffect, useRef, useState } from "react";

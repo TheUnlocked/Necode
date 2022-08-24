@@ -13,7 +13,7 @@ import Editor from './editor';
 import editorTheme from '../src/themes/editorTheme';
 import Header from '../src/components/Header';
 import { SnackbarProvider } from 'notistack';
-import { LocalizationProvider } from '@mui/lab';
+import { LocalizationProvider } from '@mui/x-date-pickers';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Box, SxProps } from '@mui/system';

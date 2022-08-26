@@ -4,8 +4,9 @@ import { ClientToServerEventMap, LiveActivityInfo, ServerToClientEventMap } from
 import { useGetRequest } from '../api/client/GetRequestHook';
 
 export interface SocketInfo {
-    socket: Socket<ServerToClientEventMap, ClientToServerEventMap>;
-    liveActivityInfo?: LiveActivityInfo;
+    readonly socket: Socket<ServerToClientEventMap, ClientToServerEventMap>;
+    readonly iceServers: RTCIceServer[];
+    readonly liveActivityInfo?: LiveActivityInfo;
 }
 
 export default function useSocket(classroomId: string): SocketInfo | undefined {
@@ -16,6 +17,15 @@ export default function useSocket(classroomId: string): SocketInfo | undefined {
         classroomId ? `/api/classroom/${classroomId}/activity/live` : null,
         { revalidateOnFocus: false }
     );
+
+    const { data: iceServers } = useGetRequest<RTCIceServer[]>(
+        classroomId ? `/api/classroom/${classroomId}/activity/ice` : null,
+        {
+            revalidateOnFocus: false,
+            refreshInterval: /* Refresh every 90 minutes */ 1000 * 60 * 90,
+            refreshWhenHidden: true,
+        }
+    )
 
     useEffect(() => {
         if (socketData) {
@@ -44,11 +54,12 @@ export default function useSocket(classroomId: string): SocketInfo | undefined {
         }
     }, [socketData]);
 
-    return useMemo(() => socket
+    return useMemo(() => socket && iceServers
         ? {
             socket: socket,
-            liveActivityInfo: liveActivityInfo
+            liveActivityInfo: liveActivityInfo,
+            iceServers,
         }
         : undefined,
-    [liveActivityInfo, socket]);
+    [liveActivityInfo, socket, iceServers]);
 }

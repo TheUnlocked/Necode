@@ -12,7 +12,7 @@ export function useRTC<T>(socketInfo: SocketInfo | undefined, onPeer: (peer: Pee
     }, [onPeer]);
 
     useEffect(() => {
-        if (!socketInfo?.socket) {
+        if (!socketInfo) {
             return;
         }
 
@@ -28,6 +28,9 @@ export function useRTC<T>(socketInfo: SocketInfo | undefined, onPeer: (peer: Pee
         ws.on('createWebRTCConnection', (initiator, connectionId, info) => {
             const peer = new Peer({
                 initiator,
+                config: {
+                    iceServers: socketInfo.iceServers,
+                },
             });
             peers.push(peer);
             console.log('created peer', initiator, connectionId, info);
@@ -64,5 +67,5 @@ export function useRTC<T>(socketInfo: SocketInfo | undefined, onPeer: (peer: Pee
             peers.forEach(x => x.destroy());
             ws.offTracked();
         };
-    }, [socketInfo?.socket]);
+    }, [socketInfo]);
 }

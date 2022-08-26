@@ -39,7 +39,7 @@ export function useBreadcrumbsData(): BreadcrumbData[] {
     const activityId = router.query.activityId;
 
     const { data: classroomData, error: classroomError, isLoading: classroomLoading } = useGetRequestImmutable<ClassroomEntity>(classroomId ? `/api/classroom/${classroomId}` : null);
-    const { data: activityData, error: activityError, isLoading: activityLoading } = useGetRequestImmutable<ActivityEntity>(activityId ? `/api/classroom/${classroomId}/activity/${activityId}` : null);
+    const { data: activityData, error: activityError, isLoading: activityLoading } = useGetRequestImmutable<ActivityEntity<{ lesson: 'deep' }>>(activityId ? `/api/classroom/${classroomId}/activity/${activityId}?include=lesson` : null);
 
     switch (pathFragments[0]) {
         case 'admin':
@@ -67,15 +67,29 @@ export function useBreadcrumbsData(): BreadcrumbData[] {
                         label: <AsyncBreadcrumb label={classroomData?.attributes.displayName} status={classroomLoading ? 'loading' : classroomError ? 'error' : 'done'} />,
                         title: classroomData?.attributes.displayName
                     });
-                    if (pathFragments[2] === 'manage') {
-                        crumbs.push({ href: `/classroom/${classroomId}/manage`, label: 'Manage' });
-                        if (pathFragments[3] === 'activity' && pathFragments[4] === '[activityId]') {
+                    switch (pathFragments[2]) {
+                        case 'manage':
+                            crumbs.push({ href: `/classroom/${classroomId}/manage`, label: 'Manage' });
+                            if (pathFragments[3] === 'activity' && pathFragments[4] === '[activityId]') {
+                                const lessonName = activityData?.attributes.lesson.attributes.displayName || activityData?.attributes.lesson.attributes.date;
+                                crumbs.push({
+                                    href: `/classroom/${classroomId}/manage#${activityData?.attributes.lesson.attributes.date}`,
+                                    label: <AsyncBreadcrumb label={lessonName} status={activityLoading ? 'loading' : activityError ? 'error' : 'done'} />,
+                                    title: lessonName
+                                });
+                                crumbs.push({
+                                    href: `/classroom/${classroomId}/manage/activity/${activityId}`,
+                                    label: <AsyncBreadcrumb label={activityData?.attributes.activityType} status={activityLoading ? 'loading' : activityError ? 'error' : 'done'} />,
+                                    title: activityData?.attributes.activityType
+                                });
+                            }
+                            break;
+                        case 'activity':
                             crumbs.push({
-                                href: `/classroom/${classroomId}/manage/activity/${activityId}`,
-                                label: <AsyncBreadcrumb label={activityData?.attributes.activityType} status={activityLoading ? 'loading' : activityError ? 'error' : 'done'} />,
-                                title: activityData?.attributes.activityType
+                                href: `/classroom/${classroomId}/activity`,
+                                label: 'Activity',
                             });
-                        }
+                            break;
                     }
                     break;
             }

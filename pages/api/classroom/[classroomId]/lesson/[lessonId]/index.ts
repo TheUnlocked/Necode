@@ -73,7 +73,7 @@ const apiLessonOne = endpoint({} as LessonEntity<{ classroom: any, activities: R
             displayName: Joi.string().allow('').optional(),
         }),
         async handler({ query: { classroomId, lessonId: lessonIdOrDate, include, merge }, body: { date, displayName }, session }, ok, fail) {
-            if (!await hasScope(session!.user.id, 'classroom:lesson:edit', { classroomId })) {
+            if (!await hasScope(session!.user.id, 'classroom:edit', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
 
@@ -174,7 +174,7 @@ const apiLessonOne = endpoint({} as LessonEntity<{ classroom: any, activities: R
     DELETE: {
         loginValidation: true,
         async handler({ query: { lessonId: lessonIdOrDate, classroomId }, session }, ok, fail) {
-            if (!await hasScope(session!.user.id, 'classroom:lesson:edit', { classroomId })) {
+            if (!await hasScope(session!.user.id, 'classroom:edit', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
 

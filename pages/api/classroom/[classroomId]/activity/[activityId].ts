@@ -38,15 +38,17 @@ const apiActivityOne = endpoint(makeActivityEntity, ['classroomId', 'activityId'
         loginValidation: true,
         schema: Joi.object({
             lesson: Joi.string().optional(),
-            displayName: Joi.string().optional(),
+            displayName: Joi.string().allow('').optional(),
             configuration: Joi.any().optional(),
             enabledLanguages: Joi.array().items(Joi.string()).optional(),
             order: Joi.number().optional(),
         }),
-        async handler({ query: { classroomId, activityId }, body, session }, ok, fail) {
-            if (!await hasScope(session!.user.id, 'classroom:lesson:edit', { classroomId })) {
+        async handler({ query: { classroomId, activityId, include }, body, session }, ok, fail) {
+            if (!await hasScope(session!.user.id, 'classroom:edit', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
+
+            const includeLesson = include.includes('lesson');
 
             const {
                 lesson: lessonId,
@@ -97,7 +99,8 @@ const apiActivityOne = endpoint(makeActivityEntity, ['classroomId', 'activityId'
                         configuration,
                         enabledLanguages,
                         order: lessonId ? await prisma.activity.count({ where: { lessonId } }) : order,
-                    }
+                    },
+                    include: { lesson: includeLesson },
                 });
             })
 
@@ -105,13 +108,17 @@ const apiActivityOne = endpoint(makeActivityEntity, ['classroomId', 'activityId'
                 return fail(Status.NOT_FOUND);
             }
 
-            return ok(makeActivityEntity(activity));
+            return ok(makeActivityEntity(activity, {
+                lesson: includeLesson
+                    ? makeLessonEntity(activity.lesson)
+                    : activity.lessonId,
+            }));
         }
     },
     DELETE: {
         loginValidation: true,
         async handler({ query: { classroomId, activityId }, session }, ok, fail) {
-            if (!await hasScope(session!.user.id, 'classroom:lesson:edit', { classroomId })) {
+            if (!await hasScope(session!.user.id, 'classroom:edit', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
 

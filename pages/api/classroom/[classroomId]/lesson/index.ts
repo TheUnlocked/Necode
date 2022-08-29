@@ -44,7 +44,7 @@ const apiLessonAll = endpoint(makeLessonEntity, ['classroomId', 'include[]'] as 
                 .optional()
         }),
         async handler({ query: { classroomId }, body: { date, displayName, activities }, session }, ok, fail) {
-            if (!await hasScope(session!.user.id, 'classroom:lesson:edit', { classroomId })) {
+            if (!await hasScope(session!.user.id, 'classroom:edit', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
 

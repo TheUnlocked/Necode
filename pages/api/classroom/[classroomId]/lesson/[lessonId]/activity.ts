@@ -25,10 +25,10 @@ const apiActivityAll = endpoint(makeActivityEntity, ['classroomId', 'lessonId'] 
         schema: Joi.object<ActivityEntity['attributes']>({
             activityType: Joi.string(),
             configuration: Joi.any(),
-            displayName: Joi.string(),
+            displayName: Joi.string().allow(''),
         }),
         async handler({ query: { classroomId, lessonId }, body: { activityType, configuration, displayName }, session }, ok, fail) {
-            if (!await hasScope(session!.user.id, 'classroom:lesson:edit', { classroomId })) {
+            if (!await hasScope(session!.user.id, 'classroom:edit', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
 

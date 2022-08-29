@@ -41,7 +41,7 @@ const apiActivityOne = endpoint(makeActivityEntity, ['classroomId', 'activityId'
             enabledLanguages: Joi.array().items(Joi.string()).optional()
         }),
         async handler({ query: { classroomId, activityId }, body, session }, ok, fail) {
-            if (!await hasScope(session!.user.id, 'classroom:edit', { classroomId })) {
+            if (!await hasScope(session!.user.id, 'classroom:lesson:edit', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
 
@@ -63,7 +63,7 @@ const apiActivityOne = endpoint(makeActivityEntity, ['classroomId', 'activityId'
     DELETE: {
         loginValidation: true,
         async handler({ query: { classroomId, activityId }, session }, ok, fail) {
-            if (!await hasScope(session!.user.id, 'classroom:edit', { classroomId })) {
+            if (!await hasScope(session!.user.id, 'classroom:lesson:edit', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
 

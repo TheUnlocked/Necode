@@ -116,6 +116,8 @@ model Lesson {
   updatedAt   DateTime   @updatedAt
   classroom   Classroom  @relation(fields: [classroomId], references: [id], onDelete: Cascade)
   activities  Activity[]
+
+  @@unique([classroomId, date])
 }
 
 model LiveActivity {

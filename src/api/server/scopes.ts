@@ -68,6 +68,7 @@ export interface Scopes {
     'user:simulated:create': { rights: SitewideRights };
     'classroom:create': undefined;
     'classroom:edit': { classroomId: string };
+    'classroom:lesson:edit': { classroomId: string };
     'classroom:invite': { classroomId: string };
     'classroom:invite:refresh': { classroomId: string };
     'classroom:view': { classroomId: string };
@@ -116,6 +117,7 @@ export async function hasScope(userId: string, ...[scope, data]: ScopeArgumentTu
             return hasControlOver(userId, data.userId);
         case 'classroom:view':
         case 'classroom:edit':
+        case 'classroom:lesson:edit':
         case 'classroom:member:edit':
         case 'classroom:invite':
         case 'classroom:invite:refresh':

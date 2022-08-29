@@ -1,14 +1,14 @@
-import { Activity } from "@prisma/client";
+import { Activity, Classroom, Lesson } from "@prisma/client";
 import Joi from "joi";
-import { AttributesOf, endpoint, Status } from "../../../../../../src/api/Endpoint";
-import { ActivityEntity, makeActivityEntity } from "../../../../../../src/api/entities/ActivityEntity";
+import { endpoint, PartialAttributesOf, Status } from "../../../../../../src/api/Endpoint";
+import { makeActivityEntity } from "../../../../../../src/api/entities/ActivityEntity";
 import { makeClassroomEntity } from "../../../../../../src/api/entities/ClassroomEntity";
 import { ReferenceDepth } from "../../../../../../src/api/entities/EntityReference";
 import { LessonEntity, makeLessonEntity } from "../../../../../../src/api/entities/LessonEntity";
 import { hasScope } from "../../../../../../src/api/server/scopes";
 import { prisma } from "../../../../../../src/db/prisma";
 import { isIso8601Date, iso8601DateRegex } from "../../../../../../src/util/iso8601";
-import { singleArg } from "../../../../../../src/util/typeguards";
+import { includes, singleArg } from "../../../../../../src/util/typeguards";
 
 async function maybeGetByIsoDate(lessonIdOrDate: string, classroomId: string) {
     if (isIso8601Date(lessonIdOrDate)) {
@@ -26,7 +26,7 @@ async function maybeGetByIsoDate(lessonIdOrDate: string, classroomId: string) {
     return lessonIdOrDate;
 }
 
-const apiLessonOne = endpoint({} as LessonEntity<{ classroom: any, activities: ReferenceDepth }>, ['classroomId', 'lessonId', 'include[]'] as const, {
+const apiLessonOne = endpoint({} as LessonEntity<{ classroom: any, activities: ReferenceDepth }>, ['classroomId', 'lessonId', 'include[]', 'merge?'] as const, {
     type: 'entity',
     GET: {
         loginValidation: true,
@@ -66,81 +66,126 @@ const apiLessonOne = endpoint({} as LessonEntity<{ classroom: any, activities: R
             }));
         }
     },
-    PUT: {
+    PATCH: {
         loginValidation: true,
-        schema: Joi.object<LessonEntity['attributes']>({
-            date: Joi.string().regex(iso8601DateRegex),
-            displayName: Joi.string().allow('').max(100),
-            activities: Joi.array()
-                .items(Joi.alt(
-                    Joi.object<AttributesOf<ActivityEntity>>({
-                        activityType: Joi.string(),
-                        configuration: Joi.any().optional(),
-                        enabledLanguages: Joi.array().items(Joi.string()).optional()
-                    }),
-                    Joi.object<AttributesOf<ActivityEntity> & { id: string }>({
-                        id: Joi.string(),
-                        configuration: Joi.any().optional(),
-                        enabledLanguages: Joi.array().items(Joi.string()).optional()
-                    }),
-                ))
+        schema: Joi.object<PartialAttributesOf<LessonEntity>>({
+            date: Joi.string().regex(iso8601DateRegex).optional(),
+            displayName: Joi.string().allow('').max(100).optional(),
         }),
-        async handler({ query: { classroomId, lessonId }, body: { date, displayName, activities }, session }, ok, fail) {
-            if (!await hasScope(session!.user.id, 'classroom:edit', { classroomId })) {
+        async handler({ query: { classroomId, lessonId: lessonIdOrDate, include, merge }, body: { date, displayName }, session }, ok, fail) {
+            if (!await hasScope(session!.user.id, 'classroom:lesson:edit', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
 
-            lessonId = await maybeGetByIsoDate(lessonId, classroomId) ?? '';
+            const lessonId = await maybeGetByIsoDate(lessonIdOrDate, classroomId);
 
-            if (lessonId === '' || await prisma.lesson.count({ where: { id: lessonId, classroomId } }) === 0) {
+            if (!lessonId || await prisma.lesson.count({ where: { classroomId, id: lessonId } }) === 0) {
                 return fail(Status.NOT_FOUND);
             }
 
-            const lesson = await prisma.lesson.update({
-                include: { activities: {
-                    orderBy: { order: 'asc' }
-                } },
-                where: { id: lessonId },
-                data: {
-                    date: new Date(date),
-                    displayName,
-                    activities: {
-                        deleteMany: {
-                            id: { notIn: activities.map(x => x.id).filter(Boolean) }
-                        },
-                        upsert: (activities as unknown as (ActivityEntity['attributes'] & { id?: string })[]).map((x, i) => ({
-                            where: { id: x.id ?? '' },
-                            create: {
-                                activityType: x.activityType ?? 'core/unknown',
-                                displayName: 'placeholder',
-                                configuration: x.configuration ?? undefined,
-                                enabledLanguages: x.enabledLanguages ?? [],
-                                order: i
-                            },
-                            update: {
-                                displayName: 'placeholder',
-                                order: i,
-                                ...(x.configuration ? { configuration: x.configuration } : {}),
-                                ...(x.enabledLanguages ? { enabledLanguages: x.enabledLanguages } : {})
-                            }
-                        }))
+            const mergeType = merge ?? 'reject';
+
+            if (!includes(['reject', 'replace', 'combine'] as const, mergeType)) {
+                return fail(Status.BAD_REQUEST, "Query parameter merge must be one of 'reject', 'replace', 'combine'");
+            }
+
+            const includeActivities = include.includes('activities');
+            const includeClassroom = include.includes('classroom');
+
+            const includeQueryPart = {
+                activities: { orderBy: { order: 'asc' }, select: includeActivities ? undefined : { id: true } },
+                classroom: includeClassroom
+            } as const;
+
+            let lesson: undefined | Lesson & {
+                classroom: Classroom;
+                activities: {}[];
+            };
+
+            if (date !== undefined) {
+                if (!isIso8601Date(date)) {
+                    return fail(Status.BAD_REQUEST, 'Invalid date');
+                }
+
+                const mergeLesson = await prisma.lesson.findUnique({ where: { classroomId_date: { classroomId, date: new Date(date) } } });
+                if (mergeLesson && mergeLesson.id !== lessonId) {
+                    switch (mergeType) {
+                        case 'reject':
+                            return fail(Status.CONFLICT, `A lesson already exists on ${date}`);
+                        case 'replace':
+                            [, lesson] = await prisma.$transaction([
+                                prisma.lesson.delete({ where: { id: mergeLesson.id } }),
+                                prisma.lesson.update({
+                                    where: { id: lessonId },
+                                    data: {
+                                        date: new Date(date),
+                                        ...displayName !== undefined ? { displayName } : undefined,
+                                    },
+                                    include: includeQueryPart,
+                                })
+                            ]);
+                        case 'combine':
+                            [,, lesson] = await prisma.$transaction([
+                                prisma.activity.updateMany({
+                                    where: { lessonId: mergeLesson.id },
+                                    data: {
+                                        lessonId,
+                                        order: {
+                                            // query intentionally not part of the transaction
+                                            increment: ((await prisma.activity.aggregate({
+                                                where: { lessonId },
+                                                _max: {
+                                                    order: true
+                                                }
+                                            }))._max.order ?? 0) + 1
+                                        }
+                                    }
+                                }),
+                                prisma.lesson.delete({ where: { id: mergeLesson.id } }),
+                                prisma.lesson.update({
+                                    where: { id: lessonId },
+                                    data: {
+                                        date: new Date(date),
+                                        ...displayName !== undefined ? { displayName } : undefined,
+                                    },
+                                    include: includeQueryPart,
+                                })
+                            ]);
+                            break;
                     }
                 }
-            });
+            }
 
-            return ok(makeLessonEntity(lesson, { activities: lesson.activities.map(singleArg(makeActivityEntity)) }));
+            if (lesson === undefined) {
+                lesson = await prisma.lesson.update({
+                    where: { id: lessonId },
+                    data: {
+                        ...displayName !== undefined ? { displayName } : undefined,
+                    },
+                    include: includeQueryPart,
+                });
+            }
+
+            return ok(makeLessonEntity(lesson, {
+                activities: includeActivities
+                    ? (lesson.activities as Activity[]).map(singleArg(makeActivityEntity))
+                    : (lesson.activities as { id: string }[]).map(x => x.id),
+                classroom: includeClassroom
+                    ? makeClassroomEntity(lesson.classroom)
+                    : lesson.classroomId
+            }));
         }
     },
     DELETE: {
         loginValidation: true,
-        async handler({ query: { lessonId, classroomId }, session }, ok, fail) {
-            if (!await hasScope(session!.user.id, 'classroom:edit', { classroomId })) {
+        async handler({ query: { lessonId: lessonIdOrDate, classroomId }, session }, ok, fail) {
+            if (!await hasScope(session!.user.id, 'classroom:lesson:edit', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
 
-            lessonId = await maybeGetByIsoDate(lessonId, classroomId) ?? '';
+            const lessonId = await maybeGetByIsoDate(lessonIdOrDate, classroomId);
 
-            if (lessonId === '') {
+            if (!lessonId) {
                 return fail(Status.NOT_FOUND);
             }
 

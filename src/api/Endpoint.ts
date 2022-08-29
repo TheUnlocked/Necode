@@ -16,6 +16,7 @@ export enum Status {
     UNAUTHORIZED = 401,
     FORBIDDEN = 403,
     NOT_FOUND = 404,
+    CONFLICT = 409,
     INTERNAL_SERVER_ERROR = 500,
     NOT_IMPLEMENTED = 501
 }
@@ -27,6 +28,7 @@ const defaultStatusMessages: { [Code in Status]: string } = {
     [Status.UNAUTHORIZED]: 'Unauthorized',
     [Status.FORBIDDEN]: 'Forbidden',
     [Status.NOT_FOUND]: 'Not Found',
+    [Status.CONFLICT]: 'Conflict',
     [Status.INTERNAL_SERVER_ERROR]: 'Internal Server Error',
     [Status.NOT_IMPLEMENTED]: 'Not Yet Implemented',
 };
@@ -329,7 +331,7 @@ export function endpoint<P extends string, Endpoints extends EndpointMap<P>>(_: 
                             cleanedParams[cleanParam] = value;
                         }
                         else {
-                            cleanedParams[cleanParam] = value[0];
+                            cleanedParams[cleanParam] = value.at(-1);
                         }
                     }
                     else if (!param.endsWith('?')) {

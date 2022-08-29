@@ -58,11 +58,7 @@ const apiUsers = endpoint(makeClassroomMemberEntity, ['userId', 'classroomId'], 
         loginValidation: true,
         async handler({ session, query: { classroomId, userId } }, ok, fail) {
 
-            // Requires both classroom:edit and classroom:member:edit, since
-            // students cannot (currently) remove themselves from classrooms.
-
-            if (!await hasScope(session!.user.id, 'classroom:edit', { classroomId }) ||
-                !await hasScope(session!.user.id, 'classroom:member:edit', { classroomId, userId })) {
+            if (!await hasScope(session!.user.id, 'classroom:member:edit', { classroomId, userId })) {
                 return fail(Status.FORBIDDEN);
             }
 

@@ -70,7 +70,7 @@ const apiLessonOne = endpoint({} as LessonEntity<{ classroom: any, activities: R
         loginValidation: true,
         schema: Joi.object<PartialAttributesOf<LessonEntity>>({
             date: Joi.string().regex(iso8601DateRegex).optional(),
-            displayName: Joi.string().allow('').max(100).optional(),
+            displayName: Joi.string().allow('').optional(),
         }),
         async handler({ query: { classroomId, lessonId: lessonIdOrDate, include, merge }, body: { date, displayName }, session }, ok, fail) {
             if (!await hasScope(session!.user.id, 'classroom:lesson:edit', { classroomId })) {
@@ -132,12 +132,7 @@ const apiLessonOne = endpoint({} as LessonEntity<{ classroom: any, activities: R
                                         lessonId,
                                         order: {
                                             // query intentionally not part of the transaction
-                                            increment: ((await prisma.activity.aggregate({
-                                                where: { lessonId },
-                                                _max: {
-                                                    order: true
-                                                }
-                                            }))._max.order ?? 0) + 1
+                                            increment: await prisma.activity.count({ where: { lessonId } })
                                         }
                                     }
                                 }),
@@ -146,7 +141,7 @@ const apiLessonOne = endpoint({} as LessonEntity<{ classroom: any, activities: R
                                     where: { id: lessonId },
                                     data: {
                                         date: new Date(date),
-                                        ...displayName !== undefined ? { displayName } : undefined,
+                                        displayName,
                                     },
                                     include: includeQueryPart,
                                 })
@@ -160,7 +155,7 @@ const apiLessonOne = endpoint({} as LessonEntity<{ classroom: any, activities: R
                 lesson = await prisma.lesson.update({
                     where: { id: lessonId },
                     data: {
-                        ...displayName !== undefined ? { displayName } : undefined,
+                        displayName,
                     },
                     include: includeQueryPart,
                 });

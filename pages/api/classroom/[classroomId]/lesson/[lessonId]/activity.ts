@@ -25,8 +25,9 @@ const apiActivityAll = endpoint(makeActivityEntity, ['classroomId', 'lessonId'] 
         schema: Joi.object<ActivityEntity['attributes']>({
             activityType: Joi.string(),
             configuration: Joi.any(),
+            displayName: Joi.string(),
         }),
-        async handler({ query: { classroomId, lessonId }, body: { activityType, configuration }, session }, ok, fail) {
+        async handler({ query: { classroomId, lessonId }, body: { activityType, configuration, displayName }, session }, ok, fail) {
             if (!await hasScope(session!.user.id, 'classroom:lesson:edit', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
@@ -35,7 +36,7 @@ const apiActivityAll = endpoint(makeActivityEntity, ['classroomId', 'lessonId'] 
                 data: {
                     lessonId,
                     activityType,
-                    displayName: 'placeholder',
+                    displayName,
                     configuration: configuration ?? undefined,
                     enabledLanguages: [],
                     order: await prisma.activity.count({ where: { lessonId } })

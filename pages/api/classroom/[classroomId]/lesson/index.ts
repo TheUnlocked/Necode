@@ -34,7 +34,7 @@ const apiLessonAll = endpoint(makeLessonEntity, ['classroomId', 'include[]'] as 
         loginValidation: true,
         schema: Joi.object<LessonEntity['attributes']>({
             date: Joi.string().regex(iso8601DateRegex),
-            displayName: Joi.string().allow('').max(100),
+            displayName: Joi.string().allow(''),
             activities: Joi.array()
                 .items(Joi.object<ActivityEntity['attributes']>({
                     activityType: Joi.string(),

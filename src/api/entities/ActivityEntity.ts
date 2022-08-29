@@ -10,6 +10,7 @@ export type ActivityEntity<References extends Refs = Refs>
     = Entity<EntityType.Activity, {
         activityType: string;
         lesson: EntityReference<LessonEntity<any>, References['lesson']>;
+        displayName: string;
         configuration: any;
         enabledLanguages: string[];
     }>;
@@ -22,6 +23,7 @@ export function makeActivityEntity<R extends Refs = any>(activity: Activity, rel
         id: activity.id,
         attributes: {
             activityType: activity.activityType,
+            displayName: activity.displayName,
             configuration: activity.configuration,
             enabledLanguages: activity.enabledLanguages,
             lesson: makeEntityReference(EntityType.Lesson, relationships?.lesson)

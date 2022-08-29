@@ -20,7 +20,7 @@ export enum Status {
     NOT_IMPLEMENTED = 501
 }
 
-const defaultStatusMessages: { [Code in Status]: string } = {
+export const defaultStatusMessages: { [Code in Status]: string } = {
     [Status.OK]: 'OK',
     [Status.CREATED]: 'Created',
     [Status.BAD_REQUEST]: 'Bad Request',
@@ -190,7 +190,7 @@ type EndpointResult<P extends string, Endpoints extends Partial<EndpointMap<any>
 };
 
 // Proper typing causes issues with express middleware. While express middleware
-// are not guaranteed to work with nodejs, most of the time they will.
+// are not guaranteed to work with nextjs, most of the time they will.
 type Middleware = (req: any, res: any, next: (resultOrError?: any) => void) => void;
 
 function runMiddleware(req: NextApiRequest, res: NextApiResponse, fn: Middleware) {
@@ -205,18 +205,22 @@ function runMiddleware(req: NextApiRequest, res: NextApiResponse, fn: Middleware
     });
 }
 
+/** @deprecated Use the resource API instead */
 export function endpoint
     <P extends string, Endpoints extends EntityEndpoints<E, P>, E extends Entity<any, any>>
     (example: E | ((...args: any[]) => E), mandatoryParams: readonly P[], endpoints: Endpoints & { middleware?: Middleware[] }): EndpointResult<P, Endpoints>;
 
+/** @deprecated Use the resource API instead */
 export function endpoint
     <P extends string, Endpoints extends EntityTypeEndpoints<E, P>, E extends Entity<any, any>>
     (example: E | ((...args: any[]) => E), mandatoryParams: readonly P[], endpoints: Endpoints & { middleware?: Middleware[] }): EndpointResult<P, Endpoints>;
 
+/** @deprecated Use the resource API instead */
 export function endpoint
     <P extends string, Endpoints extends SortableEntityTypeEndpoints<E, P>, E extends Entity<any, any>>
     (example: E | ((...args: any[]) => E), mandatoryParams: readonly P[], endpoints: Endpoints & { middleware?: Middleware[] }): EndpointResult<P, Endpoints>;
 
+/** @deprecated Use the resource API instead */
 export function endpoint
     <P extends string, Endpoints extends EndpointMap<P> & { type: 'other' }>
     (options: any, mandatoryParams: readonly P[], endpoints: Endpoints & { middleware?: Middleware[] }): EndpointResult<P, Endpoints>;

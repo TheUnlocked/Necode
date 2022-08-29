@@ -22,6 +22,8 @@ export type Awaitable<T> = T | PromiseLike<T>;
 
 export type IfAny<T, A, B> = Omit<{ a: any, b: any }, T extends never ? 'a' : 'b'> extends { a: any } ? B : A;
 
+export type If<C extends boolean, T, E = never> = C extends true ? T : E;
+
 export type NonStrictDisjunction<A, B>
     // The simple implementation doesn't work because of https://github.com/microsoft/TypeScript/issues/46976
     // = (A & Partial<B>) | (B & Partial<A>);

@@ -4,7 +4,7 @@ import { SxProps } from "@mui/system";
 import { Code as CodeIcon, TextFields as TextFieldsIcon } from "@mui/icons-material";
 import Editor, { useMonaco } from "@monaco-editor/react";
 import { usePopupState, bindTrigger, bindPopper } from "material-ui-popup-state/hooks";
-import DragHandle, { dragHandleClass, dragHandleSelector } from "./DragHandle";
+import DragHandle, { dragHandleClass, dragHandleSelector } from "../../components/widgets/DragHandle";
 import type { editor } from "monaco-editor";
 import { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
 import allLanguages from "../../languages/allLanguages";

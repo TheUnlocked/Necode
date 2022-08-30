@@ -1,6 +1,6 @@
 import { Card, Typography } from "@mui/material";
 import { Box, styled } from "@mui/system";
-import { MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ReflexContainer, ReflexElement, ReflexSplitter } from "react-reflex";
 import { useRTC } from "../../hooks/WebRtcHook";
 import { BrowserRunner } from "../../runner/BrowserRunner";

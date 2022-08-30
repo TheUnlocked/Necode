@@ -1,61 +1,20 @@
 import { Add, Delete, TextFields } from "@mui/icons-material";
 import { Button, Card, CardContent, Divider, IconButton, Stack, TextField, Tooltip, Typography } from "@mui/material";
 import { Box, SxProps } from "@mui/system";
-import { nanoid } from "nanoid";
-import { Dispatch, MutableRefObject, useCallback, useEffect, useRef, useState } from "react";
+import { Dispatch, MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDrop } from "react-dnd";
 import ActivityDescription from "../../activities/ActivityDescription";
-import allActivities from "../../activities/allActivities";
 import { useGetRequest } from "../../api/client/GetRequestHook";
-import { useLoadingContext } from "../../api/client/LoadingContext";
 import { ActivityEntity } from "../../api/entities/ActivityEntity";
 import { LessonEntity } from "../../api/entities/LessonEntity";
-import { Response } from "../../api/Response";
-import useDirty from "../../hooks/DirtyHook";
-import { useMergeReducer } from "../../hooks/MergeReducerHook";
 import { Iso8601Date, toLuxon } from "../../util/iso8601";
 import { ActivityDragDropBox, activityDragDropType } from "./ActivityDragDropBox";
 import SkeletonActivityListPane from "./SkeletonActivityListPane";
-import BrokenWidget from "./BrokenWidget";
-import NoopActivity from "./NoopActivity";
-import textInputActivityDescription from "./textInputDescription";
+import textInputActivityDescription from "../../activities/text-input/textInputDescription";
 import useImperativeDialog from "../../hooks/ImperativeDialogHook";
 import SelectActivityDialog from "./SelectActivityDialog";
-import { AttributesOf, PartialAttributesOf } from "../../api/Endpoint";
-import fetch from '../../util/fetch';
-
-export interface LocalActivity {
-    id: string;
-    activityType: ActivityDescription<any>;
-    configuration: any;
-    enabledLanguages: string[];
-}
-
-type LocalActivityReference = (LocalActivity & { isReference?: false }) | ({ id: string, isReference: true } & Partial<LocalActivity>);
-
-function activityEntityToLocal(entity: ActivityEntity): LocalActivity {
-    let activity = entity.attributes.activityType === textInputActivityDescription.id
-        ? textInputActivityDescription
-        : allActivities.find(x => x.id === entity.attributes.activityType);
-
-    if (!activity) {
-        activity = {
-            id: entity.attributes.activityType,
-            displayName: 'Unknown Activity',
-            defaultConfig: undefined,
-            requiredFeatures: [],
-            activityPage: NoopActivity,
-            configWidget: BrokenWidget
-        };
-    }
-
-    return {
-        id: entity.id,
-        activityType: activity,
-        configuration: entity.attributes.configuration,
-        enabledLanguages: entity.attributes.enabledLanguages
-    };
-}
+import useNecodeFetch from '../../hooks/useNecodeFetch';
+import { EntityReference } from '../../api/entities/EntityReference';
 
 interface ActivityListPaneProps {
     sx: SxProps;
@@ -70,18 +29,11 @@ export default function ActivityListPane({
     classroomId,
     date,
     onLessonChange,
-    saveRef: foreignSaveRef
 }: ActivityListPaneProps) {
     const onLessonChangeRef = useRef(onLessonChange);
-    useEffect(() => void (onLessonChangeRef.current = onLessonChange), [onLessonChange]);
+
+    const { upload } = useNecodeFetch();
     
-    const [isDirty, markDirty, clearDirty, dirtyCounter] = useDirty();
-
-    const isDirtyRef = useRef(false);
-    useEffect(() => {
-        isDirtyRef.current = isDirty;
-    }, [isDirty]);
-
     const [, drop] = useDrop(() => ({ accept: activityDragDropType }));
 
     const [{ isDragging }, trashDrop] = useDrop(() => ({
@@ -91,230 +43,156 @@ export default function ActivityListPane({
                 isDragging: Boolean(monitor.getItemType() === activityDragDropType)
             };
         },
-        drop(item: LocalActivity) {
-            markDirty();
-            setActivities(activities => activities.filter(x => x.id !== item.id));
+        drop(item: ActivityEntity) {
+            const updatedObject = {
+                ...lessonEntity!,
+                attributes: {
+                    ...lessonEntity!.attributes,
+                    activities: activities.filter(x => x.id === item.id)
+                }
+            };
+
+            mutateLesson(
+                async () => {
+                    await upload(`/api/classroom/${classroomId}/activity/${item.id}`, { method: 'DELETE' });
+                    return updatedObject;
+                },
+                { optimisticData: updatedObject, rollbackOnError: true }
+            );
         }
     }));
 
     async function addActivity(activity: ActivityDescription<any>) {
-        const id = `%local_${nanoid()}`;
-        setActivities(x => {
-            const newActivities = x.concat({
-                id,
-                isReference: false,
-                activityType: activity,
-                configuration: activity.defaultConfig,
-                enabledLanguages: []
-            });
-            return newActivities;
+        const lesson = lessonEntity ?? await upload<LessonEntity<{ activities: 'deep' }>>(`/api/classroom/${classroomId}/lesson`, {
+            method: 'POST',
+            body: JSON.stringify({
+                date,
+                displayName: displayName,
+            })
         });
-        markDirty();
+
+        const activityEntity = await upload<ActivityEntity>(`/api/classroom/${classroomId}/lesson/${lesson.id}/activity`, {
+            method: 'POST',
+            body: JSON.stringify({
+                activityType: activity.id,
+                configuration: activity.defaultConfig,
+                displayName: activity.displayName,
+            })
+        });
+        
+        mutateLesson({
+            ...lesson,
+            attributes: {
+                ...lesson.attributes,
+                activities: (lesson.attributes.activities ?? []).concat(activityEntity),
+            }
+        });
     }
 
-    const [activities, setActivities] = useState<LocalActivityReference[]>([]);
-
     const lessonEndpoint = `/api/classroom/${classroomId}/lesson/${date}?include=activities`;
-    const { data: lessonEntity, error: lessonEntityError, isLoading } = useGetRequest<LessonEntity<{ activities: 'deep', classroom: 'shallow' }>>(lessonEndpoint, {
-        revalidateOnFocus: false,
-        revalidateOnReconnect: false
-    });
+    const { data: lessonEntity, error: lessonEntityError, isLoading, mutate: mutateLesson } = useGetRequest<LessonEntity<{ activities: 'deep', classroom: 'shallow' }>>(lessonEndpoint);
 
-    const [{ id: lessonId, displayName }, modifyActivity] = useMergeReducer<{
-        id: string | undefined,
-        displayName: string
-    }>({ id: undefined, displayName: '' });
+    const activities = useMemo(() => lessonEntity?.attributes.activities ?? [], [lessonEntity]);
+
+    const [displayName, setDisplayName] = useState('');
 
     useEffect(() => {
         if (lessonEntity) {
             onLessonChangeRef.current?.(lessonEntity);
-            modifyActivity({ id: lessonEntity.id, displayName: lessonEntity.attributes.displayName });
-            setActivities(lessonEntity.attributes.activities.map(activityEntityToLocal));
-
-            clearDirty();
+            setDisplayName(lessonEntity.attributes.displayName);
         }
         else if (lessonEntityError) {
             onLessonChangeRef.current?.(undefined);
-            modifyActivity({ id: undefined, displayName: '' });
-            setActivities([]);
-
-            clearDirty();
+            setDisplayName('');
         }
     }, [lessonEntity, lessonEntityError]);
 
     const [activityConfigDeltas, setActivityConfigDeltas] = useState({} as { [activityId: string]: any });
 
-    const { startUpload, finishUpload } = useLoadingContext();
-
-    const save = useCallback(() => {
-        if (isLoading) {
-            // can't save while loading
-            return;
-        }
-
-        if (!classroomId) {
-            return;
-        }
-
-        if (activities.length === 0 && displayName === '') {
-            if (lessonId) {
-                // Delete lesson
-                onLessonChange?.(undefined);
-                clearDirty();
-                startUpload();
-                return fetch(`/api/classroom/${classroomId}/lesson/${lessonId}`, { method: 'DELETE' })
-                    .then(() => {})
-                    .finally(finishUpload);
-            }
-            return;
-        }
-
-        startUpload();
-                    
-        const body = JSON.stringify({
-            date,
-            displayName,
-            activities: activities.map<PartialAttributesOf<ActivityEntity>>(x => {
-                const isLocal = x.id.startsWith('%local');
-                if (isLocal) {
-                    return {
-                        activityType: x.activityType?.id,
-                        configuration: x.configuration,
-                        enabledLanguages: x.enabledLanguages
-                    };
-                }
-                else if (x.id in activityConfigDeltas) {
-                    return {
-                        id: x.id,
-                        configuration: activityConfigDeltas[x.id]
-                    };
-                }
-                else {
-                    return {
-                        id: x.id
-                    };
-                }
-            })
-        } as AttributesOf<LessonEntity<{ activities: 'deep' }>>);
-
-        let req: Promise<Response<LessonEntity<{ activities: 'deep', classroom: 'shallow' }>>>;
-        
-        if (lessonId) {
-            req = fetch(`/api/classroom/${classroomId}/lesson/${lessonId}`, {
-                method: 'PUT',
-                body
-            }).then(x => x.json());
-        }
-        else {
-            req = fetch(`/api/classroom/${classroomId}/lesson`, {
-                method: 'POST',
-                body
-            }).then(x => x.json());
-        }
-
-        setActivityConfigDeltas({});
-        clearDirty();
-        return req
-            .then(x => {
-                onLessonChange?.(x.data);
-                return x.data;
-            })
-            .finally(finishUpload);
-    }, [date, classroomId, lessonId, displayName, activities, activityConfigDeltas, isLoading, onLessonChange, startUpload, finishUpload]);
-
-    const saveRef = useRef(save);
-    useEffect(() => {
-        saveRef.current = save;
-        if (foreignSaveRef) {
-            foreignSaveRef.current = () => {
-                if (isDirtyRef.current) {
-                    save();
-                }
-            }
-        }
-    }, [save, foreignSaveRef]);
-
-    useEffect(() => {
-        if (dirtyCounter) {
-            const timer = setTimeout(saveRef.current, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [dirtyCounter]);
-
     const findItem = useCallback((id: string) => {
         return { index: activities.findIndex(x => x.id === id) };
     }, [activities]);
 
-    const moveItem = useCallback((id: string, to: number) => {
-        const newArr = [...activities];
+    const moveItem = useCallback(async (id: string, to: number) => {
+        const newActivities = [...activities];
         const from = activities.findIndex(x => x.id === id);
-        const [oldElt] = newArr.splice(from, 1);
-        newArr.splice(to, 0, oldElt);
-        setActivities(newArr);
-        markDirty();
-    }, [activities]);
+        const [oldElt] = newActivities.splice(from, 1);
+        newActivities.splice(to, 0, oldElt);
 
-    const getRealActivityId = useCallback(async (id: string) => {
-        if (id.startsWith('%local')) {
-            const newData = await save();
-            if (newData) {
-                const index = activities.findIndex(x => x.id === id);
-                return newData.attributes.activities[index].id;
-            }
-            throw new Error('Failed to obtain ID');
-        }
-        else {
-            return id;
-        }
-    }, [save, activities]);
+        // const updatedObject = {
+        //     ...lessonEntity!,
+        //     attributes: {
+        //         ...lessonEntity!.attributes,
+        //         activities: newActivities
+        //     }
+        // };
+
+        // mutateLesson(
+        //     async () => {
+        //         await upload(`/api/classroom/${classroomId}/activity/${id}`, {
+        //             method: 'PATCH',
+        //             body: JSON.stringify({
+        //                 order: to
+        //             })
+        //         });
+        //         return updatedObject;
+        //     },
+        //     { optimisticData: updatedObject, rollbackOnError: true }
+        // );
+    }, [upload, classroomId, mutateLesson, lessonEntity, activities]);
 
     function setActivityConfig(index: number, activityConfig: any) {
-        const newActivities = [
-            ...activities.slice(0, index),
-            {
-                ...activities[index],
-                configuration: activityConfig
+        const updatedObject = {
+            ...lessonEntity!,
+            attributes: {
+                ...lessonEntity!.attributes,
+                activities: [
+                    ...activities.slice(0, index),
+                    {
+                        ...activities[index],
+                        configuration: activityConfig
+                    },
+                    ...activities.slice(index + 1)
+                ]
+            }
+        };
+
+        mutateLesson(
+            async () => {
+                await upload(`/api/classroom/${classroomId}/activity/${activities[index].id}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({
+                        configuration: activityConfig,
+                    })
+                });
+                return updatedObject;
             },
-            ...activities.slice(index + 1)
-        ];
-        setActivities(newActivities);
-        markDirty();
+            { optimisticData: updatedObject, rollbackOnError: true }
+        );
     }
 
     const [selectActivityDialog, openSelectActivityDialog] = useImperativeDialog(SelectActivityDialog, {
         onSelectActivity: addActivity
     });
 
-    if (isLoading) {
+    if (isLoading && !lessonEntity) {
         return <SkeletonActivityListPane sx={sx} />;
     }
 
-    function makeWidget(activityEntity: LocalActivityReference, index: number) {
-        if (activityEntity.isReference) {
-            return <ActivityDragDropBox
-                key={activityEntity.id}
-                id={activityEntity.id}
-                skeleton={true}
-                classroomId={classroomId}
-                findItem={findItem}
-                moveItem={moveItem}
-                getRealActivityId={getRealActivityId} />;
-        }
-
+    function makeWidget(activityEntity: ActivityEntity, index: number) {
         return <ActivityDragDropBox
             key={activityEntity.id}
             id={activityEntity.id}
             skeleton={false}
-            activity={activityEntity.activityType}
             classroomId={classroomId}
-            activityConfig={activityEntity.configuration}
+            activityTypeId={activityEntity.attributes.activityType}
+            activityConfig={activityEntity.attributes.configuration}
             onActivityConfigChange={x => {
                 setActivityConfig(index, x);
                 setActivityConfigDeltas({ ...activityConfigDeltas, [activityEntity.id]: x });
             }}
             findItem={findItem}
-            moveItem={moveItem}
-            getRealActivityId={getRealActivityId} />;
+            moveItem={moveItem} />;
     }
 
     return <>
@@ -326,12 +204,7 @@ export default function ActivityListPane({
                     hiddenLabel
                     fullWidth
                     value={displayName}
-                    onChange={e => {
-                        if (e.target.value.length <= 100) {
-                            modifyActivity({ displayName: e.target.value });
-                            markDirty();
-                        }
-                    }}
+                    onChange={e => setDisplayName(e.target.value)}
                     InputProps={{ disableUnderline: true, sx: ({ typography, transitions }) => ({
                         ...typography.h6,
                         "&:hover:after": {

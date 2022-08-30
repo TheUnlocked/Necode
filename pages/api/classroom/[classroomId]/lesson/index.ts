@@ -65,7 +65,7 @@ const apiLessonAll = endpoint(makeLessonEntity, ['classroomId', 'include[]'] as 
                     data: (activities as unknown as (ActivityEntity['attributes'])[]).map((x, i) => ({
                         lessonId: lesson.id,
                         activityType: x.activityType,
-                        displayName: 'placeholder',
+                        displayName: x.displayName,
                         configuration: x.configuration,
                         enabledLanguages: x.enabledLanguages,
                         order: i

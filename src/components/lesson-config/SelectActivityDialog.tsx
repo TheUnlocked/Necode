@@ -13,10 +13,16 @@ interface SelectActivityDialogProps {
     onSelectActivity?: (activity: ActivityDescription<any>) => void;
 }
 
-const supportedLanguagesByActivity = Object.fromEntries(allActivities.map(a => [
-    a.id,
-    allLanguages.filter(curry(supportsLanguage)(a))
-]));
+const selectableActivities = allActivities
+    .filter(a => !a.id.startsWith('core/noop/'));
+
+const supportedLanguagesByActivity = Object.fromEntries(
+    selectableActivities
+        .map(a => [
+            a.id,
+            allLanguages.filter(curry(supportsLanguage)(a))
+        ])
+);
 
 export default function SelectActivityDialog({
     open,
@@ -26,7 +32,7 @@ export default function SelectActivityDialog({
     return <Dialog open={open} onClose={onClose}>
         <DialogTitle>Pick an activity...</DialogTitle>
         <List sx={{ overflow: "auto" }}>
-            {allActivities.map(activity => <ListItemButton key={activity.id} onClick={() => {
+            {selectableActivities.map(activity => <ListItemButton key={activity.id} onClick={() => {
                 onSelectActivity?.(activity);
                 onClose();
             }}>

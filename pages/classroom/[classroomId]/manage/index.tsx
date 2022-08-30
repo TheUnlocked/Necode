@@ -107,12 +107,6 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
         return Boolean(lesson && (lesson.attributes.displayName !== '' || lesson.attributes.activities.length > 0));
     }
 
-    const saveLessonRef = useRef<() => void>();
-
-    useEffect(() => {
-        saveLessonRef.current?.();
-    }, []);
-
     function endActivity() {
         startUpload();
         fetch(`/api/classroom/${classroomId}/activity/live`, { method: 'DELETE' })
@@ -129,25 +123,6 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
         server: string,
         token: string
     }>(classroomId ? `/api/classroom/${classroomId}/activity/live` : null);
-
-    useEffect(() => {
-        function visibilityChangeHandler() {
-            if (document.visibilityState === 'hidden') {
-                saveLessonRef.current?.();
-            }
-        }
-
-        document.addEventListener('visibilitychange', visibilityChangeHandler);
-
-        return () => {
-            document.removeEventListener('visibilitychange', visibilityChangeHandler);
-
-            // Save on page unload
-            // Linter is warning that saveLessonRef.current will have changed since when the effect ran.
-            // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps
-            saveLessonRef.current?.();
-        }
-    }, []);
 
     const { enqueueSnackbar } = useSnackbar();
 
@@ -209,7 +184,6 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
                     <StaticDatePicker
                         value={toLuxon(selectedDate)}
                         onChange={newDate => {
-                            saveLessonRef.current?.();
                             if (newDate) {
                                 router.push({ hash: fromLuxon(newDate) });
                             }
@@ -245,8 +219,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
                 ? <ActivityListPane sx={{ flexGrow: 3, height: "100%", display: "flex", flexDirection: "column" }}
                     classroomId={classroomId!}
                     date={selectedDate}
-                    onLessonChange={onLessonChange}
-                    saveRef={saveLessonRef} />
+                    onLessonChange={onLessonChange} />
                 : <SkeletonActivityListPane sx={{ flexGrow: 3, height: "100%", display: "flex", flexDirection: "column" }} />}
         </Stack>
     </>;

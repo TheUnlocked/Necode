@@ -90,7 +90,7 @@ const apiActivityOne = endpoint(makeActivityEntity, ['classroomId', 'activityId'
                         }
                     });
                 }
-
+                
                 return prisma.activity.update({
                     where: { id: activityId },
                     data: {

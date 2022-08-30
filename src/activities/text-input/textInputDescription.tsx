@@ -1,6 +1,6 @@
-import { activityDescription } from "../../activities/ActivityDescription";
-import NoopActivity from "./NoopActivity";
-import TextInputWidget, { TextInputWidgetProps } from "./TextInputWidget";
+import { activityDescription } from "../ActivityDescription";
+import NoopActivity from "../NoopActivity";
+import TextInputWidget from "./TextInputWidget";
 
 /** The "activity" representing a text input. It exists for its utility as a widget. */
 const textInputActivityDescription = activityDescription({

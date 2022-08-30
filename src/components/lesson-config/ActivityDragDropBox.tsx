@@ -3,11 +3,13 @@ import { useRouter } from "next/router";
 import { ComponentType, useRef } from "react";
 import { ConnectableElement, useDrag, useDrop } from "react-dnd";
 import { LiveActivityInfo } from "../../../websocketServer/src/types";
-import ActivityDescription, { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
+import { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
 import { useLoadingContext } from "../../api/client/LoadingContext";
+import { ActivityEntity } from '../../api/entities/ActivityEntity';
+import useActivityDescription from '../../hooks/useActivityDescription';
 import fetch from '../../util/fetch';
 import { compose } from "../../util/fp";
-import { LocalActivity } from "./ActivityListPane";
+import BrokenWidget from './BrokenWidget';
 import DefaultActivityWidget from "./DefaultActivityWidget";
 import SkeletonWidget from "./SkeletonWidget";
 
@@ -20,7 +22,6 @@ interface BaseActivityDragDropBoxProps {
     classroomId: string;
     moveItem: (id: string, to: number) => void;
     findItem: (id: string) => { index: number };
-    getRealActivityId: (id: string) => Promise<string>;
 }
 
 interface SkeletonActivityDragDropBoxProps extends BaseActivityDragDropBoxProps {
@@ -29,7 +30,7 @@ interface SkeletonActivityDragDropBoxProps extends BaseActivityDragDropBoxProps 
 
 interface RealActivityDragDropBoxProps extends BaseActivityDragDropBoxProps {
     skeleton: false;
-    activity: ActivityDescription<any>;
+    activityTypeId: string;
     activityConfig: any;
     onActivityConfigChange: (newConfig: any) => void;
 }
@@ -38,7 +39,7 @@ type ActivityDragDropBoxProps<IsSkeleton extends boolean>
     = IsSkeleton extends true ? SkeletonActivityDragDropBoxProps : RealActivityDragDropBoxProps;
 
 export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityDragDropBoxProps<IsSkeleton>) {
-    const { id, classroomId, moveItem, findItem, getRealActivityId } = props;
+    const { id, classroomId, moveItem, findItem } = props;
 
     const router = useRouter();
 
@@ -67,7 +68,7 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
         return x;
     }
 
-    const [, drop] = useDrop<LocalActivity, unknown, unknown>(() => ({
+    const [, drop] = useDrop<ActivityEntity, unknown, unknown>(() => ({
         accept: activityDragDropType,
         canDrop: () => false,
         hover({ id: draggedId }, monitor) {
@@ -107,29 +108,42 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
         }
     }), [id, findItem, moveItem]);
 
+    const {
+        activityTypeId,
+        activityConfig,
+        onActivityConfigChange,
+    } = props as ActivityDragDropBoxProps<false>;
+
+    const activity = useActivityDescription(activityTypeId);
+
     if (props.skeleton) {
         return <Box>
             <SkeletonWidget />
         </Box>;
     }
 
-    const {
-        activity,
-        activityConfig,
-        onActivityConfigChange,
-    } = props as ActivityDragDropBoxProps<false>;
+    if (!activity) {
+        return <BrokenWidget
+            id={id}
+            classroomId={classroomId}
+            activityConfig={activityConfig}
+            onActivityConfigChange={onActivityConfigChange}
+            startActivity={startActivity}
+            goToConfigPage={goToConfigPage}
+            dragHandle={drag} />
+    }
 
     const Widget = activity.configWidget ?? DefaultActivityWidget;
 
     async function goToConfigPage() {
-        router.push({ pathname: `/classroom/${classroomId}/manage/activity/${await getRealActivityId(id)}` });
+        router.push({ pathname: `/classroom/${classroomId}/manage/activity/${id}` });
     }
 
     async function startActivity() {
         startUpload();
         await fetch(`/api/classroom/${classroomId}/activity/live`, {
             method: 'POST',
-            body: JSON.stringify({ id, rtcPolicy: activity.rtcPolicy } as LiveActivityInfo)
+            body: JSON.stringify({ id, rtcPolicy: activity!.rtcPolicy } as LiveActivityInfo)
         }).finally(finishUpload);
 
         router.push(`/classroom/${classroomId}/activity`);

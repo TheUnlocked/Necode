@@ -1,6 +1,6 @@
 import { Button, Card, Stack, Typography } from "@mui/material";
 import { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
-import DragHandle, { dragHandleSelector } from "./DragHandle";
+import DragHandle, { dragHandleSelector } from "../widgets/DragHandle";
 
 export default function DefaultActivityWidget({
     startActivity,

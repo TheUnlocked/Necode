@@ -1,8 +1,8 @@
 import { Card, Stack, Typography } from "@mui/material";
 import { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
-import DragHandle, { dragHandleSelector } from "./DragHandle";
+import DragHandle, { dragHandleSelector } from "../widgets/DragHandle";
 
-export default function BrokenWidget({ dragHandle }: ActivityConfigWidgetProps) {
+export default function BrokenWidget({ dragHandle }: Omit<ActivityConfigWidgetProps, 'activity'>) {
     return <Card sx={{ p: 1, [`&:hover ${dragHandleSelector}`]: {
         visibility: 'visible'
     } }}>

@@ -1,3 +1,5 @@
+import { If } from '../util/types';
+
 export interface ResponsePaginationPart {
     count: number;
     total: number;
@@ -7,16 +9,16 @@ export interface ResponsePaginationPart {
     prev?: string;
 }
 
-export interface SuccessfulResponse<T, Options extends { pagination?: boolean } = {}> {
+export type SuccessfulResponse<T, Options extends { pagination?: boolean } = { pagination: false }> = {
     response: 'ok';
     data: T;
     message?: undefined;
-    pagination: Options['pagination'] extends true ? ResponsePaginationPart : unknown;
-}
+} & If<Options['pagination'], { pagination: ResponsePaginationPart }>;
+
 export interface UnsuccessfulResponse {
     response: 'error';
     data?: undefined;
     message: string;
 }
 
-export type Response<T, Options extends { pagination?: boolean } = {}> = SuccessfulResponse<T, Options> | UnsuccessfulResponse;
+export type Response<T, Options extends { pagination?: boolean } = { pagination: false }> = SuccessfulResponse<T, Options> | UnsuccessfulResponse;

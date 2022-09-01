@@ -1,8 +1,8 @@
-import { Add, Delete, TextFields } from "@mui/icons-material";
-import { Button, Card, CardContent, Divider, IconButton, Stack, TextField, Tooltip, Typography } from "@mui/material";
+import { Card, CardContent, Divider, IconButton, Stack, TextField, Tooltip, Typography } from "@mui/material";
 import { Box, SxProps } from "@mui/system";
 import { Dispatch, MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDrop } from "react-dnd";
+import composeRefs from '@seznam/compose-react-refs'
 import ActivityDescription from "../../activities/ActivityDescription";
 import { useGetRequest } from "../../api/client/GetRequestHook";
 import { ActivityEntity } from "../../api/entities/ActivityEntity";
@@ -10,11 +10,10 @@ import { LessonEntity } from "../../api/entities/LessonEntity";
 import { Iso8601Date, toLuxon } from "../../util/iso8601";
 import { ActivityDragDropBox, activityDragDropType } from "./ActivityDragDropBox";
 import SkeletonActivityListPane from "./SkeletonActivityListPane";
-import textInputActivityDescription from "../../activities/text-input/textInputDescription";
-import useImperativeDialog from "../../hooks/ImperativeDialogHook";
-import SelectActivityDialog from "./SelectActivityDialog";
 import useNecodeFetch from '../../hooks/useNecodeFetch';
-import { EntityReference } from '../../api/entities/EntityReference';
+import WidgetDragLayer, { DragIndicatorOptions } from './WidgetDragLayer';
+import { binarySearchIndex } from '../../util/binarySearch';
+import ActivityListPaneActions from './ActivityListPaneActions';
 
 interface ActivityListPaneProps {
     sx: SxProps;
@@ -22,6 +21,35 @@ interface ActivityListPaneProps {
     classroomId: string;
     onLessonChange?: Dispatch<LessonEntity<{ activities: 'shallow' }> | undefined>;
     saveRef?: MutableRefObject<(() => void) | undefined>;
+}
+
+function findWidgetInsertPosition(parent: HTMLElement, mouseY: number, guess?: number): number {
+    const children = [...parent.children];
+
+    let lastRect!: DOMRect;
+    const index = binarySearchIndex(children, child => {
+        lastRect = child.getBoundingClientRect();
+        const { top, bottom } = lastRect;
+
+        // include margins in the child.
+        if (mouseY < top - 8) {
+            return -1;
+        }
+        else if (mouseY > bottom + 8) {
+            return 1;
+        }
+        return 0;
+    }, { guess });
+
+    if (index === undefined) {
+        // The only way for it to not have been found is if the cursor is in the empty space below an activity.
+        return children.length;
+    }
+    
+    if (mouseY > lastRect.top + lastRect.height / 2) {
+        return index + 0.5;
+    }
+    return index;
 }
 
 export default function ActivityListPane({
@@ -32,37 +60,120 @@ export default function ActivityListPane({
 }: ActivityListPaneProps) {
     const onLessonChangeRef = useRef(onLessonChange);
 
+    const lessonEndpoint = `/api/classroom/${classroomId}/lesson/${date}?include=activities`;
+    const { data: lessonEntity, error: lessonEntityError, isLoading, mutate: mutateLesson } = useGetRequest<LessonEntity<{ activities: 'deep', classroom: 'shallow' }>>(lessonEndpoint);
+
+    const activities = useMemo(() => lessonEntity?.attributes.activities ?? [], [lessonEntity]);
+
     const { upload } = useNecodeFetch();
     
-    const [, drop] = useDrop(() => ({ accept: activityDragDropType }));
+    const widgetContainerRef = useRef<HTMLElement>();
 
-    const [{ isDragging }, trashDrop] = useDrop(() => ({
+    const [lastHoveredWidgetIndex, setLastHoveredWidgetIndex] = useState<number>();
+    const [dropIntoPos, setDropIntoPos] = useState<number>();
+
+    const dropIndicatorPos = useMemo(() => {
+        const container = widgetContainerRef.current;
+        if (container && dropIntoPos !== undefined) {
+            if (dropIntoPos >= container.children.length) {
+                // After last widget
+                const rect = container.children[container.children.length - 1].getBoundingClientRect();
+                return {
+                    left: rect.left,
+                    width: rect.width,
+                    // +4 for the margin
+                    y: rect.bottom + 4,
+                };
+            }
+            else {
+                const rect = container.children[dropIntoPos].getBoundingClientRect();
+                return {
+                    left: rect.left,
+                    width: rect.width,
+                    // -4 for the margin
+                    y: rect.top - 4,
+                };
+            }
+        }
+    }, [dropIntoPos]);
+
+    const [{ isDragging }, drop] = useDrop(() => ({
         accept: activityDragDropType,
         collect(monitor) {
-            return {
-                isDragging: Boolean(monitor.getItemType() === activityDragDropType)
-            };
+            return { isDragging: monitor.getItemType() === activityDragDropType };
         },
-        drop(item: ActivityEntity) {
+        hover(item: ActivityEntity, monitor) {
+            if (widgetContainerRef.current) {
+                const fracDropPos = findWidgetInsertPosition(widgetContainerRef.current, monitor.getClientOffset()!.y, lastHoveredWidgetIndex);
+                setLastHoveredWidgetIndex(Math.floor(fracDropPos));
+
+                const intDropPos = Math.ceil(fracDropPos);
+                if (activities[intDropPos]?.id === item.id) {
+                    // The target is the dragged widget's slot
+                    if (intDropPos === activities.length - 1) {
+                        // The widget being dragged is the last widget
+                        setDropIntoPos(intDropPos);
+                    }
+                    else if (fracDropPos % 1 !== 0) { 
+                        // Hovering over the widget before the target
+                        setDropIntoPos(intDropPos - 1);
+                    }
+                    else {
+                        // Hovering over the target
+                        setDropIntoPos(intDropPos + 1);
+                    }
+                }
+                else {
+                    setDropIntoPos(intDropPos);
+                }
+            }
+        },
+        drop({ id }, monitor) {
+            if (!monitor.isOver() || dropIntoPos === undefined) {
+                return;
+            }
+            const newActivities = [...activities];
+            const from = activities.findIndex(x => x.id === id);
+            const [oldElt] = newActivities.splice(from, 1);
+            if (dropIntoPos > from) {
+                newActivities.splice(dropIntoPos - 1, 0, oldElt);
+            }
+            else {
+                newActivities.splice(dropIntoPos, 0, oldElt);
+            }
+
             const updatedObject = {
                 ...lessonEntity!,
                 attributes: {
                     ...lessonEntity!.attributes,
-                    activities: activities.filter(x => x.id === item.id)
+                    activities: newActivities
                 }
             };
 
             mutateLesson(
                 async () => {
-                    await upload(`/api/classroom/${classroomId}/activity/${item.id}`, { method: 'DELETE' });
+                    await upload(`/api/classroom/${classroomId}/activity/${id}`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({
+                            order: dropIntoPos
+                        })
+                    });
                     return updatedObject;
                 },
                 { optimisticData: updatedObject, rollbackOnError: true }
             );
-        }
-    }));
+        },
+    }), [activities, lastHoveredWidgetIndex, dropIntoPos, lessonEntity, classroomId, mutateLesson, upload]);
 
-    async function addActivity(activity: ActivityDescription<any>) {
+    useEffect(() => {
+        if (!isDragging) {
+            setDropIntoPos(undefined);
+        }
+    }, [isDragging]);
+
+    const [displayName, setDisplayName] = useState('');
+
+    const createActivityHandled = useCallback(async (activity: ActivityDescription<any>) => {
         const lesson = lessonEntity ?? await upload<LessonEntity<{ activities: 'deep' }>>(`/api/classroom/${classroomId}/lesson`, {
             method: 'POST',
             body: JSON.stringify({
@@ -87,14 +198,25 @@ export default function ActivityListPane({
                 activities: (lesson.attributes.activities ?? []).concat(activityEntity),
             }
         });
-    }
+    }, [classroomId, date, displayName, lessonEntity, mutateLesson, upload]);
 
-    const lessonEndpoint = `/api/classroom/${classroomId}/lesson/${date}?include=activities`;
-    const { data: lessonEntity, error: lessonEntityError, isLoading, mutate: mutateLesson } = useGetRequest<LessonEntity<{ activities: 'deep', classroom: 'shallow' }>>(lessonEndpoint);
+    const deleteActivityHandler = useCallback((activity: ActivityEntity) => {
+        const updatedObject = {
+            ...lessonEntity!,
+            attributes: {
+                ...lessonEntity!.attributes,
+                activities: activities.filter(x => x.id !== activity.id)
+            }
+        };
 
-    const activities = useMemo(() => lessonEntity?.attributes.activities ?? [], [lessonEntity]);
-
-    const [displayName, setDisplayName] = useState('');
+        mutateLesson(
+            async () => {
+                await upload(`/api/classroom/${classroomId}/activity/${activity.id}`, { method: 'DELETE' });
+                return updatedObject;
+            },
+            { optimisticData: updatedObject, rollbackOnError: true }
+        );
+    }, [lessonEntity, classroomId, mutateLesson, upload, activities]);
 
     useEffect(() => {
         if (lessonEntity) {
@@ -107,96 +229,35 @@ export default function ActivityListPane({
         }
     }, [lessonEntity, lessonEntityError]);
 
-    const [activityConfigDeltas, setActivityConfigDeltas] = useState({} as { [activityId: string]: any });
-
-    const findItem = useCallback((id: string) => {
-        return { index: activities.findIndex(x => x.id === id) };
-    }, [activities]);
-
-    const moveItem = useCallback(async (id: string, to: number) => {
-        const newActivities = [...activities];
-        const from = activities.findIndex(x => x.id === id);
-        const [oldElt] = newActivities.splice(from, 1);
-        newActivities.splice(to, 0, oldElt);
-
-        // const updatedObject = {
-        //     ...lessonEntity!,
-        //     attributes: {
-        //         ...lessonEntity!.attributes,
-        //         activities: newActivities
-        //     }
-        // };
-
-        // mutateLesson(
-        //     async () => {
-        //         await upload(`/api/classroom/${classroomId}/activity/${id}`, {
-        //             method: 'PATCH',
-        //             body: JSON.stringify({
-        //                 order: to
-        //             })
-        //         });
-        //         return updatedObject;
-        //     },
-        //     { optimisticData: updatedObject, rollbackOnError: true }
-        // );
-    }, [upload, classroomId, mutateLesson, lessonEntity, activities]);
-
-    function setActivityConfig(index: number, activityConfig: any) {
+    const activityConfigChangeHandler = useCallback((activity: ActivityEntity, newConfig: any) => {
         const updatedObject = {
             ...lessonEntity!,
             attributes: {
                 ...lessonEntity!.attributes,
-                activities: [
-                    ...activities.slice(0, index),
-                    {
-                        ...activities[index],
-                        configuration: activityConfig
-                    },
-                    ...activities.slice(index + 1)
-                ]
+                activities: activities.map(a => a === activity ? { ...a, configuration: newConfig } : a)
             }
         };
 
         mutateLesson(
             async () => {
-                await upload(`/api/classroom/${classroomId}/activity/${activities[index].id}`, {
+                await upload(`/api/classroom/${classroomId}/activity/${activity.id}`, {
                     method: 'PATCH',
                     body: JSON.stringify({
-                        configuration: activityConfig,
+                        configuration: newConfig,
                     })
                 });
                 return updatedObject;
             },
             { optimisticData: updatedObject, rollbackOnError: true }
         );
-    }
-
-    const [selectActivityDialog, openSelectActivityDialog] = useImperativeDialog(SelectActivityDialog, {
-        onSelectActivity: addActivity
-    });
+    }, [activities, classroomId, lessonEntity, mutateLesson, upload]);
 
     if (isLoading && !lessonEntity) {
         return <SkeletonActivityListPane sx={sx} />;
     }
 
-    function makeWidget(activityEntity: ActivityEntity, index: number) {
-        return <ActivityDragDropBox
-            key={activityEntity.id}
-            id={activityEntity.id}
-            skeleton={false}
-            classroomId={classroomId}
-            activityTypeId={activityEntity.attributes.activityType}
-            activityConfig={activityEntity.attributes.configuration}
-            onActivityConfigChange={x => {
-                setActivityConfig(index, x);
-                setActivityConfigDeltas({ ...activityConfigDeltas, [activityEntity.id]: x });
-            }}
-            findItem={findItem}
-            moveItem={moveItem} />;
-    }
-
     return <>
-        {selectActivityDialog}
+        <WidgetDragLayer dropIndicatorPos={dropIndicatorPos} />
         <Card variant="outlined" sx={sx}>
             <CardContent>
                 <TextField placeholder="New Lesson"
@@ -229,28 +290,16 @@ export default function ActivityListPane({
             </CardContent>
             <Divider />
             <Box sx={{ m: 1 }}>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                    <Tooltip title="Add Activity" disableInteractive>
-                        <IconButton onClick={openSelectActivityDialog}><Add/></IconButton>
-                    </Tooltip>
-                    <Tooltip title="Add Text/Code" disableInteractive>
-                        <IconButton onClick={() => addActivity(textInputActivityDescription)}><TextFields/></IconButton>
-                    </Tooltip>
-                    <Stack direction="row" justifyContent="end" spacing={1} flexGrow={1}>
-                        <Tooltip title="Drag a widget here to delete it" disableInteractive>
-                            <div>
-                                <Button ref={trashDrop}
-                                    variant="contained"
-                                    disabled={!isDragging}
-                                    color="error" disableRipple
-                                    startIcon={<Delete/>}>Delete</Button>
-                            </div>
-                        </Tooltip>
-                    </Stack>
-                </Stack>
+                <ActivityListPaneActions onCreate={createActivityHandled} onDelete={deleteActivityHandler} />
             </Box>
-            <Stack ref={drop} sx={{ m: 1, mt: 0, overflow: "auto" }} spacing={1}>
-                {activities.map(makeWidget)}
+            <Stack ref={composeRefs(drop, widgetContainerRef)} sx={{ m: 1, mt: 0, flexGrow: 1, overflow: "auto" }} spacing={1}>
+                {activities.map(activity => <ActivityDragDropBox
+                    key={activity.id}
+                    id={activity.id}
+                    skeleton={false}
+                    classroomId={classroomId}
+                    activity={activity}
+                    onActivityConfigChange={x => activityConfigChangeHandler(activity, x)} />)}
             </Stack>
         </Card>
     </>;

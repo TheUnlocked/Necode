@@ -1,14 +1,14 @@
 import { Box } from "@mui/system";
 import { useRouter } from "next/router";
-import { ComponentType, useRef } from "react";
-import { ConnectableElement, useDrag, useDrop } from "react-dnd";
+import { ComponentType, useEffect, useRef } from "react";
+import { ConnectableElement, useDrag } from "react-dnd";
+import { getEmptyImage } from 'react-dnd-html5-backend';
 import { LiveActivityInfo } from "../../../websocketServer/src/types";
 import { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
 import { useLoadingContext } from "../../api/client/LoadingContext";
 import { ActivityEntity } from '../../api/entities/ActivityEntity';
 import useActivityDescription from '../../hooks/useActivityDescription';
 import fetch from '../../util/fetch';
-import { compose } from "../../util/fp";
 import BrokenWidget from './BrokenWidget';
 import DefaultActivityWidget from "./DefaultActivityWidget";
 import SkeletonWidget from "./SkeletonWidget";
@@ -20,47 +20,45 @@ export type DraggableComponent = ComponentType<ActivityConfigWidgetProps<any>>;
 interface BaseActivityDragDropBoxProps {
     id: string;
     classroomId: string;
-    moveItem: (id: string, to: number) => void;
-    findItem: (id: string) => { index: number };
 }
 
 interface SkeletonActivityDragDropBoxProps extends BaseActivityDragDropBoxProps {
     skeleton: true;
+    activity?: undefined;
+    onActivityConfigChange?: (newConfig: any) => void;
 }
 
 interface RealActivityDragDropBoxProps extends BaseActivityDragDropBoxProps {
     skeleton: false;
-    activityTypeId: string;
-    activityConfig: any;
+    activity: ActivityEntity;
     onActivityConfigChange: (newConfig: any) => void;
 }
 
 type ActivityDragDropBoxProps<IsSkeleton extends boolean>
     = IsSkeleton extends true ? SkeletonActivityDragDropBoxProps : RealActivityDragDropBoxProps;
 
+function isSkeleton(props: ActivityDragDropBoxProps<boolean>): props is ActivityDragDropBoxProps<true> {
+    return props.skeleton;
+}
+
 export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityDragDropBoxProps<IsSkeleton>) {
-    const { id, classroomId, moveItem, findItem } = props;
+    const { id, classroomId } = props;
 
     const router = useRouter();
 
     const { startUpload, finishUpload } = useLoadingContext();
 
-    const originalIndex = findItem(id).index;
-
     const [{ isDragging }, drag, dragPreview] = useDrag(() => ({
         type: activityDragDropType,
-        item: { id, originalIndex },
+        item: props.activity,
         collect: (monitor) => ({
             isDragging: monitor.isDragging()
         }),
-        end: (item, monitor) => {
-            const { id: droppedId, originalIndex } = item
-            const didDrop = monitor.didDrop();
-            if (!didDrop) {
-                moveItem(droppedId, originalIndex);
-            }
-        }
-    }), [id, originalIndex, moveItem]);
+    }), [props.activity]);
+
+    useEffect(() => {
+        dragPreview(getEmptyImage());
+    }, [dragPreview]);
 
     const boxRef = useRef<Element | null>(null);
     function setBoxRef(x: ConnectableElement) {
@@ -68,72 +66,26 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
         return x;
     }
 
-    const [, drop] = useDrop<ActivityEntity, unknown, unknown>(() => ({
-        accept: activityDragDropType,
-        canDrop: () => false,
-        hover({ id: draggedId }, monitor) {
-            if (draggedId !== id) {
-                const { index: dragIndex } = findItem(draggedId);
-                const hoverIndex = originalIndex;
+    const activityType = useActivityDescription(props.activity?.attributes.activityType);
 
-                // Determine rectangle on screen
-                const hoverBoundingRect = boxRef.current!.getBoundingClientRect()
-
-                // Get vertical middle
-                const hoverMiddleY =
-                    (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2
-
-                // Determine mouse position
-                const clientOffset = monitor.getClientOffset()
-
-                // Get pixels to the top
-                const hoverClientY = clientOffset!.y - hoverBoundingRect.top
-
-                // Only perform the move when the mouse has crossed half of the items height
-                // When dragging downwards, only move when the cursor is below 50%
-                // When dragging upwards, only move when the cursor is above 50%
-
-                // Dragging downwards
-                if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-                    return
-                }
-
-                // Dragging upwards
-                if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-                    return
-                }
-
-                moveItem(draggedId, hoverIndex);
-            }
-        }
-    }), [id, findItem, moveItem]);
-
-    const {
-        activityTypeId,
-        activityConfig,
-        onActivityConfigChange,
-    } = props as ActivityDragDropBoxProps<false>;
-
-    const activity = useActivityDescription(activityTypeId);
-
-    if (props.skeleton) {
+    if (isSkeleton(props)) {
         return <Box>
             <SkeletonWidget />
         </Box>;
     }
 
-    if (!activity) {
+    if (!activityType) {
         return <BrokenWidget
             id={id}
             classroomId={classroomId}
-            activityConfig={activityConfig}
-            onActivityConfigChange={onActivityConfigChange}
+            activityConfig={props.activity.attributes.configuration}
+            onActivityConfigChange={props.onActivityConfigChange}
             startActivity={startActivity}
             goToConfigPage={goToConfigPage}
             dragHandle={drag} />
     }
 
-    const Widget = activity.configWidget ?? DefaultActivityWidget;
+    const Widget = activityType.configWidget ?? DefaultActivityWidget;
 
     async function goToConfigPage() {
         router.push({ pathname: `/classroom/${classroomId}/manage/activity/${id}` });
@@ -143,21 +95,21 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
         startUpload();
         await fetch(`/api/classroom/${classroomId}/activity/live`, {
             method: 'POST',
-            body: JSON.stringify({ id, rtcPolicy: activity!.rtcPolicy } as LiveActivityInfo)
+            body: JSON.stringify({ id, rtcPolicy: activityType!.rtcPolicy } as LiveActivityInfo)
         }).finally(finishUpload);
 
         router.push(`/classroom/${classroomId}/activity`);
     }
 
-    return <Box ref={compose(setBoxRef, drop, dragPreview)} sx={{ opacity: isDragging ? 0 : 1 }}>
+    return <Box ref={setBoxRef} sx={{ opacity: isDragging ? 0 : 1 }}>
         <Widget
             id={id}
             classroomId={classroomId}
-            activity={activity}
-            activityConfig={activityConfig}
-            onActivityConfigChange={onActivityConfigChange}
+            activity={activityType}
+            activityConfig={props.activity.attributes.configuration}
+            onActivityConfigChange={props.onActivityConfigChange}
             startActivity={startActivity}
-            goToConfigPage={activity.configPage ? goToConfigPage : undefined}
+            goToConfigPage={activityType.configPage ? goToConfigPage : undefined}
             dragHandle={drag} />
     </Box>;
 }

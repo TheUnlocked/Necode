@@ -4,6 +4,7 @@ import { prisma } from "../../../../../src/db/prisma";
 import { makeLessonEntity } from "../../../../../src/api/entities/LessonEntity";
 import Joi from "joi";
 import { hasScope } from "../../../../../src/api/server/scopes";
+import { clamp } from 'lodash';
 
 const apiActivityOne = endpoint(makeActivityEntity, ['classroomId', 'activityId', 'include[]'] as const, {
     type: 'entity',
@@ -51,7 +52,7 @@ const apiActivityOne = endpoint(makeActivityEntity, ['classroomId', 'activityId'
             const includeLesson = include.includes('lesson');
 
             const {
-                lesson: lessonId,
+                lesson: otherLessonId,
                 displayName,
                 configuration,
                 enabledLanguages,
@@ -64,41 +65,61 @@ const apiActivityOne = endpoint(makeActivityEntity, ['classroomId', 'activityId'
                 order?: number;
             };
 
-            if (lessonId) {
-                if (await prisma.lesson.count({ where: { id: lessonId } }) === 0) {
+            if (otherLessonId) {
+                if (await prisma.lesson.count({ where: { id: otherLessonId } }) === 0) {
                     return fail(Status.NOT_FOUND, 'The target lesson was not found');
                 }
             }
 
             const activity = await prisma.$transaction(async () => {
+                let normalizedOrder: number | undefined;
+                
                 if (order !== undefined) {
-                    const {
-                        lessonId: currentLessonId,
-                        order: currentOrder,
-                    } = (await prisma.activity.findUnique({ where: { id: activityId }, select: { lessonId: true, order: true } }))!;
-                    
-                    await prisma.activity.updateMany({
-                        where: { lessonId: lessonId ?? currentLessonId, order: { lte: order } },
-                        data: {
-                            order: { increment: 1 },
-                        }
-                    });
-                    await prisma.activity.updateMany({
-                        where: { lessonId: lessonId ?? currentLessonId, order: { gt: currentOrder } },
-                        data: {
-                            order: { increment: -1 },
-                        }
-                    });
+                    if (otherLessonId) {
+                        await prisma.activity.updateMany({
+                            where: { lessonId: otherLessonId, order: { gte: order } },
+                            data: {
+                                order: { increment: 1 },
+                            }
+                        });
+
+                        normalizedOrder = clamp(order, 0, await prisma.activity.count({ where: { lessonId: otherLessonId } }));
+                    }
+                    else {
+                        const {
+                            lessonId: currentLessonId,
+                            order: currentOrder,
+                        } = (await prisma.activity.findUnique({ where: { id: activityId }, select: { lessonId: true, order: true } }))!;
+                        
+                        normalizedOrder = clamp(
+                            order > currentOrder ? order - 1 : order,
+                            0,
+                            await prisma.activity.count({ where: { lessonId: currentLessonId } }) - 1
+                        );
+
+                        await prisma.activity.updateMany({
+                            where: { lessonId: currentLessonId, order: { gte: order } },
+                            data: {
+                                order: { increment: 1 },
+                            }
+                        });
+                        await prisma.activity.updateMany({
+                            where: { lessonId: currentLessonId, order: { gt: currentOrder } },
+                            data: {
+                                order: { increment: -1 },
+                            }
+                        });
+                    }
                 }
                 
                 return prisma.activity.update({
                     where: { id: activityId },
                     data: {
-                        lessonId,
+                        lessonId: otherLessonId,
                         displayName,
                         configuration,
                         enabledLanguages,
-                        order: lessonId ? await prisma.activity.count({ where: { lessonId } }) : order,
+                        order: normalizedOrder,
                     },
                     include: { lesson: includeLesson },
                 });

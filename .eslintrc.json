@@ -8,6 +8,7 @@
     "@grncdr/react-hooks/exhaustive-deps": [
       "warn",
       {
+        "additionalHooks": "(useDrop|useDrag|useDragLayer)",
         "staticHooks": {
           "useMergeReducer": [false, true],
           "useDirty": [false, true, true, false, true]

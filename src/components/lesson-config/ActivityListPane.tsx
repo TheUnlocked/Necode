@@ -1,7 +1,7 @@
 import { Card, CardContent, Divider, IconButton, Stack, TextField, Tooltip, Typography } from "@mui/material";
 import { Box, SxProps } from "@mui/system";
 import { Dispatch, MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useDrop } from "react-dnd";
+import { DropTargetMonitor, useDrop } from "react-dnd";
 import composeRefs from '@seznam/compose-react-refs'
 import ActivityDescription from "../../activities/ActivityDescription";
 import { useGetRequest } from "../../api/client/GetRequestHook";
@@ -11,7 +11,7 @@ import { Iso8601Date, toLuxon } from "../../util/iso8601";
 import { ActivityDragDropBox, activityDragDropType } from "./ActivityDragDropBox";
 import SkeletonActivityListPane from "./SkeletonActivityListPane";
 import useNecodeFetch from '../../hooks/useNecodeFetch';
-import WidgetDragLayer, { DragIndicatorOptions } from './WidgetDragLayer';
+import WidgetDragLayer from './WidgetDragLayer';
 import { binarySearchIndex } from '../../util/binarySearch';
 import ActivityListPaneActions from './ActivityListPaneActions';
 
@@ -69,14 +69,14 @@ export default function ActivityListPane({
     
     const widgetContainerRef = useRef<HTMLElement>();
 
-    const [lastHoveredWidgetIndex, setLastHoveredWidgetIndex] = useState<number>();
+    const [, setLastHoveredWidgetIndex] = useState<number>();
     const [dropIntoPos, setDropIntoPos] = useState<number>();
 
     const dropIndicatorPos = useMemo(() => {
         const container = widgetContainerRef.current;
         if (container && dropIntoPos !== undefined) {
             if (dropIntoPos >= container.children.length) {
-                // After last widget
+                // Place indicator after last widget
                 const rect = container.children[container.children.length - 1].getBoundingClientRect();
                 return {
                     left: rect.left,
@@ -103,29 +103,36 @@ export default function ActivityListPane({
             return { isDragging: monitor.getItemType() === activityDragDropType };
         },
         hover(item: ActivityEntity, monitor) {
-            if (widgetContainerRef.current) {
-                const fracDropPos = findWidgetInsertPosition(widgetContainerRef.current, monitor.getClientOffset()!.y, lastHoveredWidgetIndex);
-                setLastHoveredWidgetIndex(Math.floor(fracDropPos));
-
-                const intDropPos = Math.ceil(fracDropPos);
-                if (activities[intDropPos]?.id === item.id) {
-                    // The target is the dragged widget's slot
-                    if (intDropPos === activities.length - 1) {
-                        // The widget being dragged is the last widget
-                        setDropIntoPos(intDropPos);
+            const container = widgetContainerRef.current;
+            if (container) {
+                setLastHoveredWidgetIndex(oldWidgetIndex => {
+                    if (!monitor.isOver()) {
+                        return oldWidgetIndex;
                     }
-                    else if (fracDropPos % 1 !== 0) { 
-                        // Hovering over the widget before the target
-                        setDropIntoPos(intDropPos - 1);
+                    const fracDropPos = findWidgetInsertPosition(container, monitor.getClientOffset()!.y, oldWidgetIndex);
+    
+                    const intDropPos = Math.ceil(fracDropPos);
+                    if (activities[intDropPos]?.id === item.id) {
+                        // The target is the dragged widget's slot
+                        if (intDropPos === activities.length - 1) {
+                            // The widget being dragged is the last widget
+                            setDropIntoPos(intDropPos);
+                        }
+                        else if (fracDropPos % 1 !== 0) { 
+                            // Hovering over the widget before the target
+                            setDropIntoPos(intDropPos - 1);
+                        }
+                        else {
+                            // Hovering over the target
+                            setDropIntoPos(intDropPos + 1);
+                        }
                     }
                     else {
-                        // Hovering over the target
-                        setDropIntoPos(intDropPos + 1);
+                        setDropIntoPos(intDropPos);
                     }
-                }
-                else {
-                    setDropIntoPos(intDropPos);
-                }
+
+                    return Math.floor(fracDropPos);
+                });
             }
         },
         drop({ id }, monitor) {
@@ -163,7 +170,7 @@ export default function ActivityListPane({
                 { optimisticData: updatedObject, rollbackOnError: true }
             );
         },
-    }), [activities, lastHoveredWidgetIndex, dropIntoPos, lessonEntity, classroomId, mutateLesson, upload]);
+    }), [activities, dropIntoPos, lessonEntity, classroomId, mutateLesson, upload]);
 
     useEffect(() => {
         if (!isDragging) {
@@ -252,6 +259,17 @@ export default function ActivityListPane({
         );
     }, [activities, classroomId, lessonEntity, mutateLesson, upload]);
 
+    const activityWidgets = useMemo(() =>
+        activities.map(activity => <ActivityDragDropBox
+            key={activity.id}
+            id={activity.id}
+            skeleton={false}
+            classroomId={classroomId}
+            activity={activity}
+            onActivityConfigChange={x => activityConfigChangeHandler(activity, x)} />),
+        [classroomId, activities, activityConfigChangeHandler]
+    );
+
     if (isLoading && !lessonEntity) {
         return <SkeletonActivityListPane sx={sx} />;
     }
@@ -293,13 +311,7 @@ export default function ActivityListPane({
                 <ActivityListPaneActions onCreate={createActivityHandled} onDelete={deleteActivityHandler} />
             </Box>
             <Stack ref={composeRefs(drop, widgetContainerRef)} sx={{ m: 1, mt: 0, flexGrow: 1, overflow: "auto" }} spacing={1}>
-                {activities.map(activity => <ActivityDragDropBox
-                    key={activity.id}
-                    id={activity.id}
-                    skeleton={false}
-                    classroomId={classroomId}
-                    activity={activity}
-                    onActivityConfigChange={x => activityConfigChangeHandler(activity, x)} />)}
+                {activityWidgets}
             </Stack>
         </Card>
     </>;

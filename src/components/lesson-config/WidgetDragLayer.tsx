@@ -1,6 +1,9 @@
 import { Alert, Box } from '@mui/material';
 import { styled } from '@mui/system';
+import { truncate } from 'lodash';
+import { useMemo } from 'react';
 import { useDragLayer } from 'react-dnd';
+import textInputActivityDescription from '../../activities/text-input/textInputDescription';
 import { ActivityEntity } from '../../api/entities/ActivityEntity';
 import { activityDragDropType } from './ActivityDragDropBox';
 
@@ -34,6 +37,18 @@ export default function WidgetDragLayer({ dropIndicatorPos }: WidgetDragLayerPro
         isDragging: monitor.isDragging(),
     }));
 
+    const widgetDisplayName = useMemo(() => {
+        if (!item) {
+            return null;
+        }
+        if (item.attributes.activityType === textInputActivityDescription.id) {
+            const { language, value } = item.attributes.configuration as typeof textInputActivityDescription['defaultConfig'];
+            const text = truncate(value.trim().replaceAll('\n', ' '), { length: 30 });
+            return language == null ? text : <code>{text}</code>;
+        }
+        return truncate(item.attributes.displayName, { length: 30 });
+    }, [item]);
+
     if (!isDragging || itemType !== activityDragDropType || !position || !item) {
         return null;
     }
@@ -51,7 +66,7 @@ export default function WidgetDragLayer({ dropIndicatorPos }: WidgetDragLayerPro
             }} />
             : null}
         <div style={{ position: "absolute", left: position.x, top: position.y }}>
-            <Alert variant="filled" severity="info" elevation={8} icon={false}>{item.attributes.displayName}</Alert>
+            <Alert variant="filled" severity="info" elevation={8} icon={false}>{widgetDisplayName}</Alert>
         </div>
     </DragLayer>;
 }

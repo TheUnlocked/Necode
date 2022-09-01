@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import fetch from '../../util/fetch';
 import { useLoadingContext } from "./LoadingContext"
 
@@ -7,13 +8,13 @@ export function useLoadingFetch(): {
 } {
     const { startDownload, finishDownload, startUpload, finishUpload } = useLoadingContext();
     return {
-        download(...args) {
+        download: useCallback((...args) => {
             startDownload();
-            return fetch.apply(this, args).finally(finishDownload);
-        },
-        upload(...args) {
+            return fetch(...args).finally(finishDownload);
+        }, [startDownload, finishDownload]),
+        upload: useCallback((...args) => {
             startUpload();
-            return fetch.apply(this, args).finally(finishUpload);
-        }
+            return fetch(...args).finally(finishUpload);
+        }, [startUpload, finishUpload])
     };
 }

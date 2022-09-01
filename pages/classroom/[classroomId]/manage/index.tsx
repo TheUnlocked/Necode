@@ -1,7 +1,7 @@
 import { PickersDay, StaticDatePicker } from "@mui/x-date-pickers";
 import { Badge, Button, Card, CardActions, CardContent, IconButton, Paper, Skeleton, Stack, TextField, Toolbar, Tooltip, Typography } from "@mui/material";
 import { NextPage } from "next";
-import { Dispatch, useCallback, useEffect, useRef, useState } from "react";
+import { Dispatch, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ActivityListPane from "../../../../src/components/lesson-config/ActivityListPane";
 import { LessonEntity } from "../../../../src/api/entities/LessonEntity";
 import { useGetRequest, useGetRequestImmutable } from "../../../../src/api/client/GetRequestHook";
@@ -144,6 +144,52 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
 
     const isActivityRunning = liveActivityData?.live;
 
+    const listPane = useMemo(() => {
+        if (!lessons) {
+            return <SkeletonActivityListPane sx={{ flexGrow: 3, height: "100%", display: "flex", flexDirection: "column" }} />;
+        }
+        return <ActivityListPane sx={{ flexGrow: 3, height: "100%", display: "flex", flexDirection: "column" }}
+            classroomId={classroomId!}
+            date={selectedDate}
+            onLessonChange={onLessonChange} />;
+    }, [classroomId, lessons, selectedDate, onLessonChange]);
+
+    const datePicker = useMemo(() =>
+        <StaticDatePicker
+            value={toLuxon(selectedDate)}
+            onChange={newDate => {
+                if (newDate) {
+                    router.push({ hash: fromLuxon(newDate) });
+                }
+            }}
+            renderInput={params => <TextField {...params} />}
+            displayStaticWrapperAs="desktop"
+            views={["year", "day"]}
+            renderDay={(day, _value, DayComponentProps) => {
+                const isoDate = fromLuxon(day);
+                const todayLesson = lessonsByDate[isoDate];
+                const showsIndicators = isActiveLesson(todayLesson) && !DayComponentProps.selected;
+                return DayComponentProps.outsideCurrentMonth
+                    ? <PickersDay {...DayComponentProps} />
+                    : <Tooltip key={DayComponentProps.key}
+                        title={showsIndicators ? todayLesson!.attributes.displayName : ''}
+                        placement="top" arrow
+                        disableInteractive
+                    > 
+                        <Badge key={isoDate}
+                            overlap="circular" variant="dot"
+                            anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+                            componentsProps={{ badge: { style: { right: "50%", pointerEvents: "none" } } }}
+                            color="primary"
+                            invisible={!showsIndicators}
+                        >
+                            <PickersDay {...DayComponentProps} />
+                    </Badge>
+                </Tooltip>;
+            }}/>,
+        [router, lessonsByDate, selectedDate]
+    );
+
     return <>
         {isActivityRunning
             ? <Toolbar sx={{
@@ -181,46 +227,10 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
                     </Stack>
                 </Card>
                 <Paper variant="outlined" sx={{ pt: 2 }}>
-                    <StaticDatePicker
-                        value={toLuxon(selectedDate)}
-                        onChange={newDate => {
-                            if (newDate) {
-                                router.push({ hash: fromLuxon(newDate) });
-                            }
-                        }}
-                        renderInput={params => <TextField {...params} />}
-                        displayStaticWrapperAs="desktop"
-                        views={["year", "day"]}
-                        renderDay={(day, _value, DayComponentProps) => {
-                            const isoDate = fromLuxon(day);
-                            const todayLesson = lessonsByDate[isoDate];
-                            const showsIndicators = isActiveLesson(todayLesson) && !DayComponentProps.selected;
-                            return DayComponentProps.outsideCurrentMonth
-                                ? <PickersDay {...DayComponentProps} />
-                                : <Tooltip key={DayComponentProps.key}
-                                    title={showsIndicators ? todayLesson!.attributes.displayName : ''}
-                                    placement="top" arrow
-                                    disableInteractive
-                                > 
-                                    <Badge key={isoDate}
-                                        overlap="circular" variant="dot"
-                                        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-                                        componentsProps={{ badge: { style: { right: "50%", pointerEvents: "none" } } }}
-                                        color="primary"
-                                        invisible={!showsIndicators}
-                                    >
-                                        <PickersDay {...DayComponentProps} />
-                                </Badge>
-                            </Tooltip>;
-                        }} />
+                    {datePicker}
                 </Paper>
             </Stack>
-            {lessons
-                ? <ActivityListPane sx={{ flexGrow: 3, height: "100%", display: "flex", flexDirection: "column" }}
-                    classroomId={classroomId!}
-                    date={selectedDate}
-                    onLessonChange={onLessonChange} />
-                : <SkeletonActivityListPane sx={{ flexGrow: 3, height: "100%", display: "flex", flexDirection: "column" }} />}
+            {listPane}
         </Stack>
     </>;
 };

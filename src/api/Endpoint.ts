@@ -226,7 +226,7 @@ export function endpoint
 export function endpoint<P extends string, Endpoints extends EndpointMap<P>>(_: any, mandatoryParams: readonly P[], endpoints: Endpoints & { middleware?: Middleware[] }) {
     async function handler(
         req: NextApiRequest,
-        res: NextApiResponse<Response<any>>
+        res: NextApiResponse<Response<any, any>>
     ) {
         for (const middleware of endpoints.middleware ?? []) {
             await runMiddleware(req, res, middleware);

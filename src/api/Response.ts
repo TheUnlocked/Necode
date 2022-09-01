@@ -9,16 +9,24 @@ export interface ResponsePaginationPart {
     prev?: string;
 }
 
-export type SuccessfulResponse<T, Options extends { pagination?: boolean } = { pagination: false }> = {
+interface RequestOptions {
+    pagination?: boolean;
+}
+
+interface DefaultRequestOptions extends RequestOptions {
+    pagination: false;
+}
+
+export type SuccessfulResponse<T, Options extends RequestOptions = DefaultRequestOptions> = {
     response: 'ok';
     data: T;
     message?: undefined;
 } & If<Options['pagination'], { pagination: ResponsePaginationPart }>;
 
-export interface UnsuccessfulResponse {
+export type UnsuccessfulResponse<Options extends RequestOptions = DefaultRequestOptions> = {
     response: 'error';
     data?: undefined;
     message: string;
-}
+} & If<Options['pagination'], { pagination?: undefined }>;
 
-export type Response<T, Options extends { pagination?: boolean } = { pagination: false }> = SuccessfulResponse<T, Options> | UnsuccessfulResponse;
+export type Response<T, Options extends RequestOptions = DefaultRequestOptions> = SuccessfulResponse<T, Options> | UnsuccessfulResponse<Options>;

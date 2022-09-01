@@ -101,6 +101,7 @@ const apiActivitySubmissionAll = endpoint(makeActivitySubmissionEntity, ['classr
                                 activityType: x.activityType,
                                 configuration: x.configuration,
                                 enabledLanguages: x.enabledLanguages,
+                                displayName: x.displayName,
                                 lesson: undefined
                             }
                         }

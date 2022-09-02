@@ -5,6 +5,7 @@ import { makeLessonEntity } from "../../../../../src/api/entities/LessonEntity";
 import Joi from "joi";
 import { hasScope } from "../../../../../src/api/server/scopes";
 import { clamp } from 'lodash';
+import { Activity, Lesson } from '@prisma/client';
 
 const apiActivityOne = endpoint(makeActivityEntity, ['classroomId', 'activityId', 'include[]'] as const, {
     type: 'entity',
@@ -52,11 +53,11 @@ const apiActivityOne = endpoint(makeActivityEntity, ['classroomId', 'activityId'
             const includeLesson = include.includes('lesson');
 
             const {
-                lesson: otherLessonId,
+                lesson: targetLessonId,
                 displayName,
                 configuration,
                 enabledLanguages,
-                order,
+                order: targetOrder,
             } = body as {
                 lesson?: string;
                 displayName?: string;
@@ -65,68 +66,124 @@ const apiActivityOne = endpoint(makeActivityEntity, ['classroomId', 'activityId'
                 order?: number;
             };
 
-            if (otherLessonId) {
-                if (await prisma.lesson.count({ where: { id: otherLessonId } }) === 0) {
+            if (targetLessonId) {
+                if (await prisma.lesson.count({ where: { id: targetLessonId } }) === 0) {
                     return fail(Status.NOT_FOUND, 'The target lesson was not found');
                 }
             }
 
-            const activity = await prisma.$transaction(async () => {
-                let normalizedOrder: number | undefined;
-                
-                if (order !== undefined) {
-                    if (otherLessonId) {
-                        await prisma.activity.updateMany({
-                            where: { lessonId: otherLessonId, order: { gte: order } },
-                            data: {
-                                order: { increment: 1 },
-                            }
-                        });
+            const thisActivity = await prisma.activity.findUnique({ where: { id: activityId }, select: { lessonId: true, order: true } });
 
-                        normalizedOrder = clamp(order, 0, await prisma.activity.count({ where: { lessonId: otherLessonId } }));
-                    }
-                    else {
-                        const {
-                            lessonId: currentLessonId,
-                            order: currentOrder,
-                        } = (await prisma.activity.findUnique({ where: { id: activityId }, select: { lessonId: true, order: true } }))!;
-                        
-                        normalizedOrder = clamp(
-                            order > currentOrder ? order - 1 : order,
-                            0,
-                            await prisma.activity.count({ where: { lessonId: currentLessonId } }) - 1
-                        );
-
-                        await prisma.activity.updateMany({
-                            where: { lessonId: currentLessonId, order: { gte: order } },
-                            data: {
-                                order: { increment: 1 },
-                            }
-                        });
-                        await prisma.activity.updateMany({
-                            where: { lessonId: currentLessonId, order: { gt: currentOrder } },
-                            data: {
-                                order: { increment: -1 },
-                            }
-                        });
-                    }
-                }
-                
-                return prisma.activity.update({
-                    where: { id: activityId },
-                    data: {
-                        lessonId: otherLessonId,
-                        displayName,
-                        configuration,
-                        enabledLanguages,
-                        order: normalizedOrder,
-                    },
-                    include: { lesson: includeLesson },
-                });
-            })
-
-            if (!activity) {
+            if (!thisActivity) {
                 return fail(Status.NOT_FOUND);
+            }
+
+            const { lessonId: originalLessonId, order: currentOrder } = thisActivity;
+
+            let activity: Activity & {
+                lesson: Lesson;
+            };
+
+            if (targetLessonId && targetLessonId !== originalLessonId) {
+                // Moving to another lesson
+                if (targetOrder !== undefined && targetOrder !== currentOrder) {
+                    const normalizedOrder = clamp(
+                        targetOrder,
+                        0,
+                        await prisma.activity.count({ where: { lessonId: targetLessonId } })
+                    );
+
+                    [, activity] = await prisma.$transaction([
+                        // Shift activities after destination in target lesson forward to make room
+                        prisma.activity.updateMany({
+                            where: { lessonId: targetLessonId, order: { gte: targetOrder } },
+                            data: { order: { increment: 1 } },
+                        }),
+                        // Move this activity to its destination
+                        prisma.activity.update({
+                            where: { id: activityId },
+                            data: {
+                                lessonId: targetLessonId,
+                                order: normalizedOrder,
+                                displayName,
+                                configuration,
+                                enabledLanguages,
+                            },
+                            include: { lesson: includeLesson },
+                        }),
+                        // Shift activities after the source in the original lesson backwards
+                        prisma.activity.updateMany({
+                            where: { id: originalLessonId, order: { gt: currentOrder } },
+                            data: { order: { decrement: 1 } },
+                        }),
+                    ]);
+                }
+                else {
+                    [activity] = await prisma.$transaction([
+                        // Move this activity to its destination
+                        prisma.activity.update({
+                            where: { id: activityId },
+                            data: {
+                                lessonId: targetLessonId,
+                                order: await prisma.activity.count({ where: { lessonId: targetLessonId } }),
+                                displayName,
+                                configuration,
+                                enabledLanguages,
+                            },
+                            include: { lesson: includeLesson },
+                        }),
+                        // Shift activities after the source in the original lesson backwards
+                        prisma.activity.updateMany({
+                            where: { id: originalLessonId, order: { gt: currentOrder } },
+                            data: { order: { decrement: 1 } },
+                        }),
+                    ]);
+                }
+            }
+            else {
+                // Moving within the same lesson
+                if (targetOrder !== undefined && targetOrder !== currentOrder) { 
+                    const normalizedOrder = clamp(
+                        targetOrder > currentOrder ? targetOrder - 1 : targetOrder,
+                        0,
+                        await prisma.activity.count({ where: { lessonId: originalLessonId } }) - 1
+                    );
+
+                    const [lowerBound, upperBound, increment] = targetOrder > currentOrder ? [currentOrder + 1, targetOrder, -1] : [targetOrder, currentOrder - 1, 1];
+
+                    console.log('lower', lowerBound, 'upper', upperBound, 'inc', increment, 'move', currentOrder, '->', normalizedOrder);
+                    
+                    [, activity] = await prisma.$transaction([
+                        // Shift activities between the source and destination
+                        prisma.activity.updateMany({
+                            where: { lessonId: originalLessonId, AND: [{ order: { gte: lowerBound } }, { order: { lte: upperBound } }] },
+                            data: { order: { increment } },
+                        }),
+                        // Move the target activity to its correct location and update
+                        prisma.activity.update({
+                            where: { id: activityId },
+                            data: {
+                                order: normalizedOrder,
+                                displayName,
+                                configuration,
+                                enabledLanguages,
+                            },
+                            include: { lesson: includeLesson },
+                        }),
+                    ]);
+                }
+                else {
+                    // Just update the user without touching the order
+                    activity = await prisma.activity.update({
+                        where: { id: activityId },
+                        data: {
+                            displayName,
+                            configuration,
+                            enabledLanguages,
+                        },
+                        include: { lesson: includeLesson },
+                    });
+                }
             }
 
             return ok(makeActivityEntity(activity, {

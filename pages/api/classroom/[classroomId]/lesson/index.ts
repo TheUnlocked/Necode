@@ -62,14 +62,14 @@ const apiLessonAll = endpoint(makeLessonEntity, ['classroomId', 'include[]'] as 
                 });
 
                 await prisma.activity.createMany({
-                    data: (activities as unknown as (ActivityEntity['attributes'])[]).map((x, i) => ({
+                    data: (activities as unknown as (ActivityEntity['attributes'])[] | undefined)?.map((x, i) => ({
                         lessonId: lesson.id,
                         activityType: x.activityType,
                         displayName: x.displayName,
                         configuration: x.configuration,
                         enabledLanguages: x.enabledLanguages,
                         order: i
-                    }))
+                    })) ?? []
                 });
 
                 const acts = await prisma.activity.findMany({

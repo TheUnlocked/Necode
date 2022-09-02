@@ -11,7 +11,8 @@
         "additionalHooks": "(useDrop|useDrag|useDragLayer)",
         "staticHooks": {
           "useMergeReducer": [false, true],
-          "useDirty": [false, true, true, false, true]
+          "useDirty": [false, true, true, false, true],
+          "useLocalCachedState": [false, true, false, false]
         }
       }
     ]

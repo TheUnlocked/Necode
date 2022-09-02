@@ -2,6 +2,7 @@ import { DragIndicator } from "@mui/icons-material";
 import { SvgIconTypeMap } from "@mui/material";
 import { DefaultComponentProps } from "@mui/material/OverridableComponent";
 import { Box, BoxTypeMap } from "@mui/system";
+import { omit } from 'lodash';
 import { Ref } from "react";
 
 export const dragHandleClass = 'DragHandle-svg-icon';
@@ -11,7 +12,7 @@ export default function DragHandle(props: Omit<DefaultComponentProps<BoxTypeMap<
     innerRef?: Ref<unknown>,
     iconProps?: DefaultComponentProps<SvgIconTypeMap<{}, "svg">>
 }) {
-    return <Box ref={props.innerRef} {...props}
+    return <Box ref={props.innerRef} {...omit(props, ['iconProps', 'innerRef'])}
         sx={{
             display: "flex",
             justifyContent: "center",

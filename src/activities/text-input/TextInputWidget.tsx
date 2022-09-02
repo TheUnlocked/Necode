@@ -1,5 +1,5 @@
 import { ClickAwayListener, Grow, IconButton, MenuItem, MenuList, Paper, Popper, Stack, TextField, Theme } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { SxProps } from "@mui/system";
 import { Code as CodeIcon, TextFields as TextFieldsIcon } from "@mui/icons-material";
 import Editor, { useMonaco } from "@monaco-editor/react";
@@ -8,6 +8,7 @@ import DragHandle, { dragHandleClass, dragHandleSelector } from "../../component
 import type { editor } from "monaco-editor";
 import { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
 import allLanguages from "../../languages/allLanguages";
+import useLocalCachedState from '../../hooks/useLocalCachedState';
 
 export interface TextInputWidgetProps {
     value: string;
@@ -16,7 +17,7 @@ export interface TextInputWidgetProps {
 
 export default function TextInputWidget({
     id,
-    activityConfig: { value, language },
+    activityConfig: { value: _textContent, language },
     onActivityConfigChange,
     dragHandle
 }: ActivityConfigWidgetProps<TextInputWidgetProps>) {
@@ -27,16 +28,24 @@ export default function TextInputWidget({
         popupId: `language-select-popup-${id}`
     });
 
-    function onValueChange(newValue: string) {
+    const onTextContentChange = useCallback((newValue: string) =>
         onActivityConfigChange({
             value: newValue,
             language
-        });
-    }
+        }),
+        [onActivityConfigChange, language]
+    );
+
+    const [textContent, setTextContent, commitTextContent] = useLocalCachedState(_textContent, onTextContentChange);
+
+    const commitTextContentRef = useRef(commitTextContent);
+    useEffect(() => {
+        commitTextContentRef.current = commitTextContent;
+    }, [commitTextContent]);
 
     function changeLanguage(newLanguage: string | null) {
         onActivityConfigChange({
-            value,
+            value: textContent,
             language: newLanguage
         });
     }
@@ -94,10 +103,11 @@ export default function TextInputWidget({
             <DragHandle innerRef={dragHandle} iconProps={{ sx: { mr: 0.5 } }} />
             <Editor
                 height={editorHeight}
-                value={value} onChange={x => onValueChange(x ?? "")}
+                value={textContent} onChange={x => setTextContent(x ?? '')}
                 onMount={editor => {
                     updateHeight(editor)();
                     editor.onDidContentSizeChange(updateHeight(editor));
+                    editor.onDidBlurEditorText(() => commitTextContentRef.current());
                 }}
                 theme="vs-black"
                 language={languageDescription?.monacoName}
@@ -139,7 +149,8 @@ export default function TextInputWidget({
 
     return <TextField
         multiline fullWidth variant="filled" hiddenLabel
-        value={value} onChange={e => onValueChange(e.target.value)}
+        value={textContent} onChange={e => setTextContent(e.target.value)}
+        onBlur={commitTextContent}
         InputProps={{
             disableUnderline: true,
             sx: {

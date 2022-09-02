@@ -105,6 +105,8 @@ model Activity {
   lesson           Lesson               @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   submissions      ActivitySubmission[]
   liveInstances    LiveActivity[]
+
+  // @@unique([order, lessonId]) Waiting on https://github.com/prisma/prisma/issues/8807
 }
 
 model Lesson {

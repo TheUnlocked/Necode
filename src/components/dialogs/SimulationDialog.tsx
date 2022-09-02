@@ -57,7 +57,7 @@ export default function SimulationDialog({
     }
 
     function getUserItem(user: UserEntity) {
-        return <ListItemButton onClick={() => impersonate(user.id)}>
+        return <ListItemButton key={user.id} onClick={() => impersonate(user.id)}>
             {user.attributes.displayName}
         </ListItemButton>;
     }

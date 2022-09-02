@@ -27,7 +27,7 @@ export default function useNecodeFetch() {
         catch (e) {
             err = e as Error;
         }
-        enqueueSnackbar(err, { variant: 'error' });
+        enqueueSnackbar(err.toString(), { variant: 'error' });
         throw err;
     }, [enqueueSnackbar]);
 

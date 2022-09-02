@@ -1,7 +1,7 @@
-import { Card, CardContent, Divider, IconButton, Stack, TextField, Tooltip, Typography } from "@mui/material";
+import { Card, CardContent, Divider, Stack, TextField, Typography } from "@mui/material";
 import { Box, SxProps } from "@mui/system";
 import { Dispatch, MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DropTargetMonitor, useDrop } from "react-dnd";
+import { useDrop } from "react-dnd";
 import composeRefs from '@seznam/compose-react-refs'
 import ActivityDescription from "../../activities/ActivityDescription";
 import { useGetRequest } from "../../api/client/GetRequestHook";
@@ -14,11 +14,13 @@ import useNecodeFetch from '../../hooks/useNecodeFetch';
 import WidgetDragLayer from './WidgetDragLayer';
 import { binarySearchIndex } from '../../util/binarySearch';
 import ActivityListPaneActions from './ActivityListPaneActions';
+import useLocalCachedState from '../../hooks/useLocalCachedState';
 
 interface ActivityListPaneProps {
     sx: SxProps;
     date: Iso8601Date;
     classroomId: string;
+    skeletonActivityCount?: number;
     onLessonChange?: Dispatch<LessonEntity<{ activities: 'shallow' }> | undefined>;
     saveRef?: MutableRefObject<(() => void) | undefined>;
 }
@@ -55,11 +57,10 @@ function findWidgetInsertPosition(parent: HTMLElement, mouseY: number, guess?: n
 export default function ActivityListPane({
     sx,
     classroomId,
+    skeletonActivityCount,
     date,
     onLessonChange,
 }: ActivityListPaneProps) {
-    const onLessonChangeRef = useRef(onLessonChange);
-
     const lessonEndpoint = `/api/classroom/${classroomId}/lesson/${date}?include=activities`;
     const { data: lessonEntity, error: lessonEntityError, isLoading, mutate: mutateLesson } = useGetRequest<LessonEntity<{ activities: 'deep', classroom: 'shallow' }>>(lessonEndpoint);
 
@@ -169,6 +170,7 @@ export default function ActivityListPane({
                 },
                 { optimisticData: updatedObject, rollbackOnError: true }
             );
+            // No need to fire onLessonChange for reordering
         },
     }), [activities, dropIntoPos, lessonEntity, classroomId, mutateLesson, upload]);
 
@@ -178,14 +180,49 @@ export default function ActivityListPane({
         }
     }, [isDragging]);
 
-    const [displayName, setDisplayName] = useState('');
+    const [displayName, setDisplayName, commitDisplayName, revertDisplayName] = useLocalCachedState(lessonEntity?.attributes.displayName ?? '', useCallback(async displayName => {
+        if (!lessonEntity) {
+            mutateLesson(async () => {
+                const lesson = await upload<LessonEntity<{ activities: 'deep' }>>(`/api/classroom/${classroomId}/lesson`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        date,
+                        displayName,
+                    })
+                });
+                onLessonChange?.(lesson);
+                return lesson;
+            });
+            return;
+        }
 
-    const createActivityHandled = useCallback(async (activity: ActivityDescription<any>) => {
+        const updatedObject = {
+            ...lessonEntity!,
+            attributes: {
+                ...lessonEntity!.attributes,
+                displayName
+            }
+        };
+
+        mutateLesson(
+            async () => {
+                await upload(`/api/classroom/${classroomId}/lesson/${lessonEntity.id}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ displayName }),
+                });
+                onLessonChange?.(updatedObject);
+                return updatedObject;
+            },
+            { optimisticData: updatedObject, rollbackOnError: true }
+        );
+    }, [classroomId, date, lessonEntity, upload, onLessonChange, mutateLesson]));
+
+    const createActivityHandler = useCallback(async (activity: ActivityDescription<any>) => {
         const lesson = lessonEntity ?? await upload<LessonEntity<{ activities: 'deep' }>>(`/api/classroom/${classroomId}/lesson`, {
             method: 'POST',
             body: JSON.stringify({
                 date,
-                displayName: displayName,
+                displayName,
             })
         });
 
@@ -197,15 +234,18 @@ export default function ActivityListPane({
                 displayName: activity.displayName,
             })
         });
-        
-        mutateLesson({
+
+        const updatedObject = {
             ...lesson,
             attributes: {
                 ...lesson.attributes,
                 activities: (lesson.attributes.activities ?? []).concat(activityEntity),
             }
-        });
-    }, [classroomId, date, displayName, lessonEntity, mutateLesson, upload]);
+        };
+        
+        mutateLesson(updatedObject);
+        onLessonChange?.(updatedObject);
+    }, [classroomId, date, displayName, lessonEntity, upload, mutateLesson, onLessonChange]);
 
     const deleteActivityHandler = useCallback((activity: ActivityEntity) => {
         const updatedObject = {
@@ -219,22 +259,13 @@ export default function ActivityListPane({
         mutateLesson(
             async () => {
                 await upload(`/api/classroom/${classroomId}/activity/${activity.id}`, { method: 'DELETE' });
+                onLessonChange?.(updatedObject);
                 return updatedObject;
             },
             { optimisticData: updatedObject, rollbackOnError: true }
         );
-    }, [lessonEntity, classroomId, mutateLesson, upload, activities]);
-
-    useEffect(() => {
-        if (lessonEntity) {
-            onLessonChangeRef.current?.(lessonEntity);
-            setDisplayName(lessonEntity.attributes.displayName);
-        }
-        else if (lessonEntityError) {
-            onLessonChangeRef.current?.(undefined);
-            setDisplayName('');
-        }
-    }, [lessonEntity, lessonEntityError]);
+        
+    }, [classroomId, lessonEntity, activities, upload, mutateLesson, onLessonChange]);
 
     const activityConfigChangeHandler = useCallback((activity: ActivityEntity, newConfig: any) => {
         const updatedObject = {
@@ -253,11 +284,12 @@ export default function ActivityListPane({
                         configuration: newConfig,
                     })
                 });
+                onLessonChange?.(updatedObject);
                 return updatedObject;
             },
             { optimisticData: updatedObject, rollbackOnError: true }
         );
-    }, [activities, classroomId, lessonEntity, mutateLesson, upload]);
+    }, [classroomId, lessonEntity, activities, upload, mutateLesson, onLessonChange]);
 
     const activityWidgets = useMemo(() =>
         activities.map(activity => <ActivityDragDropBox
@@ -271,7 +303,7 @@ export default function ActivityListPane({
     );
 
     if (isLoading && !lessonEntity) {
-        return <SkeletonActivityListPane sx={sx} />;
+        return <SkeletonActivityListPane sx={sx} activityCount={skeletonActivityCount} />;
     }
 
     return <>
@@ -283,6 +315,7 @@ export default function ActivityListPane({
                     hiddenLabel
                     fullWidth
                     value={displayName}
+                    onBlur={commitDisplayName}
                     onChange={e => setDisplayName(e.target.value)}
                     InputProps={{ disableUnderline: true, sx: ({ typography, transitions }) => ({
                         ...typography.h6,
@@ -308,7 +341,7 @@ export default function ActivityListPane({
             </CardContent>
             <Divider />
             <Box sx={{ m: 1 }}>
-                <ActivityListPaneActions onCreate={createActivityHandled} onDelete={deleteActivityHandler} />
+                <ActivityListPaneActions onCreate={createActivityHandler} onDelete={deleteActivityHandler} />
             </Box>
             <Stack ref={composeRefs(drop, widgetContainerRef)} sx={{ m: 1, mt: 0, flexGrow: 1, overflow: "auto" }} spacing={1}>
                 {activityWidgets}

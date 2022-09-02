@@ -16,6 +16,7 @@ import { ClassroomMemberEntity } from "../../../../src/api/entities/ClassroomMem
 import { ContentCopy, Share } from "@mui/icons-material";
 import { useSnackbar } from "notistack";
 import fetch from '../../../../src/util/fetch';
+import LessonDatePicker from '../../../../src/components/lesson-config/LessonDatePicker';
 
 
 function getDateFromPath(path: string) {
@@ -103,10 +104,6 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
         }));
     }, [selectedDate]);
 
-    function isActiveLesson(lesson: LessonEntity<{ activities: 'shallow' }> | undefined) {
-        return Boolean(lesson && (lesson.attributes.displayName !== '' || lesson.attributes.activities.length > 0));
-    }
-
     function endActivity() {
         startUpload();
         fetch(`/api/classroom/${classroomId}/activity/live`, { method: 'DELETE' })
@@ -151,44 +148,9 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
         return <ActivityListPane sx={{ flexGrow: 3, height: "100%", display: "flex", flexDirection: "column" }}
             classroomId={classroomId!}
             date={selectedDate}
+            skeletonActivityCount={lessonsByDate[selectedDate]?.attributes.activities.length ?? 0}
             onLessonChange={onLessonChange} />;
-    }, [classroomId, lessons, selectedDate, onLessonChange]);
-
-    const datePicker = useMemo(() =>
-        <StaticDatePicker
-            value={toLuxon(selectedDate)}
-            onChange={newDate => {
-                if (newDate) {
-                    router.push({ hash: fromLuxon(newDate) });
-                }
-            }}
-            renderInput={params => <TextField {...params} />}
-            displayStaticWrapperAs="desktop"
-            views={["year", "day"]}
-            renderDay={(day, _value, DayComponentProps) => {
-                const isoDate = fromLuxon(day);
-                const todayLesson = lessonsByDate[isoDate];
-                const showsIndicators = isActiveLesson(todayLesson) && !DayComponentProps.selected;
-                return DayComponentProps.outsideCurrentMonth
-                    ? <PickersDay {...DayComponentProps} />
-                    : <Tooltip key={DayComponentProps.key}
-                        title={showsIndicators ? todayLesson!.attributes.displayName : ''}
-                        placement="top" arrow
-                        disableInteractive
-                    > 
-                        <Badge key={isoDate}
-                            overlap="circular" variant="dot"
-                            anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-                            componentsProps={{ badge: { style: { right: "50%", pointerEvents: "none" } } }}
-                            color="primary"
-                            invisible={!showsIndicators}
-                        >
-                            <PickersDay {...DayComponentProps} />
-                    </Badge>
-                </Tooltip>;
-            }}/>,
-        [router, lessonsByDate, selectedDate]
-    );
+    }, [classroomId, lessons, lessonsByDate, selectedDate, onLessonChange]);
 
     return <>
         {isActivityRunning
@@ -227,7 +189,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
                     </Stack>
                 </Card>
                 <Paper variant="outlined" sx={{ pt: 2 }}>
-                    {datePicker}
+                    <LessonDatePicker selectedDate={selectedDate} lessonsByDate={lessonsByDate} />
                 </Paper>
             </Stack>
             {listPane}

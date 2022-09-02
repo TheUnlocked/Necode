@@ -4,10 +4,12 @@ import { ActivityDragDropBox } from "./ActivityDragDropBox";
 
 interface SkeletonActivityListPaneProps {
     sx: SxProps;
+    activityCount?: number;
 }
 
 export default function SkeletonActivityListPane({
     sx,
+    activityCount,
 }: SkeletonActivityListPaneProps) {
     return <Card variant="outlined" sx={sx}>
         <CardContent>
@@ -22,7 +24,7 @@ export default function SkeletonActivityListPane({
             </Stack>
         </Box>
         <Stack sx={{ p: 1, overflow: "auto", flexGrow: 1 }} spacing={1}>
-            {new Array(3).fill(undefined)
+            {new Array(activityCount ?? 0).fill(undefined)
                 .map((_, i) =>
                     <ActivityDragDropBox key={i}
                         id={`${i}`}

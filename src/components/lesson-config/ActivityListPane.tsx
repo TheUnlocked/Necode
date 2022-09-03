@@ -1,6 +1,6 @@
 import { Card, CardContent, Divider, Stack, TextField, Typography } from "@mui/material";
 import { Box, SxProps } from "@mui/system";
-import { Dispatch, MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Dispatch, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDrop } from "react-dnd";
 import composeRefs from '@seznam/compose-react-refs'
 import ActivityDescription from "../../activities/ActivityDescription";
@@ -265,7 +265,7 @@ export default function ActivityListPane({
             method: 'POST',
             body: JSON.stringify({
                 activityType: activity.attributes.activityType,
-                displayName: activity.attributes.displayName,
+                displayName: activity.attributes.displayName + ' (copy)',
                 configuration: activity.attributes.configuration,
                 enabledLanguages: activity.attributes.enabledLanguages,
             })

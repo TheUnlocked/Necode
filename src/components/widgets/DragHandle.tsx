@@ -23,7 +23,7 @@ export default function DragHandle(props: Omit<DefaultComponentProps<BoxTypeMap<
             [`&${dragHandleSelector}`]: {
                 visibility: "hidden"
             },
-            color: "rgba(255, 255, 255, 0.5)",
+            color: ({ palette }) => palette.text.disabled,
             cursor: "grab",
             ...props.iconProps?.sx ?? {}
         }} />

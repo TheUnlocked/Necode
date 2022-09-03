@@ -143,7 +143,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
         });
         const newActivity = await upload<ActivityEntity>(`/api/classroom/${classroomId}/activity/${activity.id}`, {
             method: 'PATCH',
-            body: JSON.stringify({ lesson: lessonsByDate[date]!.id })
+            body: JSON.stringify({ lesson: lesson.id })
         });
         setLessonsByDate(lessonsByDate => ({
             ...lessonsByDate,

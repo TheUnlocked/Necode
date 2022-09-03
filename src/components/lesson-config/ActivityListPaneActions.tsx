@@ -16,7 +16,7 @@ interface ActivityListPaneActionsProps {
 }
 
 export default function ActivityListPaneActions({ onCreate, onClone, onDelete }: ActivityListPaneActionsProps) {
-    const [isDragging, cloneDrop] = useDrop(() => ({
+    const [{ isDragging }, cloneDrop] = useDrop(() => ({
         accept: activityDragDropType,
         collect: monitor => ({ isDragging: monitor.getItemType() === activityDragDropType }),
         drop(item: ActivityEntity) {
@@ -44,7 +44,7 @@ export default function ActivityListPaneActions({ onCreate, onClone, onDelete }:
                 <IconButton onClick={() => onCreate?.(textInputActivityDescription)}><TextFields/></IconButton>
             </Tooltip>
             <Stack direction="row" justifyContent="end" spacing={1} flexGrow={1}>
-                <Tooltip title="Drag an activity here to move it to another date" disableInteractive>
+                <Tooltip title="Drag an activity here to clone it" disableInteractive>
                     <div>
                         <Button ref={cloneDrop}
                             variant="outlined"

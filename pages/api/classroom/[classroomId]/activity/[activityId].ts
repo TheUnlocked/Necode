@@ -78,7 +78,7 @@ const apiActivityOne = endpoint(makeActivityEntity, ['classroomId', 'activityId'
                 return fail(Status.NOT_FOUND);
             }
 
-            const { lessonId: originalLessonId, order: currentOrder } = thisActivity;
+            const { lessonId: originalLessonId, order: originalOrder } = thisActivity;
 
             let activity: Activity & {
                 lesson: Lesson;
@@ -86,7 +86,7 @@ const apiActivityOne = endpoint(makeActivityEntity, ['classroomId', 'activityId'
 
             if (targetLessonId && targetLessonId !== originalLessonId) {
                 // Moving to another lesson
-                if (targetOrder !== undefined && targetOrder !== currentOrder) {
+                if (targetOrder !== undefined && targetOrder !== originalOrder) {
                     const normalizedOrder = clamp(
                         targetOrder,
                         0,
@@ -113,7 +113,7 @@ const apiActivityOne = endpoint(makeActivityEntity, ['classroomId', 'activityId'
                         }),
                         // Shift activities after the source in the original lesson backwards
                         prisma.activity.updateMany({
-                            where: { id: originalLessonId, order: { gt: currentOrder } },
+                            where: { lessonId: originalLessonId, order: { gt: originalOrder } },
                             data: { order: { decrement: 1 } },
                         }),
                     ]);
@@ -134,7 +134,7 @@ const apiActivityOne = endpoint(makeActivityEntity, ['classroomId', 'activityId'
                         }),
                         // Shift activities after the source in the original lesson backwards
                         prisma.activity.updateMany({
-                            where: { id: originalLessonId, order: { gt: currentOrder } },
+                            where: { lessonId: originalLessonId, order: { gt: originalOrder } },
                             data: { order: { decrement: 1 } },
                         }),
                     ]);
@@ -142,16 +142,14 @@ const apiActivityOne = endpoint(makeActivityEntity, ['classroomId', 'activityId'
             }
             else {
                 // Moving within the same lesson
-                if (targetOrder !== undefined && targetOrder !== currentOrder) { 
+                if (targetOrder !== undefined && targetOrder !== originalOrder) { 
                     const normalizedOrder = clamp(
-                        targetOrder > currentOrder ? targetOrder - 1 : targetOrder,
+                        targetOrder > originalOrder ? targetOrder - 1 : targetOrder,
                         0,
                         await prisma.activity.count({ where: { lessonId: originalLessonId } }) - 1
                     );
 
-                    const [lowerBound, upperBound, increment] = targetOrder > currentOrder ? [currentOrder + 1, targetOrder, -1] : [targetOrder, currentOrder - 1, 1];
-
-                    console.log('lower', lowerBound, 'upper', upperBound, 'inc', increment, 'move', currentOrder, '->', normalizedOrder);
+                    const [lowerBound, upperBound, increment] = targetOrder > originalOrder ? [originalOrder + 1, targetOrder, -1] : [targetOrder, originalOrder - 1, 1];
                     
                     [, activity] = await prisma.$transaction([
                         // Shift activities between the source and destination

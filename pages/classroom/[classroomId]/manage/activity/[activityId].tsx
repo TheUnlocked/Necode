@@ -23,6 +23,7 @@ import NotFoundPage from "../../../../404";
 import supportsLanguage from "../../../../../src/activities/supportsLanguage";
 import { curry } from "lodash";
 import fetch from '../../../../../src/util/fetch';
+import useNecodeFetch from '../../../../../src/hooks/useNecodeFetch';
 
 interface StaticProps {
     classroomId: string;
@@ -51,7 +52,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
     const router = useRouter();
 
     const activityEndpoint = `/api/classroom/${classroomId}/activity/${activityId}?include=lesson`;
-    const { data: activityEntity } = useGetRequest<ActivityEntity<{ lesson: 'deep' }>>(activityEndpoint);
+    const { data: activityEntity, mutate } = useGetRequest<ActivityEntity<{ lesson: 'deep' }>>(activityEndpoint);
 
     const activity = useMemo(() => allActivities.find(x => x.id === activityEntity?.attributes.activityType), [activityEntity]);
 
@@ -104,26 +105,33 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
         unsupportedLanguages: useMemo(() => allLanguages.filter(x => !supportedLanguages.includes(x)), [supportedLanguages])
     });
 
-    const { enqueueSnackbar } = useSnackbar();
-    const { startUpload, finishUpload, startDownload, finishDownload } = useLoadingContext();
+    const { download, upload } = useNecodeFetch();
 
-    function save() {
-        startUpload();
-        fetch(`/api/classroom/${classroomId}/activity/${activityId}`, {
-            method: 'PUT',
-            body: JSON.stringify({
-                configuration: activityConfig,
-                enabledLanguages: enabledLanguages.map(x => x.name)
-            })
-        }).then(async res => {
-            const data = await res.json() as Response<any>;
-            if (data.response === 'ok') {
-                clearDirty();
+    async function save() {
+        const patch = {
+            configuration: activityConfig,
+            enabledLanguages: enabledLanguages.map(x => x.name),
+        };
+
+        const updatedActivity = {
+            ...activityEntity!,
+            attributes: {
+                ...activityEntity!.attributes,
+                ...patch,
             }
-            else {
-                enqueueSnackbar(`HTTP ${res.status}: ${data.message}`, { variant: 'error' })
-            }
-        }).finally(finishUpload);
+        };
+
+        mutate(async () => {
+            await upload(`/api/classroom/${classroomId}/activity/${activityId}`, {
+                method: 'PATCH',
+                body: JSON.stringify(patch)
+            });
+            clearDirty();
+            return updatedActivity;
+        }, {
+            optimisticData: updatedActivity,
+            rollbackOnError: true,
+        });
     }
 
     const unsavedWarnMessage = 'Changes you made may not be saved.';
@@ -156,18 +164,8 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
     async function returnToManage() {
         let date = activityEntity?.attributes.lesson.attributes.date;
         if (!date) {
-            try {
-                startDownload();
-                const result = await fetch(`/api/classroom/${classroomId}/activity/${activityId}?include=lesson`);
-                const data = await result.json() as Response<ActivityEntity<{ lesson: 'deep' }>>;
-                if (data.response === 'ok') {
-                    date = data.data.attributes.lesson.attributes.date;
-                }
-            }
-            catch (e) {}
-            finally {
-                finishDownload();
-            }
+            const result = await download<ActivityEntity<{ lesson: 'deep' }>>(`/api/classroom/${classroomId}/activity/${activityId}?include=lesson`);
+            date = result.attributes.lesson.attributes.date;
         }
         router.push({
             pathname: `/classroom/${classroomId}/manage`,

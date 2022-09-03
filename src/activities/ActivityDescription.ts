@@ -29,6 +29,8 @@ export interface ActivityConfigPageProps<ConfigData = undefined> extends BaseAct
 }
 
 export interface ActivityConfigWidgetProps<ConfigData = undefined> extends BaseActivityProps<ConfigData> {
+    activityTypeId: string;
+
     onActivityConfigChange: (newConfig: ConfigData) => void;
     
     goToConfigPage: (() => void) | undefined;
@@ -37,7 +39,9 @@ export interface ActivityConfigWidgetProps<ConfigData = undefined> extends BaseA
     
     dragHandle: ConnectDragSource;
 
-    activity: ActivityDescription<ConfigData>;
+    displayName: string;
+    
+    onDisplayNameChange: (newDisplayName: string) => void;
 }
 
 interface ActivityDescription<ConfigData, Features extends readonly FeatureDescription<any>[] = readonly FeatureDescription<any>[]> {

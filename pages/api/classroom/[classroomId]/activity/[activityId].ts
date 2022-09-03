@@ -144,7 +144,7 @@ const apiActivityOne = endpoint(makeActivityEntity, ['classroomId', 'activityId'
                 // Moving within the same lesson
                 if (targetOrder !== undefined && targetOrder !== originalOrder) { 
                     const normalizedOrder = clamp(
-                        targetOrder > originalOrder ? targetOrder - 1 : targetOrder,
+                        targetOrder,
                         0,
                         await prisma.activity.count({ where: { lessonId: originalLessonId } }) - 1
                     );

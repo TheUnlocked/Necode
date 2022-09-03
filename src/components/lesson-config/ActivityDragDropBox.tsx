@@ -1,14 +1,14 @@
 import { Box } from "@mui/system";
 import { useRouter } from "next/router";
-import { ComponentType, useEffect, useRef } from "react";
+import { ComponentType, useCallback, useEffect, useRef } from "react";
 import { ConnectableElement, useDrag } from "react-dnd";
 import { getEmptyImage } from 'react-dnd-html5-backend';
 import { LiveActivityInfo } from "../../../websocketServer/src/types";
 import { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
-import { useLoadingContext } from "../../api/client/LoadingContext";
+import { PartialAttributesOf } from '../../api/Endpoint';
 import { ActivityEntity } from '../../api/entities/ActivityEntity';
 import useActivityDescription from '../../hooks/useActivityDescription';
-import fetch from '../../util/fetch';
+import useNecodeFetch from '../../hooks/useNecodeFetch';
 import BrokenWidget from './BrokenWidget';
 import DefaultActivityWidget from "./DefaultActivityWidget";
 import SkeletonWidget from "./SkeletonWidget";
@@ -25,13 +25,13 @@ interface BaseActivityDragDropBoxProps {
 interface SkeletonActivityDragDropBoxProps extends BaseActivityDragDropBoxProps {
     skeleton: true;
     activity?: undefined;
-    onActivityConfigChange?: (newConfig: any) => void;
+    onActivityChange?: undefined;
 }
 
 interface RealActivityDragDropBoxProps extends BaseActivityDragDropBoxProps {
     skeleton: false;
     activity: ActivityEntity;
-    onActivityConfigChange: (newConfig: any) => void;
+    onActivityChange?: (changes: PartialAttributesOf<ActivityEntity>) => void;
 }
 
 type ActivityDragDropBoxProps<IsSkeleton extends boolean>
@@ -42,11 +42,11 @@ function isSkeleton(props: ActivityDragDropBoxProps<boolean>): props is Activity
 }
 
 export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityDragDropBoxProps<IsSkeleton>) {
-    const { id, classroomId } = props;
+    const { id, classroomId, onActivityChange } = props;
 
     const router = useRouter();
 
-    const { startUpload, finishUpload } = useLoadingContext();
+    const { upload } = useNecodeFetch();
 
     const [{ isDragging }, drag, dragPreview] = useDrag(() => ({
         type: activityDragDropType,
@@ -68,6 +68,14 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
 
     const activityType = useActivityDescription(props.activity?.attributes.activityType);
 
+    const configChangeHandler = useCallback((configuration: any) => {
+        onActivityChange?.({ configuration });
+    }, [onActivityChange]);
+
+    const displayNameChangeHandler = useCallback((displayName: string) => {
+        onActivityChange?.({ displayName });
+    }, [onActivityChange]);
+
     if (isSkeleton(props)) {
         return <Box>
             <SkeletonWidget />
@@ -78,8 +86,11 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
         return <BrokenWidget
             id={id}
             classroomId={classroomId}
+            activityTypeId={props.activity.attributes.activityType}
             activityConfig={props.activity.attributes.configuration}
-            onActivityConfigChange={props.onActivityConfigChange}
+            onActivityConfigChange={configChangeHandler}
+            displayName={props.activity.attributes.displayName}
+            onDisplayNameChange={displayNameChangeHandler}
             startActivity={startActivity}
             goToConfigPage={goToConfigPage}
             dragHandle={drag} />
@@ -92,11 +103,10 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
     }
 
     async function startActivity() {
-        startUpload();
-        await fetch(`/api/classroom/${classroomId}/activity/live`, {
+        await upload(`/api/classroom/${classroomId}/activity/live`, {
             method: 'POST',
             body: JSON.stringify({ id, rtcPolicy: activityType!.rtcPolicy } as LiveActivityInfo)
-        }).finally(finishUpload);
+        });
 
         router.push(`/classroom/${classroomId}/activity`);
     }
@@ -105,9 +115,11 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
         <Widget
             id={id}
             classroomId={classroomId}
-            activity={activityType}
+            activityTypeId={props.activity.attributes.activityType}
             activityConfig={props.activity.attributes.configuration}
-            onActivityConfigChange={props.onActivityConfigChange}
+            onActivityConfigChange={configChangeHandler}
+            displayName={props.activity.attributes.displayName}
+            onDisplayNameChange={displayNameChangeHandler}
             startActivity={startActivity}
             goToConfigPage={activityType.configPage ? goToConfigPage : undefined}
             dragHandle={drag} />

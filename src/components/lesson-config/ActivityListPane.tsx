@@ -16,6 +16,7 @@ import { binarySearchIndex } from '../../util/binarySearch';
 import ActivityListPaneActions from './ActivityListPaneActions';
 import useLocalCachedState from '../../hooks/useLocalCachedState';
 import { assignRef, SimpleRef } from '../../util/simpleRef';
+import { PartialAttributesOf } from '../../api/Endpoint';
 
 interface ActivityListPaneProps {
     sx: SxProps;
@@ -68,7 +69,7 @@ export default function ActivityListPane({
 
     assignRef(refreshRef, mutateLesson);
 
-    const activities = useMemo(() => lessonEntity?.attributes.activities ?? [], [lessonEntity]);
+    const activities: ActivityEntity[] = useMemo(() => lessonEntity?.attributes.activities ?? [], [lessonEntity]);
 
     const { upload } = useNecodeFetch();
     
@@ -114,6 +115,10 @@ export default function ActivityListPane({
                     if (!monitor.isOver()) {
                         return oldWidgetIndex;
                     }
+                    if (activities.length === 1) {
+                        setDropIntoPos(0);
+                        return 0;
+                    }
                     const fracDropPos = findWidgetInsertPosition(container, monitor.getClientOffset()!.y, oldWidgetIndex);
     
                     const intDropPos = Math.ceil(fracDropPos);
@@ -145,9 +150,9 @@ export default function ActivityListPane({
                 return;
             }
             const newActivities = [...activities];
-            const from = activities.findIndex(x => x.id === id);
-            const [oldElt] = newActivities.splice(from, 1);
-            if (dropIntoPos > from) {
+            const fromPos = activities.findIndex(x => x.id === id);
+            const [oldElt] = newActivities.splice(fromPos, 1);
+            if (dropIntoPos > fromPos) {
                 newActivities.splice(dropIntoPos - 1, 0, oldElt);
             }
             else {
@@ -167,7 +172,7 @@ export default function ActivityListPane({
                     await upload(`/api/classroom/${classroomId}/activity/${id}`, {
                         method: 'PATCH',
                         body: JSON.stringify({
-                            order: dropIntoPos
+                            order: dropIntoPos > fromPos ? dropIntoPos - 1 : dropIntoPos
                         })
                     });
                     return updatedObject;
@@ -298,12 +303,15 @@ export default function ActivityListPane({
         
     }, [classroomId, lessonEntity, activities, upload, mutateLesson, onLessonChange]);
 
-    const activityConfigChangeHandler = useCallback((activity: ActivityEntity, newConfig: any) => {
+    const activityChangeHandler = useCallback((activity: ActivityEntity, changes: Omit<PartialAttributesOf<ActivityEntity>, 'lesson'>) => {
         const updatedObject = {
             ...lessonEntity!,
             attributes: {
                 ...lessonEntity!.attributes,
-                activities: activities.map(a => a === activity ? { ...a, configuration: newConfig } : a)
+                activities: activities.map(a => a === activity ? {
+                    ...a,
+                    attributes: { ...a.attributes, ...changes }
+                } : a)
             }
         };
 
@@ -311,9 +319,7 @@ export default function ActivityListPane({
             async () => {
                 await upload(`/api/classroom/${classroomId}/activity/${activity.id}`, {
                     method: 'PATCH',
-                    body: JSON.stringify({
-                        configuration: newConfig,
-                    })
+                    body: JSON.stringify(changes),
                 });
                 onLessonChange?.(updatedObject);
                 return updatedObject;
@@ -329,8 +335,8 @@ export default function ActivityListPane({
             skeleton={false}
             classroomId={classroomId}
             activity={activity}
-            onActivityConfigChange={x => activityConfigChangeHandler(activity, x)} />),
-        [classroomId, activities, activityConfigChangeHandler]
+            onActivityChange={x => activityChangeHandler(activity, x)} />),
+        [classroomId, activities, activityChangeHandler]
     );
 
     if (isLoading && !lessonEntity) {

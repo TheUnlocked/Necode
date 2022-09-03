@@ -19,6 +19,8 @@ const DragLayer = styled('div')`
     height: 100vh;
 `;
 
+const MAX_DISPLAY_CHARS = 40;
+
 export interface DragIndicatorOptions {
     left: number;
     width: number;
@@ -38,16 +40,16 @@ export default function WidgetDragLayer({ dropIndicatorPos }: WidgetDragLayerPro
     }));
 
     const widgetDisplayName = useMemo(() => {
-        if (!item) {
+        if (!item || itemType !== activityDragDropType) {
             return null;
         }
         if (item.attributes.activityType === textInputActivityDescription.id) {
             const { language, value } = item.attributes.configuration as typeof textInputActivityDescription['defaultConfig'];
-            const text = truncate(value.trim().replaceAll('\n', ' '), { length: 30 });
+            const text = truncate(value.trim().replaceAll('\n', ' '), { length: MAX_DISPLAY_CHARS });
             return language == null ? text : <code>{text}</code>;
         }
-        return truncate(item.attributes.displayName, { length: 30 });
-    }, [item]);
+        return truncate(item.attributes.displayName, { length: MAX_DISPLAY_CHARS });
+    }, [item, itemType]);
 
     if (!isDragging || itemType !== activityDragDropType || !position || !item) {
         return null;

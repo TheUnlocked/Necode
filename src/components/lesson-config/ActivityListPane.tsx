@@ -15,6 +15,7 @@ import WidgetDragLayer from './WidgetDragLayer';
 import { binarySearchIndex } from '../../util/binarySearch';
 import ActivityListPaneActions from './ActivityListPaneActions';
 import useLocalCachedState from '../../hooks/useLocalCachedState';
+import { assignRef, SimpleRef } from '../../util/simpleRef';
 
 interface ActivityListPaneProps {
     sx: SxProps;
@@ -22,7 +23,7 @@ interface ActivityListPaneProps {
     classroomId: string;
     skeletonActivityCount?: number;
     onLessonChange?: Dispatch<LessonEntity<{ activities: 'shallow' }> | undefined>;
-    saveRef?: MutableRefObject<(() => void) | undefined>;
+    refreshRef?: SimpleRef<(() => void) | undefined>;
 }
 
 function findWidgetInsertPosition(parent: HTMLElement, mouseY: number, guess?: number): number {
@@ -60,9 +61,12 @@ export default function ActivityListPane({
     skeletonActivityCount,
     date,
     onLessonChange,
+    refreshRef,
 }: ActivityListPaneProps) {
     const lessonEndpoint = `/api/classroom/${classroomId}/lesson/${date}?include=activities`;
-    const { data: lessonEntity, error: lessonEntityError, isLoading, mutate: mutateLesson } = useGetRequest<LessonEntity<{ activities: 'deep', classroom: 'shallow' }>>(lessonEndpoint);
+    const { data: lessonEntity, isLoading, mutate: mutateLesson } = useGetRequest<LessonEntity<{ activities: 'deep', classroom: 'shallow' }>>(lessonEndpoint);
+
+    assignRef(refreshRef, mutateLesson);
 
     const activities = useMemo(() => lessonEntity?.attributes.activities ?? [], [lessonEntity]);
 

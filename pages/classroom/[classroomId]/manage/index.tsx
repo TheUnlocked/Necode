@@ -17,6 +17,8 @@ import { ContentCopy, Share } from "@mui/icons-material";
 import { useSnackbar } from "notistack";
 import fetch from '../../../../src/util/fetch';
 import LessonDatePicker from '../../../../src/components/lesson-config/LessonDatePicker';
+import useNecodeFetch from '../../../../src/hooks/useNecodeFetch';
+import { ActivityEntity } from '../../../../src/api/entities/ActivityEntity';
 
 
 function getDateFromPath(path: string) {
@@ -57,23 +59,16 @@ const Page: NextPage = () => {
 const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
     const router = useRouter();
 
-    const { startUpload, finishUpload, startDownload, finishDownload } = useLoadingContext();
+    const { upload, download } = useNecodeFetch();
 
     const [joinCode, setJoinCode] = useState<string>();
 
     useEffect(() => {
         if (classroomId && joinCode === undefined) {
-            startDownload();
-            fetch(`/api/classroom/${classroomId}/join-code`, { method: 'POST' })
-                .then(res => res.json() as Promise<Response<string>>)
-                .then(res => {
-                    if (res.response === 'ok') {
-                        setJoinCode(res.data);
-                    }
-                })
-                .finally(finishDownload);
+            download<string>(`/api/classroom/${classroomId}/join-code`, { method: 'POST' })
+                .then(setJoinCode);
         }
-    }, [joinCode, classroomId, startDownload, finishDownload]);
+    }, [classroomId, joinCode, download]);
 
     // Normally fromLuxon uses UTC, but for the default we want "today" in the user's timezone
     const [selectedDate, setSelectedDate] = useState(fromLuxon(DateTime.now(), false));
@@ -105,10 +100,8 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
     }, [selectedDate]);
 
     function endActivity() {
-        startUpload();
-        fetch(`/api/classroom/${classroomId}/activity/live`, { method: 'DELETE' })
-            .then(() => mutateLiveActivityData(undefined, true))
-            .finally(finishUpload);
+        upload(`/api/classroom/${classroomId}/activity/live`, { method: 'DELETE' })
+            .then(() => mutateLiveActivityData(undefined, true));
     }
 
     function goToActivity() {
@@ -141,6 +134,37 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
 
     const isActivityRunning = liveActivityData?.live;
 
+    const refreshLessonPaneRef = useRef<() => void>();
+
+    const handleCalendarDropActivity = useCallback(async (activity: ActivityEntity, date: Iso8601Date) => {
+        const lesson = lessonsByDate[date] ?? await upload<LessonEntity<{ activities: 'shallow' }>>(`/api/classroom/${classroomId}/lesson`, {
+            method: 'POST',
+            body: JSON.stringify({ date, displayName: '' })
+        });
+        const newActivity = await upload<ActivityEntity>(`/api/classroom/${classroomId}/activity/${activity.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ lesson: lessonsByDate[date]!.id })
+        });
+        setLessonsByDate(lessonsByDate => ({
+            ...lessonsByDate,
+            [selectedDate]: {
+                ...lessonsByDate[selectedDate],
+                attributes: {
+                    ...lessonsByDate[selectedDate]!.attributes,
+                    activities: lessonsByDate[selectedDate]!.attributes.activities.filter(x => x.id !== activity.id)
+                }
+            },
+            [date]: {
+                ...lesson,
+                attributes: {
+                    ...lesson.attributes,
+                    activities: lesson.attributes.activities.concat(newActivity),
+                }
+            },
+        }));
+        refreshLessonPaneRef.current?.();
+    }, [classroomId, selectedDate, lessonsByDate, upload]);
+
     const listPane = useMemo(() => {
         if (!lessons) {
             return <SkeletonActivityListPane sx={{ flexGrow: 3, height: "100%", display: "flex", flexDirection: "column" }} />;
@@ -149,7 +173,8 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
             classroomId={classroomId!}
             date={selectedDate}
             skeletonActivityCount={lessonsByDate[selectedDate]?.attributes.activities.length ?? 0}
-            onLessonChange={onLessonChange} />;
+            onLessonChange={onLessonChange}
+            refreshRef={refreshLessonPaneRef} />;
     }, [classroomId, lessons, lessonsByDate, selectedDate, onLessonChange]);
 
     return <>
@@ -189,7 +214,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
                     </Stack>
                 </Card>
                 <Paper variant="outlined" sx={{ pt: 2 }}>
-                    <LessonDatePicker selectedDate={selectedDate} lessonsByDate={lessonsByDate} />
+                    <LessonDatePicker selectedDate={selectedDate} lessonsByDate={lessonsByDate} onDropActivity={handleCalendarDropActivity} />
                 </Paper>
             </Stack>
             {listPane}

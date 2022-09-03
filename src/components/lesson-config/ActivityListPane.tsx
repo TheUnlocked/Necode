@@ -184,7 +184,7 @@ export default function ActivityListPane({
         }
     }, [isDragging]);
 
-    const [displayName, setDisplayName, commitDisplayName, revertDisplayName] = useLocalCachedState(lessonEntity?.attributes.displayName ?? '', useCallback(async displayName => {
+    const [displayName, setDisplayName, commitDisplayName] = useLocalCachedState(lessonEntity?.attributes.displayName ?? '', useCallback(async displayName => {
         if (!lessonEntity) {
             mutateLesson(async () => {
                 const lesson = await upload<LessonEntity<{ activities: 'deep' }>>(`/api/classroom/${classroomId}/lesson`, {
@@ -250,6 +250,33 @@ export default function ActivityListPane({
         mutateLesson(updatedObject);
         onLessonChange?.(updatedObject);
     }, [classroomId, date, displayName, lessonEntity, upload, mutateLesson, onLessonChange]);
+
+    const cloneActivityHandler = useCallback(async (activity: ActivityEntity) => {
+        if (!lessonEntity) {
+            return;
+        }
+
+        const activityEntity = await upload<ActivityEntity>(`/api/classroom/${classroomId}/lesson/${lessonEntity.id}/activity`, {
+            method: 'POST',
+            body: JSON.stringify({
+                activityType: activity.attributes.activityType,
+                displayName: activity.attributes.displayName,
+                configuration: activity.attributes.configuration,
+                enabledLanguages: activity.attributes.enabledLanguages,
+            })
+        });
+
+        const updatedObject = {
+            ...lessonEntity,
+            attributes: {
+                ...lessonEntity.attributes,
+                activities: (lessonEntity.attributes.activities ?? []).concat(activityEntity),
+            }
+        };
+        
+        mutateLesson(updatedObject);
+        onLessonChange?.(updatedObject);
+    }, [classroomId, lessonEntity, upload, mutateLesson, onLessonChange]);
 
     const deleteActivityHandler = useCallback((activity: ActivityEntity) => {
         const updatedObject = {
@@ -345,7 +372,10 @@ export default function ActivityListPane({
             </CardContent>
             <Divider />
             <Box sx={{ m: 1 }}>
-                <ActivityListPaneActions onCreate={createActivityHandler} onDelete={deleteActivityHandler} />
+                <ActivityListPaneActions
+                    onCreate={createActivityHandler}
+                    onClone={cloneActivityHandler}
+                    onDelete={deleteActivityHandler} />
             </Box>
             <Stack ref={composeRefs(drop, widgetContainerRef)} sx={{ m: 1, mt: 0, flexGrow: 1, overflow: "auto" }} spacing={1}>
                 {activityWidgets}

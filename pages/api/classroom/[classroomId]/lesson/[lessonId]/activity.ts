@@ -24,10 +24,15 @@ const apiActivityAll = endpoint(makeActivityEntity, ['classroomId', 'lessonId'] 
         loginValidation: true,
         schema: Joi.object<ActivityEntity['attributes']>({
             activityType: Joi.string(),
-            configuration: Joi.any().optional(),
             displayName: Joi.string().allow(''),
+            configuration: Joi.any().optional(),
+            enabledLanguages: Joi.array().items(Joi.string()).optional(),
         }),
-        async handler({ query: { classroomId, lessonId }, body: { activityType, configuration, displayName }, session }, ok, fail) {
+        async handler({
+            query: { classroomId, lessonId },
+            body: { activityType, configuration, displayName, enabledLanguages = [] },
+            session
+        }, ok, fail) {
             if (!await hasScope(session!.user.id, 'classroom:edit', { classroomId })) {
                 return fail(Status.FORBIDDEN);
             }
@@ -38,7 +43,7 @@ const apiActivityAll = endpoint(makeActivityEntity, ['classroomId', 'lessonId'] 
                     activityType,
                     displayName,
                     configuration: configuration ?? undefined,
-                    enabledLanguages: [],
+                    enabledLanguages: enabledLanguages,
                     order: await prisma.activity.count({ where: { lessonId } })
                 }
             });

@@ -12,7 +12,7 @@ export default function SkeletonActivityListPane({
     activityCount,
 }: SkeletonActivityListPaneProps) {
     return <Card variant="outlined" sx={sx}>
-        <CardContent>
+        <CardContent sx={{ ml: 4 }}>
             <Typography variant="h6" component="span"><Skeleton variant="text" sx={{ py: `${9.75 / 2}px` }} /></Typography>
             <Typography variant="body2" component="span"><Skeleton variant="text" width="150px" /></Typography>
         </CardContent>

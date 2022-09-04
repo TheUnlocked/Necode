@@ -1,23 +1,11 @@
 import { Alert, Box } from '@mui/material';
-import { styled } from '@mui/system';
 import { truncate } from 'lodash';
 import { useMemo } from 'react';
 import { useDragLayer } from 'react-dnd';
 import textInputActivityDescription from '../../activities/text-input/textInputDescription';
 import { ActivityEntity } from '../../api/entities/ActivityEntity';
-import { activityDragDropType } from './ActivityDragDropBox';
-
-const DragLayer = styled('div')`
-    position: fixed;
-    margin: 0 !important;
-    pointer-events: none;
-    white-space: nowrap;
-    z-index: 10000;
-    left: 0;
-    top: 0;
-    width: 100vw;
-    height: 100vh;
-`;
+import { activityDragDropType } from '../../dnd/types';
+import DragLayer from '../DragLayer';
 
 const MAX_DISPLAY_CHARS = 40;
 

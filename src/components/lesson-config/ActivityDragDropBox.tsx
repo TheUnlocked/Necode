@@ -7,13 +7,12 @@ import { LiveActivityInfo } from "../../../websocketServer/src/types";
 import { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
 import { PartialAttributesOf } from '../../api/Endpoint';
 import { ActivityEntity } from '../../api/entities/ActivityEntity';
+import { activityDragDropType } from '../../dnd/types';
 import useActivityDescription from '../../hooks/useActivityDescription';
 import useNecodeFetch from '../../hooks/useNecodeFetch';
 import BrokenWidget from './BrokenWidget';
 import DefaultActivityWidget from "./DefaultActivityWidget";
 import SkeletonWidget from "./SkeletonWidget";
-
-export const activityDragDropType = 'application/lesson-activity+json';
 
 export type DraggableComponent = ComponentType<ActivityConfigWidgetProps<any>>;
 

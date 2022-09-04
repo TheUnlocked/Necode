@@ -19,6 +19,7 @@ import fetch from '../../../../src/util/fetch';
 import LessonDatePicker from '../../../../src/components/lesson-config/LessonDatePicker';
 import useNecodeFetch from '../../../../src/hooks/useNecodeFetch';
 import { ActivityEntity } from '../../../../src/api/entities/ActivityEntity';
+import LessonDragLayer from '../../../../src/components/lesson-config/LessonDragLayer';
 
 
 function getDateFromPath(path: string) {
@@ -99,38 +100,38 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
         }));
     }, [selectedDate]);
 
-    function endActivity() {
-        upload(`/api/classroom/${classroomId}/activity/live`, { method: 'DELETE' })
-            .then(() => mutateLiveActivityData(undefined, true));
-    }
-
-    function goToActivity() {
-        router.push(`/classroom/${classroomId}/activity`);
-    }
-
     const { data: liveActivityData, mutate: mutateLiveActivityData } = useGetRequest<{
         live: boolean,
         server: string,
-        token: string
+        token: string,
     }>(classroomId ? `/api/classroom/${classroomId}/activity/live` : null);
+
+    const endActivity = useCallback(() => {
+        upload(`/api/classroom/${classroomId}/activity/live`, { method: 'DELETE' })
+            .then(() => mutateLiveActivityData(undefined, true));
+    }, [classroomId, upload, mutateLiveActivityData]);
+
+    const goToActivity = useCallback(() => {
+        router.push(`/classroom/${classroomId}/activity`);
+    }, [router, classroomId]);
 
     const { enqueueSnackbar } = useSnackbar();
 
-    function copyJoinCodeToKeyboard() {
+    const copyJoinCodeToKeyboard = useCallback(() => {
         if (joinCode) {
             navigator.clipboard.writeText(joinCode)
                 .then(() => enqueueSnackbar('Copied join code to clipboard', { variant: 'success' }))
                 .catch(() => enqueueSnackbar('Failed to copy to clipboard', { variant: 'error' }));
         }
-    }
+    }, [joinCode, enqueueSnackbar]);
 
-    function copyJoinLinkToKeyboard() {
+    const copyJoinLinkToKeyboard = useCallback(() => {
         if (joinCode) {
             navigator.clipboard.writeText(`${location.origin}/classroom/join?joinCode=${joinCode}`)
                 .then(() => enqueueSnackbar('Copied join link to clipboard', { variant: 'success' }))
                 .catch(() => enqueueSnackbar('Failed to copy to clipboard', { variant: 'error' }));
         }
-    }
+    }, [joinCode, enqueueSnackbar]);
 
     const isActivityRunning = liveActivityData?.live;
 
@@ -165,6 +166,37 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
         refreshLessonPaneRef.current?.();
     }, [classroomId, selectedDate, lessonsByDate, upload]);
 
+    const activityRunningHeader = useMemo(() => isActivityRunning
+        ? <Toolbar sx={{
+            height: 64,
+            backgroundColor: 'success.dark',
+            justifyContent: "center"
+        }}>
+            <Stack direction="row" spacing={1}>
+                <Typography variant="h6">
+                    An activity is currently running.    
+                </Typography>
+                <Button color="primary" variant="contained" onClick={goToActivity}>Go To Activity</Button>
+                <Button color="error" variant="contained" onClick={endActivity}>End Activity</Button>
+            </Stack>
+        </Toolbar>
+        : undefined, [isActivityRunning, goToActivity, endActivity]);
+
+    const joinCard = useMemo(() => <Card variant="outlined">
+        <Stack direction="row">
+            <CardContent sx={{ px: 3, pt: 3, flexGrow: 1 }}>
+                <Typography variant="body1">Join Code</Typography>
+                {joinCode
+                    ? <Typography variant="h3" component="div" sx={{ mt: 1 }}>{joinCode}</Typography>
+                    : <Typography variant="h3" component="div" sx={{ mt: 1 }}><Skeleton /></Typography>}
+            </CardContent>
+            {joinCode ? <Stack direction="column" justifyContent="flex-end" spacing={1} sx={{ p: 1 }}>
+                <Tooltip title="Copy Join Code" disableInteractive><IconButton onClick={copyJoinCodeToKeyboard}><ContentCopy/></IconButton></Tooltip>
+                <Tooltip title="Copy Join Link" disableInteractive><IconButton onClick={copyJoinLinkToKeyboard}><Share/></IconButton></Tooltip>
+            </Stack> : undefined}
+        </Stack>
+    </Card>, [joinCode, copyJoinCodeToKeyboard, copyJoinLinkToKeyboard]);
+
     const listPane = useMemo(() => {
         if (!lessons) {
             return <SkeletonActivityListPane sx={{ flexGrow: 3, height: "100%", display: "flex", flexDirection: "column" }} />;
@@ -178,20 +210,8 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
     }, [classroomId, lessons, lessonsByDate, selectedDate, onLessonChange]);
 
     return <>
-        {isActivityRunning
-            ? <Toolbar sx={{
-                height: 64,
-                backgroundColor: 'success.dark',
-                justifyContent: "center"
-            }}>
-                <Stack direction="row" spacing={1}>
-                    <Typography variant="h6">
-                        An activity is currently running.    
-                    </Typography>
-                    <Button color="primary" variant="contained" onClick={goToActivity}>Go To Activity</Button>
-                    <Button color="error" variant="contained" onClick={endActivity}>End Activity</Button>
-                </Stack>
-            </Toolbar> : undefined}
+        <LessonDragLayer />
+        {activityRunningHeader}
         <Stack sx={{
             ...{ '--header-height': isActivityRunning ? '128px' : undefined },
             height: `calc(100vh - var(--header-height))`,
@@ -199,20 +219,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
             py: 4
         }} direction="row" spacing={8}>
             <Stack spacing={4}>
-                <Card variant="outlined">
-                    <Stack direction="row">
-                        <CardContent sx={{ px: 3, pt: 3, flexGrow: 1 }}>
-                            <Typography variant="body1">Join Code</Typography>
-                            {joinCode
-                                ? <Typography variant="h3" component="div" sx={{ mt: 1 }}>{joinCode}</Typography>
-                                : <Typography variant="h3" component="div" sx={{ mt: 1 }}><Skeleton /></Typography>}
-                        </CardContent>
-                        {joinCode ? <Stack direction="column" justifyContent="flex-end" spacing={1} sx={{ p: 1 }}>
-                            <Tooltip title="Copy Join Code" disableInteractive><IconButton onClick={copyJoinCodeToKeyboard}><ContentCopy/></IconButton></Tooltip>
-                            <Tooltip title="Copy Join Link" disableInteractive><IconButton onClick={copyJoinLinkToKeyboard}><Share/></IconButton></Tooltip>
-                        </Stack> : undefined}
-                    </Stack>
-                </Card>
+                {joinCard}
                 <Paper variant="outlined" sx={{ pt: 2 }}>
                     <LessonDatePicker selectedDate={selectedDate} lessonsByDate={lessonsByDate} onDropActivity={handleCalendarDropActivity} />
                 </Paper>

@@ -5,8 +5,10 @@ import { useDrop } from 'react-dnd';
 import ActivityDescription from '../../activities/ActivityDescription';
 import textInputActivityDescription from '../../activities/text-input/textInputDescription';
 import { ActivityEntity } from '../../api/entities/ActivityEntity';
+import { EntityType } from '../../api/entities/Entity';
+import { LessonEntity } from '../../api/entities/LessonEntity';
+import { activityDragDropType, lessonDragDropType } from '../../dnd/types';
 import useImperativeDialog from '../../hooks/ImperativeDialogHook';
-import { activityDragDropType } from './ActivityDragDropBox';
 import SelectActivityDialog from './SelectActivityDialog';
 
 interface ActivityListPaneActionsProps {
@@ -15,18 +17,26 @@ interface ActivityListPaneActionsProps {
     onCreate?(item: ActivityDescription<any>): void;
 }
 
+const dragTypes = [activityDragDropType, lessonDragDropType];
+
 export default function ActivityListPaneActions({ onCreate, onClone, onDelete }: ActivityListPaneActionsProps) {
     const [{ isDragging }, cloneDrop] = useDrop(() => ({
-        accept: activityDragDropType,
-        collect: monitor => ({ isDragging: monitor.getItemType() === activityDragDropType }),
-        drop(item: ActivityEntity) {
-            onClone?.(item);
+        accept: dragTypes,
+        collect: monitor => ({ isDragging: dragTypes.includes(monitor.getItemType() as string) }),
+        drop(item: ActivityEntity | LessonEntity) {
+            if (item.type === EntityType.Activity) {
+                onClone?.(item);
+            }
         }
     }), [onClone]);
     
     const [, trashDrop] = useDrop(() => ({
-        accept: activityDragDropType,
-        drop: onDelete,
+        accept: [activityDragDropType, lessonDragDropType],
+        drop(item: ActivityEntity | LessonEntity) {
+            if (item.type === EntityType.Activity) {
+                onDelete?.(item);
+            }
+        },
     }), [onDelete]);
 
     const [selectActivityDialog, openSelectActivityDialog] = useImperativeDialog(

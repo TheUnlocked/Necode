@@ -4,28 +4,29 @@ import { DateTime } from 'luxon';
 import { useDrop } from 'react-dnd';
 import { ActivityEntity } from '../../api/entities/ActivityEntity';
 import { LessonEntity } from '../../api/entities/LessonEntity';
+import { EntityType } from '../../api/entities/Entity';
+import { activityDragDropType, lessonDragDropType } from '../../dnd/types';
+import isContentfulLesson from '../../lessons/isContentfulLesson';
 import { Iso8601Date } from '../../util/iso8601';
-import { activityDragDropType } from './ActivityDragDropBox';
-
-function isContentfulLesson(lesson: LessonEntity<{ activities: 'shallow' }> | undefined): lesson is LessonEntity<{ activities: 'shallow' }> {
-    return Boolean(lesson && (lesson.attributes.displayName !== '' || lesson.attributes.activities.length > 0));
-}
 
 interface LessonDatePickerDayProps {
     pickerProps: PickersDayProps<DateTime>;
     lesson?: LessonEntity<{ activities: 'shallow' }>,
     isoDate: Iso8601Date,
     onDropActivity?: (activity: ActivityEntity, date: Iso8601Date) => void;
+    onDropLesson?: (lesson: LessonEntity, date: Iso8601Date) => void;
 }
 
 export default function LessonDatePickerDay({ pickerProps, lesson, isoDate, onDropActivity }: LessonDatePickerDayProps) {
     const [{ isOver }, drop] = useDrop(() => ({
-        accept: activityDragDropType,
+        accept: [activityDragDropType, lessonDragDropType],
         collect: monitor => ({
             isOver: monitor.isOver(),
         }),
-        drop: (item: ActivityEntity) => {
-            onDropActivity?.(item, isoDate);
+        drop: (item: ActivityEntity | LessonEntity) => {
+            if (item.type === EntityType.Activity) {
+                onDropActivity?.(item, isoDate);
+            }
         }
     }), [isoDate, onDropActivity]);
     

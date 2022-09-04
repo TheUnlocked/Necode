@@ -8,7 +8,7 @@ import { useGetRequest } from "../../api/client/GetRequestHook";
 import { ActivityEntity } from "../../api/entities/ActivityEntity";
 import { LessonEntity } from "../../api/entities/LessonEntity";
 import { Iso8601Date } from "../../util/iso8601";
-import { ActivityDragDropBox, activityDragDropType } from "./ActivityDragDropBox";
+import { ActivityDragDropBox } from "./ActivityDragDropBox";
 import SkeletonActivityListPane from "./SkeletonActivityListPane";
 import useNecodeFetch from '../../hooks/useNecodeFetch';
 import WidgetDragLayer from './WidgetDragLayer';
@@ -17,6 +17,7 @@ import ActivityListPaneActions from './ActivityListPaneActions';
 import { assignRef, SimpleRef } from '../../util/simpleRef';
 import { PartialAttributesOf } from '../../api/Endpoint';
 import AcitivityListPaneTitleBar from './ActivityListPaneTitleBar';
+import { activityDragDropType } from '../../dnd/types';
 
 interface ActivityListPaneProps {
     sx: SxProps;
@@ -364,7 +365,7 @@ export default function ActivityListPane({
     return <>
         <WidgetDragLayer dropIndicatorPos={dropIndicatorPos} />
         <Card variant="outlined" sx={sx}>
-            <AcitivityListPaneTitleBar date={date} displayName={displayName} onDisplayNameChange={handleDisplayNameChange} />
+            <AcitivityListPaneTitleBar date={date} lesson={lessonEntity} onDisplayNameChange={handleDisplayNameChange} />
             <Divider />
             <Box sx={{ m: 1 }}>
                 <ActivityListPaneActions

@@ -1,4 +1,4 @@
-import { Card, CardContent, Divider, Stack, TextField, Typography } from "@mui/material";
+import { Card, Divider, Stack } from "@mui/material";
 import { Box, SxProps } from "@mui/system";
 import { Dispatch, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDrop } from "react-dnd";
@@ -7,16 +7,16 @@ import ActivityDescription from "../../activities/ActivityDescription";
 import { useGetRequest } from "../../api/client/GetRequestHook";
 import { ActivityEntity } from "../../api/entities/ActivityEntity";
 import { LessonEntity } from "../../api/entities/LessonEntity";
-import { Iso8601Date, toLuxon } from "../../util/iso8601";
+import { Iso8601Date } from "../../util/iso8601";
 import { ActivityDragDropBox, activityDragDropType } from "./ActivityDragDropBox";
 import SkeletonActivityListPane from "./SkeletonActivityListPane";
 import useNecodeFetch from '../../hooks/useNecodeFetch';
 import WidgetDragLayer from './WidgetDragLayer';
 import { binarySearchIndex } from '../../util/binarySearch';
 import ActivityListPaneActions from './ActivityListPaneActions';
-import useLocalCachedState from '../../hooks/useLocalCachedState';
 import { assignRef, SimpleRef } from '../../util/simpleRef';
 import { PartialAttributesOf } from '../../api/Endpoint';
+import AcitivityListPaneTitleBar from './ActivityListPaneTitleBar';
 
 interface ActivityListPaneProps {
     sx: SxProps;
@@ -189,19 +189,43 @@ export default function ActivityListPane({
         }
     }, [isDragging]);
 
-    const [displayName, setDisplayName, commitDisplayName] = useLocalCachedState(lessonEntity?.attributes.displayName ?? '', useCallback(async displayName => {
+    const creatingLessonPromiseRef = useRef<Promise<LessonEntity<{ activities: 'deep' }>> | undefined>();
+    const getOrCreateLesson = useCallback(async ({ date, displayName }: { date: Iso8601Date, displayName: string }) => {
+        if (lessonEntity) {
+            return lessonEntity;
+        }
+
+        if (creatingLessonPromiseRef.current) {
+            return creatingLessonPromiseRef.current;
+        }
+
+        creatingLessonPromiseRef.current = upload(`/api/classroom/${classroomId}/lesson`, {
+            method: 'POST',
+            body: JSON.stringify({
+                date,
+                displayName,
+            })
+        });
+        
+        const result = await creatingLessonPromiseRef.current;
+
+        mutateLesson(result);
+        onLessonChange?.(result);
+
+        return result;
+    }, [classroomId, lessonEntity, upload, mutateLesson, onLessonChange]);
+
+    useEffect(() => {
+        if (lessonEntity) {
+            creatingLessonPromiseRef.current = undefined;
+        }
+    }, [lessonEntity]);
+
+    const displayName = lessonEntity?.attributes.displayName ?? '';
+
+    const handleDisplayNameChange = useCallback(async displayName => {
         if (!lessonEntity) {
-            mutateLesson(async () => {
-                const lesson = await upload<LessonEntity<{ activities: 'deep' }>>(`/api/classroom/${classroomId}/lesson`, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        date,
-                        displayName,
-                    })
-                });
-                onLessonChange?.(lesson);
-                return lesson;
-            });
+            getOrCreateLesson({ date, displayName });
             return;
         }
 
@@ -224,16 +248,10 @@ export default function ActivityListPane({
             },
             { optimisticData: updatedObject, rollbackOnError: true }
         );
-    }, [classroomId, date, lessonEntity, upload, onLessonChange, mutateLesson]));
+    }, [classroomId, date, lessonEntity, getOrCreateLesson, upload, onLessonChange, mutateLesson]);
 
     const createActivityHandler = useCallback(async (activity: ActivityDescription<any>) => {
-        const lesson = lessonEntity ?? await upload<LessonEntity<{ activities: 'deep' }>>(`/api/classroom/${classroomId}/lesson`, {
-            method: 'POST',
-            body: JSON.stringify({
-                date,
-                displayName,
-            })
-        });
+        const lesson = await getOrCreateLesson({ date, displayName });
 
         const activityEntity = await upload<ActivityEntity>(`/api/classroom/${classroomId}/lesson/${lesson.id}/activity`, {
             method: 'POST',
@@ -254,7 +272,7 @@ export default function ActivityListPane({
         
         mutateLesson(updatedObject);
         onLessonChange?.(updatedObject);
-    }, [classroomId, date, displayName, lessonEntity, upload, mutateLesson, onLessonChange]);
+    }, [classroomId, date, displayName, getOrCreateLesson, upload, mutateLesson, onLessonChange]);
 
     const cloneActivityHandler = useCallback(async (activity: ActivityEntity) => {
         if (!lessonEntity) {
@@ -346,36 +364,7 @@ export default function ActivityListPane({
     return <>
         <WidgetDragLayer dropIndicatorPos={dropIndicatorPos} />
         <Card variant="outlined" sx={sx}>
-            <CardContent>
-                <TextField placeholder="New Lesson"
-                    variant="standard"
-                    hiddenLabel
-                    fullWidth
-                    value={displayName}
-                    onBlur={commitDisplayName}
-                    onChange={e => setDisplayName(e.target.value)}
-                    InputProps={{ disableUnderline: true, sx: ({ typography, transitions }) => ({
-                        ...typography.h6,
-                        "&:hover:after": {
-                            backgroundColor: ({palette}) => palette.action.hover,
-                            borderRadius: 1
-                        },
-                        "&:after": {
-                            content: "''",
-                            position: "absolute",
-                            width: ({ spacing }) => `calc(100% + ${spacing(2)})`,
-                            height: "100%",
-                            pointerEvents: "none",
-                            mx: -1,
-                            borderRadius: 1,
-                            transition: transitions.create("background-color", {
-                                duration: transitions.duration.shorter,
-                                easing: transitions.easing.easeOut
-                            })
-                        }
-                    }) }} />
-                <Typography variant="body2" component="span">{toLuxon(date).toFormat("DDDD")}</Typography>
-            </CardContent>
+            <AcitivityListPaneTitleBar date={date} displayName={displayName} onDisplayNameChange={handleDisplayNameChange} />
             <Divider />
             <Box sx={{ m: 1 }}>
                 <ActivityListPaneActions

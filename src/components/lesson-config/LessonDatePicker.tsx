@@ -11,7 +11,8 @@ import LessonDatePickerDay from './LessonDatePickerDay';
 interface LessonDatePickerProps {
     selectedDate: Iso8601Date;
     lessonsByDate: { [date: Iso8601Date]: LessonEntity<{ activities: 'shallow' }> | undefined };
-    onDropActivity?: (activity: ActivityEntity, date: Iso8601Date) => void;
+    onDropActivity?: (activity: ActivityEntity, date: Iso8601Date, copy: boolean) => void;
+    onDropLesson?: (lesson: LessonEntity, date: Iso8601Date, copy: boolean) => void;
 }
 
 const views = ["year", "day"] as const;

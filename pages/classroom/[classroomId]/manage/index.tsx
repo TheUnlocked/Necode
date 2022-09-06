@@ -137,15 +137,25 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
 
     const refreshLessonPaneRef = useRef<() => void>();
 
-    const handleCalendarDropActivity = useCallback(async (activity: ActivityEntity, date: Iso8601Date) => {
+    const handleCalendarDropActivity = useCallback(async (activity: ActivityEntity, date: Iso8601Date, copy: boolean) => {
         const lesson = lessonsByDate[date] ?? await upload<LessonEntity<{ activities: 'shallow' }>>(`/api/classroom/${classroomId}/lesson`, {
             method: 'POST',
             body: JSON.stringify({ date, displayName: '' })
         });
-        const newActivity = await upload<ActivityEntity>(`/api/classroom/${classroomId}/activity/${activity.id}`, {
-            method: 'PATCH',
-            body: JSON.stringify({ lesson: lesson.id })
-        });
+        const newActivity = copy
+            ? await upload<ActivityEntity>(`/api/classroom/${classroomId}/lesson/${lesson.id}/activity`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    activityType: activity.attributes.activityType,
+                    displayName: activity.attributes.displayName,
+                    configuration: activity.attributes.configuration,
+                    enabledLanguages: activity.attributes.enabledLanguages,
+                })
+            })
+            : await upload<ActivityEntity>(`/api/classroom/${classroomId}/activity/${activity.id}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ lesson: lesson.id })
+            });
         setLessonsByDate(lessonsByDate => ({
             ...lessonsByDate,
             [selectedDate]: {
@@ -155,7 +165,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
                     activities: lessonsByDate[selectedDate]!.attributes.activities.filter(x => x.id !== activity.id)
                 }
             },
-            [date]: {
+            [date]: copy ? lessonsByDate[date] : {
                 ...lesson,
                 attributes: {
                     ...lesson.attributes,
@@ -163,8 +173,18 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
                 }
             },
         }));
-        refreshLessonPaneRef.current?.();
-    }, [classroomId, selectedDate, lessonsByDate, upload]);
+        if (copy) {
+            enqueueSnackbar(`Successfully copied activity to ${toLuxon(date).toLocaleString(DateTime.DATE_FULL)}`, { variant: 'success' });
+        }
+        else {
+            // Can't copy an activity onto the current day's lesson so no need to refresh on copy
+            refreshLessonPaneRef.current?.();
+        }
+    }, [classroomId, selectedDate, lessonsByDate, enqueueSnackbar, upload]);
+
+    const handleCalendarDropLesson = useCallback(async (lesson: LessonEntity, date: Iso8601Date, copy: boolean) => {
+
+    }, []);
 
     const activityRunningHeader = useMemo(() => isActivityRunning
         ? <Toolbar sx={{
@@ -221,7 +241,9 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
             <Stack spacing={4}>
                 {joinCard}
                 <Paper variant="outlined" sx={{ pt: 2 }}>
-                    <LessonDatePicker selectedDate={selectedDate} lessonsByDate={lessonsByDate} onDropActivity={handleCalendarDropActivity} />
+                    <LessonDatePicker selectedDate={selectedDate} lessonsByDate={lessonsByDate}
+                        onDropActivity={handleCalendarDropActivity}
+                        onDropLesson={handleCalendarDropLesson} />
                 </Paper>
             </Stack>
             {listPane}

@@ -158,14 +158,14 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
             });
         setLessonsByDate(lessonsByDate => ({
             ...lessonsByDate,
-            [selectedDate]: {
+            [selectedDate]: copy ? lessonsByDate[selectedDate] : {
                 ...lessonsByDate[selectedDate],
                 attributes: {
                     ...lessonsByDate[selectedDate]!.attributes,
                     activities: lessonsByDate[selectedDate]!.attributes.activities.filter(x => x.id !== activity.id)
                 }
             },
-            [date]: copy ? lessonsByDate[date] : {
+            [date]: {
                 ...lesson,
                 attributes: {
                     ...lesson.attributes,

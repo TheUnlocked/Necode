@@ -28,8 +28,8 @@ function makeUseGetRequest(immutable: boolean) {
         const { data, error, isValidating, mutate } = (immutable ? useSWRImmutable : useSWR)<Response<T>, Error>(endpoint, (url: string) => {
             startDownload();
             return fetch(url)
-            .then(res => res.json())
-            .finally(finishDownload);
+                .then(res => res.json())
+                .finally(finishDownload);
         }, options);
         
         const volatileEndpointAndImpersonatingChanged = useChanged(Boolean(useImpersonation()) && isVolatileEndpoint(endpoint));
@@ -87,6 +87,17 @@ function makeUseGetRequest(immutable: boolean) {
 
             return mutate(obj, options).then(x => x?.data);
         }, [mutate]);
+
+        const mutateDelete = useCallback((callback?: () => Promise<void>) => {
+            const err = {
+                response: 'error',
+                message: 'Deleted by client',
+            } as Response<T>;
+            mutate(async () => {
+                await callback?.();
+                return err;
+            }, { optimisticData: err, rollbackOnError: true });
+        }, [mutate]);
     
         return {
             data: data?.data,
@@ -94,6 +105,7 @@ function makeUseGetRequest(immutable: boolean) {
             isValidating,
             isLoading: isValidating || (!data?.data && !data?.message && !error?.message),
             mutate: mutateData,
+            mutateDelete,
         };
     };
 }

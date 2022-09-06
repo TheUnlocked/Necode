@@ -1,40 +1,47 @@
-import { ComponentType, useState } from "react";
+import { ComponentType, useCallback, useState } from "react";
 
-type HookResult = [
+type PublicProps<P> = Omit<Omit<P, 'open' | 'onClose'> & { onClose?(): void }, never>;
+type DialogComponent<P> = ComponentType<P & { open: boolean, onClose(): void }>;
+
+type HookResult<P extends {}> = [
     dialogElt: JSX.Element,
-    openDialog: () => void,
+    openDialog: (overrideProps?: Partial<P>) => void,
     closeDialog: () => void,
     isOpen: boolean
 ];
 
-export default function useImperativeDialog(
-    DialogComponent: ComponentType<{ open: boolean, onClose(): void }>
-): HookResult;
 export default function useImperativeDialog<P>(
-    DialogComponent: ComponentType<P>,
+    DialogComponent: DialogComponent<P>
+): HookResult<PublicProps<P>>;
+export default function useImperativeDialog<P>(
+    DialogComponent: DialogComponent<P>,
     // see https://github.com/microsoft/TypeScript/issues/46748
-    props: Omit<Omit<P, 'open' | 'onClose'> & { onClose?: () => void }, never>
-): HookResult;
+    props: PublicProps<P>
+): HookResult<PublicProps<P>>;
 export default function useImperativeDialog(
-    DialogComponent: ComponentType<{ open: boolean, onClose(): void }>,
-    props?: any
-) {
+    DialogComponent: DialogComponent<{}>,
+    props?: { onClose?(): void }
+): HookResult<any> {
     const [isOpen, setOpen] = useState(false);
+    const [overrideProps, setOverrideProps] = useState<{}>();
 
-    function open() {
+    const onClose = props?.onClose;
+
+    const open = useCallback((overrideProps?: {}) => {
+        setOverrideProps(overrideProps);
         setOpen(true);
-    }
+    }, []);
 
-    function close() {
-        if (props?.onClose instanceof Function) {
-            props.onClose();
+    const close = useCallback(() => {
+        if (onClose instanceof Function) {
+            onClose();
         }
         setOpen(false);
-    }
+    }, [onClose]);
 
     return [
         // eslint-disable-next-line react/jsx-key
-        <DialogComponent {...props} open={isOpen} onClose={close} />,
+        <DialogComponent {...props} {...overrideProps} open={isOpen} onClose={close} />,
         open,
         close,
         isOpen

@@ -19,7 +19,13 @@ interface LessonDatePickerDayProps {
     onDropLesson?: (lesson: LessonEntity, date: Iso8601Date, copy: boolean) => void;
 }
 
-export default function LessonDatePickerDay({ pickerProps, lesson, isoDate, onDropActivity }: LessonDatePickerDayProps) {
+export default function LessonDatePickerDay({
+    pickerProps,
+    lesson,
+    isoDate,
+    onDropActivity,
+    onDropLesson,
+}: LessonDatePickerDayProps) {
     const [copy, setCopy] = useState(false);
 
     useEffect(() => {
@@ -43,8 +49,11 @@ export default function LessonDatePickerDay({ pickerProps, lesson, isoDate, onDr
             if (item.type === EntityType.Activity) {
                 onDropActivity?.(item, isoDate, copy);
             }
+            else if (item.type === EntityType.Lesson) {
+                onDropLesson?.(item, isoDate, copy);
+            }
         }
-    }), [isoDate, copy, onDropActivity]);
+    }), [isoDate, copy, onDropActivity, onDropLesson]);
     
     if (pickerProps.outsideCurrentMonth || pickerProps.selected) {
         return <PickersDay {...pickerProps} />;

@@ -125,16 +125,17 @@ const apiLessonOne = endpoint({} as LessonEntity<{ classroom: any, activities: R
                                 })
                             ]);
                         case 'combine':
-                            [,, lesson] = await prisma.$transaction([
+                            [,,, lesson] = await prisma.$transaction([
+                                prisma.activity.updateMany({
+                                    where: { lessonId },
+                                    data: { order: {
+                                        // query intentionally not part of the transaction
+                                        increment: await prisma.activity.count({ where: { lessonId: mergeLesson.id } })
+                                    } }
+                                }),
                                 prisma.activity.updateMany({
                                     where: { lessonId: mergeLesson.id },
-                                    data: {
-                                        lessonId,
-                                        order: {
-                                            // query intentionally not part of the transaction
-                                            increment: await prisma.activity.count({ where: { lessonId } })
-                                        }
-                                    }
+                                    data: { lessonId }
                                 }),
                                 prisma.lesson.delete({ where: { id: mergeLesson.id } }),
                                 prisma.lesson.update({

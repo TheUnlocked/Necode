@@ -234,7 +234,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
             </Button>
             <Button size="small" startIcon={<Save/>} onClick={save} disabled={!isDirty}>Save Changes</Button>
             <Stack direction="row" justifyContent="flex-end" flexGrow={1} spacing={1}>
-                <Button size="small" startIcon={<Code/>} onClick={openConfigureLanguagesDialog}>Configure Languages</Button>
+                <Button size="small" startIcon={<Code/>} onClick={() => openConfigureLanguagesDialog()}>Configure Languages</Button>
                 <Select size="small" sx={{ height: "32px" }}
                     id="language-select-box"
                     value={selectedLanguage}

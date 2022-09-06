@@ -1,4 +1,3 @@
-import { PickersDay, StaticDatePicker } from "@mui/x-date-pickers";
 import { Badge, Button, Card, CardActions, CardContent, IconButton, Paper, Skeleton, Stack, TextField, Toolbar, Tooltip, Typography } from "@mui/material";
 import { NextPage } from "next";
 import { Dispatch, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -9,17 +8,17 @@ import { fromLuxon, Iso8601Date, iso8601DateRegex, toLuxon } from "../../../../s
 import SkeletonActivityListPane from "../../../../src/components/lesson-config/SkeletonActivityListPane";
 import { DateTime } from "luxon";
 import { useRouter } from "next/router";
-import { useLoadingContext } from "../../../../src/api/client/LoadingContext";
-import { Response } from "../../../../src/api/Response";
 import NotFoundPage from "../../../404";
 import { ClassroomMemberEntity } from "../../../../src/api/entities/ClassroomMemberEntity";
 import { ContentCopy, Share } from "@mui/icons-material";
 import { useSnackbar } from "notistack";
-import fetch from '../../../../src/util/fetch';
 import LessonDatePicker from '../../../../src/components/lesson-config/LessonDatePicker';
 import useNecodeFetch from '../../../../src/hooks/useNecodeFetch';
 import { ActivityEntity } from '../../../../src/api/entities/ActivityEntity';
 import LessonDragLayer from '../../../../src/components/lesson-config/LessonDragLayer';
+import useImperativeDialog from '../../../../src/hooks/ImperativeDialogHook';
+import LessonMergeDialog from '../../../../src/components/dialogs/LessonMergeDialog';
+import isContentfulLesson from '../../../../src/lessons/isContentfulLesson';
 
 
 function getDateFromPath(path: string) {
@@ -182,9 +181,29 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
         }
     }, [classroomId, selectedDate, lessonsByDate, enqueueSnackbar, upload]);
 
-    const handleCalendarDropLesson = useCallback(async (lesson: LessonEntity, date: Iso8601Date, copy: boolean) => {
+    const [lessonMergeDialog, openLessonMergeDialog] = useImperativeDialog(LessonMergeDialog, {
+        // Default value, overridden when dialog is opened
+        copy: false,
+    });
 
-    }, []);
+    const handleCalendarDropLesson = useCallback(async (lesson: LessonEntity, date: Iso8601Date, copy: boolean) => {
+        let mergeMethod = 'reject';
+        const toLesson = lessonsByDate[date];
+        if (toLesson) {
+            if (isContentfulLesson(toLesson)) {
+                mergeMethod = await new Promise<string>(resolve => openLessonMergeDialog({
+                    copy,
+                    fromLesson: lesson,
+                    toLesson,
+                    onCommit: resolve,
+                }));
+            }
+            else {
+                mergeMethod = 'replace';
+            }
+        }
+        console.log(mergeMethod);
+    }, [lessonsByDate, openLessonMergeDialog]);
 
     const activityRunningHeader = useMemo(() => isActivityRunning
         ? <Toolbar sx={{
@@ -230,6 +249,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
     }, [classroomId, lessons, lessonsByDate, selectedDate, onLessonChange]);
 
     return <>
+        {lessonMergeDialog}
         <LessonDragLayer />
         {activityRunningHeader}
         <Stack sx={{

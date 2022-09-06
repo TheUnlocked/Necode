@@ -12,17 +12,18 @@ import useImperativeDialog from '../../hooks/ImperativeDialogHook';
 import SelectActivityDialog from './SelectActivityDialog';
 
 interface ActivityListPaneActionsProps {
-    onDelete?(item: ActivityEntity): void;
+    onDeleteActivity?(item: ActivityEntity): void;
+    onDeleteLesson?(item: LessonEntity): void;
     onClone?(item: ActivityEntity): void;
     onCreate?(item: ActivityDescription<any>): void;
 }
 
 const dragTypes = [activityDragDropType, lessonDragDropType];
 
-export default function ActivityListPaneActions({ onCreate, onClone, onDelete }: ActivityListPaneActionsProps) {
-    const [{ isDragging }, cloneDrop] = useDrop(() => ({
+export default function ActivityListPaneActions({ onCreate, onClone, onDeleteActivity, onDeleteLesson }: ActivityListPaneActionsProps) {
+    const [{ isDragging: isDraggingActivity }, cloneDrop] = useDrop(() => ({
         accept: dragTypes,
-        collect: monitor => ({ isDragging: dragTypes.includes(monitor.getItemType() as string) }),
+        collect: monitor => ({ isDragging: monitor.getItemType() === activityDragDropType }),
         drop(item: ActivityEntity | LessonEntity) {
             if (item.type === EntityType.Activity) {
                 onClone?.(item);
@@ -30,14 +31,18 @@ export default function ActivityListPaneActions({ onCreate, onClone, onDelete }:
         }
     }), [onClone]);
     
-    const [, trashDrop] = useDrop(() => ({
+    const [{ isDragging: isDraggingActivityOrLesson }, trashDrop] = useDrop(() => ({
         accept: [activityDragDropType, lessonDragDropType],
+        collect: monitor => ({ isDragging: dragTypes.includes(monitor.getItemType() as string) }),
         drop(item: ActivityEntity | LessonEntity) {
             if (item.type === EntityType.Activity) {
-                onDelete?.(item);
+                onDeleteActivity?.(item);
+            }
+            else if (item.type === EntityType.Lesson) {
+                onDeleteLesson?.(item);
             }
         },
-    }), [onDelete]);
+    }), [onDeleteActivity, onDeleteLesson]);
 
     const [selectActivityDialog, openSelectActivityDialog] = useImperativeDialog(
         SelectActivityDialog,
@@ -48,7 +53,7 @@ export default function ActivityListPaneActions({ onCreate, onClone, onDelete }:
         {selectActivityDialog}
         <Stack direction="row" alignItems="center" spacing={1}>
             <Tooltip title="Add Activity" disableInteractive>
-                <IconButton onClick={openSelectActivityDialog}><Add/></IconButton>
+                <IconButton onClick={() => openSelectActivityDialog()}><Add/></IconButton>
             </Tooltip>
             <Tooltip title="Add Text/Code" disableInteractive>
                 <IconButton onClick={() => onCreate?.(textInputActivityDescription)}><TextFields/></IconButton>
@@ -58,7 +63,7 @@ export default function ActivityListPaneActions({ onCreate, onClone, onDelete }:
                     <div>
                         <Button ref={cloneDrop}
                             variant="outlined"
-                            disabled={!isDragging}
+                            disabled={!isDraggingActivity}
                             color="success" disableRipple
                             startIcon={<ContentCopy/>}>Clone</Button>
                     </div>
@@ -67,7 +72,7 @@ export default function ActivityListPaneActions({ onCreate, onClone, onDelete }:
                     <div>
                         <Button ref={trashDrop}
                             variant="outlined"
-                            disabled={!isDragging}
+                            disabled={!isDraggingActivityOrLesson}
                             color="error" disableRipple
                             startIcon={<Delete/>}>Delete</Button>
                     </div>

@@ -18,6 +18,7 @@ import { assignRef, SimpleRef } from '../../util/simpleRef';
 import { PartialAttributesOf } from '../../api/Endpoint';
 import AcitivityListPaneTitleBar from './ActivityListPaneTitleBar';
 import { activityDragDropType } from '../../dnd/types';
+import { useConfirm } from 'material-ui-confirm';
 
 interface ActivityListPaneProps {
     sx: SxProps;
@@ -66,7 +67,8 @@ export default function ActivityListPane({
     refreshRef,
 }: ActivityListPaneProps) {
     const lessonEndpoint = `/api/classroom/${classroomId}/lesson/${date}?include=activities`;
-    const { data: lessonEntity, isLoading, mutate: mutateLesson } = useGetRequest<LessonEntity<{ activities: 'deep', classroom: 'shallow' }>>(lessonEndpoint);
+    const { data: lessonEntity, isLoading, mutate: mutateLesson, mutateDelete: deleteLesson }
+        = useGetRequest<LessonEntity<{ activities: 'deep', classroom: 'shallow' }>>(lessonEndpoint);
 
     assignRef(refreshRef, mutateLesson);
 
@@ -322,6 +324,19 @@ export default function ActivityListPane({
         
     }, [classroomId, lessonEntity, activities, upload, mutateLesson, onLessonChange]);
 
+    const confirm = useConfirm();
+
+    const deleteLessonHandler = useCallback(async (lesson: LessonEntity) => {
+        try {
+            await confirm({ description: `Are you sure you want to delete this lesson? This cannot be undone.` });
+            deleteLesson(async () => {
+                await upload(`/api/classroom/${classroomId}/lesson/${lesson.id}`, { method: 'DELETE' });
+                onLessonChange?.(undefined);
+            });
+        }
+        catch (e) { return }
+    }, [classroomId, confirm, upload, deleteLesson, onLessonChange]);
+
     const activityChangeHandler = useCallback((activity: ActivityEntity, changes: Omit<PartialAttributesOf<ActivityEntity>, 'lesson'>) => {
         const updatedObject = {
             ...lessonEntity!,
@@ -371,7 +386,8 @@ export default function ActivityListPane({
                 <ActivityListPaneActions
                     onCreate={createActivityHandler}
                     onClone={cloneActivityHandler}
-                    onDelete={deleteActivityHandler} />
+                    onDeleteActivity={deleteActivityHandler}
+                    onDeleteLesson={deleteLessonHandler} />
             </Box>
             <Stack ref={composeRefs(drop, widgetContainerRef)} sx={{ m: 1, mt: 0, flexGrow: 1, overflow: "auto" }} spacing={1}>
                 {activityWidgets}

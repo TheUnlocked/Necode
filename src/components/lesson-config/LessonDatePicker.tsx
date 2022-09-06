@@ -17,15 +17,21 @@ interface LessonDatePickerProps {
 
 const views = ["year", "day"] as const;
 
-export default function LessonDatePicker({ selectedDate, lessonsByDate, onDropActivity }: LessonDatePickerProps) {
+export default function LessonDatePicker({
+    selectedDate,
+    lessonsByDate,
+    onDropActivity,
+    onDropLesson,
+}: LessonDatePickerProps) {
     const router = useRouter();
 
     const renderDay = useCallback((day: DateTime, _, DayComponentProps: PickersDayProps<DateTime>) => {
         const date = fromLuxon(day);
         const lesson = lessonsByDate[date];
         return <LessonDatePickerDay key={date} pickerProps={DayComponentProps}
-            isoDate={date} lesson={lesson} onDropActivity={onDropActivity} />;
-    }, [lessonsByDate, onDropActivity]);
+            isoDate={date} lesson={lesson}
+            onDropActivity={onDropActivity} onDropLesson={onDropLesson} />;
+    }, [lessonsByDate, onDropActivity, onDropLesson]);
 
     return <StaticDatePicker
         value={useMemo(() => toLuxon(selectedDate), [selectedDate])}

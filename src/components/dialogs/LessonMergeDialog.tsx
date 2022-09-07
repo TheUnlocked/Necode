@@ -54,6 +54,8 @@ export default function LessonMergeDialog({
 
     const [mergeType, setMergeType] = useState('combine');
 
+    const replaceDisplayName = Boolean(!fromLesson?.attributes.displayName || (copy && toLesson?.attributes.displayName));
+
     return <Dialog fullWidth open={open} onClose={onClose}>
         <DialogTitle>{actionVerb} Lesson Merge Conflict</DialogTitle>
         <DialogContent>
@@ -75,7 +77,7 @@ export default function LessonMergeDialog({
                 {mergeType === 'combine'
                     ? <>
                     With the <Chip size="small" label="combine" /> merge method, all of the activities in {fromLessonText} will be appended
-                    to {toLessonText}, and the lesson title will be replaced.
+                    to {toLessonText}{replaceDisplayName ? '.' : ', and the lesson title will be replaced.'}
                     </>
                 : mergeType === 'replace'
                     ? <>
@@ -87,7 +89,10 @@ export default function LessonMergeDialog({
         </DialogContent>
         <DialogActions>
             <Button onClick={onClose}>Cancel</Button>
-            <Button variant="contained" color={actionVerbColor} onClick={() => onCommit?.(mergeType as 'replace' | 'combine')}>{actionVerb}</Button>
+            <Button variant="contained" color={actionVerbColor} onClick={() => {
+                onCommit?.(mergeType as 'replace' | 'combine');
+                onClose();
+            }}>{actionVerb}</Button>
         </DialogActions>
     </Dialog>;
 }

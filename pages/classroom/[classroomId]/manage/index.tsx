@@ -186,7 +186,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
         copy: false,
     });
 
-    const handleCalendarDropLesson = useCallback(async (lesson: LessonEntity, date: Iso8601Date, copy: boolean) => {
+    const handleCalendarDropLesson = useCallback(async (lesson: LessonEntity<{ activities: 'deep' }>, date: Iso8601Date, copy: boolean) => {
         let mergeMethod = 'reject';
         const toLesson = lessonsByDate[date];
         if (toLesson) {
@@ -201,9 +201,57 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
             else {
                 mergeMethod = 'replace';
             }
+            if (copy) {
+                // Copying to existing lesson
+                const newLesson = await upload<LessonEntity>(`/api/classroom/${classroomId}/lesson/${toLesson.id}?merge=${mergeMethod}`, {
+                    method: 'POST',
+                    body: JSON.stringify({ lesson: lesson.id })
+                });
+                setLessonsByDate(lessonsByDate => ({
+                    ...lessonsByDate,
+                    [date]: newLesson,
+                }));
+                enqueueSnackbar(`Successfully copied lesson to ${toLuxon(date).toLocaleString(DateTime.DATE_FULL)}`, { variant: 'success' });
+                return;
+            }
         }
-        console.log(mergeMethod);
-    }, [lessonsByDate, openLessonMergeDialog]);
+        if (copy) {
+            // Copying to new lesson
+            const newLesson = await upload<LessonEntity>(`/api/classroom/${classroomId}/lesson`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    date,
+                    displayName: lesson.attributes.displayName,
+                    activities: lesson.attributes.activities.map(a => ({
+                        displayName: a.attributes.displayName,
+                        activityType: a.attributes.activityType,
+                        configuration: a.attributes.configuration,
+                        enabledLanguages: a.attributes.enabledLanguages,
+                    })),
+                })
+            });
+            setLessonsByDate(lessonsByDate => ({
+                ...lessonsByDate,
+                [date]: newLesson,
+            }));
+            enqueueSnackbar(`Successfully copied lesson to ${toLuxon(date).toLocaleString(DateTime.DATE_FULL)}`, { variant: 'success' });
+            return;
+        }
+        else {
+            // Moving to date
+            const newLesson = await upload<LessonEntity>(`/api/classroom/${classroomId}/lesson/${lesson.id}?merge=${mergeMethod}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ date }),
+            });
+            setLessonsByDate(lessonsByDate => ({
+                ...lessonsByDate,
+                [date]: newLesson,
+                [lesson.attributes.date]: undefined,
+            }));
+            router.push({ hash: date });
+            enqueueSnackbar(`Successfully moved lesson to ${toLuxon(date).toLocaleString(DateTime.DATE_FULL)}`, { variant: 'info' });
+        }
+    }, [classroomId, router, lessonsByDate, openLessonMergeDialog, enqueueSnackbar, upload]);
 
     const activityRunningHeader = useMemo(() => isActivityRunning
         ? <Toolbar sx={{

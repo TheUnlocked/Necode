@@ -16,7 +16,7 @@ interface LessonDatePickerDayProps {
     lesson?: LessonEntity<{ activities: 'shallow' }>,
     isoDate: Iso8601Date,
     onDropActivity?: (activity: ActivityEntity, date: Iso8601Date, copy: boolean) => void;
-    onDropLesson?: (lesson: LessonEntity, date: Iso8601Date, copy: boolean) => void;
+    onDropLesson?: (lesson: LessonEntity<{ activities: 'deep' }>, date: Iso8601Date, copy: boolean) => void;
 }
 
 export default function LessonDatePickerDay({
@@ -45,7 +45,7 @@ export default function LessonDatePickerDay({
         collect: monitor => ({
             isOver: monitor.isOver(),
         }),
-        drop: (item: ActivityEntity | LessonEntity) => {
+        drop: (item: ActivityEntity | LessonEntity<{ activities: 'deep' }>) => {
             if (item.type === EntityType.Activity) {
                 onDropActivity?.(item, isoDate, copy);
             }

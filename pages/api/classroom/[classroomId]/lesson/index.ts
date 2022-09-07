@@ -37,6 +37,7 @@ const apiLessonAll = endpoint(makeLessonEntity, ['classroomId', 'include[]'] as 
             displayName: Joi.string().allow(''),
             activities: Joi.array()
                 .items(Joi.object<ActivityEntity['attributes']>({
+                    displayName: Joi.string(),
                     activityType: Joi.string(),
                     configuration: Joi.any().optional(),
                     enabledLanguages: Joi.array().items(Joi.string())

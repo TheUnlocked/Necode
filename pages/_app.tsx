@@ -59,7 +59,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         <ThemeProvider theme={theme}>
             <CssBaseline />
             <LocalizationProvider dateAdapter={CustomAdapterLuxon}>
-            <ConfirmProvider defaultOptions={{ confirmationText: "Yes, I'm sure", confirmationButtonProps: { variant: 'contained', color: 'error' } }}>
+            <ConfirmProvider defaultOptions={{ confirmationText: "Yes, I'm sure" }}>
             <SnackbarProvider hideIconVariant>
             <DndProvider backend={HTML5Backend}>
             <LoadingContext.Provider value={loadingContext}>

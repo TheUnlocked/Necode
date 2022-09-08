@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default interface FeatureDescription<ConfigConstraint> {
     name: string;
 }

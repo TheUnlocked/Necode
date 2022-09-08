@@ -1,6 +1,6 @@
 import styled, { keyframes } from '@mui/styled-engine';
 import alpha from 'color-alpha';
-import { useUniqueId } from '../hooks/UniqueIdHook';
+import { useId } from 'react';
 
 const spinnerAnimation = keyframes`
     0% {
@@ -35,9 +35,7 @@ export interface SpinnerProps {
 }
 
 export default function Spinner({ visible = true, color, offsetRatio = 0 }: SpinnerProps) {
-    const gradientId = useUniqueId("spinner-gradient");
-
-    if (!gradientId) return null;
+    const gradientId = useId() + '-spinner-gradient';
 
     return <svg viewBox={`0 0 ${svgSize} ${svgSize}`} xmlns="http://www.w3.org/2000/svg" style={{ transform: `rotate(${360 * offsetRatio}deg)` }}>
         <defs>

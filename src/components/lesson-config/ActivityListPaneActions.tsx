@@ -1,7 +1,7 @@
 import { Add, ContentCopy, Delete, TextFields } from '@mui/icons-material';
 import { Button, IconButton, Tooltip } from '@mui/material';
 import { Stack } from '@mui/system';
-import { useDrop } from 'react-dnd';
+import { DropTargetMonitor, useDrop } from 'react-dnd';
 import ActivityDescription from '../../activities/ActivityDescription';
 import textInputActivityDescription from '../../activities/text-input/textInputDescription';
 import { ActivityEntity } from '../../api/entities/ActivityEntity';
@@ -22,19 +22,17 @@ const dragTypes = [activityDragDropType, lessonDragDropType];
 
 export default function ActivityListPaneActions({ onCreate, onClone, onDeleteActivity, onDeleteLesson }: ActivityListPaneActionsProps) {
     const [{ isDragging: isDraggingActivity }, cloneDrop] = useDrop(() => ({
-        accept: dragTypes,
-        collect: monitor => ({ isDragging: monitor.getItemType() === activityDragDropType }),
-        drop(item: ActivityEntity | LessonEntity) {
-            if (item.type === EntityType.Activity) {
-                onClone?.(item);
-            }
+        accept: activityDragDropType,
+        collect: (monitor: DropTargetMonitor<ActivityEntity>) => ({ isDragging: monitor.getItemType() === activityDragDropType }),
+        drop(item) {
+            onClone?.(item);
         }
     }), [onClone]);
     
     const [{ isDragging: isDraggingActivityOrLesson }, trashDrop] = useDrop(() => ({
         accept: [activityDragDropType, lessonDragDropType],
-        collect: monitor => ({ isDragging: dragTypes.includes(monitor.getItemType() as string) }),
-        drop(item: ActivityEntity | LessonEntity) {
+        collect: (monitor: DropTargetMonitor<ActivityEntity | LessonEntity>) => ({ isDragging: dragTypes.includes(monitor.getItemType() as string) }),
+        drop(item) {
             if (item.type === EntityType.Activity) {
                 onDeleteActivity?.(item);
             }

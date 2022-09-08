@@ -21,6 +21,10 @@ import { ErrorBoundary } from 'react-error-boundary';
 import ErrorBoundaryPage from '../src/components/ErrorBoundaryPage';
 import usePageTitle from '../src/hooks/PageTitleHook';
 import { ConfirmProvider } from 'material-ui-confirm';
+import { loader } from '@monaco-editor/react';
+
+// Temporarily required due to https://github.com/microsoft/monaco-editor/issues/2947
+loader.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.31.1/min/vs' } });
 
 function MyApp({ Component, pageProps }: AppProps) {
     const loadingInfoRef = useRef({

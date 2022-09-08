@@ -318,7 +318,7 @@ export function endpoint<P extends string, Endpoints extends EndpointMap<P>>(_: 
                 const value = req.query[cleanParam];
                 if (param.endsWith('[]')) {
                     if (value) {
-                        cleanedParams[cleanParam] = ([] as string[]).concat(req.query[cleanParam]);
+                        cleanedParams[cleanParam] = ([] as string[]).concat(value);
                     }
                     else {
                         cleanedParams[cleanParam] = [];

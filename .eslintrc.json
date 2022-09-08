@@ -4,7 +4,7 @@
   "rules": {
     "react-hooks/rules-of-hooks": "off",
     "react-hooks/exhaustive-deps": "off",
-    "@typescript-eslint/no-unused-vars": ["warn", { "args": "none" }],
+    "@typescript-eslint/no-unused-vars": ["warn", { "args": "none", "varsIgnorePattern": "^_", "argsIgnorePattern": "^_", "destructuredArrayIgnorePattern": "^_" }],
     "@grncdr/react-hooks/rules-of-hooks": "error",
     "@grncdr/react-hooks/exhaustive-deps": [
       "warn",

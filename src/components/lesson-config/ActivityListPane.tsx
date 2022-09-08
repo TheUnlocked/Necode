@@ -1,7 +1,7 @@
 import { Card, Divider, Stack } from "@mui/material";
 import { Box, SxProps } from "@mui/system";
 import { Dispatch, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useDrop } from "react-dnd";
+import { DropTargetMonitor, useDrop } from "react-dnd";
 import composeRefs from '@seznam/compose-react-refs'
 import ActivityDescription from "../../activities/ActivityDescription";
 import { useGetRequest } from "../../api/client/GetRequestHook";
@@ -108,10 +108,10 @@ export default function ActivityListPane({
 
     const [{ isDragging }, drop] = useDrop(() => ({
         accept: activityDragDropType,
-        collect(monitor) {
+        collect(monitor: DropTargetMonitor<ActivityEntity>) {
             return { isDragging: monitor.getItemType() === activityDragDropType };
         },
-        hover(item: ActivityEntity, monitor) {
+        hover(item, monitor) {
             const container = widgetContainerRef.current;
             if (container) {
                 setLastHoveredWidgetIndex(oldWidgetIndex => {
@@ -226,7 +226,7 @@ export default function ActivityListPane({
 
     const displayName = lessonEntity?.attributes.displayName ?? '';
 
-    const handleDisplayNameChange = useCallback(async displayName => {
+    const handleDisplayNameChange = useCallback(async (displayName: string) => {
         if (!lessonEntity) {
             getOrCreateLesson({ date, displayName });
             return;

@@ -1,5 +1,3 @@
-import cachedIterable from "./cachedIterable";
-
 type Composition
     = [type: 'map',    callbackfn: (value: any, currentIndex: number) => any, thisArg?: any]
     | [type: 'filter', predicate:  (value: any, currentIndex: number) => boolean, thisArg?: any]

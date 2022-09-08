@@ -84,7 +84,7 @@ export interface Scopes {
 
 type ScopeArgumentTuples = { [K in keyof Scopes]: Scopes[K] extends undefined ? [K] : [K, Scopes[K]] }[keyof Scopes];
 
-export async function hasScope<Scope extends keyof Scopes>(userId: string, scope: keyof { [K in keyof Scopes as Scopes[K] extends undefined ? K : never]: undefined }): Promise<boolean>;
+export async function hasScope(userId: string, scope: keyof { [K in keyof Scopes as Scopes[K] extends undefined ? K : never]: undefined }): Promise<boolean>;
 export async function hasScope<Scope extends keyof Scopes>(userId: string, scope: Scope, params: Scopes[Scope]): Promise<boolean>;
 export async function hasScope(userId: string, ...[scope, data]: ScopeArgumentTuples): Promise<boolean> {
     switch (scope) {

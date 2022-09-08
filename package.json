@@ -12,7 +12,10 @@
     "typecheck": "tsc --noemit",
     "wsserver": "webpack --watch --config ./websocketServer/webpack.config.js",
     "test": "mocha",
-    "vercel-build": "prisma generate && prisma db push && next build"
+    "vercel-build": "prisma generate && prisma migrate deploy && next build"
+  },
+  "prisma": {
+    "seed": "ts-node --transpile-only prisma/seed.ts"
   },
   "dependencies": {
     "@babel/core": "^7.15.5",

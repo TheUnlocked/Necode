@@ -1,6 +1,6 @@
 import { NextPage } from "next";
 import { useRouter } from "next/router";
-import { useContext, useEffect, useState } from "react";
+import { useState } from "react";
 import { Button, Chip, Stack, Toolbar } from "@mui/material";
 import { ArrowBack, AssignmentTurnedIn, Close } from "@mui/icons-material";
 import { Box } from "@mui/system";
@@ -8,7 +8,6 @@ import { ClassroomMemberEntity } from "../../../src/api/entities/ClassroomMember
 import { useGetRequest, useGetRequestImmutable } from "../../../src/api/client/GetRequestHook";
 import useSocket from "../../../src/hooks/SocketHook";
 import StatusPage from "../../../src/components/StatusPage";
-import { useLoadingContext } from "../../../src/api/client/LoadingContext";
 import { ActivityEntity } from "../../../src/api/entities/ActivityEntity";
 import allActivities from "../../../src/activities/allActivities";
 import allLanguages from "../../../src/languages/allLanguages";
@@ -19,7 +18,7 @@ import { ClassroomRole } from ".prisma/client";
 import NotFoundPage from "../../404";
 import supportsLanguage from "../../../src/activities/supportsLanguage";
 import { curry } from "lodash";
-import fetch from '../../../src/util/fetch';
+import useNecodeFetch from '../../../src/hooks/useNecodeFetch';
 
 interface StaticProps {
     classroomId: string;
@@ -45,7 +44,8 @@ const Page: NextPage = () => {
 
 const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
     const router = useRouter();
-    const { startUpload, finishUpload } = useLoadingContext();
+
+    const { upload } = useNecodeFetch();
 
     const isInstructor = role === 'Instructor';
 
@@ -136,10 +136,8 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
         }
     }
 
-    function endActivity() {
-        startUpload();
-        fetch(`/api/classroom/${classroomId}/activity/live`, { method: 'DELETE' })
-            .finally(finishUpload);
+    async function endActivity() {
+        await upload(`/api/classroom/${classroomId}/activity/live`, { method: 'DELETE' });
         goToManage();
     }
 

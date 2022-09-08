@@ -2,13 +2,16 @@ import { useSnackbar } from 'notistack';
 import { useCallback, useMemo } from 'react';
 import { useLoadingFetch } from '../api/client/LoadingFetchHook';
 import { Response } from '../api/Response';
-import fetch from '../util/fetch';
+
+export interface NecodeFetchRequestOptions {
+    errorMessage?: string | ((err: Error) => string | null | undefined) | null;
+}
 
 export default function useNecodeFetch() {
     const { upload, download } = useLoadingFetch();
     const { enqueueSnackbar } = useSnackbar();
 
-    const necodeFetch = useCallback((fetcher: typeof fetch) => async <T,>(req: RequestInfo, options?: RequestInit) => {
+    const necodeFetch = useCallback((fetcher: typeof fetch) => async <T,>(req: RequestInfo, options?: RequestInit & NecodeFetchRequestOptions) => {
         let err: Error;
         try {
             const response = await fetcher(req, options);
@@ -27,7 +30,20 @@ export default function useNecodeFetch() {
         catch (e) {
             err = e as Error;
         }
-        enqueueSnackbar(err.toString(), { variant: 'error' });
+        if (options?.errorMessage !== undefined) {
+            if (typeof options.errorMessage === 'string') {
+                enqueueSnackbar(options.errorMessage, { variant: 'error' });
+            }
+            else if (options.errorMessage !== null) {
+                const msg = options.errorMessage(err);
+                if (msg != null) {
+                    enqueueSnackbar(msg, { variant: 'error' });
+                }
+            }
+        }
+        else {
+            enqueueSnackbar(err.toString(), { variant: 'error' });
+        }
         throw err;
     }, [enqueueSnackbar]);
 

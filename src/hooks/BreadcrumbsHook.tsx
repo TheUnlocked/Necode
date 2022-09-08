@@ -6,6 +6,7 @@ import { ReactNode } from 'react';
 import { useGetRequestImmutable } from '../api/client/GetRequestHook';
 import { ActivityEntity } from '../api/entities/ActivityEntity';
 import { ClassroomEntity } from '../api/entities/ClassroomEntity';
+import { ClassroomMemberEntity } from '../api/entities/ClassroomMemberEntity';
 
 export type BreadcrumbData = {
     href: string;
@@ -38,8 +39,13 @@ export function useBreadcrumbsData(): BreadcrumbData[] {
     const classroomId = router.query.classroomId;
     const activityId = router.query.activityId;
 
-    const { data: classroomData, error: classroomError, isLoading: classroomLoading } = useGetRequestImmutable<ClassroomEntity>(classroomId ? `/api/classroom/${classroomId}` : null);
-    const { data: activityData, error: activityError, isLoading: activityLoading } = useGetRequestImmutable<ActivityEntity<{ lesson: 'deep' }>>(activityId ? `/api/classroom/${classroomId}/activity/${activityId}?include=lesson` : null);
+    const { data: classroomMemberData, error: classroomError, isLoading: classroomLoading } = useGetRequestImmutable<ClassroomMemberEntity<{ classroom: 'deep' }>>(
+        classroomId ? `/api/classroom/${classroomId}/me?include=classroom` : null
+    );
+
+    const { data: activityData, error: activityError, isLoading: activityLoading } = useGetRequestImmutable<ActivityEntity<{ lesson: 'deep' }>>(
+        activityId && classroomMemberData ? `/api/classroom/${classroomId}/activity/${activityId}${classroomMemberData.attributes.role === 'Instructor' ? '?include=lesson' : ''}` : null
+    );
 
     switch (pathFragments[0]) {
         case 'admin':
@@ -64,8 +70,8 @@ export function useBreadcrumbsData(): BreadcrumbData[] {
                 case '[classroomId]':
                     crumbs.push({
                         href: `/classroom/${classroomId}`,
-                        label: <AsyncBreadcrumb label={classroomData?.attributes.displayName} status={classroomLoading ? 'loading' : classroomError ? 'error' : 'done'} />,
-                        title: classroomData?.attributes.displayName
+                        label: <AsyncBreadcrumb label={classroomMemberData?.attributes.classroom.attributes.displayName} status={classroomLoading ? 'loading' : classroomError ? 'error' : 'done'} />,
+                        title: classroomMemberData?.attributes.classroom.attributes.displayName
                     });
                     switch (pathFragments[2]) {
                         case 'manage':

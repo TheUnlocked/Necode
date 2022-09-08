@@ -3,7 +3,6 @@ import useSWR, { Key, KeyedMutator, SWRConfiguration } from "swr";
 import useSWRImmutable from "swr/immutable";
 import useChanged from '../../hooks/ChangedHook';
 import { useImpersonation } from '../../hooks/ImpersonationHook';
-import fetch from '../../util/fetch';
 import { Response } from "../Response";
 import LoadingContext from "./LoadingContext";
 

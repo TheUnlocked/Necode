@@ -1,5 +1,5 @@
 import Editor, { OnChange, useMonaco } from "@monaco-editor/react";
-import { Button, Card, CardContent, Checkbox, IconButton, Stack, styled, Tooltip, Typography, Box, ButtonBase } from "@mui/material";
+import { Button, Card, CardContent, Checkbox, IconButton, Stack, Tooltip, Typography, Box, ButtonBase } from "@mui/material";
 import { ReflexContainer, ReflexElement, ReflexSplitter } from "react-reflex";
 import useIsSizeOrSmaller from "../../hooks/ScreenSizeHook";
 import { cssDescription } from "../../languages/css";
@@ -32,7 +32,6 @@ import { useLoadingContext } from "../../api/client/LoadingContext";
 import { debounce } from "lodash";
 import { ImplicitNewType, NonStrictDisjunction } from "../../util/types";
 import SubtleLink from "../../components/SubtleLink";
-import fetch from '../../util/fetch';
 
 export interface HtmlTestActivityBaseConfig {
     description?: string;
@@ -134,7 +133,7 @@ export function createTestActivityPage({
         }, []);
 
         const { enqueueSnackbar } = useSnackbar();
-        const { startUpload, finishUpload } = useLoadingContext();
+        const { startDownload, finishDownload, startUpload, finishUpload } = useLoadingContext();
 
         const startTests = useRef(() => {});
         const passTests = useRef(() => {});
@@ -437,12 +436,14 @@ export function createTestActivityPage({
             }
             else {
                 setTypeDeclarationFiles(x => x ?? []);
+                startDownload();
                 Promise.allSettled(typeDeclarationsSource.map(url => fetch(url as string).then(x => x.text()).then(x => [x, url as string])))
                     .then(results => results
                         .filter((x): x is PromiseFulfilledResult<[string, string]> => x.status === 'fulfilled')
                         .map(x => x.value)
                         .map(([ content, filePath ]) => ({ content, filePath })))
-                    .then(setTypeDeclarationFiles);
+                    .then(setTypeDeclarationFiles)
+                    .finally(finishDownload);
             }
         }
 

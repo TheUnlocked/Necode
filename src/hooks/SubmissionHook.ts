@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { useGetRequest } from "../api/client/GetRequestHook";
 import { ActivitySubmissionEntity } from "../api/entities/ActivitySubmissionEntity";
-import { Response } from "../api/Response";
-import fetch from '../util/fetch';
 import tracked from "../util/trackedEventEmitter";
 import { SocketInfo } from "./SocketHook";
+import useNecodeFetch from './useNecodeFetch';
 
 export function useSubmissions(classroomId: string | undefined, socketInfo: SocketInfo | undefined, onSubmission?: (submissionEntity: ActivitySubmissionEntity<{
     user: 'deep',
@@ -18,18 +16,22 @@ export function useSubmissions(classroomId: string | undefined, socketInfo: Sock
 
     const [submissions, setSubmissions] = useState<ActivitySubmissionEntity<{ user: 'deep', activity: 'none' }>[]>([]);
 
+    const { download } = useNecodeFetch();
+
     useEffect(() => {
         if (socketInfo?.socket) {
             const ws = tracked(socketInfo.socket);
 
             ws.on('startActivity', async () => {
                 if (classroomId) {
-                    const res = await fetch(`/api/classroom/${classroomId}/activity/submission?include=user`);
-                    const data: Response<ActivitySubmissionEntity<{ user: 'deep', activity: 'none' }>[]> = await res.json();
-                    if (data.response === 'ok') {
-                        setSubmissions(data.data);
+                    try {
+                        const submissions = await download<ActivitySubmissionEntity<{ user: 'deep', activity: 'none' }>[]>(
+                            `/api/classroom/${classroomId}/activity/submission?include=user`,
+                            { errorMessage: null },
+                        );
+                        setSubmissions(submissions);
                     }
-                    else {
+                    catch (err) {
                         setSubmissions([]);
                     }
                 }
@@ -58,7 +60,7 @@ export function useSubmissions(classroomId: string | undefined, socketInfo: Sock
 
             return () => ws.offTracked();
         }
-    }, [socketInfo, classroomId]);
+    }, [socketInfo, classroomId, download]);
 
     return submissions;
 }

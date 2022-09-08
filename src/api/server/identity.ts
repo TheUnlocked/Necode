@@ -3,6 +3,8 @@ import { Session } from 'next-auth';
 import { getSession } from 'next-auth/react';
 import { prisma } from '../../db/prisma';
 import { hasScope } from './scopes';
+import { parse as parseCookie } from 'cookie';
+import { IMPERSONATION_COOKIE } from '../../hooks/ImpersonationHook';
 
 export type IdentityError
     = 'not-logged-in'
@@ -16,7 +18,9 @@ export default async function getIdentity(req: IncomingMessage): Promise<Identit
         return 'not-logged-in';
     }
 
-    const impersonate = req.headers.impersonate as string | undefined;
+    const cookies = parseCookie(req.headers.cookie ?? '');
+    const impersonate = cookies[IMPERSONATION_COOKIE] as string | undefined;
+    
     if (impersonate) {
         if (!await hasScope(nextAuthSession.user.id, 'user:impersonate', { userId: impersonate })) {
             return 'cannot-impersonate';

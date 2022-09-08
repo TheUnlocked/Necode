@@ -40,7 +40,7 @@ export default function LessonDatePicker({
                 router.push({ hash: fromLuxon(newDate) });
             }
         }, [router])}
-        renderInput={TextField}
+        renderInput={props => <TextField {...props} />}
         displayStaticWrapperAs="desktop"
         views={views}
         renderDay={renderDay}/>;

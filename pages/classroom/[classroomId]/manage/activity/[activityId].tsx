@@ -1,6 +1,6 @@
 import { NextPage } from "next";
 import { useRouter } from "next/router";
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Toolbar, Select, MenuItem, Stack, ToggleButton, Skeleton, Paper } from "@mui/material";
 import { ArrowBack, Code, Save } from "@mui/icons-material";
 import { Box, SxProps } from "@mui/system";
@@ -15,14 +15,10 @@ import { useGetRequest, useGetRequestImmutable } from "../../../../../src/api/cl
 import { ActivityEntity } from "../../../../../src/api/entities/ActivityEntity";
 import allActivities from "../../../../../src/activities/allActivities";
 import useDirty from "../../../../../src/hooks/DirtyHook";
-import { useLoadingContext } from "../../../../../src/api/client/LoadingContext";
-import { Response } from "../../../../../src/api/Response";
-import { useSnackbar } from "notistack";
 import { ClassroomMemberEntity } from "../../../../../src/api/entities/ClassroomMemberEntity";
 import NotFoundPage from "../../../../404";
 import supportsLanguage from "../../../../../src/activities/supportsLanguage";
 import { curry } from "lodash";
-import fetch from '../../../../../src/util/fetch';
 import useNecodeFetch from '../../../../../src/hooks/useNecodeFetch';
 
 interface StaticProps {

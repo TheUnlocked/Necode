@@ -16,7 +16,7 @@ import { makeUserEntity } from '../../src/api/entities/UserEntity';
 import allPolicies from './rtc/policies/allPolicies';
 import { hasScope } from '../../src/api/server/scopes';
 
-dotenv.config()
+dotenv.config();
 
 const prisma = new PrismaClient();
 

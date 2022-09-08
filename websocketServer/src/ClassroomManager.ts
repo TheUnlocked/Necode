@@ -63,7 +63,7 @@ class Classroom {
             partitionedMembers.filter((x): x is [string, string[]] => x[0] !== undefined)
         );
 
-        return (await query()).flatMap(x => backwardsUserTable[x.userId])
+        return (await query()).flatMap(x => backwardsUserTable[x.userId]);
     }
 
     get membersCache() {
@@ -83,7 +83,7 @@ class Classroom {
                 },
                 select: { userId: true }
             })
-        )
+        );
     }
 
     private _instructorsCache = new Set();

@@ -1,7 +1,6 @@
 import { nanoid } from "nanoid";
 import tracked from "../../../src/util/trackedEventEmitter";
 import { IOServer } from "../types";
-import UserManager from "../UserManager";
 
 export default class RtcManager {
     constructor(private io: IOServer) {

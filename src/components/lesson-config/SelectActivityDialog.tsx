@@ -1,5 +1,5 @@
 import { Code } from "@mui/icons-material";
-import { Dialog, DialogTitle, List, ListItemButton, ListItemIcon, ListItemSecondaryAction, ListItemText, Stack, Tooltip } from "@mui/material";
+import { Dialog, DialogTitle, List, ListItemButton, ListItemText, Stack, Tooltip } from "@mui/material";
 import { Box } from "@mui/system";
 import { curry } from "lodash";
 import ActivityDescription from "../../activities/ActivityDescription";

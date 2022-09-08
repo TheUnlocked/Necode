@@ -1,7 +1,7 @@
-import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, List, ListItem, ListItemButton, ListItemText, Paper, TextField } from "@mui/material";
+import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, List, ListItemButton } from "@mui/material";
 import { Box } from '@mui/system';
 import { useRouter } from 'next/router';
-import { useGetRequest, useGetRequestImmutable } from '../../api/client/GetRequestHook';
+import { useGetRequestImmutable } from '../../api/client/GetRequestHook';
 import { UserEntity } from '../../api/entities/UserEntity';
 import { setImpersonation, useImpersonation } from '../../hooks/ImpersonationHook';
 

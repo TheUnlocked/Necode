@@ -2,7 +2,6 @@ import { Skeleton, TextField } from "@mui/material";
 import { NextPage } from "next";
 import FormPage from "../../src/components/FormPage";
 import { FormEventHandler, useCallback, useState } from "react";
-import { useSnackbar } from 'notistack';
 import { ClassroomEntity } from "../../src/api/entities/ClassroomEntity";
 import { useRouter } from "next/router";
 import { useGetRequestImmutable } from "../../src/api/client/GetRequestHook";
@@ -18,8 +17,6 @@ const Page: NextPage = () => {
     const { data: me, isLoading } = useGetRequestImmutable<UserEntity>('/api/me');
 
     const [displayName, setDisplayName] = useState<string>();
-
-    const { enqueueSnackbar } = useSnackbar();
 
     const { upload } = useNecodeFetch();
 

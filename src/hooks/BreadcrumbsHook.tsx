@@ -5,7 +5,6 @@ import { useRouter } from 'next/router';
 import { ReactNode } from 'react';
 import { useGetRequestImmutable } from '../api/client/GetRequestHook';
 import { ActivityEntity } from '../api/entities/ActivityEntity';
-import { ClassroomEntity } from '../api/entities/ClassroomEntity';
 import { ClassroomMemberEntity } from '../api/entities/ClassroomMemberEntity';
 
 export type BreadcrumbData = {

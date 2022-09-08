@@ -2,7 +2,7 @@ import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { readFile, readdir } from 'fs/promises';
 import { join, parse as parsePath } from 'path';
 import { PropsWithChildren } from "react";
-import { Alert, Button, Card, Checkbox, Container, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Typography, TypographyProps } from "@mui/material";
+import { Alert, Button, Card, Checkbox, Container, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Typography } from "@mui/material";
 import { serialize } from 'next-mdx-remote/serialize';
 import { MDXRemote, MDXRemoteSerializeResult } from 'next-mdx-remote';
 import Footer from "../../src/components/Footer";

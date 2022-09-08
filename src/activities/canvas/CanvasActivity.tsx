@@ -21,8 +21,6 @@ const SharedCanvas = styled('canvas')({
 export function CanvasActivity({
     language, socketInfo
 }: ActivityPageProps) {
-    const [debugMsg, setDebugMsg] = useState("No debug message");
-
     const frameRate = 10;
     const [inboundVideoElt, setInboundVideoElt] = useState<HTMLVideoElement | null>(null);
 
@@ -31,8 +29,6 @@ export function CanvasActivity({
     const [outboundMediaStream, setOutboundMediaStream] = useState<{ stream: MediaStream }>();
     const lastOutboundMediaStreamRef = useRef<[SimplePeer.Instance, MediaStream]>();
     const [inboundMediaStream, setInboundMediaStream] = useState<MediaStream>();
-
-    // const [participants, setParticipants] = useState(new Set<string>());
 
     const loadInboundVideoRef = (video: HTMLVideoElement | null) => {
         setInboundVideoElt(video);
@@ -187,7 +183,7 @@ export function CanvasActivity({
     useEffect(() => {
         if (inboundVideoElt && inboundMediaStream) {
             console.log('incoming', inboundMediaStream.getTracks());
-            setDebugMsg('Recieved but not playing');
+
             try {
                 inboundVideoElt.muted = true;
                 inboundVideoElt.srcObject = inboundMediaStream;
@@ -195,11 +191,9 @@ export function CanvasActivity({
                     for (let i = 0; i < 10; i++) {
                         try {
                             await inboundVideoElt.play();
-                            setDebugMsg('Playing');
                             return;
                         }
                         catch (e: any) {
-                            setDebugMsg(`${e.name}: ${e.message}`);
                             inboundVideoElt.srcObject = inboundMediaStream;
                             inboundVideoElt.load();
                         }
@@ -207,18 +201,7 @@ export function CanvasActivity({
                 })();
             }
             catch (e) {
-                if (e instanceof Error) {
-                    setDebugMsg(`${e.name}: ${e.message}`);
-                }
                 console.log(e)
-            }
-        }
-        else {
-            if (inboundVideoElt) {
-                setDebugMsg('No incoming media stream');
-            }
-            else {
-                setDebugMsg('<video> element not loaded');
             }
         }
     }, [inboundVideoElt, inboundMediaStream]);
@@ -260,7 +243,6 @@ export function CanvasActivity({
         <ReflexElement flex={2}>
             <Card sx={{ height: "100%", flexGrow: 1, display: "flex", flexDirection: "column" }}>
                 <Typography variant="body1" component="div" sx={{ pl: 2, pr: 1, py: 1 }}>Write code to modify the canvas!</Typography>
-                {/* <Typography>{debugMsg}</Typography> */}
                 <Box sx={{
                     flexGrow: 1,
                     overflow: "hidden" }}>

@@ -1,4 +1,4 @@
-import { Badge, Button, Card, CardActions, CardContent, IconButton, Paper, Skeleton, Stack, TextField, Toolbar, Tooltip, Typography } from "@mui/material";
+import { Button, Card, CardContent, IconButton, Paper, Skeleton, Stack, Toolbar, Tooltip, Typography } from "@mui/material";
 import { NextPage } from "next";
 import { Dispatch, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ActivityListPane from "../../../../src/components/lesson-config/ActivityListPane";

@@ -2,7 +2,7 @@ import { Container, Stack, Typography, styled, ToggleButtonGroup, ToggleButton, 
 import { Box } from '@mui/system';
 import type { NextPage } from 'next';
 import { PropsWithChildren, ReactNode, useState } from 'react';
-import { useGetRequest, useGetRequestImmutable } from '../src/api/client/GetRequestHook';
+import { useGetRequestImmutable } from '../src/api/client/GetRequestHook';
 import { UserEntity } from '../src/api/entities/UserEntity';
 import Footer from '../src/components/Footer';
 import NecodeLogo from '../src/components/NecodeLogo';

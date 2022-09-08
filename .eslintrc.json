@@ -3,7 +3,7 @@
   "plugins": ["@grncdr/react-hooks", "@typescript-eslint"],
   "rules": {
     "@typescript-eslint/no-unused-vars": ["warn", { "args": "none", "varsIgnorePattern": "^_", "argsIgnorePattern": "^_", "destructuredArrayIgnorePattern": "^_" }],
-    "@typescript-eslint/semi": ["error", "always", { "omitLastInOneLineBlock": true }],
+    "@typescript-eslint/semi": ["warn", "always", { "omitLastInOneLineBlock": true }],
     "@typescript-eslint/brace-style": ["warn", "stroustrup", { "allowSingleLine": true }],
     // Waiting on https://github.com/typescript-eslint/typescript-eslint/issues/3105 for TS support
     "array-bracket-spacing": ["warn", "never"],

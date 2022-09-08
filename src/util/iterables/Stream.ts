@@ -32,7 +32,7 @@ export class Stream<T> implements Iterable<T> {
                     }
                 }
                 else {
-                    throw new Error(`Invalid operation in stream: ${composition[0]}, expected "map" or "filter"`)
+                    throw new Error(`Invalid operation in stream: ${composition[0]}, expected "map" or "filter"`);
                 }
             }
             yield value;
@@ -170,7 +170,7 @@ export class Stream<T> implements Iterable<T> {
                     break;
                 }
                 if (callbackfn) {
-                    yield callbackfn.call(thisArg, value1, value2, i)
+                    yield callbackfn.call(thisArg, value1, value2, i);
                 }
                 else {
                     yield [value1, value2] as [T, U];

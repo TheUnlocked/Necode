@@ -18,6 +18,14 @@ const apiClassroomOne = endpoint(makeClassroomEntity, ['classroomId', 'include[]
             const includeLessons = include.includes('lessons');
             const includeMembers = include.includes('members');
 
+            if (includeLessons && !await hasScope(session!.user.id, 'classroom:detailed:view', { classroomId })) {
+                return fail(Status.FORBIDDEN);
+            }
+
+            if (includeMembers && !await hasScope(session!.user.id, 'classroom:member:all:view', { classroomId })) {
+                return fail(Status.FORBIDDEN);
+            }
+
             if (includeMembers) {
                 const classroom = (await prisma.classroom.findUnique({
                     where: { id: classroomId },

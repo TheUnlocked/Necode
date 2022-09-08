@@ -1,6 +1,5 @@
 import { Schema } from "joi";
 import { NextApiHandler, NextApiRequest, NextApiResponse } from "next";
-import { getSession } from "next-auth/react";
 import { Entity } from "./entities/Entity";
 import { Response, ResponsePaginationPart } from "./Response";
 import { IncomingMessage } from "http";
@@ -404,10 +403,14 @@ function execute<E extends Endpoint<any, any, any>>(this: E, req: IncomingMessag
         let session: Session | undefined;
     
         if (this.loginValidation !== false) {
-            session = await getSession({ req }) ?? undefined;
-            if (!session) {
-                return fail(Status.UNAUTHORIZED, 'Not logged in');
+            const identityResult = await getIdentity(req);
+            switch (identityResult) {
+                case 'not-logged-in':
+                    return fail(Status.UNAUTHORIZED, 'Not logged in');
+                case 'cannot-impersonate':
+                    return fail(Status.FORBIDDEN, 'Either you do not have the rights to impersonate that user, or the Impersonate header is invalid');
             }
+            session = identityResult;
         }
 
         return this.handler({ ...content, session }, ok, fail);

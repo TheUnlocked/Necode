@@ -1,4 +1,4 @@
-import { NextApiRequest } from 'next';
+import { IncomingMessage } from "http";
 import { Session } from 'next-auth';
 import { getSession } from 'next-auth/react';
 import { prisma } from '../../db/prisma';
@@ -9,7 +9,7 @@ export type IdentityError
     | 'cannot-impersonate'
     ;
 
-export default async function getIdentity(req: NextApiRequest): Promise<IdentityError | Session> {
+export default async function getIdentity(req: IncomingMessage): Promise<IdentityError | Session> {
     const nextAuthSession = await getSession({ req });
 
     if (!nextAuthSession) {

@@ -24,7 +24,7 @@ function AsyncBreadcrumb({ label, status }: { label?: string, status: 'done' | '
         case 'loading':
             return <CircularProgress size={16} />;
         case 'error':
-            return <ErrorOutline color="error" />
+            return <ErrorOutline color="error" sx={{ display: "block" }} />
     }
 }
 
@@ -79,8 +79,8 @@ export function useBreadcrumbsData(): BreadcrumbData[] {
                                 });
                                 crumbs.push({
                                     href: `/classroom/${classroomId}/manage/activity/${activityId}`,
-                                    label: <AsyncBreadcrumb label={activityData?.attributes.activityType} status={activityLoading ? 'loading' : activityError ? 'error' : 'done'} />,
-                                    title: activityData?.attributes.activityType
+                                    label: <AsyncBreadcrumb label={activityData?.attributes.displayName} status={activityLoading ? 'loading' : activityError ? 'error' : 'done'} />,
+                                    title: activityData?.attributes.displayName
                                 });
                             }
                             break;

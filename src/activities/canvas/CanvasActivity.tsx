@@ -2,13 +2,13 @@ import { Card, Typography } from "@mui/material";
 import { Box, styled } from "@mui/system";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ReflexContainer, ReflexElement, ReflexSplitter } from "react-reflex";
-import { useRTC } from "../../hooks/WebRtcHook";
+import { useRTC } from "../../hooks/useRTC";
 import { BrowserRunner } from "../../runner/BrowserRunner";
 import dedent from "dedent-js";
 import Editor from "@monaco-editor/react";
-import useCodeGenerator from "../../hooks/CodeGeneratorHook";
+import useCodeGenerator from "../../hooks/useCodeGenerator";
 import { ActivityPageProps } from "../ActivityDescription";
-import useIsSizeOrSmaller from "../../hooks/ScreenSizeHook";
+import useIsSizeOrSmaller from "../../hooks/useIsSizeOrSmaller";
 import CodeAlert from "../../components/CodeAlert";
 import SimplePeer from "simple-peer";
 

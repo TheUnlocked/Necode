@@ -8,7 +8,7 @@ import { ActivityEntity } from '../../api/entities/ActivityEntity';
 import { EntityType } from '../../api/entities/Entity';
 import { LessonEntity } from '../../api/entities/LessonEntity';
 import { activityDragDropType, lessonDragDropType } from '../../dnd/types';
-import useImperativeDialog from '../../hooks/ImperativeDialogHook';
+import useImperativeDialog from '../../hooks/useImperativeDialog';
 import SelectActivityDialog from './SelectActivityDialog';
 
 interface ActivityListPaneActionsProps {

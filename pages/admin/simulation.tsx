@@ -14,7 +14,7 @@ import { UserEntity } from "../../src/api/entities/UserEntity";
 import { Response } from "../../src/api/Response";
 import AdminPageAlert from "../../src/components/AdminPageAlert";
 import FullPageLoader from "../../src/components/FullPageLoader";
-import { useImpersonation } from '../../src/hooks/ImpersonationHook';
+import { useImpersonation } from '../../src/hooks/useImpersonation';
 
 function SimulationToolbar(props: {
     onCreateSimulatedUser: () => void;

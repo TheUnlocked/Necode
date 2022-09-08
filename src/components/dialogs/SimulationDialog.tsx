@@ -3,7 +3,7 @@ import { Box } from '@mui/system';
 import { useRouter } from 'next/router';
 import { useGetRequestImmutable } from '../../api/client/GetRequestHook';
 import { UserEntity } from '../../api/entities/UserEntity';
-import { setImpersonation, useImpersonation } from '../../hooks/ImpersonationHook';
+import { setImpersonation, useImpersonation } from '../../hooks/useImpersonation';
 
 interface SubmissionsDialogProps {
     open: boolean;

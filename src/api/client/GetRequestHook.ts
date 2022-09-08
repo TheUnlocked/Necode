@@ -1,8 +1,8 @@
 import { useCallback, useContext, useEffect } from "react";
 import useSWR, { Key, KeyedMutator, SWRConfiguration } from "swr";
 import useSWRImmutable from "swr/immutable";
-import useChanged from '../../hooks/ChangedHook';
-import { useImpersonation } from '../../hooks/ImpersonationHook';
+import useChanged from '../../hooks/useChanged';
+import { useImpersonation } from '../../hooks/useImpersonation';
 import { Response } from "../Response";
 import LoadingContext from "./LoadingContext";
 

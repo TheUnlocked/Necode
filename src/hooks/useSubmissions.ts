@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ActivitySubmissionEntity } from "../api/entities/ActivitySubmissionEntity";
 import tracked from "../util/trackedEventEmitter";
-import { SocketInfo } from "./SocketHook";
+import { SocketInfo } from "./useSocket";
 import useNecodeFetch from './useNecodeFetch';
 
 export function useSubmissions(classroomId: string | undefined, socketInfo: SocketInfo | undefined, onSubmission?: (submissionEntity: ActivitySubmissionEntity<{

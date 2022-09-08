@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import Peer from 'simple-peer';
 import tracked from '../util/trackedEventEmitter';
-import { SocketInfo } from './SocketHook';
+import { SocketInfo } from './useSocket';
 
 
 export function useRTC<T>(socketInfo: SocketInfo | undefined, onPeer: (peer: Peer.Instance, info: T) => void) {

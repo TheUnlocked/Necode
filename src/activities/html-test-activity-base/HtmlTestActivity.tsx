@@ -1,7 +1,7 @@
 import Editor, { OnChange, useMonaco } from "@monaco-editor/react";
 import { Button, Card, CardContent, Checkbox, IconButton, Stack, Tooltip, Typography, Box, ButtonBase } from "@mui/material";
 import { ReflexContainer, ReflexElement, ReflexSplitter } from "react-reflex";
-import useIsSizeOrSmaller from "../../hooks/ScreenSizeHook";
+import useIsSizeOrSmaller from "../../hooks/useIsSizeOrSmaller";
 import { cssDescription } from "../../languages/css";
 import { htmlDescription } from "../../languages/html";
 import LanguageDescription from "../../languages/LangaugeDescription";
@@ -9,7 +9,7 @@ import { ActivityConfigPageProps, ActivityPageProps } from "../ActivityDescripti
 import { Refresh as RefreshIcon, Sync as SyncIcon } from "@mui/icons-material";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import React from "react";
-import useCodeGenerator from "../../hooks/CodeGeneratorHook";
+import useCodeGenerator from "../../hooks/useCodeGenerator";
 import supportsGlobal from "../../languages/features/supportsGlobal";
 import supportsIsolated from "../../languages/features/supportsIsolated";
 import ReactMarkdown from "react-markdown";
@@ -20,7 +20,7 @@ import testScaffoldingTypes from "raw-loader!./test-scaffolding.d.ts.raw";
 import transformTestScaffolding from "../../languages/transformers/babel-plugin-transform-test-scaffolding";
 import { Typescript } from "../../languages/typescript";
 import CodeAlert from "../../components/CodeAlert";
-import useImperativeDialog from "../../hooks/ImperativeDialogHook";
+import useImperativeDialog from "../../hooks/useImperativeDialog";
 import TestsDialog from "./TestsDialog";
 import { editorStateReducer, EditorType } from "./editorStateReducer";
 import PaneEditor from "./PaneEditor";

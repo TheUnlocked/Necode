@@ -6,7 +6,7 @@ import { ArrowBack, Code, Save } from "@mui/icons-material";
 import { Box, SxProps } from "@mui/system";
 import allLanguages from "../../../../../src/languages/allLanguages";
 import LanguageDescription from "../../../../../src/languages/LangaugeDescription";
-import useImperativeDialog from "../../../../../src/hooks/ImperativeDialogHook";
+import useImperativeDialog from "../../../../../src/hooks/useImperativeDialog";
 import sortByProperty from "../../../../../src/util/sortByProperty";
 import { flip, make } from "../../../../../src/util/fp";
 import Lazy from "../../../../../src/components/Lazy";
@@ -14,7 +14,7 @@ import ConfigureLanguageDialog from "../../../../../src/components/dialogs/Confi
 import { useGetRequest, useGetRequestImmutable } from "../../../../../src/api/client/GetRequestHook";
 import { ActivityEntity } from "../../../../../src/api/entities/ActivityEntity";
 import allActivities from "../../../../../src/activities/allActivities";
-import useDirty from "../../../../../src/hooks/DirtyHook";
+import useDirty from "../../../../../src/hooks/useDirty";
 import { ClassroomMemberEntity } from "../../../../../src/api/entities/ClassroomMemberEntity";
 import NotFoundPage from "../../../../404";
 import supportsLanguage from "../../../../../src/activities/supportsLanguage";

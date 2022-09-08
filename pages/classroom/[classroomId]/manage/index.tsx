@@ -16,7 +16,7 @@ import LessonDatePicker from '../../../../src/components/lesson-config/LessonDat
 import useNecodeFetch from '../../../../src/hooks/useNecodeFetch';
 import { ActivityEntity } from '../../../../src/api/entities/ActivityEntity';
 import LessonDragLayer from '../../../../src/components/lesson-config/LessonDragLayer';
-import useImperativeDialog from '../../../../src/hooks/ImperativeDialogHook';
+import useImperativeDialog from '../../../../src/hooks/useImperativeDialog';
 import LessonMergeDialog from '../../../../src/components/dialogs/LessonMergeDialog';
 import isContentfulLesson from '../../../../src/lessons/isContentfulLesson';
 

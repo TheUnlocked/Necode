@@ -4,7 +4,7 @@ import { getSession } from 'next-auth/react';
 import { prisma } from '../../db/prisma';
 import { hasScope } from './scopes';
 import { parse as parseCookie } from 'cookie';
-import { IMPERSONATION_COOKIE } from '../../hooks/ImpersonationHook';
+import { IMPERSONATION_COOKIE } from '../../hooks/useImpersonation';
 
 export type IdentityError
     = 'not-logged-in'

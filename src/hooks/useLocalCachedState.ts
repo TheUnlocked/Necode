@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
-import useChanged from './ChangedHook';
-import useDirty from './DirtyHook';
+import useChanged from './useChanged';
+import useDirty from './useDirty';
 
 type HookResult<T> = [
     state: T,

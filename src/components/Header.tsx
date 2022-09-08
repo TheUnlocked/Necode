@@ -3,11 +3,11 @@ import { signIn, signOut } from "next-auth/react";
 import React from "react";
 import { UserEntity } from "../api/entities/UserEntity";
 import { useGetRequestImmutable } from "../api/client/GetRequestHook";
-import { setImpersonation, useImpersonation } from '../hooks/ImpersonationHook';
-import useImperativeDialog from '../hooks/ImperativeDialogHook';
+import { setImpersonation, useImpersonation } from '../hooks/useImpersonation';
+import useImperativeDialog from '../hooks/useImperativeDialog';
 import SimulationDialog from './dialogs/SimulationDialog';
 import { SitewideRights } from '@prisma/client';
-import useBreadcrumbs from '../hooks/BreadcrumbsHook';
+import useBreadcrumbs from '../hooks/useBreadcrumbs';
 
 export default function Header() {
     const shouldElevate = useScrollTrigger({

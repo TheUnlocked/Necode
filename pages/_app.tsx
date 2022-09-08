@@ -19,7 +19,7 @@ import LoadingSpinners from '../src/components/LoadingSpinners';
 import CustomAdapterLuxon from '../src/util/CustomLuxonAdapter';
 import { ErrorBoundary } from 'react-error-boundary';
 import ErrorBoundaryPage from '../src/components/ErrorBoundaryPage';
-import usePageTitle from '../src/hooks/PageTitleHook';
+import usePageTitle from '../src/hooks/usePageTitle';
 import { ConfirmProvider } from 'material-ui-confirm';
 import { loader } from '@monaco-editor/react';
 
@@ -46,13 +46,6 @@ function MyApp({ Component, pageProps }: AppProps) {
         removeUploadListener: listener => loadingInfoRef.current.uploadListeners.splice(
             loadingInfoRef.current.uploadListeners.indexOf(listener), 1),
     } as LoadingContextInfo), []);
-
-    // if (Component === Editor) {
-    //     return <ThemeProvider theme={editorTheme}>
-    //         <CssBaseline />
-    //         <Component {...pageProps} />
-    //     </ThemeProvider>;
-    // }
 
     return <>
         <Head>

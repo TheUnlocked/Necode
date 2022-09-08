@@ -1,6 +1,6 @@
 import { ComponentType } from "react";
 import { ConnectDragSource } from "react-dnd";
-import { SocketInfo } from "../hooks/SocketHook";
+import { SocketInfo } from "../hooks/useSocket";
 import FeatureDescription from "../languages/features/FeatureDescription";
 import LanguageDescription from "../languages/LangaugeDescription";
 

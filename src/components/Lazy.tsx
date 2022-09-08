@@ -26,7 +26,7 @@ export default function Lazy({ show, children, keepInDom = false, unloadRef }: L
 
     const unload = useCallback(() => {
         setHasShown(false);
-    }, [])
+    }, []);
 
     if (unloadRef) {
         unloadRef.current = unload;
@@ -41,5 +41,5 @@ export default function Lazy({ show, children, keepInDom = false, unloadRef }: L
         }
         return <div style={{ display: show ? "contents" : "none" }}>{children}</div>;
     }
-    return <div style={{ display: "none" }} />
+    return <div style={{ display: "none" }} />;
 }

@@ -224,7 +224,7 @@ export function createTestActivityPage({
                         dispatchEditorsState({ target: type, type: 'initialize', value: activityConfig.languages[type]!.defaultValue! });
                     }
                 }
-            }
+            };
 
             const Icon = language.icon;
 
@@ -245,7 +245,7 @@ export function createTestActivityPage({
                         <Typography variant="overline" sx={{
                             userSelect: onClick ? "none" : undefined,
                             mx: 1,
-                            color: active ? undefined : ({palette}) => palette.text.disabled
+                            color: active ? undefined : ({ palette }) => palette.text.disabled
                         }}>
                             {title}
                         </Typography>
@@ -267,7 +267,7 @@ export function createTestActivityPage({
                     </>;
 
                     if (onClick) {
-                        return <ButtonBase onClick={onClick} sx={({palette}) => ({
+                        return <ButtonBase onClick={onClick} sx={({ palette }) => ({
                             flexShrink: 0,
                             borderRadius: "0 0 4px 4px",
                             mb: 1,
@@ -365,7 +365,7 @@ export function createTestActivityPage({
                 else {
                     dispatchEditorsState({ target: type, type: 'valueChange', value: value ?? '' });
                 }
-            }
+            };
 
             let editor: JSX.Element;
 
@@ -374,7 +374,7 @@ export function createTestActivityPage({
                     isConfig={true}
                     language={htmlDescription}
                     value={activityConfig.hiddenHtml}
-                    onChange={onHiddenHtmlChange} />
+                    onChange={onHiddenHtmlChange} />;
             }
             else if (isEditor && type === 'html') {
                 // Want to load both editors to preserve scroll.
@@ -441,7 +441,7 @@ export function createTestActivityPage({
                     .then(results => results
                         .filter((x): x is PromiseFulfilledResult<[string, string]> => x.status === 'fulfilled')
                         .map(x => x.value)
-                        .map(([ content, filePath ]) => ({ content, filePath })))
+                        .map(([content, filePath]) => ({ content, filePath })))
                     .then(setTypeDeclarationFiles)
                     .finally(finishDownload);
             }
@@ -560,7 +560,7 @@ export function createTestActivityPage({
                         </Box>
                         <CodeAlert error={testsCompileError} successMessage="Your tests compiled successfully!" />
                     </Stack>
-                </Card>
+                </Card>;
             }
             else {
                 iframeOrTestPane
@@ -623,7 +623,7 @@ export function createTestActivityPage({
                             })} /></Box>
                         : <CardContent sx={{ pt: 0, flexGrow: 1, overflow: "auto" }}>
                             <ReactMarkdown
-                                rehypePlugins={[[rehypeHighlight, {ignoreMissing: true}]]}
+                                rehypePlugins={[[rehypeHighlight, { ignoreMissing: true }]]}
                                 remarkPlugins={[remarkGfm]}
                                 linkTarget="_blank">{description}</ReactMarkdown>
                         </CardContent>}
@@ -717,7 +717,7 @@ export function createTestActivityPage({
             {testsDialog}
             {layout}
         </>;
-    }
+    };
 }
 
 export default function createTestActivityPages<Config extends HtmlTestActivityBaseConfig>(options: HtmlTestActivityOptions = {}): [

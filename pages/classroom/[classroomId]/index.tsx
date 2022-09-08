@@ -17,7 +17,7 @@ export const getServerSideProps: GetServerSideProps = async ({ query: { classroo
                     statusCode: 302,
                     destination: `/classroom/${classroomId}/manage`
                 }
-            }
+            };
         }
     }
 
@@ -26,5 +26,5 @@ export const getServerSideProps: GetServerSideProps = async ({ query: { classroo
             statusCode: 302,
             destination: `/classroom/${classroomId}/activity`
         }
-    }
+    };
 };

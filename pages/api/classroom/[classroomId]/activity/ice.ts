@@ -38,7 +38,7 @@ const apiActivityIce = endpoint(null, ['classroomId'], {
                     credentialType: 'password',
                     username,
                     credential: password,
-                })
+                });
             }
 
             ok(iceServers);

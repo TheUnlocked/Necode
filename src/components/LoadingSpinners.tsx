@@ -19,7 +19,7 @@ export default function LoadingSpinners() {
         return () => {
             removeDownloadListener(setDownloaders);
             removeUploadListener(setUploaders);
-        }
+        };
     }, [loadingContext]);
 
     const { palette } = useTheme();

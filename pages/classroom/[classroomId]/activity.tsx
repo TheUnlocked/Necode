@@ -57,7 +57,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
     const [submissionsDialog, openSubmissionsDialog] = useImperativeDialog(SubmissionsDialog, {
         submissions,
         onPickSubmission: s => setSaveData({ data: s.attributes.data })
-    })
+    });
 
     function viewSubmissions() {
         openSubmissionsDialog();

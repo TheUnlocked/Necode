@@ -24,7 +24,7 @@ function AsyncBreadcrumb({ label, status }: { label?: string, status: 'done' | '
         case 'loading':
             return <CircularProgress size={16} />;
         case 'error':
-            return <ErrorOutline color="error" sx={{ display: "block" }} />
+            return <ErrorOutline color="error" sx={{ display: "block" }} />;
     }
 }
 

@@ -108,7 +108,7 @@ export function ActivityIframe({
 
     useEffect(() => {
         internalReloadRef.current = reload;
-    }, [reload])
+    }, [reload]);
 
     useEffect(() => {
         internalReloadRef.current({ html, js });
@@ -150,7 +150,7 @@ export function ActivityIframe({
                         reload();
                         return resolve();
                     }
-                }
+                };
     
                 window.addEventListener('message', testResultsListener);
                 setTimeout(() => {

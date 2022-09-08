@@ -39,7 +39,7 @@ export function useRTC<T>(socketInfo: SocketInfo | undefined, onPeer: (peer: Pee
             
             const peerTrackedWs = tracked(ws);
 
-            peer.on('error', err => console.log('peer error', err))
+            peer.on('error', err => console.log('peer error', err));
             
             peer.on('signal', data => {
                 // console.log('signal to peer', connectionId);

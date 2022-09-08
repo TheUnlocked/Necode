@@ -28,5 +28,5 @@ export default function StatusPage({ primary, secondary, body, children }: Statu
             {body}
         </Typography> : undefined}
         {children}
-    </Stack>
+    </Stack>;
 }

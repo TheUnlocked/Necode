@@ -54,7 +54,7 @@ const Page: NextPage = () => {
     }
 
     return <PageContent classroomId={classroomId} />;
-}
+};
 
 const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
     const router = useRouter();

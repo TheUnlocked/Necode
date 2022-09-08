@@ -20,14 +20,14 @@ export default class Bimap<T1, T2> implements IMap<T1, T2> {
     }
 
     /** Alias of {@link hasKey} */
-    has(key: T1) { return this.hasKey(key); }
-    hasKey(key: T1) { return this.fdMap.has(key); }
-    hasValue(value: T2) { return this.bkMap.has(value); }
+    has(key: T1) { return this.hasKey(key) }
+    hasKey(key: T1) { return this.fdMap.has(key) }
+    hasValue(value: T2) { return this.bkMap.has(value) }
 
     /** Alias of {@link getByKey} */
-    get(key: T1) { return this.getByKey(key); }
-    getByKey(key: T1) { return this.fdMap.get(key); }
-    getByValue(value: T2) { return this.bkMap.get(value); }
+    get(key: T1) { return this.getByKey(key) }
+    getByKey(key: T1) { return this.fdMap.get(key) }
+    getByValue(value: T2) { return this.bkMap.get(value) }
 
     /** Alias of {@link deleteByKey} */
     delete(key: T1) {
@@ -59,13 +59,13 @@ export default class Bimap<T1, T2> implements IMap<T1, T2> {
         this.bkMap.clear();
     }
 
-    [Symbol.iterator]() { return this.fdMap[Symbol.iterator](); }
-    keys() { return this.fdMap.keys(); }
-    values() { return this.bkMap.keys(); }
-    entries() { return this.fdMap.entries(); }
+    [Symbol.iterator]() { return this.fdMap[Symbol.iterator]() }
+    keys() { return this.fdMap.keys() }
+    values() { return this.bkMap.keys() }
+    entries() { return this.fdMap.entries() }
     forEach<ThisArg>(callbackFn: (this: ThisArg | undefined, value: T2, key: T1, map: this) => void, thisArg?: ThisArg) {
         for (const [key, value] of this) {
-            callbackFn.call(thisArg, value, key, this)
+            callbackFn.call(thisArg, value, key, this);
         }
     }
 }

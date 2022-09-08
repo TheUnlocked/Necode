@@ -30,7 +30,7 @@ export default function ActivityWidgetBase({
                             padding: 0,
                         },
                         "&:hover:after": {
-                            backgroundColor: ({palette}) => palette.action.hover,
+                            backgroundColor: ({ palette }) => palette.action.hover,
                             borderRadius: 1
                         },
                         "&:after": {

@@ -17,7 +17,7 @@ export default function SkeletonActivityListPane({
             <Typography variant="body2" component="span"><Skeleton variant="text" width="150px" /></Typography>
         </CardContent>
         <Divider />
-        <Box sx={{ backgroundColor: ({palette}) => palette.background.default, p: 1 }}>
+        <Box sx={{ backgroundColor: ({ palette }) => palette.background.default, p: 1 }}>
             <Stack direction="row">
                 <Skeleton variant="circular" width={32} height={32} sx={{ m: 0.5, mr: 1.5 }} />
                 <Skeleton variant="circular" width={32} height={32} sx={{ m: 0.5, mr: 1.5 }} />

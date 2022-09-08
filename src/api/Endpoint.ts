@@ -198,10 +198,10 @@ function runMiddleware(req: NextApiRequest, res: NextApiResponse, fn: Middleware
     return new Promise((resolve, reject) => {
         fn(req, res, (result) => {
             if (result instanceof Error) {
-                return reject(result)
+                return reject(result);
             }
     
-            return resolve(result)
+            return resolve(result);
         });
     });
 }
@@ -414,6 +414,6 @@ function execute<E extends Endpoint<any, any, any>>(this: E, req: IncomingMessag
         }
 
         return this.handler({ ...content, session }, ok, fail);
-    })
+    });
 
 }

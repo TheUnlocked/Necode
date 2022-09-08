@@ -92,7 +92,7 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
             onDisplayNameChange={displayNameChangeHandler}
             startActivity={startActivity}
             goToConfigPage={goToConfigPage}
-            dragHandle={drag} />
+            dragHandle={drag} />;
     }
 
     const Widget = activityType.configWidget ?? DefaultActivityWidget;

@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useMemo } from "react";
 import RunnableLanguage from "../languages/RunnableLanguage";
 import { Javascript } from "../languages/javascript";
 import { NoLanguage } from "../languages/noLanguage";

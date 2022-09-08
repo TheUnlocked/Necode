@@ -5,7 +5,7 @@ const palette = createTheme({ palette: {
     mode: 'dark',
     primary: blue,
     secondary: pink
-}}).palette;
+} }).palette;
 
 const splitterCore = '#1e1e1e';
 const splitterCoreHover = palette.primary.dark;

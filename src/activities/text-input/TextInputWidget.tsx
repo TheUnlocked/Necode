@@ -54,7 +54,7 @@ export default function TextInputWidget({
     const updateHeight = (editor: editor.IStandaloneCodeEditor) => () => {
         const contentHeight = Math.max(20, Math.min(200, editor.getContentHeight()));
         setEditorHeight(contentHeight);
-        editor.layout({ height: contentHeight, width: editor.getLayoutInfo().width })
+        editor.layout({ height: contentHeight, width: editor.getLayoutInfo().width });
     };
 
     const border = {
@@ -63,9 +63,9 @@ export default function TextInputWidget({
         borderStyle: "solid",
         borderColor: "transparent",
         "&:hover": {
-            borderColor: ({palette}) => palette.action.hover
+            borderColor: ({ palette }) => palette.action.hover
         },
-        transition: ({transitions}) => transitions.create("border-color", {
+        transition: ({ transitions }) => transitions.create("border-color", {
             duration: transitions.duration.shorter,
             easing: transitions.easing.easeOut
         })
@@ -164,7 +164,7 @@ export default function TextInputWidget({
                 },
                 backgroundColor: "transparent !important",
                 ...border,
-                fontSize: ({typography}) => typography.body1.fontSize
+                fontSize: ({ typography }) => typography.body1.fontSize
             },
             startAdornment: <DragHandle innerRef={dragHandle} iconProps={{ sx: { mr: 1 } }} />,
             endAdornment: <IconButton size="small" className={dragHandleClass} onClick={() => changeLanguage('plaintext')}><CodeIcon/></IconButton>

@@ -17,7 +17,7 @@ export function languageDescription(
     desc: Omit<LanguageDescription<readonly FeatureDescription<any>[]>, 'features'> & { features?: readonly FeatureDescription<any>[] }
 ) {
     desc.features ??= [];
-    desc.features = [...desc.features, isLanguage(desc)]
+    desc.features = [...desc.features, isLanguage(desc)];
     return desc;
 }
 

@@ -3,8 +3,8 @@ import { Box, Button, Tooltip } from "@mui/material";
 import { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
 import ActivityWidgetBase from './ActivityWidgetBase';
 
-const infoIconClass = 'ActivityInfo-svg-icon'
-const infoIconSelector = `.${infoIconClass}`
+const infoIconClass = 'ActivityInfo-svg-icon';
+const infoIconSelector = `.${infoIconClass}`;
 
 export default function DefaultActivityWidget(props: ActivityConfigWidgetProps) {
     return <Box sx={{ [`&:hover ${infoIconSelector}`]: { visibility: "visible" } }}>

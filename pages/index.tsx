@@ -111,7 +111,7 @@ const canIUsePhoneText = <>
     Probably not. <SubtleLink target="_blank" rel="noopener" href="https://microsoft.github.io/monaco-editor/">Monaco</SubtleLink>,
     the code editor Necode currently uses on all devices, does not officially support touch interaction,
     and while some activities do have responsive layouts, that is also not a guarantee. Using a laptop is strongly recommended.
-</>
+</>;
 
 const instructorInfo = (me: UserEntity<{ classes: 'deep' }> | undefined) => <>
     <InfoSection title="How can I use Necode in my classroom?">

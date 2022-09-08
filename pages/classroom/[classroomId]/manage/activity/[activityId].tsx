@@ -84,7 +84,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
                             .filter(x => x !== undefined) as LanguageDescription[];
                             
                     setEnabledLanguages(enabledLanguages);
-                    setSelectedLanguage(enabledLanguages[0])
+                    setSelectedLanguage(enabledLanguages[0]);
                 }
                 return false;
             });
@@ -96,7 +96,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
         enabledLanguages,
         saveEnabledLanguages: langs => {
             markDirty();
-            setEnabledLanguages(sortByProperty(langs, "name"))
+            setEnabledLanguages(sortByProperty(langs, "name"));
         },
         unsupportedLanguages: useMemo(() => allLanguages.filter(x => !supportedLanguages.includes(x)), [supportedLanguages])
     });

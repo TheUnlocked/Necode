@@ -26,7 +26,7 @@ export default async function getIdentity(req: IncomingMessage): Promise<Identit
             return 'cannot-impersonate';
         }
 
-        return { ...nextAuthSession, user: (await prisma.user.findUnique({ where: { id: impersonate } }))! }
+        return { ...nextAuthSession, user: (await prisma.user.findUnique({ where: { id: impersonate } }))! };
     }
 
     return nextAuthSession;

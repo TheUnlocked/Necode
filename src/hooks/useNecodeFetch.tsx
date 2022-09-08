@@ -50,5 +50,5 @@ export default function useNecodeFetch() {
     return {
         upload: useMemo(() => necodeFetch(upload), [necodeFetch, upload]),
         download: useMemo(() => necodeFetch(download), [necodeFetch, download]),
-    }
+    };
 }

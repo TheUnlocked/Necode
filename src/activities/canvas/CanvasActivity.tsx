@@ -35,7 +35,7 @@ export function CanvasActivity({
         if (video) {
             video.muted = true;
         }
-    }
+    };
 
     const onCanvasRefChange = useCallback((canvas: HTMLCanvasElement) => {
         if (canvas) {
@@ -201,7 +201,7 @@ export function CanvasActivity({
                 })();
             }
             catch (e) {
-                console.log(e)
+                console.log(e);
             }
         }
     }, [inboundVideoElt, inboundMediaStream]);

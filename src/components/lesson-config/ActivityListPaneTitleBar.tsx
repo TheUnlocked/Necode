@@ -46,7 +46,7 @@ export default function AcitivityListPaneTitleBar({
                 InputProps={{ disableUnderline: true, sx: ({ typography, transitions }) => ({
                     ...typography.h6,
                     "&:hover:after": {
-                        backgroundColor: ({palette}) => palette.action.hover,
+                        backgroundColor: ({ palette }) => palette.action.hover,
                         borderRadius: 1
                     },
                     "&:after": {

@@ -36,4 +36,4 @@ export type NonStrictDisjunction<A, B>
                 : Key extends keyof B
                     ? B[Key] | undefined
                     : undefined
-    }
+    };

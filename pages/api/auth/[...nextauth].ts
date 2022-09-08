@@ -1,6 +1,6 @@
 import NextAuth, { ISODateString, User } from "next-auth";
 import { SitewideRights } from "@prisma/client";
-import { PrismaAdapter } from "@next-auth/prisma-adapter"
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "../../../src/db/prisma";
 import Credentials from 'next-auth/providers/credentials';
 import { OAuthConfig, OAuthUserConfig } from 'next-auth/providers';
@@ -59,7 +59,7 @@ function WPIProvider({ authorization, token, tenantId, ...rest }: OAuthUserConfi
         },
         userinfo: 'https://graph.microsoft.com/v1.0/me/',
         ...rest,
-    }
+    };
 }
 
 export default NextAuth({
@@ -121,7 +121,7 @@ export default NextAuth({
                 user.lastName ??= user.username;
             }
             return createUser.call(this, user);
-        }
+        };
         return adapter;
     })(),
     session: {
@@ -138,7 +138,7 @@ export default NextAuth({
                 return {
                     user: token as User,
                     expires: session.expires
-                }
+                };
             }
             return {
                 user,

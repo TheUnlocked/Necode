@@ -56,7 +56,7 @@ function makeUseGetRequest(immutable: boolean) {
                         response: 'ok',
                         data: (_options.populateCache as (result: any, currentData: T) => T)(result, currentData.data!)
                     })
-            }
+            };
 
             const obj: Parameters<typeof mutate>[0]
                 = _obj === undefined ? undefined

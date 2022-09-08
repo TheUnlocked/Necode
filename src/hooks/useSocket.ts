@@ -25,7 +25,7 @@ export default function useSocket(classroomId: string): SocketInfo | undefined {
             refreshInterval: /* Refresh every 90 minutes */ 1000 * 60 * 90,
             refreshWhenHidden: true,
         }
-    )
+    );
 
     useEffect(() => {
         if (socketData) {
@@ -50,7 +50,7 @@ export default function useSocket(classroomId: string): SocketInfo | undefined {
 
             ws.on('endActivity', () => setLiveActivityInfo(undefined));
     
-            return () => { ws.close(); };
+            return () => { ws.close() };
         }
     }, [socketData]);
 

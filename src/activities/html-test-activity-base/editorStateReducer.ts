@@ -15,17 +15,17 @@ export type EditorState = {
 export const editorStateReducer = (state: { [Type in EditorType]?: EditorState }, action: EditorStateDispatchAction) => {
     switch (action.type) {
         case 'initialize':
-            return {...state, [action.target]: {
+            return { ...state, [action.target]: {
                 isDirty: false,
                 uncommittedValue: action.value,
                 value: action.value
-            } as EditorState};
+            } as EditorState };
         case 'valueChange':
-            return {...state, [action.target]: {
+            return { ...state, [action.target]: {
                 ...state[action.target],
                 isDirty: true,
                 uncommittedValue: action.value
-            } as EditorState};
+            } as EditorState };
         case 'applyChanges':
             if (state[action.target]?.isDirty) {
                 const newState = {
@@ -34,7 +34,7 @@ export const editorStateReducer = (state: { [Type in EditorType]?: EditorState }
                     isDirty: false
                 } as EditorState;
                 action.resolve?.(newState);
-                return {...state, [action.target]: newState};
+                return { ...state, [action.target]: newState };
             }
             else {
                 action.reject?.('nochange');

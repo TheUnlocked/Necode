@@ -6,7 +6,7 @@ import { makeClassroomEntity } from "../../../../src/api/entities/ClassroomEntit
 const apiClassroomMe = endpoint(makeClassroomMemberEntity, ['classroomId', 'include[]'] as const, {
     type: 'entity' as const,
     GET: {
-        requiresLogin: true,
+        loginValidation: true,
         handler: async ({ query: { classroomId, include }, session }, ok, fail) => {
             const includeClasses = include.includes('classes');
             const includeClassroom = include.includes('classroom');

@@ -3,6 +3,7 @@ const withTM = require('next-transpile-modules')([/* Problematic module names go
 /** @type {import('next').NextConfig} */
 module.exports = withTM({
   reactStrictMode: true,
+  swcMinify: true,
   webpack(config, ctx) {
     return Object.assign({}, config, {
       // Support @babel/core
@@ -16,7 +17,11 @@ module.exports = withTM({
       }),
       plugins: [
         ...config.plugins ?? [],
-      ]
+      ],
+      optimization: {
+        ...config.optimization,
+        minimize: true,
+      }
     });
   }
 });

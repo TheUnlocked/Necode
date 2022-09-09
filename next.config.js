@@ -21,4 +21,4 @@ module.exports = withTM({
   }
 });
 
-module.exports = require('@next/bundle-analyzer')({ enabled: true })(module.exports);
+// module.exports = require('@next/bundle-analyzer')({ enabled: true })(module.exports);

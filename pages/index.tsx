@@ -1,7 +1,7 @@
 import { Container, Stack, Typography, styled, ToggleButtonGroup, ToggleButton, Tooltip } from '@mui/material';
 import { Box } from '@mui/system';
 import type { NextPage } from 'next';
-import { PropsWithChildren, ReactNode, useState } from 'react';
+import { PropsWithChildren, ReactNode, useMemo, useState } from 'react';
 import { useGetRequestImmutable } from '../src/api/client/GetRequestHook';
 import { UserEntity } from '../src/api/entities/UserEntity';
 import Footer from '../src/components/Footer';
@@ -24,13 +24,13 @@ const Home: NextPage = () => {
 
     const [infoCategory, setInfoCategory] = useState('general');
 
-    function getInfo() {
+    const infoContent = useMemo(() => {
         switch (infoCategory) {
             case 'general': return generalInfo;
             case 'instructor': return instructorInfo(meInfo);
             case 'student': return studentInfo(meInfo);
         }
-    }
+    }, [infoCategory, meInfo]);
 
     return <>
         <Stack direction="column" alignItems="center" p={4}>
@@ -49,7 +49,7 @@ const Home: NextPage = () => {
                 </ToggleButtonGroup>
                 : null}
             <Container maxWidth="sm">
-                {getInfo()}
+                {infoContent}
             </Container>
         </Stack>
         <Footer />

@@ -12,7 +12,7 @@ export default interface LanguageDescription<Features extends readonly FeatureDe
     readonly icon?: ComponentType<SvgIconProps>;
     readonly features: Features;
 
-    readonly runnable?: Importable<RunnableLanguage<Features>>
+    readonly runnable?: Importable<RunnableLanguage<Features>>;
 }
 
 export function languageDescription(desc: Omit<LanguageDescription<readonly []>, 'features'>): LanguageDescription<readonly []>;

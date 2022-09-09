@@ -9,6 +9,6 @@ export type ConstraintOf<T extends FeatureDescription<any>> =
 export type ConstraintsOf<T extends readonly FeatureDescription<any>[]> =
     T extends readonly [infer F, ...infer Rest]
     ? Rest extends FeatureDescription<any>[]
-        ? F extends FeatureDescription<any> ? ConstraintOf<F> & ConstraintsOf<Rest> : ConstraintsOf<Rest>
-        : F extends FeatureDescription<any> ? ConstraintOf<F> : {}
+        ? F extends FeatureDescription<any> ? Partial<ConstraintOf<F>> & ConstraintsOf<Rest> : ConstraintsOf<Rest>
+        : F extends FeatureDescription<any> ? Partial<ConstraintOf<F>> : {}
     : {};

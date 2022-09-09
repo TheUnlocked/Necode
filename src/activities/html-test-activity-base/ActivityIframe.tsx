@@ -4,9 +4,9 @@ import { useCallback, useEffect, useRef } from "react";
 import iframeHtml from "raw-loader!./iframe.html";
 import testScaffoldingImpl from "raw-loader!./test-scaffolding-impl.js.raw";
 import transformTestScaffolding from "../../languages/transformers/babel-plugin-transform-test-scaffolding";
-import { Typescript } from "../../languages/typescript";
 import { SxProps } from "@mui/system";
 import { assignRef, SimpleRef } from "../../util/simpleRef";
+import { typescriptDescription } from '../../languages/typescript';
 
 const Iframe = styled('iframe')``;
 
@@ -121,12 +121,13 @@ export function ActivityIframe({
     const runTests = useCallback<RunTestsCallback>(async (tests, startTests, finishTests) => {
         const iframeElt = iframeRef.current!;
         await reload();
-        return new Promise<void>(resolve => {
+        return new Promise<void>(async resolve => {
             try {
-                const code = testScaffoldingImpl + new Typescript().toRunnerCode(tests, {
+                const runner = await typescriptDescription.runnable!();
+                const code = testScaffoldingImpl + runner.toRunnerCode(tests, {
                     global: true,
                     isolated: true,
-                    babelPlugins: [transformTestScaffolding]
+                    babelPlugins: [transformTestScaffolding],
                 });
     
                 iframeElt.contentWindow!.postMessage({ type: 'tests', signature: signatureRef.current, code }, '*');

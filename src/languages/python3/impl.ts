@@ -1,28 +1,9 @@
-import RunnableLanguage from './RunnableLanguage';
+import RunnableLanguage from '../RunnableLanguage';
 import dedent from 'dedent-js';
-// import transformPreventInfiniteLoops from "./transformers/babel-plugin-transform-prevent-infinite-loops";
-// import { transformSync } from '@babel/core';
-
+import { FeatureOptionsOf } from '../LangaugeDescription';
+import { pythonDescription } from '.';
 import brythonRaw from 'raw-loader!brython/brython.js';
-import brythonStdlibRaw from 'raw-loader!brython/brython_stdlib.js'; 
-import { FeatureOptionsOf, languageDescription } from './LangaugeDescription';
-import PythonIcon from '../util/icons/PythonIcon';
-import supportsGlobal from "./features/supportsGlobal";
-import supportsEntryPoint from "./features/supportsEntryPoint";
-import supportsIsolated from './features/supportsIsolated';
-
-export const pythonDescription = languageDescription({
-    name: 'python3',
-    monacoName: 'python',
-    displayName: 'Python 3',
-    icon: PythonIcon,
-    features: [
-        supportsEntryPoint,
-        supportsGlobal,
-        supportsIsolated
-    ] as const,
-    runnable: async () => new Python3() as any,
-});
+import brythonStdlibRaw from 'raw-loader!brython/brython_stdlib.js';
 
 declare global {
     var __BRYTHON__: {
@@ -32,7 +13,7 @@ declare global {
     };
 }
 
-export class Python3 implements RunnableLanguage<typeof pythonDescription.features> {
+export default class Python3Impl implements RunnableLanguage<typeof pythonDescription.features> {
     constructor() {
         if (typeof window !== 'undefined' && !document.getElementById('__brython_runtime_script')) {
             function addScript(text: string, id: string) {

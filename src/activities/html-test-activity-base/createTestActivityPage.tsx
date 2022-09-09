@@ -15,7 +15,6 @@ import rehypeHighlight from 'rehype-highlight';
 import TypescriptIcon from "../../util/icons/TypescriptIcon";
 import testScaffoldingTypes from "raw-loader!./test-scaffolding.d.ts.raw";
 import transformTestScaffolding from "../../languages/transformers/babel-plugin-transform-test-scaffolding";
-import { Typescript } from "../../languages/typescript";
 import CodeAlert from "../../components/CodeAlert";
 import useImperativeDialog from "../../hooks/useImperativeDialog";
 import TestsDialog from "./TestsDialog";
@@ -30,6 +29,7 @@ import { debounce } from "lodash";
 import { ImplicitNewType, NonStrictDisjunction } from "../../util/types";
 import SubtleLink from "../../components/SubtleLink";
 import useImported from '../../hooks/useImported';
+import { typescriptDescription } from '../../languages/typescript';
 
 export interface HtmlTestActivityBaseConfig {
     description?: string;
@@ -479,14 +479,15 @@ export default function createTestActivityPage({
 
         // Be very careful when editing this function, since exaustive-deps is disabled.
         // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps
-        const validateTests = useCallback(debounce((tests: string) => {
+        const validateTests = useCallback(debounce(async (tests: string) => {
             try {
-                new Typescript().toRunnerCode(tests, {
+                const runner = await typescriptDescription.runnable!();
+                runner.toRunnerCode(tests, {
                     global: true,
                     isolated: true,
                     throwAllCompilerErrors: true,
                     babelPlugins: [transformTestScaffolding]
-                });
+                } as any);
                 setTestsCompileError(undefined);
             }
             catch (e) {

@@ -1,7 +1,9 @@
 import { SvgIconProps } from "@mui/material";
 import { ComponentType } from "react";
+import { Importable } from '../util/types';
 import FeatureDescription, { ConstraintsOf } from "./features/FeatureDescription";
 import isLanguage from "./features/isLanguage";
+import RunnableLanguage from './RunnableLanguage';
 
 export default interface LanguageDescription<Features extends readonly FeatureDescription<any>[] = readonly FeatureDescription<any>[]> {
     readonly name: string;
@@ -9,6 +11,8 @@ export default interface LanguageDescription<Features extends readonly FeatureDe
     readonly displayName: string;
     readonly icon?: ComponentType<SvgIconProps>;
     readonly features: Features;
+
+    readonly runnable?: Importable<RunnableLanguage<Features>>
 }
 
 export function languageDescription(desc: Omit<LanguageDescription<readonly []>, 'features'>): LanguageDescription<readonly []>;

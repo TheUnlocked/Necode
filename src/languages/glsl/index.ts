@@ -8,7 +8,7 @@ export const glslDescription = languageDescription({
     displayName: 'GLSL'
 });
 
-export class GLSL implements RunnableLanguage<typeof glslDescription> {
+export class GLSL implements RunnableLanguage<typeof glslDescription.features> {
     toRunnerCode(code: string, options: FeatureOptionsOf<typeof glslDescription>) {
         return injectionCode.replace('__GLSL_USER_INPUT_SOURCE__', JSON.stringify(code));
     }

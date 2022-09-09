@@ -9,6 +9,7 @@ import { PartialAttributesOf } from '../../api/Endpoint';
 import { ActivityEntity } from '../../api/entities/ActivityEntity';
 import { activityDragDropType } from '../../dnd/types';
 import useActivityDescription from '../../hooks/useActivityDescription';
+import useImported from '../../hooks/useImported';
 import useNecodeFetch from '../../hooks/useNecodeFetch';
 import BrokenWidget from './BrokenWidget';
 import DefaultActivityWidget from "./DefaultActivityWidget";
@@ -75,7 +76,10 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
         onActivityChange?.({ displayName });
     }, [onActivityChange]);
 
-    if (isSkeleton(props)) {
+    const ConfigWidget = useImported(activityType?.configWidget);
+    const shouldShowSkeleton = isSkeleton(props) || (activityType?.configWidget && !ConfigWidget);
+
+    if (shouldShowSkeleton) {
         return <Box>
             <SkeletonWidget />
         </Box>;
@@ -95,7 +99,7 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
             dragHandle={drag} />;
     }
 
-    const Widget = activityType.configWidget ?? DefaultActivityWidget;
+    const Widget = ConfigWidget ?? DefaultActivityWidget;
 
     async function goToConfigPage() {
         router.push({ pathname: `/classroom/${classroomId}/manage/activity/${id}` });

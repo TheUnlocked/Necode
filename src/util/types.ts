@@ -37,3 +37,5 @@ export type NonStrictDisjunction<A, B>
                     ? B[Key] | undefined
                     : undefined
     };
+
+export type Importable<T> = () => Promise<T>;

@@ -9,9 +9,6 @@ import { ActivityConfigPageProps, ActivityPageProps } from "../ActivityDescripti
 import { Refresh as RefreshIcon, Sync as SyncIcon } from "@mui/icons-material";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import React from "react";
-import useCodeGenerator from "../../hooks/useCodeGenerator";
-import supportsGlobal from "../../languages/features/supportsGlobal";
-import supportsIsolated from "../../languages/features/supportsIsolated";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -32,6 +29,7 @@ import { useLoadingContext } from "../../api/client/LoadingContext";
 import { debounce } from "lodash";
 import { ImplicitNewType, NonStrictDisjunction } from "../../util/types";
 import SubtleLink from "../../components/SubtleLink";
+import useImported from '../../hooks/useImported';
 
 export interface HtmlTestActivityBaseConfig {
     description?: string;
@@ -64,7 +62,7 @@ interface HtmlTestActivityMetaProps {
     options: HtmlTestActivityOptions;
 }
 
-export function createTestActivityPage({
+export default function createTestActivityPage({
     isEditor,
     options: {
         hasTests: activityTypeHasTests = true,
@@ -189,12 +187,12 @@ export function createTestActivityPage({
             }
         }, [isHtmlEnabled, isCodeEnabled, isCssEnabled]);
 
-        const codeGenerator = useCodeGenerator<[typeof supportsGlobal, typeof supportsIsolated]>(language.name);
+        const codeGenerator = useImported(language.runnable);
         const [compiledJs, setCompiledJs] = useState('');
         const codeSource = editorStates.code?.value;
 
         useEffect(() => {
-            if (codeSource !== undefined) {
+            if (codeSource !== undefined && codeGenerator !== undefined) {
                 try {
                     const compiledJs = codeGenerator.toRunnerCode(codeSource, {
                         global: true,
@@ -718,14 +716,4 @@ export function createTestActivityPage({
             {layout}
         </>;
     };
-}
-
-export default function createTestActivityPages<Config extends HtmlTestActivityBaseConfig>(options: HtmlTestActivityOptions = {}): [
-    activityPage: (props: ActivityPageProps<Config>) => JSX.Element,
-    configPage: (props: ActivityConfigPageProps<Config>) => JSX.Element
-] {
-    const activityPage = createTestActivityPage({ isEditor: false, options });
-    const configPage = createTestActivityPage({ isEditor: true, options });
-
-    return [activityPage, configPage];
 }

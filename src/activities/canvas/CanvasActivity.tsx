@@ -6,11 +6,11 @@ import { useRTC } from "../../hooks/useRTC";
 import { BrowserRunner } from "../../runner/BrowserRunner";
 import dedent from "dedent-js";
 import Editor from "@monaco-editor/react";
-import useCodeGenerator from "../../hooks/useCodeGenerator";
 import { ActivityPageProps } from "../ActivityDescription";
 import useIsSizeOrSmaller from "../../hooks/useIsSizeOrSmaller";
 import CodeAlert from "../../components/CodeAlert";
 import SimplePeer from "simple-peer";
+import useImported from '../../hooks/useImported';
 
 const SharedCanvas = styled('canvas')({
     maxWidth: "100%",
@@ -119,13 +119,15 @@ export function CanvasActivity({
         return runner;
     }, []);
 
-    const codeGenerator = useCodeGenerator(language.name);
+    const codeGenerator = useImported(language.runnable);
     const codeToRun = code ?? defaultCode[language.name];
 
     useEffect(() => () => runner.shutdown(), [runner]);
     useEffect(() => {
         try {
-            runner.prepareCode(codeGenerator.toRunnerCode(codeToRun, { entryPoint: 'draw' }));
+            if (codeGenerator) {
+                runner.prepareCode(codeGenerator.toRunnerCode(codeToRun, { entryPoint: 'draw' }));
+            }
         }
         catch (e) {
             runner.prepareCode(undefined);

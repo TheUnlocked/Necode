@@ -18,10 +18,11 @@ export const javascriptDescription = languageDescription({
         supportsGlobal,
         supportsIsolated,
         supportsBabelPlugins
-    ] as const
+    ] as const,
+    runnable: async () => new Javascript() as any,
 });
 
-export class Javascript implements RunnableLanguage<typeof javascriptDescription> {
+export class Javascript implements RunnableLanguage<typeof javascriptDescription.features> {
     toRunnerCode(code: string, options: FeatureOptionsOf<typeof javascriptDescription>) {
         try {
             const result = transformSync(code, {

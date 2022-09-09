@@ -19,6 +19,8 @@ import NotFoundPage from "../../404";
 import supportsLanguage from "../../../src/activities/supportsLanguage";
 import { curry } from "lodash";
 import useNecodeFetch from '../../../src/hooks/useNecodeFetch';
+import useImported from '../../../src/hooks/useImported';
+import { typeAssert } from '../../../src/util/typeguards';
 
 interface StaticProps {
     classroomId: string;
@@ -106,7 +108,9 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
         }
     }
 
-    if (!socketInfo) {
+    const ActivityPage = useImported(activity?.activityPage);
+
+    if (!socketInfo || (activity && !ActivityPage)) {
         return <>
             {instructorToolbar}
             <StatusPage primary="Loading..." />
@@ -141,6 +145,9 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
         goToManage();
     }
 
+    // Typescript isn't smart enough to infer this on its own
+    typeAssert(ActivityPage !== undefined);
+
     return <>
         {instructorToolbar}
         {isInstructor ? submissionsDialog : undefined}
@@ -153,7 +160,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
                 overflow: "hidden"
             }
         }}>
-            <activity.activityPage
+            <ActivityPage
                 key={activityEntity!.id}
                 id={activityEntity!.id}
                 activityConfig={activityEntity!.attributes.configuration}

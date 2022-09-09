@@ -20,10 +20,11 @@ export const typescriptDescription = languageDescription({
         supportsGlobal,
         supportsIsolated,
         supportsBabelPlugins
-    ] as const
+    ] as const,
+    runnable: async () => new Typescript() as any,
 });
 
-export class Typescript implements RunnableLanguage<typeof typescriptDescription> {
+export class Typescript implements RunnableLanguage<typeof typescriptDescription.features> {
     toRunnerCode(code: string, options: FeatureOptionsOf<typeof typescriptDescription> & { throwAllCompilerErrors?: boolean }) {
         try {
             const result = transformSync(code, {

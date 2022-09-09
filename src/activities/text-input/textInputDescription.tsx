@@ -1,6 +1,4 @@
 import { activityDescription } from "../ActivityDescription";
-import NoopActivity from "../NoopActivity";
-import TextInputWidget from "./TextInputWidget";
 
 /** The "activity" representing a text input. It exists for its utility as a widget. */
 const textInputActivityDescription = activityDescription({
@@ -11,8 +9,8 @@ const textInputActivityDescription = activityDescription({
         language: null as string | null,
         value: 'Write lesson notes here...'
     },
-    activityPage: NoopActivity,
-    configWidget: TextInputWidget
+    activityPage: async () => (await import('../NoopActivity')).default,
+    configWidget: async () => (await import('./TextInputWidget')).default,
 });
 
 export default textInputActivityDescription;

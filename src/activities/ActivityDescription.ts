@@ -3,6 +3,7 @@ import { ConnectDragSource } from "react-dnd";
 import { SocketInfo } from "../hooks/useSocket";
 import FeatureDescription from "../languages/features/FeatureDescription";
 import LanguageDescription from "../languages/LangaugeDescription";
+import { Importable } from '../util/types';
 
 interface BaseActivityProps<ConfigData = undefined> {
     id: string;
@@ -55,11 +56,11 @@ interface ActivityDescription<ConfigData, Features extends readonly FeatureDescr
 
     rtcPolicy?: string;
 
-    configWidget?: ComponentType<ActivityConfigWidgetProps<ConfigData>>;
+    configWidget?: Importable<ComponentType<ActivityConfigWidgetProps<ConfigData>>>;
 
-    configPage?: ComponentType<ActivityConfigPageProps<ConfigData>>;
+    configPage?: Importable<ComponentType<ActivityConfigPageProps<ConfigData>>>;
 
-    activityPage: ComponentType<ActivityPageProps<ConfigData>>;
+    activityPage: Importable<ComponentType<ActivityPageProps<ConfigData>>>;
 }
 
 export function activityDescription<ConfigData, Features extends readonly FeatureDescription<any>[]>(desc: ActivityDescription<ConfigData, Features>) {

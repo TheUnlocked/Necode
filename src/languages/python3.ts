@@ -20,22 +20,9 @@ export const pythonDescription = languageDescription({
         supportsEntryPoint,
         supportsGlobal,
         supportsIsolated
-    ] as const
+    ] as const,
+    runnable: async () => new Python3() as any,
 });
-
-if (typeof window !== 'undefined') {
-    function addScript(text: string, id: string) {
-        if (!document.getElementById(id)) {
-            const script = document.createElement('script');
-            script.type = 'text/javascript';
-            script.innerHTML = text;
-            script.id = id;
-            document.head.appendChild(script);
-        }
-    }
-    addScript(brythonRaw, '__brython_runtime_script');
-    addScript(brythonStdlibRaw, '__brython_stdlib_script');
-}
 
 declare global {
     var __BRYTHON__: {
@@ -45,7 +32,23 @@ declare global {
     };
 }
 
-export class Python3 implements RunnableLanguage<typeof pythonDescription> {
+export class Python3 implements RunnableLanguage<typeof pythonDescription.features> {
+    constructor() {
+        if (typeof window !== 'undefined' && !document.getElementById('__brython_runtime_script')) {
+            function addScript(text: string, id: string) {
+                if (!document.getElementById(id)) {
+                    const script = document.createElement('script');
+                    script.type = 'text/javascript';
+                    script.innerHTML = text;
+                    script.id = id;
+                    document.head.appendChild(script);
+                }
+            }
+            addScript(brythonRaw, '__brython_runtime_script');
+            addScript(brythonStdlibRaw, '__brython_stdlib_script');
+        }
+    }
+
     toRunnerCode(code: string, options: FeatureOptionsOf<typeof pythonDescription>) {
         let result: string;
 

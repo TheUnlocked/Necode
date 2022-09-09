@@ -9,7 +9,7 @@ import LanguageDescription from "../../../../../src/languages/LangaugeDescriptio
 import useImperativeDialog from "../../../../../src/hooks/useImperativeDialog";
 import sortByProperty from "../../../../../src/util/sortByProperty";
 import { flip, make } from "../../../../../src/util/fp";
-import Lazy from "../../../../../src/components/Lazy";
+import { LazyImportable } from "../../../../../src/components/Lazy";
 import ConfigureLanguageDialog from "../../../../../src/components/dialogs/ConfigureLanguageDialog";
 import { useGetRequest, useGetRequestImmutable } from "../../../../../src/api/client/GetRequestHook";
 import { ActivityEntity } from "../../../../../src/api/entities/ActivityEntity";
@@ -254,23 +254,21 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
                 overflow: "hidden"
             }
         } as SxProps}>
-            <Lazy show={isPreview} keepInDom unloadRef={unloadPreviewRef}>
-                <activity.activityPage
+            <LazyImportable show={isPreview} keepInDom unloadRef={unloadPreviewRef} importable={activity.activityPage} render={
+                ActivityPage => <ActivityPage
                     id={""}
                     activityConfig={activityConfig}
                     classroomId={classroomId}
                     language={selectedLanguage}
                     socketInfo={undefined}
-                    onSaveDataChange={() => {}} />
-            </Lazy>
-            <Lazy show={!isPreview}>
-                <activity.configPage
+                    onSaveDataChange={() => {}} />} />
+            <LazyImportable show={!isPreview} importable={activity.configPage} render={
+                ActivityConfigPage => <ActivityConfigPage
                     id={""}
                     activityConfig={activityConfig}
                     onActivityConfigChange={handleActivityConfigChange}
                     classroomId={classroomId}
-                    language={selectedLanguage} />
-            </Lazy>
+                    language={selectedLanguage} />} />
         </Box>
     </>;
 };

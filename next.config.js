@@ -17,11 +17,7 @@ module.exports = withTM({
       }),
       plugins: [
         ...config.plugins ?? [],
-      ],
-      optimization: {
-        ...config.optimization,
-        minimize: true,
-      }
+      ]
     });
   }
 });

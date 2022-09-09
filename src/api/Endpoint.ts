@@ -2,11 +2,12 @@ import { Schema } from "joi";
 import { NextApiHandler, NextApiRequest, NextApiResponse } from "next";
 import { Entity } from "./entities/Entity";
 import { Response, ResponsePaginationPart } from "./Response";
-import { IncomingMessage } from "http";
+import { IncomingMessage, ServerResponse } from "http";
 import { Session } from "next-auth";
 import { IfAny, UndefinedIsOptional } from "../util/types";
 import { EntityReference, EntityReferenceArray, ReferenceDepth } from "./entities/EntityReference";
 import getIdentity from './server/identity';
+import { parse as parseCookie } from 'cookie';
 
 export enum Status {
     OK = 200,
@@ -301,7 +302,7 @@ export function endpoint<P extends string, Endpoints extends EndpointMap<P>>(_: 
             let session: Session | undefined;
 
             if (endpoint.loginValidation !== false) {
-                const identityResult = await getIdentity(req);
+                const identityResult = await getIdentity(req, res);
                 switch (identityResult) {
                     case 'not-logged-in':
                         return fail(Status.UNAUTHORIZED, 'Not logged in');
@@ -384,7 +385,7 @@ type ExecuteMethod<P extends string, E extends Endpoint<any, any, P>> = (
     content: UndefinedIsOptional<Omit<Parameters<E['handler']>[0], 'session'>>
 ) => Promise<Response<Parameters<Parameters<E['handler']>[1]>[0]>>;
 
-function execute<E extends Endpoint<any, any, any>>(this: E, req: IncomingMessage, content: Omit<Parameters<E['handler']>[0], 'session'>) {
+function execute<E extends Endpoint<any, any, any>>(this: E, req: IncomingMessage, res: ServerResponse, content: Omit<Parameters<E['handler']>[0], 'session'>) {
     return new Promise(async resolve => {
         function ok(result: any) {
             resolve({
@@ -403,7 +404,8 @@ function execute<E extends Endpoint<any, any, any>>(this: E, req: IncomingMessag
         let session: Session | undefined;
     
         if (this.loginValidation !== false) {
-            const identityResult = await getIdentity(req);
+            (req as any).cookies = parseCookie(req.headers.cookie ?? '');
+            const identityResult = await getIdentity(req as any, res);
             switch (identityResult) {
                 case 'not-logged-in':
                     return fail(Status.UNAUTHORIZED, 'Not logged in');

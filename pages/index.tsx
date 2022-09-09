@@ -142,10 +142,10 @@ const instructorInfo = (me: UserEntity<{ classes: 'deep' }> | undefined) => <>
         No. While there are future plans to make Necode mobile-friendly from the student view, there are no plans
         to do the same for the instructor view. The manage classroom/activity pages will not work on a phone.
     </InfoSection>
-    <InfoSection title="I have a classroom registered on Necode, but I lost the link.">
+    <InfoSection omitParagraph title="I have a classroom registered on Necode, but I lost the link.">
         {me?.attributes.classes.length! > 0
             ? <>
-                Is it one of these?
+                <p>Is it one of these?</p>
                 <ul>
                     {me?.attributes.classes.map(x => <li key={x.id}>
                         <SubtleLink href={`/classroom/${x.id}`}>{x.attributes.displayName}</SubtleLink>
@@ -166,14 +166,16 @@ const studentInfo = (me: UserEntity<{ classes: 'deep' }> | undefined) => <>
             you can always enter the code into the join classroom page again and it will send you right back!
         </p>
         {me?.attributes.classes.length! > 0
-            ? <p>
-                Or you can just come back here and select your class from this list <span style={{ whiteSpace: "nowrap" }}>/ᐠ｡ꞈ｡ᐟ\</span>
+            ? <>
+                <p>
+                    Or you can just come back here and select your class from this list <span style={{ whiteSpace: "nowrap" }}>/ᐠ｡ꞈ｡ᐟ\</span>
+                </p>
                 <ul>
                     {me?.attributes.classes.map(x => <li key={x.id}>
                         <SubtleLink href={`/classroom/${x.id}`}>{x.attributes.displayName}</SubtleLink>
                     </li>)}
                 </ul>
-            </p>
+            </>
             : null}
     </InfoSection>
     <InfoSection title="Can I use Necode on my phone?">

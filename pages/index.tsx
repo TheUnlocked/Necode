@@ -80,12 +80,12 @@ const generalInfo = <>
             Additionally, Necode runs all user code in the browser. While this removes the ability to have trustworthy
             verification of task completion (Necode is NOT intended to be used for graded assignments), it provides many
             benefits over server-side computation:
-            <ul>
-                <li>Students can debug their code using native browser debugging tools</li>
-                <li>Realtime multi-media activities are possible, including those with canvas graphics, audio, and even WebGL</li>
-                <li>Intermittent server issues will not severely impact interactivity</li>
-            </ul>
         </p>
+        <ul>
+            <li>Students can debug their code using native browser debugging tools</li>
+            <li>Realtime multi-media activities are possible, including those with canvas graphics, audio, and even WebGL</li>
+            <li>Intermittent server issues will not severely impact interactivity</li>
+        </ul>
     </InfoSection>
     <InfoSection title="Is there a paper I can read?">
         <SubtleLink target="_blank" rel="noopener" href="https://digital.wpi.edu/show/6h440w69h">Yes!</SubtleLink>{' '}

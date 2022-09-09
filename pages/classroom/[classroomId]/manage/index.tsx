@@ -1,4 +1,4 @@
-import { Button, Card, CardContent, IconButton, Paper, Skeleton, Stack, Toolbar, Tooltip, Typography } from "@mui/material";
+import { Button, Paper, Stack, Toolbar, Typography } from "@mui/material";
 import { NextPage } from "next";
 import { Dispatch, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ActivityListPane from "../../../../src/components/lesson-config/ActivityListPane";
@@ -10,7 +10,6 @@ import { DateTime } from "luxon";
 import { useRouter } from "next/router";
 import NotFoundPage from "../../../404";
 import { ClassroomMemberEntity } from "../../../../src/api/entities/ClassroomMemberEntity";
-import { ContentCopy, Share } from "@mui/icons-material";
 import { useSnackbar } from "notistack";
 import LessonDatePicker from '../../../../src/components/lesson-config/LessonDatePicker';
 import useNecodeFetch from '../../../../src/hooks/useNecodeFetch';
@@ -19,6 +18,7 @@ import LessonDragLayer from '../../../../src/components/lesson-config/LessonDrag
 import useImperativeDialog from '../../../../src/hooks/useImperativeDialog';
 import LessonMergeDialog from '../../../../src/components/dialogs/LessonMergeDialog';
 import isContentfulLesson from '../../../../src/lessons/isContentfulLesson';
+import JoinCodeCard from '../../../../src/components/lesson-config/JoinCodeCard';
 
 
 function getDateFromPath(path: string) {
@@ -59,16 +59,7 @@ const Page: NextPage = () => {
 const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
     const router = useRouter();
 
-    const { upload, download } = useNecodeFetch();
-
-    const [joinCode, setJoinCode] = useState<string>();
-
-    useEffect(() => {
-        if (classroomId && joinCode === undefined) {
-            download<string>(`/api/classroom/${classroomId}/join-code`, { method: 'POST' })
-                .then(setJoinCode);
-        }
-    }, [classroomId, joinCode, download]);
+    const { upload } = useNecodeFetch();
 
     // Normally fromLuxon uses UTC, but for the default we want "today" in the user's timezone
     const [selectedDate, setSelectedDate] = useState(fromLuxon(DateTime.now(), false));
@@ -115,22 +106,6 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
     }, [router, classroomId]);
 
     const { enqueueSnackbar } = useSnackbar();
-
-    const copyJoinCodeToKeyboard = useCallback(() => {
-        if (joinCode) {
-            navigator.clipboard.writeText(joinCode)
-                .then(() => enqueueSnackbar('Copied join code to clipboard', { variant: 'success' }))
-                .catch(() => enqueueSnackbar('Failed to copy to clipboard', { variant: 'error' }));
-        }
-    }, [joinCode, enqueueSnackbar]);
-
-    const copyJoinLinkToKeyboard = useCallback(() => {
-        if (joinCode) {
-            navigator.clipboard.writeText(`${location.origin}/classroom/join?joinCode=${joinCode}`)
-                .then(() => enqueueSnackbar('Copied join link to clipboard', { variant: 'success' }))
-                .catch(() => enqueueSnackbar('Failed to copy to clipboard', { variant: 'error' }));
-        }
-    }, [joinCode, enqueueSnackbar]);
 
     const isActivityRunning = liveActivityData?.live;
 
@@ -269,21 +244,6 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
         </Toolbar>
         : undefined, [isActivityRunning, goToActivity, endActivity]);
 
-    const joinCard = useMemo(() => <Card variant="outlined">
-        <Stack direction="row">
-            <CardContent sx={{ px: 3, pt: 3, flexGrow: 1 }}>
-                <Typography variant="body1">Join Code</Typography>
-                {joinCode
-                    ? <Typography variant="h3" component="div" sx={{ mt: 1 }}>{joinCode}</Typography>
-                    : <Typography variant="h3" component="div" sx={{ mt: 1 }}><Skeleton /></Typography>}
-            </CardContent>
-            {joinCode ? <Stack direction="column" justifyContent="flex-end" spacing={1} sx={{ p: 1 }}>
-                <Tooltip title="Copy Join Code" disableInteractive><IconButton onClick={copyJoinCodeToKeyboard}><ContentCopy/></IconButton></Tooltip>
-                <Tooltip title="Copy Join Link" disableInteractive><IconButton onClick={copyJoinLinkToKeyboard}><Share/></IconButton></Tooltip>
-            </Stack> : undefined}
-        </Stack>
-    </Card>, [joinCode, copyJoinCodeToKeyboard, copyJoinLinkToKeyboard]);
-
     const listPane = useMemo(() => {
         if (!lessons) {
             return <SkeletonActivityListPane sx={{ flexGrow: 3, height: "100%", display: "flex", flexDirection: "column" }} />;
@@ -307,7 +267,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
             py: 4
         }} direction="row" spacing={8}>
             <Stack spacing={4}>
-                {joinCard}
+                <JoinCodeCard classroomId={classroomId} />
                 <Paper variant="outlined" sx={{ pt: 2 }}>
                     <LessonDatePicker selectedDate={selectedDate} lessonsByDate={lessonsByDate}
                         onDropActivity={handleCalendarDropActivity}

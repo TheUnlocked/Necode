@@ -1,8 +1,7 @@
 import { Schema } from "joi";
-import { NextApiHandler, NextApiRequest, NextApiResponse } from "next";
+import { GetServerSidePropsContext, NextApiHandler, NextApiRequest, NextApiResponse } from "next";
 import { Entity } from "./entities/Entity";
 import { Response, ResponsePaginationPart } from "./Response";
-import { IncomingMessage, ServerResponse } from "http";
 import { Session } from "next-auth";
 import { IfAny, UndefinedIsOptional } from "../util/types";
 import { EntityReference, EntityReferenceArray, ReferenceDepth } from "./entities/EntityReference";
@@ -381,11 +380,12 @@ export function endpoint<P extends string, Endpoints extends EndpointMap<P>>(_: 
 
 type ExecuteMethod<P extends string, E extends Endpoint<any, any, P>> = (
     this: E,
-    req: IncomingMessage,
+    req: GetServerSidePropsContext['req'],
+    res: GetServerSidePropsContext['res'],
     content: UndefinedIsOptional<Omit<Parameters<E['handler']>[0], 'session'>>
 ) => Promise<Response<Parameters<Parameters<E['handler']>[1]>[0]>>;
 
-function execute<E extends Endpoint<any, any, any>>(this: E, req: IncomingMessage, res: ServerResponse, content: Omit<Parameters<E['handler']>[0], 'session'>) {
+function execute<E extends Endpoint<any, any, any>>(this: E, req: GetServerSidePropsContext['req'], res: GetServerSidePropsContext['res'], content: Omit<Parameters<E['handler']>[0], 'session'>) {
     return new Promise(async resolve => {
         function ok(result: any) {
             resolve({

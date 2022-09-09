@@ -14,7 +14,7 @@ import allLanguages from "../../../src/languages/allLanguages";
 import { useSubmissions } from "../../../src/hooks/useSubmissions";
 import useImperativeDialog from "../../../src/hooks/useImperativeDialog";
 import SubmissionsDialog from "../../../src/components/dialogs/SubmissionsDialog";
-import { ClassroomRole } from ".prisma/client";
+import { ClassroomRole } from "@prisma/client";
 import NotFoundPage from "../../404";
 import supportsLanguage from "../../../src/activities/supportsLanguage";
 import { curry } from "lodash";

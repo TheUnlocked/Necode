@@ -1,4 +1,4 @@
-import { Lesson } from ".prisma/client";
+import { Lesson } from "@prisma/client";
 import { DateTime } from "luxon";
 import { fromLuxon, Iso8601Date } from "../../util/iso8601";
 import { ActivityEntity } from "./ActivityEntity";

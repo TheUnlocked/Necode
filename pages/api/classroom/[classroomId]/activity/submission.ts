@@ -1,4 +1,4 @@
-import { Activity, ActivitySubmission, User } from ".prisma/client";
+import { Activity, ActivitySubmission, User } from "@prisma/client";
 import { endpoint, Status } from "../../../../../src/api/Endpoint";
 import { makeActivityEntity } from "../../../../../src/api/entities/ActivityEntity";
 import { makeActivitySubmissionEntity } from "../../../../../src/api/entities/ActivitySubmissionEntity";

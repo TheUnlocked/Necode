@@ -1,4 +1,4 @@
-import { PrismaClient } from ".prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { stream } from "../../src/util/iterables/Stream";
 import { isNotNull } from "../../src/util/typeguards";
 import { RtcCoordinator } from "./rtc/policies/RtcPolicy";

@@ -1,4 +1,4 @@
-import { Activity } from ".prisma/client";
+import { Activity } from "@prisma/client";
 import { Entity, EntityType } from "./Entity";
 import { EntityReference, makeEntityReference, ReferenceDepth } from "./EntityReference";
 import { LessonEntity } from "./LessonEntity";

@@ -1,4 +1,4 @@
-import { ClassroomRole } from ".prisma/client";
+import { ClassroomRole } from "@prisma/client";
 import Joi from "joi";
 import { prisma } from "../../../src/db/prisma";
 import { makeClassroomEntity } from "../../../src/api/entities/ClassroomEntity";

@@ -1,4 +1,4 @@
-import { SitewideRights, User } from ".prisma/client";
+import { SitewideRights, User } from "@prisma/client";
 import { Entity, EntityType } from "./Entity";
 import { EntityReferenceArray, makeEntityReferenceArray, ReferenceDepth } from "./EntityReference";
 import { ClassroomEntity } from "./ClassroomEntity";

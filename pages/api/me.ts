@@ -3,6 +3,10 @@ import { makeUserEntity } from "../../src/api/entities/UserEntity";
 import { endpoint, Status } from "../../src/api/Endpoint";
 import { makeClassroomEntity } from "../../src/api/entities/ClassroomEntity";
 
+export const config = {
+    runtime: 'experimental-edge',
+};
+
 const apiMe = endpoint(makeUserEntity, ['include[]'], {
     type: 'entity',
     GET: {

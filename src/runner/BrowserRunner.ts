@@ -23,14 +23,15 @@ export class BrowserRunner implements IRunner {
     isAlive = false;
     private code: string = "";
     private compiled: Function | undefined;
+    private entryPoint: Function | undefined;
 
     async start() {
         if (this.wasStarted) {
             if (this.isAlive) {
-                throw new Error(`Cannot start an already started SecureRunner`);
+                throw new Error(`Cannot start an already started runner`);
             }
             else {
-                throw new Error(`Cannot re-start a dead SecureRunner, create a new instance instead`);
+                throw new Error(`Cannot re-start a dead runner, create a new instance instead`);
             }
         }
     }
@@ -41,11 +42,12 @@ export class BrowserRunner implements IRunner {
      * @throws
      */
     prepareCode(code: string | undefined) {
+        this.entryPoint = undefined;
         if (code === undefined) {
             this.compiled = undefined;
         }
         else {
-            this.compiled = new Function(`${code}\nentry(...arguments)`);
+            this.compiled = new Function(`${code};return entry`);
         }
     }
 
@@ -63,7 +65,19 @@ export class BrowserRunner implements IRunner {
         if (!this.compiled) {
             throw Error("Tried to run code without preparing it");
         }
-        return this.compiled(...args);
+        if (this.entryPoint) {
+            return this.runHot(args, timeout);
+        }
+        return this.runCold(args, timeout);
+    }
+
+    private async runCold(args: any[], timeout: number) {
+        this.entryPoint = this.compiled!();
+        return this.runHot(args, timeout);
+    }
+
+    private async runHot(args: any[], timeout: number) {
+        this.entryPoint!(...args);
     }
 
     /**

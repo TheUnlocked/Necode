@@ -15,6 +15,22 @@ export interface TextInputWidgetProps {
     language: string | null;
 }
 
+const monacoOptions = {
+    minimap: { enabled: false },
+    scrollBeyondLastLine: false,
+    fixedOverflowWidgets: true,
+    lineNumbers: 'off',
+    lineDecorationsWidth: 0,
+    folding: false,
+    matchBrackets: 'never',
+    renderLineHighlightOnlyWhenFocus: true,
+    overviewRulerLanes: 0,
+    hideCursorInOverviewRuler: true,
+    overviewRulerBorder: false,
+    renderIndentGuides: false,
+    fontSize: 15
+} as editor.IStandaloneEditorConstructionOptions;
+
 export default function TextInputWidget({
     id,
     activityConfig: { value: _textContent, language },
@@ -111,21 +127,7 @@ export default function TextInputWidget({
                 }}
                 theme="vs-black"
                 language={languageDescription?.monacoName}
-                options={{
-                    minimap: { enabled: false },
-                    scrollBeyondLastLine: false,
-                    fixedOverflowWidgets: true,
-                    lineNumbers: 'off',
-                    lineDecorationsWidth: 0,
-                    folding: false,
-                    matchBrackets: 'never',
-                    renderLineHighlightOnlyWhenFocus: true,
-                    overviewRulerLanes: 0,
-                    hideCursorInOverviewRuler: true,
-                    overviewRulerBorder: false,
-                    renderIndentGuides: false,
-                    fontSize: 15
-                } as editor.IStandaloneEditorConstructionOptions} />
+                options={monacoOptions} />
             <span><IconButton size="small" className={dragHandleClass} sx={{ ml: 0.5 }}
                 {...bindTrigger(languageSelectPopup)}>{languageDescription?.icon ? <languageDescription.icon /> : <CodeIcon/>}</IconButton></span>
             <Popper {...bindPopper(languageSelectPopup)}

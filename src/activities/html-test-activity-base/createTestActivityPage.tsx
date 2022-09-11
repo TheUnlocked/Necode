@@ -30,6 +30,7 @@ import { ImplicitNewType, NonStrictDisjunction } from "../../util/types";
 import SubtleLink from "../../components/SubtleLink";
 import useImported from '../../hooks/useImported';
 import { typescriptDescription } from '../../languages/typescript';
+import { editor } from 'monaco-editor';
 
 export interface HtmlTestActivityBaseConfig {
     description?: string;
@@ -61,6 +62,21 @@ interface HtmlTestActivityMetaProps {
     isEditor: boolean;
     options: HtmlTestActivityOptions;
 }
+
+const markdownEditorOptions: editor.IStandaloneEditorConstructionOptions = {
+    minimap: { enabled: false },
+    "semanticHighlighting.enabled": true,
+    fixedOverflowWidgets: true,
+    lineNumbers: "off",
+    lineDecorationsWidth: 0,
+    wordWrap: "on",
+};
+
+const codeEditorOptions: editor.IStandaloneEditorConstructionOptions = {
+    minimap: { enabled: false },
+    "semanticHighlighting.enabled": true,
+    fixedOverflowWidgets: true,
+};
 
 export default function createTestActivityPage({
     isEditor,
@@ -542,11 +558,7 @@ export default function createTestActivityPage({
                         }}>
                             <Editor
                                 theme="vs-dark"
-                                options={{
-                                    minimap: { enabled: false },
-                                    "semanticHighlighting.enabled": true,
-                                    fixedOverflowWidgets: true,
-                                }}
+                                options={codeEditorOptions}
                                 language="typescript"
                                 value={testsSource}
                                 onChange={val => testsSource === val ? undefined : onActivityConfigChange!({
@@ -606,14 +618,7 @@ export default function createTestActivityPage({
                     {isEditor
                         ? <Box sx={{ flexGrow: 1 }}><Editor
                             theme="vs-dark"
-                            options={{
-                                minimap: { enabled: false },
-                                "semanticHighlighting.enabled": true,
-                                fixedOverflowWidgets: true,
-                                lineNumbers: "off",
-                                lineDecorationsWidth: 0,
-                                wordWrap: "on",
-                            }}
+                            options={markdownEditorOptions}
                             language="markdown"
                             value={description}
                             onChange={val => description === val ? undefined : onActivityConfigChange!({

@@ -109,10 +109,7 @@ io.on('connection', socket => {
     });
 
     socket.on('joinRtc', async () => {
-        if (classroom.activity?.rtcPolicy) {
-            classroom.activity.rtcPolicy.onUserLeave(socketId);
-            classroom.activity.rtcPolicy.onUserJoin(socketId);
-        }
+        classroom.activity?.rtcPolicy?.onUserJoin(socketId);
     });
 
     socket.on('disconnecting', reason => {

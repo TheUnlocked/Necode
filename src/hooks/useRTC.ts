@@ -3,6 +3,7 @@ import Peer from 'simple-peer';
 import tracked from '../util/trackedEventEmitter';
 import { SocketInfo } from './useSocket';
 
+let joinedRtc = false;
 
 export function useRTC<T>(socketInfo: SocketInfo | undefined, onPeer: (peer: Peer.Instance, info: T) => void) {
     const onPeerRef = useRef(onPeer);
@@ -61,9 +62,13 @@ export function useRTC<T>(socketInfo: SocketInfo | undefined, onPeer: (peer: Pee
             peer.on('close', () => peerTrackedWs.offTracked());
         });
 
-        ws.emit('joinRtc');
+        if (!joinedRtc) {
+            ws.emit('joinRtc');
+            joinedRtc = true;
+        }
 
         return () => {
+            joinedRtc = false;
             peers.forEach(x => x.destroy());
             ws.offTracked();
         };

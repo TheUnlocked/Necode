@@ -13,7 +13,7 @@ export default class RtcManager {
         const recipientName = recipientId;
         const initiatorConnId = connId + '/' + nanoid();
         const recipientConnId = connId + '/' + nanoid();
-        console.log(`[${connId}]`, 'link', initiatorName, 'with', recipientName);
+        console.debug(`[${connId}]`, 'link', initiatorName, 'with', recipientName);
     
         if (!initiatorId) {
             console.log(`[${connId}]`, initiatorName, 'is not a valid user');
@@ -37,13 +37,13 @@ export default class RtcManager {
         initiatorSocket.on('provideWebRTCSignal', (conn, signal) => {
             if (conn === initiatorConnId) {
                 this.io.to(recipientId).emit('signalWebRTCConnection', recipientConnId, signal);
-                console.log(`[${recipientConnId}] signal`);
+                console.debug(`[${recipientConnId}] signal`);
             }
         });
         recipientSocket.on('provideWebRTCSignal', (conn, signal) => {
             if (conn === recipientConnId) {
                 this.io.to(initiatorId).emit('signalWebRTCConnection', initiatorConnId, signal);
-                console.log(`[${initiatorConnId}] signal`);
+                console.debug(`[${initiatorConnId}] signal`);
             }
         });
     
@@ -55,10 +55,10 @@ export default class RtcManager {
         });
     
         this.io.to(initiatorId).emit('createWebRTCConnection', true, initiatorConnId, initiatorInfo);
-        console.log(`[${connId}]`, 'told', initiatorName, 'to initiate connection with', recipientName);
+        console.debug(`[${connId}]`, 'told', initiatorName, 'to initiate connection with', recipientName);
         
         this.io.to(recipientId).emit('createWebRTCConnection', false, recipientConnId, recipientInfo);
-        console.log(`[${connId}]`, 'told', recipientName, 'to create connection with', initiatorName);
+        console.debug(`[${connId}]`, 'told', recipientName, 'to create connection with', initiatorName);
     
         const self = this;
 
@@ -70,7 +70,7 @@ export default class RtcManager {
                     throw new Error(`Cannot destroy already dead connection ${connId}`);
                 }
                 this.alive = false;
-                console.log(`[${connId}]`, 'unlink', initiatorName, 'from', recipientName);
+                console.debug(`[${connId}]`, 'unlink', initiatorName, 'from', recipientName);
                 self.io.to(initiatorId).emit('killWebRTCConnection', initiatorConnId);
                 self.io.to(recipientId).emit('killWebRTCConnection', recipientConnId);
             }

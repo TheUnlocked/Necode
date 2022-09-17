@@ -58,6 +58,9 @@ module.exports = {
         encoding: "commonjs2 encoding",
         "util/types": "commonjs2 util/types"
     },
+    node: {
+        __dirname: true,
+    },
     experiments: {
         topLevelAwait: true
     }

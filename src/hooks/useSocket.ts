@@ -55,11 +55,7 @@ export default function useSocket(classroomId: string): SocketInfo | undefined {
     }, [socketData]);
 
     return useMemo(() => socket && iceServers
-        ? {
-            socket: socket,
-            liveActivityInfo: liveActivityInfo,
-            iceServers,
-        }
+        ? { socket, liveActivityInfo, iceServers }
         : undefined,
     [liveActivityInfo, socket, iceServers]);
 }

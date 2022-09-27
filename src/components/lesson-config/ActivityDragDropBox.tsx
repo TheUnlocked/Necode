@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { ComponentType, useCallback, useEffect, useRef } from "react";
 import { ConnectableElement, useDrag } from "react-dnd";
 import { getEmptyImage } from 'react-dnd-html5-backend';
-import { LiveActivityInfo } from "../../../websocketServer/src/types";
+import { CreateLiveActivityInfo } from "../../../websocketServer/src/types";
 import { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
 import { PartialAttributesOf } from '../../api/Endpoint';
 import { ActivityEntity } from '../../api/entities/ActivityEntity';
@@ -106,12 +106,17 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
     }
 
     async function startActivity() {
-        await upload(`/api/classroom/${classroomId}/activity/live`, {
-            method: 'POST',
-            body: JSON.stringify({ id, rtcPolicy: activityType!.rtcPolicy } as LiveActivityInfo)
-        });
-
-        router.push(`/classroom/${classroomId}/activity`);
+        if (activityType) {
+            await upload(`/api/classroom/${classroomId}/activity/live`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    id,
+                    networks: activityType.configurePolicies?.(props.activity!.attributes.configuration),
+                } as CreateLiveActivityInfo)
+            });
+    
+            router.push(`/classroom/${classroomId}/activity`);
+        }
     }
 
     return <Box ref={setBoxRef} sx={{ opacity: isDragging ? 0 : 1 }}>

@@ -1,4 +1,5 @@
 import { nanoid } from "nanoid";
+import { NetworkId } from '../../../src/api/RtcNetwork';
 import tracked from "../../../src/util/trackedEventEmitter";
 import { IOServer } from "../types";
 
@@ -7,7 +8,7 @@ export default class RtcManager {
 
     }
 
-    createWebRtcConnection(initiatorId: string, recipientId: string, initiatorInfo: unknown, recipientInfo: unknown) {
+    createWebRtcConnection(network: NetworkId, initiatorId: string, recipientId: string) {
         const connId = nanoid();
         const initiatorName = initiatorId;
         const recipientName = recipientId;
@@ -54,10 +55,10 @@ export default class RtcManager {
             recipientSocket.offTracked();
         });
     
-        this.io.to(initiatorId).emit('createWebRTCConnection', true, initiatorConnId, initiatorInfo);
+        this.io.to(initiatorId).emit('createWebRTCConnection', network, true, initiatorConnId, null);
         console.debug(`[${connId}]`, 'told', initiatorName, 'to initiate connection with', recipientName);
         
-        this.io.to(recipientId).emit('createWebRTCConnection', false, recipientConnId, recipientInfo);
+        this.io.to(recipientId).emit('createWebRTCConnection', network, false, recipientConnId, null);
         console.debug(`[${connId}]`, 'told', recipientName, 'to create connection with', initiatorName);
     
         const self = this;

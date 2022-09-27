@@ -1,16 +1,28 @@
 import { PrismaClient } from "@prisma/client";
+import { NetworkId, PolicyConfiguration } from '../../src/api/RtcNetwork';
 import { stream } from "../../src/util/iterables/Stream";
 import { isNotNull } from "../../src/util/typeguards";
-import { RtcCoordinator } from "./rtc/policies/RtcPolicy";
+import RtcManager from './rtc/RtcManager';
+import { RtcNetwork } from './rtc/RtcNetwork';
 import { IOServer } from "./types";
 import UserManager from "./UserManager";
+
+function toNetworkId(x: number) {
+    switch (x) {
+        case 0:
+            return NetworkId.NET_0;
+        case 1:
+            return NetworkId.NET_1;
+    }
+    throw new Error(`There is no network with id ${x}`);
+}
 
 class Classroom {
     private memberSocketIds = new Set<string>();
 
     private _activity?: Activity;
 
-    constructor(public readonly id: string, private io: IOServer, private prisma: PrismaClient, private users: UserManager) {
+    constructor(public readonly id: string, private io: IOServer, private prisma: PrismaClient, private users: UserManager, private rtc: RtcManager) {
 
     }
 
@@ -18,11 +30,11 @@ class Classroom {
         return this._activity;
     }
 
-    startActivity(activityId: string, activityInfo: any, rtcPolicy?: RtcCoordinator) {
+    startActivity(activityId: string, networkConfig: readonly PolicyConfiguration[], activityInfo: any) {
         this._activity = {
             id: activityId,
             info: activityInfo,
-            rtcPolicy
+            networks: networkConfig.map((config, i) => new RtcNetwork(toNetworkId(i), this.rtc, config)),
         };
         this.io.to(this.id).emit('startActivity', { id: activityId, info: activityInfo });
     }
@@ -47,7 +59,7 @@ class Classroom {
         this.memberSocketIds.delete(socketId);
         this._instructorsCache.delete(socketId);
 
-        this.activity?.rtcPolicy?.onUserLeave(socketId);
+        this.activity?.networks.forEach(network => network.onUserLeave(socketId));
     }
 
     private async getMembersFromQueryResult(query: () => Promise<{ userId: string }[]>) {
@@ -117,13 +129,13 @@ export type { Classroom };
 export interface Activity {
     id: string;
     info: any;
-    rtcPolicy?: RtcCoordinator;
+    networks: readonly RtcNetwork[];
 }
 
 export default class ClassroomManager {
     private map = new Map<string, Classroom>();
 
-    constructor(private io: IOServer, private prisma: PrismaClient, private users: UserManager) {
+    constructor(private io: IOServer, private prisma: PrismaClient, private users: UserManager, private rtc: RtcManager) {
 
     }
 
@@ -133,7 +145,7 @@ export default class ClassroomManager {
 
     getOrCreate(id: string) {
         if (!this.map.has(id)) {
-            const classroom = new Classroom(id, this.io, this.prisma, this.users);
+            const classroom = new Classroom(id, this.io, this.prisma, this.users, this.rtc);
             this.map.set(id, classroom);
             return classroom;
         }

@@ -1,17 +1,18 @@
+import { isEqual } from 'lodash';
 import { useEffect, useMemo, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { ClientToServerEventMap, LiveActivityInfo, ServerToClientEventMap } from '../../websocketServer/src/types';
+import { ClientToServerEventMap, ServerToClientEventMap, SignalLiveActivityInfo } from '../../websocketServer/src/types';
 import { useGetRequest } from '../api/client/GetRequestHook';
 
 export interface SocketInfo {
     readonly socket: Socket<ServerToClientEventMap, ClientToServerEventMap>;
     readonly iceServers: RTCIceServer[];
-    readonly liveActivityInfo?: LiveActivityInfo;
+    readonly liveActivityInfo?: SignalLiveActivityInfo;
 }
 
-export default function useSocket(classroomId: string): SocketInfo | undefined {
+export function useSocket(classroomId: string) {
     const [socket, setSocket] = useState<Socket<ServerToClientEventMap, ClientToServerEventMap> | undefined>();
-    const [liveActivityInfo, setLiveActivityInfo] = useState<LiveActivityInfo>();
+    const [liveActivityInfo, setLiveActivityInfo] = useState<SignalLiveActivityInfo>();
 
     const { data: socketData } = useGetRequest<{ server: string, token: string }>(
         classroomId ? `/api/classroom/${classroomId}/activity/live` : null,
@@ -46,7 +47,7 @@ export default function useSocket(classroomId: string): SocketInfo | undefined {
                 });
             });
 
-            ws.on('startActivity', setLiveActivityInfo);
+            ws.on('startActivity', data => setLiveActivityInfo(curr => isEqual(curr, data) ? curr : data));
 
             ws.on('endActivity', () => setLiveActivityInfo(undefined));
     

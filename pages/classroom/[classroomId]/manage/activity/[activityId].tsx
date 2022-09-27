@@ -20,6 +20,7 @@ import NotFoundPage from "../../../../404";
 import supportsLanguage from "../../../../../src/activities/supportsLanguage";
 import { curry } from "lodash";
 import useNecodeFetch from '../../../../../src/hooks/useNecodeFetch';
+import { useSnackbar } from 'notistack';
 
 interface StaticProps {
     classroomId: string;
@@ -174,6 +175,8 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
         unloadPreviewRef.current();
         setActivityConfig(newConfig);
     }, []);
+
+    const { enqueueSnackbar } = useSnackbar();
     
     if (isLoading) {
         return <>
@@ -260,8 +263,10 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
                     activityConfig={activityConfig}
                     classroomId={classroomId}
                     language={selectedLanguage}
-                    socketInfo={undefined}
-                    onSaveDataChange={() => {}} />} />
+                    onSaveDataChange={() => {}}
+                    onSubmit={async () => {
+                        enqueueSnackbar('Submissions are disabled during configuration.', { variant: 'info' });
+                    }} />} />
             <LazyImportable show={!isPreview} importable={activity.configPage} render={
                 ActivityConfigPage => <ActivityConfigPage
                     id={""}

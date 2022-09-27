@@ -1,12 +1,12 @@
 import { NextPage } from "next";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Button, Chip, Stack, Toolbar } from "@mui/material";
 import { ArrowBack, AssignmentTurnedIn, Close } from "@mui/icons-material";
 import { Box } from "@mui/system";
 import { ClassroomMemberEntity } from "../../../src/api/entities/ClassroomMemberEntity";
 import { useGetRequest, useGetRequestImmutable } from "../../../src/api/client/GetRequestHook";
-import useSocket from "../../../src/hooks/useSocket";
+import { useSocket } from "../../../src/hooks/useSocket";
 import StatusPage from "../../../src/components/StatusPage";
 import { ActivityEntity } from "../../../src/api/entities/ActivityEntity";
 import allActivities from "../../../src/activities/allActivities";
@@ -21,6 +21,9 @@ import { curry } from "lodash";
 import useNecodeFetch from '../../../src/hooks/useNecodeFetch';
 import useImported from '../../../src/hooks/useImported';
 import { typeAssert } from '../../../src/util/typeguards';
+import { RtcProvider } from '../../../src/hooks/useRtc';
+import { useSnackbar } from 'notistack';
+import { useLoadingContext } from '../../../src/api/client/LoadingContext';
 
 interface StaticProps {
     classroomId: string;
@@ -66,7 +69,29 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
         setHasNewSubmissions(false);
     }
 
+    const { enqueueSnackbar } = useSnackbar();
+    const { startUpload, finishUpload } = useLoadingContext();
     const [saveData, setSaveData] = useState<{ data: any }>();
+
+    const handleSubmit = useCallback(() => {
+        if (!socketInfo?.socket) {
+            enqueueSnackbar('A network error occurrred. Copy your work to a safe place and refresh the page.', { variant: 'error' });
+            return Promise.reject();
+        }
+        startUpload();
+        return new Promise<void>((resolve, reject) => {
+            socketInfo.socket.emit('submission', saveData, error => {
+                finishUpload();
+                if (error) {
+                    enqueueSnackbar(error, { variant: 'error' });
+                    reject(new Error(error));
+                }
+                else {
+                    resolve();
+                }
+            });
+        });
+    }, [saveData, socketInfo?.socket, enqueueSnackbar, startUpload, finishUpload]);
 
     const { data: activityEntity } = useGetRequest<ActivityEntity<{ lesson: 'deep' }>>(
         socketInfo?.liveActivityInfo
@@ -160,15 +185,17 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
                 overflow: "hidden"
             }
         }}>
-            <ActivityPage
-                key={activityEntity!.id}
-                id={activityEntity!.id}
-                activityConfig={activityEntity!.attributes.configuration}
-                classroomId={classroomId}
-                language={enabledLanguages[0]}
-                socketInfo={socketInfo}
-                saveData={saveData}
-                onSaveDataChange={setSaveData} />
+            <RtcProvider socketInfo={socketInfo}>
+                <ActivityPage
+                    key={activityEntity!.id}
+                    id={activityEntity!.id}
+                    activityConfig={activityEntity!.attributes.configuration}
+                    classroomId={classroomId}
+                    language={enabledLanguages[0]}
+                    onSubmit={handleSubmit}
+                    saveData={saveData}
+                    onSaveDataChange={setSaveData} />
+            </RtcProvider>
         </Box>
     </>;
 };

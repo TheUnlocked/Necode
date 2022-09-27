@@ -9,6 +9,7 @@ import { TypeAttributeKind } from '@necode-org/mike/types/Attribute';
 import { JavascriptTarget, JsLibraryImplementation, MiKeProgram, MiKeProgramWithoutExternals } from '@necode-org/mike/codegen/js';
 import { ArrayKeyMap } from '../../../../src/util/maps/ArrayKeyMap';
 import loadModule from '@brillout/load-module';
+import { NetworkId } from '../../../../src/api/RtcNetwork';
 
 const userType: SimpleType = { kind: TypeKind.Simple, name: 'User', typeArguments: [] };
 const policyType: SimpleType = { kind: TypeKind.Simple, name: 'Policy', typeArguments: [] };
@@ -88,12 +89,12 @@ export default async function createMiKePolicy(filename: string) {
         private joinListener?: MiKeProgram['listeners'][any];
         private leaveListener?: MiKeProgram['listeners'][any];
 
-        constructor(users: Iterable<string>, private settings: RtcPolicySettings) {
+        constructor(network: NetworkId, users: Iterable<string>, private settings: RtcPolicySettings) {
             this.program = createMiKeProgram({
                 debug: console.log,
                 link: (a: string, b: string) => {
                     console.debug(a, '->', b);
-                    this.connectionMap.set([a, b], this.settings.rtc.createWebRtcConnection(a, b, { 'role': 'send' }, { 'role': 'recv' }));
+                    this.connectionMap.set([a, b], this.settings.rtc.createWebRtcConnection(network, a, b));
                 },
                 unlink: (a: string, b: string) => {
                     console.debug(a, '-X', b);

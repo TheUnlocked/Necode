@@ -1,16 +1,16 @@
 import { Card, Typography } from "@mui/material";
 import { Box, styled } from "@mui/system";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ReflexContainer, ReflexElement, ReflexSplitter } from "react-reflex";
-import { useRTC } from "../../hooks/useRTC";
 import { BrowserRunner } from "../../runner/BrowserRunner";
 import dedent from "dedent-js";
 import Editor from "@monaco-editor/react";
 import { ActivityPageProps } from "../ActivityDescription";
 import useIsSizeOrSmaller from "../../hooks/useIsSizeOrSmaller";
 import CodeAlert from "../../components/CodeAlert";
-import SimplePeer from "simple-peer";
 import useImported from '../../hooks/useImported';
+import { useMediaChannel } from '../../hooks/useRtc';
+import { NetworkId } from '../../api/RtcNetwork';
 
 const SharedCanvas = styled('canvas')({
     maxWidth: "100%",
@@ -18,24 +18,21 @@ const SharedCanvas = styled('canvas')({
     backgroundColor: "black"
 });
 
-export function CanvasActivity({
-    language, socketInfo
-}: ActivityPageProps) {
+export function CanvasActivity({ language }: ActivityPageProps) {
     const frameRate = 10;
     const [inboundVideoElt, setInboundVideoElt] = useState<HTMLVideoElement | null>(null);
 
     const [context2d, setContext2d] = useState<CanvasRenderingContext2D | null>(null);
     const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
-    const [outboundMediaStream, setOutboundMediaStream] = useState<{ stream: MediaStream }>();
-    const lastOutboundMediaStreamRef = useRef<[SimplePeer.Instance, MediaStream]>();
-    const [inboundMediaStream, setInboundMediaStream] = useState<MediaStream>();
 
-    const loadInboundVideoRef = (video: HTMLVideoElement | null) => {
+    const handleVideoLoad = useCallback((video: HTMLVideoElement | null) => {
         setInboundVideoElt(video);
         if (video) {
             video.muted = true;
         }
-    };
+    }, []);
+
+    const [[inboundStream], setOutboundStream] = useMediaChannel(NetworkId.NET_0);
 
     const onCanvasRefChange = useCallback((canvas: HTMLCanvasElement) => {
         if (canvas) {
@@ -67,11 +64,15 @@ export function CanvasActivity({
 
             setContext2d(ctx);
             setCanvas(canvas);
-            
-            const canvasMediaStream = canvas.captureStream(frameRate);
-            setOutboundMediaStream({ stream: canvasMediaStream });
+            setOutboundStream(canvas.captureStream(frameRate));
         }
-    }, []);
+    }, [setOutboundStream]);
+
+    useEffect(() => {
+        if (canvas) {
+            setOutboundStream(canvas.captureStream(frameRate));
+        }
+    }, [canvas, setOutboundStream]);
 
     const defaultCode = useMemo(() => ({
         javascript: dedent `/**
@@ -159,36 +160,11 @@ export function CanvasActivity({
         }
     }, [context2d, inboundVideoElt, runner]);
 
-    type PeerInfo = { role: 'send' | 'recv' };
-
-    const [sendPeer, setSendPeer] = useState<SimplePeer.Instance>();
-
-    useRTC<PeerInfo>(socketInfo, (peer, info) => {
-        console.log('useRTC', info.role);
-        if (info.role === 'send') {
-            setSendPeer(peer);
-        }
-        else {
-            peer.on('stream', stream => {
-                setInboundMediaStream(stream);
-            });
-        }
-    });
-
     useEffect(() => {
-        if (canvas && sendPeer) {
-            const canvasMediaStream = canvas.captureStream(frameRate);
-            setOutboundMediaStream({ stream: canvasMediaStream });
-        }
-    }, [canvas, sendPeer]);
-
-    useEffect(() => {
-        if (inboundVideoElt && inboundMediaStream) {
-            console.log('incoming', inboundMediaStream.getTracks());
-
+        if (inboundVideoElt && inboundStream) {
             try {
                 inboundVideoElt.muted = true;
-                inboundVideoElt.srcObject = inboundMediaStream;
+                inboundVideoElt.srcObject = inboundStream;
                 (async () => {
                     for (let i = 0; i < 10; i++) {
                         try {
@@ -196,7 +172,7 @@ export function CanvasActivity({
                             return;
                         }
                         catch (e: any) {
-                            inboundVideoElt.srcObject = inboundMediaStream;
+                            inboundVideoElt.srcObject = inboundStream;
                             inboundVideoElt.load();
                         }
                     }
@@ -206,38 +182,7 @@ export function CanvasActivity({
                 console.log(e);
             }
         }
-    }, [inboundVideoElt, inboundMediaStream]);
-
-    useEffect(() => {
-        if (sendPeer && outboundMediaStream) {
-            if (lastOutboundMediaStreamRef.current?.[0] === sendPeer) {
-                const oldTrack = lastOutboundMediaStreamRef.current[1].getVideoTracks()[0];
-                const newTrack = outboundMediaStream.stream.getVideoTracks()[0];
-                try {
-                    if (oldTrack !== newTrack) {
-                        sendPeer.replaceTrack(
-                            oldTrack,
-                            newTrack,
-                            lastOutboundMediaStreamRef.current[1]
-                        );
-                        console.log('sent stream', outboundMediaStream);
-                    }
-                    else {
-                        console.log('stream already attached', outboundMediaStream);
-                    }
-                }
-                catch (e) {
-                    sendPeer.addStream(outboundMediaStream.stream);
-                    console.log('sent stream', outboundMediaStream);
-                }
-            }
-            else {
-                sendPeer.addStream(outboundMediaStream.stream);
-                console.log('sent stream', outboundMediaStream);
-            }
-            lastOutboundMediaStreamRef.current = [sendPeer, outboundMediaStream.stream];
-        }
-    }, [outboundMediaStream, sendPeer]);
+    }, [inboundVideoElt, inboundStream]);
 
     const isSmallScreen = useIsSizeOrSmaller("sm");
 
@@ -274,7 +219,7 @@ export function CanvasActivity({
                 alignItems: "center"
             }}>
                 <SharedCanvas id="canvas-activity--canvas" width={400} height={400} ref={onCanvasRefChange} />
-                <video width={400} height={400} autoPlay style={{ position: "absolute", left: -1e6 }} ref={loadInboundVideoRef} />
+                <video width={400} height={400} autoPlay style={{ position: "absolute", left: -1e6 }} ref={handleVideoLoad} />
             </Box>
         </ReflexElement>
     </ReflexContainer>;

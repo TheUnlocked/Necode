@@ -7,8 +7,8 @@ const canvasActivityDescription = activityDescription({
     requiredFeatures: [
         supportsEntryPoint
     ] as const,
+    configurePolicies: () => [{ name: 'ring' }],
     activityPage: async () => (await import('./CanvasActivity')).CanvasActivity,
-    rtcPolicy: 'ring',
     defaultConfig: undefined
 });
 

@@ -26,7 +26,7 @@ const apiActivityIce = endpoint(null, ['classroomId'], {
             }
 
             if (process.env.WEBRTC_TURN_SERVER_URL && process.env.WEBRTC_TURN_SECRET) {
-                const expirationDate = Date.now() / 1000 + 60 * 60 * 2; // 2 hours
+                const expirationDate = Math.floor(Date.now() / 1000 + 60 * 60 * 2); // 2 hours
                 const username = `${expirationDate}:${session?.user.username}`;
                 const password = createHmac('sha1', process.env.WEBRTC_TURN_SECRET)
                     .update(username)

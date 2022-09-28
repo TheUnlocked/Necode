@@ -11,26 +11,19 @@ import CodeAlert from "../../components/CodeAlert";
 import useImported from '../../hooks/useImported';
 import { useMediaChannel } from '../../hooks/useRtc';
 import { NetworkId } from '../../api/RtcNetwork';
+import Video from '../../components/Video';
 
-const SharedCanvas = styled('canvas')({
+const DrawingCanvas = styled('canvas')({
     maxWidth: "100%",
     maxHeight: "100%",
     backgroundColor: "black"
 });
 
+const FRAME_RATE = 10;
+
 export function CanvasActivity({ language }: ActivityPageProps) {
-    const frameRate = 10;
-    const [inboundVideoElt, setInboundVideoElt] = useState<HTMLVideoElement | null>(null);
-
-    const [context2d, setContext2d] = useState<CanvasRenderingContext2D | null>(null);
     const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
-
-    const handleVideoLoad = useCallback((video: HTMLVideoElement | null) => {
-        setInboundVideoElt(video);
-        if (video) {
-            video.muted = true;
-        }
-    }, []);
+    const [context2d, setContext2d] = useState<CanvasRenderingContext2D | null>(null);
 
     const [[inboundStream], setOutboundStream] = useMediaChannel(NetworkId.NET_0);
 
@@ -64,13 +57,12 @@ export function CanvasActivity({ language }: ActivityPageProps) {
 
             setContext2d(ctx);
             setCanvas(canvas);
-            setOutboundStream(canvas.captureStream(frameRate));
         }
-    }, [setOutboundStream]);
+    }, []);
 
     useEffect(() => {
         if (canvas) {
-            setOutboundStream(canvas.captureStream(frameRate));
+            setOutboundStream(canvas.captureStream(FRAME_RATE));
         }
     }, [canvas, setOutboundStream]);
 
@@ -120,6 +112,7 @@ export function CanvasActivity({ language }: ActivityPageProps) {
         return runner;
     }, []);
 
+    const [codeError, setCodeError] = useState<Error | undefined>();
     const codeGenerator = useImported(language.runnable);
     const codeToRun = code ?? defaultCode[language.name];
 
@@ -135,8 +128,8 @@ export function CanvasActivity({ language }: ActivityPageProps) {
             setCodeError(e as Error);
         }
     }, [codeToRun, runner, codeGenerator]);
-
-    const [codeError, setCodeError] = useState<Error | undefined>();
+    
+    const [inboundVideoElt, setInboundVideoElt] = useState<HTMLVideoElement | null>(null);
 
     useEffect(() => {
         if (context2d) {
@@ -154,35 +147,11 @@ export function CanvasActivity({ language }: ActivityPageProps) {
                         });
                 }
             }
-            const interval = setInterval(run, 1000 / frameRate);
+            const interval = setInterval(run, 1000 / FRAME_RATE);
             run();
             return () => clearInterval(interval);
         }
     }, [context2d, inboundVideoElt, runner]);
-
-    useEffect(() => {
-        if (inboundVideoElt && inboundStream) {
-            try {
-                inboundVideoElt.muted = true;
-                inboundVideoElt.srcObject = inboundStream;
-                (async () => {
-                    for (let i = 0; i < 10; i++) {
-                        try {
-                            await inboundVideoElt.play();
-                            return;
-                        }
-                        catch (e: any) {
-                            inboundVideoElt.srcObject = inboundStream;
-                            inboundVideoElt.load();
-                        }
-                    }
-                })();
-            }
-            catch (e) {
-                console.log(e);
-            }
-        }
-    }, [inboundVideoElt, inboundStream]);
 
     const isSmallScreen = useIsSizeOrSmaller("sm");
 
@@ -218,8 +187,9 @@ export function CanvasActivity({ language }: ActivityPageProps) {
                 justifyContent: "center",
                 alignItems: "center"
             }}>
-                <SharedCanvas id="canvas-activity--canvas" width={400} height={400} ref={onCanvasRefChange} />
-                <video width={400} height={400} autoPlay style={{ position: "absolute", left: -1e6 }} ref={handleVideoLoad} />
+                <DrawingCanvas id="canvas-activity--canvas" width={400} height={400} ref={onCanvasRefChange} />
+                <Video width={400} height={400} style={{ position: "absolute", left: -1e6 }}
+                    muted autoPlay srcObject={inboundStream} ref={setInboundVideoElt} />
             </Box>
         </ReflexElement>
     </ReflexContainer>;

@@ -123,6 +123,8 @@ function usePeer(network: NetworkId, callback: UsePeerCallback) {
     }, [onPeerCallbacks, callback]);
 }
 
+export const usePeer_unstable = usePeer;
+
 /** https://stackoverflow.com/a/55646905/4937286 */
 function parseBigInt(value: string, radix: number) {
     const size = 10;

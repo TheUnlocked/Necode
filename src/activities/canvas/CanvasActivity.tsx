@@ -25,7 +25,7 @@ export function CanvasActivity({ language }: ActivityPageProps) {
     const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
     const [context2d, setContext2d] = useState<CanvasRenderingContext2D | null>(null);
 
-    const [[inboundStream], setOutboundStream] = useMediaChannel(NetworkId.NET_0);
+    const [[inboundStream], setOutboundStream] = useMediaChannel(NetworkId.NET_0, 'canvas');
 
     const onCanvasRefChange = useCallback((canvas: HTMLCanvasElement) => {
         if (canvas) {

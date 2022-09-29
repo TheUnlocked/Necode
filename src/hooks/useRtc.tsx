@@ -1,7 +1,8 @@
 import { omit } from 'lodash';
-import { createContext, PropsWithChildren, useCallback, useEffect, useRef, useState, useId, useContext } from 'react';
+import { createContext, PropsWithChildren, useCallback, useEffect, useRef, useState, useContext } from 'react';
 import SimplePeer from 'simple-peer';
 import { NetworkId } from '../api/RtcNetwork';
+import cyrb53 from '../util/cyrb53';
 import { callWith } from '../util/fp';
 import tracked from '../util/trackedEventEmitter';
 import { SocketInfo } from './useSocket';
@@ -126,22 +127,6 @@ function usePeer(network: NetworkId, callback: UsePeerCallback) {
 
 export const usePeer_unstable = usePeer;
 
-/** https://stackoverflow.com/a/55646905/4937286 */
-function parseBigInt(value: string, radix: number) {
-    const size = 10;
-    const factor = BigInt(radix ** size);
-    let i = value.length % size || size;
-    const parts = [value.slice(0, i)];
-
-    while (i < value.length) parts.push(value.slice(i, i += size));
-
-    return parts.reduce((r, v) => r * factor + BigInt(parseInt(v, radix)), 0n);
-}
-
-function useChannelId() {
-    return parseBigInt(useId().replaceAll(':', ''), 32) & 0xFFFF_FFFF_FFFF_FFFFn;
-}
-
 function encode(id: bigint, data: Uint8Array) {
     const buffer = new Uint8Array(data.length + 8);
     const view = new DataView(buffer.buffer);
@@ -153,12 +138,11 @@ function encode(id: bigint, data: Uint8Array) {
 function decode(id: bigint, data: Uint8Array) {
     const messageChannelId = new DataView(data.buffer).getBigUint64(0);
     if (messageChannelId === id) {
-        // TODO: Fix channel consistency issue. Possibly a dev only issue, unclear atm.
+        return data.slice(8);
     }
     else {
         console.debug(`recv message id ${messageChannelId} !== ${id}`);
     }
-    return data.slice(8);
 }
 
 function encodeString(id: bigint, str: string) {
@@ -175,9 +159,10 @@ function decodeString(id: bigint, data: Uint8Array) {
 
 export function useDataChannel(
     network: NetworkId,
+    channelName: string,
     onData: (data: Uint8Array) => void,
 ): (data: Uint8Array) => void {
-    const channelId = useChannelId();
+    const channelId = cyrb53(channelName);
 
     const peersRef = useRef(new Set<Peer>());
 
@@ -206,11 +191,16 @@ export function useDataChannel(
 
 export function useStringDataChannel(
     network: NetworkId,
+    channelName: string,
     onData: (data: string) => void,
 ): (data: string) => void {
-    const emitBuffer = useDataChannel(network, useCallback(data => {
-        onData(new TextDecoder().decode(data));
-    }, [onData]));
+    const emitBuffer = useDataChannel(
+        network,
+        channelName,
+        useCallback(data => {
+            onData(new TextDecoder().decode(data));
+        }, [onData])
+    );
     return useCallback((data: string) => {
         emitBuffer(new TextEncoder().encode(data));
     }, [emitBuffer]);
@@ -218,8 +208,9 @@ export function useStringDataChannel(
 
 export function useMediaChannel(
     network: NetworkId,
+    channelName: string,
 ): readonly [readonly MediaStream[], (stream: MediaStream | undefined) => void] {
-    const channelId = useChannelId();
+    const channelId = cyrb53(channelName);
 
     const peerIdIncRef = useRef(0);
     const [incomingStreams, setIncomingStreams] = useState<{ [peerId: number]: MediaStream }>({});

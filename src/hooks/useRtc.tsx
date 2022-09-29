@@ -81,8 +81,9 @@ export function RtcProvider({ socketInfo, children }: PropsWithChildren<{ socket
 
             peer.once('connect', () => {
                 console.debug('connected', connectionId);
-                cleanupCallbacks.push(...[...getNetworkCallbacksRef.current(network)].map(cb => cb(peer) ?? (() => {})));
             });
+
+            cleanupCallbacks.push(...[...getNetworkCallbacksRef.current(network)].map(cb => cb(peer) ?? (() => {})));
         });
 
         ws.emit('joinRtc');
@@ -233,6 +234,7 @@ export function useMediaChannel(
 
         const streamMap = new Map<string, MediaStream>();
         const streamHandler = (stream: MediaStream) => {
+            console.debug('stream arrived', stream.id);
             streamMap.set(stream.id, stream);
         };
         const dataHandler = (data: Uint8Array) => {
@@ -243,6 +245,7 @@ export function useMediaChannel(
             if (streamId) {
                 const stream = streamMap.get(streamId);
                 if (stream) {
+                    console.debug('Stream had already arrived');
                     setIncomingStreams(streams => ({ ...streams, [peerId]: stream }));
                 }
                 else {
@@ -269,15 +272,25 @@ export function useMediaChannel(
             }
         };
 
-        if (outgoingStreamRef.current && peer.isInitiator) {
-            const encoded = encodeString(channelId, outgoingStreamRef.current?.id ?? '');
-            peer.addStream(outgoingStreamRef.current);
-            peer.send(encoded);
-            console.debug('sent!');
+        function handleConnect() {
+            if (outgoingStreamRef.current && peer.isInitiator) {
+                const encoded = encodeString(channelId, outgoingStreamRef.current?.id ?? '');
+                peer.addStream(outgoingStreamRef.current);
+                peer.send(encoded);
+                console.debug('sent!');
+            }
         }
 
         peer.on('stream', streamHandler);
         peer.on('data', dataHandler);
+
+        if (peer.connected) {
+            handleConnect();
+        }
+        else {
+            peer.on('connect', handleConnect);
+        }
+
         console.debug('established peer', peerId);
 
         return () => {

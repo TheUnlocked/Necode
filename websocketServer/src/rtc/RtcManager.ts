@@ -30,9 +30,14 @@ export default class RtcManager {
         const recipientSocket = tracked(this.io.sockets.sockets.get(recipientId));
     
         if (!initiatorSocket || !recipientSocket) {
-            // Socket is on a different node.
-            // We don't support this currently.
-            throw new Error(`Using multiple Socket.IO nodes is not supported`);
+            // Either a socket has been disconnected very recently,
+            // or a socket is on a different node which we don't support this currently.
+            console.warn(`Tried to create RTC connection with unknown socket`);
+            return {
+                connectionId: connId,
+                alive: false,
+                destroyWebRtcConnection() {},
+            };
         }
         
         initiatorSocket.on('provideWebRTCSignal', (conn, signal) => {

@@ -21,10 +21,15 @@ export default forwardRef(function Video({ srcObject, muted, autoPlay, ...props 
     }, [video, muted]);
 
     useEffect(() => {
-        if (video && srcObject !== undefined) {
-            video.srcObject = srcObject;
-            if (autoPlay) {
-                video.play();
+        if (video) {
+            if (srcObject === undefined) {
+                video.srcObject = null;
+            }
+            else {
+                video.srcObject = srcObject;
+                if (autoPlay) {
+                    video.play();
+                }
             }
         }
     }, [video, autoPlay, srcObject]);

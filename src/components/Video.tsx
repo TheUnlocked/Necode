@@ -26,7 +26,12 @@ export default forwardRef(function Video({ srcObject, muted, autoPlay, ...props 
                 video.srcObject = null;
             }
             else {
-                video.srcObject = srcObject;
+                try {
+                    video.srcObject = srcObject;
+                }
+                catch (e) {
+                    // There may be an error about cancelling play. That's fine, we can just ignore it.
+                }
                 if (autoPlay) {
                     video.play();
                 }

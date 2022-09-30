@@ -310,11 +310,13 @@ export function useMediaChannel(
                         peer.removeStream(currentStreamRef.current);
                     }
                 }
-                if (stream) {
-                    peer.addStream(stream);
+                if (peer.connected) {
+                    if (stream) {
+                        peer.addStream(stream);
+                    }
+                    peer.send(encoded);
+                    console.debug('sent!');
                 }
-                peer.send(encoded);
-                console.debug('sent!');
             }
             currentStreamRef.current = stream;
         }, [channelId]),

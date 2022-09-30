@@ -153,7 +153,11 @@ export default function createTestActivityPage({
 
         async function makeSubmission() {
             if (onSubmit) {
-                await onSubmit();
+                await onSubmit({
+                    html: editorStates.html?.value,
+                    code: editorStates.code?.value,
+                    css: editorStates.css?.value
+                });
                 closeTestsDialog();
             }
         }

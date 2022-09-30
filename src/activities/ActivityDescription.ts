@@ -20,7 +20,7 @@ export interface ActivityPageProps<ConfigData = undefined> extends BaseActivityP
 
     onSaveDataChange: (newSaveData: { data: any } | undefined) => void;
 
-    onSubmit: () => Promise<void>;
+    onSubmit: (data: any) => Promise<void>;
 }
 
 export interface ActivityConfigPageProps<ConfigData = undefined> extends BaseActivityProps<ConfigData> {

@@ -73,25 +73,26 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
     const { startUpload, finishUpload } = useLoadingContext();
     const [saveData, setSaveData] = useState<{ data: any }>();
 
-    const handleSubmit = useCallback(() => {
+    const handleSubmit = useCallback((data: any) => {
         if (!socketInfo?.socket) {
             enqueueSnackbar('A network error occurrred. Copy your work to a safe place and refresh the page.', { variant: 'error' });
             return Promise.reject();
         }
         startUpload();
         return new Promise<void>((resolve, reject) => {
-            socketInfo.socket.emit('submission', saveData, error => {
+            socketInfo.socket.emit('submission', data, error => {
                 finishUpload();
                 if (error) {
                     enqueueSnackbar(error, { variant: 'error' });
                     reject(new Error(error));
                 }
                 else {
+                    enqueueSnackbar('Submission successful!', { variant: 'info' });
                     resolve();
                 }
             });
         });
-    }, [saveData, socketInfo?.socket, enqueueSnackbar, startUpload, finishUpload]);
+    }, [socketInfo?.socket, enqueueSnackbar, startUpload, finishUpload]);
 
     const { data: activityEntity } = useGetRequest<ActivityEntity<{ lesson: 'deep' }>>(
         socketInfo?.liveActivityInfo

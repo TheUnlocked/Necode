@@ -1,5 +1,5 @@
 import { Server } from 'socket.io';
-import { IOServer, LiveActivityInfo } from './types';
+import { IOServer, CreateLiveActivityInfo } from './types';
 import { jwtVerify, importJWK } from 'jose';
 import * as dotenv from 'dotenv';
 import { isNotNull } from '../../src/util/typeguards';
@@ -13,7 +13,6 @@ import * as express from 'express';
 import { DateTime, Duration } from 'luxon';
 import { makeActivitySubmissionEntity } from '../../src/api/entities/ActivitySubmissionEntity';
 import { makeUserEntity } from '../../src/api/entities/UserEntity';
-import allPolicies from './rtc/policies/allPolicies';
 import { hasScope } from '../../src/api/server/scopes';
 
 dotenv.config();
@@ -21,6 +20,8 @@ dotenv.config();
 const prisma = new PrismaClient();
 
 let server;
+
+console.debug = () => {};
 
 const restApp = express();
 if (process.env.USE_SSL_WEBSOCKET) {
@@ -44,7 +45,7 @@ const io: IOServer = new Server(server, {
 
 const users = new UserManager();
 const rtc = new RtcManager(io);
-const classrooms = new ClassroomManager(io, prisma, users);
+const classrooms = new ClassroomManager(io, prisma, users, rtc);
 
 async function initialize() {
     // purge all live activities
@@ -58,7 +59,7 @@ io.on('connection', socket => {
     let classroom: Classroom;
 
     async function connect() {
-        console.log(userId, 'connected to with id', socketId);
+        console.log(userId, 'connected with id', socketId);
 
         users.add(socketId, userId);
 
@@ -109,10 +110,11 @@ io.on('connection', socket => {
     });
 
     socket.on('joinRtc', async () => {
-        if (classroom.activity?.rtcPolicy) {
-            classroom.activity.rtcPolicy.onUserLeave(socketId);
-            classroom.activity.rtcPolicy.onUserJoin(socketId);
-        }
+        // if (process.env.NODE_ENV === 'development') {
+        //     // Works better with hot reload on the client
+        //     classroom.activity?.networks.forEach(net => net.onUserLeave(socketId));
+        // }
+        classroom.activity?.networks.forEach(net => net.onUserJoin(socketId));
     });
 
     socket.on('disconnecting', reason => {
@@ -202,6 +204,7 @@ io.on('connection', socket => {
         catch (e) {
             // Most trying to add a submission with a version that already exists,
             // but it's possible that other database errors could occur.
+            console.error(e);
             callback('An unexpected error occurred');
         }
     });
@@ -236,11 +239,9 @@ internalApi.use(async (req, res, next) => {
 
 internalApi.post('/:classroomId/activity', async (req, res) => {
     const classroom = classrooms.getOrCreate(req.params.classroomId);
-    const body: LiveActivityInfo = req.body;
-
-    const policyConstructor = allPolicies.find(x => x.policyId === body.rtcPolicy);
+    const body: CreateLiveActivityInfo = req.body;
     
-    classroom.startActivity(body.id, body.info, policyConstructor ? new policyConstructor(await classroom.getMembers(), { rtc }) : undefined);
+    classroom.startActivity(body.id, body.networks, body.info);
 
     res.status(200).send();
 });

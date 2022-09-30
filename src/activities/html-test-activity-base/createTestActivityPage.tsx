@@ -23,7 +23,6 @@ import PaneEditor from "./PaneEditor";
 import Key from "../../components/Key";
 import { ActivityIframe, RunTestsCallback } from "./ActivityIframe";
 import Lazy from "../../components/Lazy";
-import { useSnackbar } from "notistack";
 import { useLoadingContext } from "../../api/client/LoadingContext";
 import { debounce } from "lodash";
 import { ImplicitNewType, NonStrictDisjunction } from "../../util/types";
@@ -96,7 +95,7 @@ export default function createTestActivityPage({
             language,
             activityConfig,
             onActivityConfigChange,
-            socketInfo,
+            onSubmit,
             saveData,
             onSaveDataChange
         } = props as NonStrictDisjunction<ActivityConfigPageProps<Config>, ActivityPageProps<Config>>;
@@ -146,32 +145,21 @@ export default function createTestActivityPage({
             });
         }, []);
 
-        const { enqueueSnackbar } = useSnackbar();
-        const { startDownload, finishDownload, startUpload, finishUpload } = useLoadingContext();
+        const { startDownload, finishDownload } = useLoadingContext();
 
         const startTests = useRef(() => {});
         const passTests = useRef(() => {});
         const failTests = useRef((_: string) => {});
 
-        function makeSubmission() {
-            if (!socketInfo?.socket) {
-                enqueueSnackbar('A network error occurrred. Copy your work to a safe place and refresh the page.', { variant: 'error' });
-                return;
+        async function makeSubmission() {
+            if (onSubmit) {
+                await onSubmit({
+                    html: editorStates.html?.value,
+                    code: editorStates.code?.value,
+                    css: editorStates.css?.value
+                });
+                closeTestsDialog();
             }
-            startUpload();
-            socketInfo.socket.emit('submission', {
-                html: editorStates.html?.value,
-                code: editorStates.code?.value,
-                css: editorStates.css?.value
-            }, error => {
-                finishUpload();
-                if (error) {
-                    enqueueSnackbar(error, { variant: 'error' });
-                }
-                else {
-                    closeTestsDialog();
-                }
-            });
         }
 
         const [testsDialog, openTestsDialog, closeTestsDialog] = useImperativeDialog(TestsDialog, {

@@ -1,0 +1,103 @@
+state ring: Map<User, RingItem> = {};
+state head: option<RingItem> = none;
+
+type RingItem (
+    user: User,
+    prev: User,
+    next: User,
+);
+
+on join(user: User) {
+    if head |headItem| {
+        // With three users, adding a fourth
+        // 0 -> 1 -> 2 -> 0
+        //    => 0 -> 1 -> 2
+        //    => 0 -> 1 -> 2 -> 3
+        //    => 0 -> 1 -> 2 -> 3 -> 0
+
+        // With one user, adding a second
+        // 0 -> 0
+        //    => 0
+        //    => 0 -> 1
+        //    => 0 -> 1 -> 0
+
+        let beforeHead = headItem.prev;
+
+        unlink(beforeHead, headItem.user);
+        link(beforeHead, user);
+        link(user, headItem.user);
+        ring.set(user, RingItem(user, beforeHead, headItem.user));
+        if ring.get(beforeHead) |prevItem| {
+            prevItem.next = user;
+        }
+        else {
+            debug "BUG: previous user", beforeHead, "should have been in the ring but isn't";
+        }
+        headItem.prev = user;
+        debug user, "joined between", beforeHead, "and", headItem.user;
+    }
+    else {
+        // ring is empty
+        link(user, user);
+        let item = RingItem(user, user, user);
+        ring.set(user, item);
+        head = some(item);
+        debug user, "joined and is the only user in the ring";
+    }
+}
+
+on leave(user: User) {
+    if head |headItem| {
+        if ring.get(user) |item| {
+            if item.user == item.next {
+                // One user
+                unlink(item.user, item.user);
+                head = none;
+                debug user, "left, and the ring is now empty";
+            }
+            else {
+                // With three users, removing user 1
+                // 2 -> 0 -> 1 -> 2
+                //    => 2 -> 0 -> 1
+                //    => 2 -> 0
+                //    => 2 -> 0 -> 2
+
+                // With two users, removing user 0
+                // 1 -> 0 -> 1
+                //    => 1 -> 0
+                //    => 1
+                //    => 1 -> 1
+
+                if ring.get(item.next) |nextItem| {
+                    nextItem.prev = item.prev;
+                    if item == headItem {
+                        // Update the head pointer if the user that left was the head user
+                        head = some(nextItem);
+                    }
+                }
+                else {
+                    debug "BUG: next user", user, "should have been in the ring but isn't";
+                }
+                if ring.get(item.prev) |prevItem| {
+                    prevItem.next = item.next;
+                }
+                else {
+                    debug "BUG: previous user", user, "should have been in the ring but isn't";
+                }
+
+                unlink(item.prev, item.user);
+                unlink(item.user, item.next);
+                link(item.prev, item.next);
+                debug user, "left, creating a link between", item.prev, "and", item.next;
+            }
+            // Remove the user from the ring
+            ring.remove(user);
+        }
+        else {
+            debug "BUG:", user, "left even though they weren't in the ring";
+        }
+    }
+    else {
+        debug "BUG:", user, "left even though the ring was supposedly empty";
+    }
+}

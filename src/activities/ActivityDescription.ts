@@ -1,6 +1,6 @@
 import { ComponentType } from "react";
 import { ConnectDragSource } from "react-dnd";
-import { SocketInfo } from "../hooks/useSocket";
+import { PolicyConfiguration } from '../api/RtcNetwork';
 import FeatureDescription from "../languages/features/FeatureDescription";
 import LanguageDescription from "../languages/LangaugeDescription";
 import { Importable } from '../util/types';
@@ -15,12 +15,12 @@ interface BaseActivityProps<ConfigData = undefined> {
 
 export interface ActivityPageProps<ConfigData = undefined> extends BaseActivityProps<ConfigData> {
     language: LanguageDescription;
-
-    socketInfo: SocketInfo | undefined;
     
     saveData?: { data: any };
 
     onSaveDataChange: (newSaveData: { data: any } | undefined) => void;
+
+    onSubmit: (data: any) => Promise<void>;
 }
 
 export interface ActivityConfigPageProps<ConfigData = undefined> extends BaseActivityProps<ConfigData> {
@@ -54,7 +54,7 @@ interface ActivityDescription<ConfigData, Features extends readonly FeatureDescr
 
     defaultConfig: ConfigData;
 
-    rtcPolicy?: string;
+    configurePolicies?: (config: ConfigData) => readonly PolicyConfiguration[];
 
     configWidget?: Importable<ComponentType<ActivityConfigWidgetProps<ConfigData>>>;
 

@@ -1,6 +1,7 @@
 import type { SignalData } from 'simple-peer';
 import { Server } from 'socket.io';
 import { ActivitySubmissionEntity } from '../../src/api/entities/ActivitySubmissionEntity';
+import { NetworkId, PolicyConfiguration } from '../../src/api/RtcNetwork';
 
 export type IOServer = Server<ClientToServerEventMap, ServerToClientEventMap>;
 
@@ -9,7 +10,7 @@ export interface ClientToServerEventMap {
     joinRtc(): void;
     
     getParticipants(callback: (participants: string[]) => void): void;
-    getActivity(callback: (liveActivityInfo: LiveActivityInfo) => void): void;
+    getActivity(callback: (liveActivityInfo: CreateLiveActivityInfo) => void): void;
     
     /**
      * Send a command as an instructor to other users in the class.
@@ -39,7 +40,7 @@ export interface ClientToServerEventMap {
 
 export interface ServerToClientEventMap {
     // Orders
-    createWebRTCConnection(initiator: boolean, connId: string, info: any): void;
+    createWebRTCConnection(network: NetworkId, initiator: boolean, connId: string, info: any): void;
     signalWebRTCConnection(connId: string, signal: SignalData): void;
     killWebRTCConnection(connId: string): void;
 
@@ -53,15 +54,20 @@ export interface ServerToClientEventMap {
      * An activity restart would be indicated by recieving
      * an endActivity event followed by a startActivity event.
      */
-    startActivity(liveActivityinfo: LiveActivityInfo): void;
+    startActivity(liveActivityinfo: SignalLiveActivityInfo): void;
     endActivity(): void;
     command(data: any): void;
     request(data: any): void;
     submission(entity: ActivitySubmissionEntity<{ user: 'deep', activity: 'none' }>): void;
 }
 
-export interface LiveActivityInfo {
+export interface CreateLiveActivityInfo {
+    id: string;
+    networks: readonly PolicyConfiguration[];
+    info?: any;
+}
+
+export interface SignalLiveActivityInfo {
     id: string;
     info?: any;
-    rtcPolicy?: string;
 }

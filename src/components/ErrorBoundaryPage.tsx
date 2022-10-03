@@ -1,4 +1,4 @@
-import { Stack, Typography, Link } from "@mui/material";
+import { Link } from "@mui/material";
 import { MouseEvent } from "react";
 import StatusPage from "./StatusPage";
 

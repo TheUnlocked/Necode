@@ -1,8 +1,9 @@
 import { activityDescription } from "../ActivityDescription";
-import createTestActivityPages, { HtmlTestActivityBaseConfig } from "../html-test-activity-base/HtmlTestActivity";
+import { HtmlTestActivityBaseConfig } from "../html-test-activity-base/createTestActivityPage";
 import supportsGlobal from "../../languages/features/supportsGlobal";
 import supportsIsolated from "../../languages/features/supportsIsolated";
 import dedent from "dedent-js";
+import createTestActivityPages from '../html-test-activity-base/createTestActivityPages';
 
 interface DomTestActivityConfig extends HtmlTestActivityBaseConfig {
     description: string;

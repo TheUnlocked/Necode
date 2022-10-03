@@ -1,13 +1,12 @@
 import { Schema } from "joi";
-import { NextApiHandler, NextApiRequest, NextApiResponse } from "next";
-import { getSession } from "next-auth/react";
+import { GetServerSidePropsContext, NextApiHandler, NextApiRequest, NextApiResponse } from "next";
 import { Entity } from "./entities/Entity";
 import { Response, ResponsePaginationPart } from "./Response";
-import { IncomingMessage } from "http";
 import { Session } from "next-auth";
 import { IfAny, UndefinedIsOptional } from "../util/types";
 import { EntityReference, EntityReferenceArray, ReferenceDepth } from "./entities/EntityReference";
 import getIdentity from './server/identity';
+import { parse as parseCookie } from 'cookie';
 
 export enum Status {
     OK = 200,
@@ -16,6 +15,7 @@ export enum Status {
     UNAUTHORIZED = 401,
     FORBIDDEN = 403,
     NOT_FOUND = 404,
+    CONFLICT = 409,
     INTERNAL_SERVER_ERROR = 500,
     NOT_IMPLEMENTED = 501
 }
@@ -27,6 +27,7 @@ const defaultStatusMessages: { [Code in Status]: string } = {
     [Status.UNAUTHORIZED]: 'Unauthorized',
     [Status.FORBIDDEN]: 'Forbidden',
     [Status.NOT_FOUND]: 'Not Found',
+    [Status.CONFLICT]: 'Conflict',
     [Status.INTERNAL_SERVER_ERROR]: 'Internal Server Error',
     [Status.NOT_IMPLEMENTED]: 'Not Yet Implemented',
 };
@@ -197,10 +198,10 @@ function runMiddleware(req: NextApiRequest, res: NextApiResponse, fn: Middleware
     return new Promise((resolve, reject) => {
         fn(req, res, (result) => {
             if (result instanceof Error) {
-                return reject(result)
+                return reject(result);
             }
     
-            return resolve(result)
+            return resolve(result);
         });
     });
 }
@@ -224,7 +225,7 @@ export function endpoint
 export function endpoint<P extends string, Endpoints extends EndpointMap<P>>(_: any, mandatoryParams: readonly P[], endpoints: Endpoints & { middleware?: Middleware[] }) {
     async function handler(
         req: NextApiRequest,
-        res: NextApiResponse<Response<any>>
+        res: NextApiResponse<Response<any, any>>
     ) {
         for (const middleware of endpoints.middleware ?? []) {
             await runMiddleware(req, res, middleware);
@@ -300,7 +301,7 @@ export function endpoint<P extends string, Endpoints extends EndpointMap<P>>(_: 
             let session: Session | undefined;
 
             if (endpoint.loginValidation !== false) {
-                const identityResult = await getIdentity(req);
+                const identityResult = await getIdentity(req, res);
                 switch (identityResult) {
                     case 'not-logged-in':
                         return fail(Status.UNAUTHORIZED, 'Not logged in');
@@ -317,7 +318,7 @@ export function endpoint<P extends string, Endpoints extends EndpointMap<P>>(_: 
                 const value = req.query[cleanParam];
                 if (param.endsWith('[]')) {
                     if (value) {
-                        cleanedParams[cleanParam] = ([] as string[]).concat(req.query[cleanParam]);
+                        cleanedParams[cleanParam] = ([] as string[]).concat(value);
                     }
                     else {
                         cleanedParams[cleanParam] = [];
@@ -329,7 +330,7 @@ export function endpoint<P extends string, Endpoints extends EndpointMap<P>>(_: 
                             cleanedParams[cleanParam] = value;
                         }
                         else {
-                            cleanedParams[cleanParam] = value[0];
+                            cleanedParams[cleanParam] = value.at(-1);
                         }
                     }
                     else if (!param.endsWith('?')) {
@@ -379,11 +380,12 @@ export function endpoint<P extends string, Endpoints extends EndpointMap<P>>(_: 
 
 type ExecuteMethod<P extends string, E extends Endpoint<any, any, P>> = (
     this: E,
-    req: IncomingMessage,
+    req: GetServerSidePropsContext['req'],
+    res: GetServerSidePropsContext['res'],
     content: UndefinedIsOptional<Omit<Parameters<E['handler']>[0], 'session'>>
 ) => Promise<Response<Parameters<Parameters<E['handler']>[1]>[0]>>;
 
-function execute<E extends Endpoint<any, any, any>>(this: E, req: IncomingMessage, content: Omit<Parameters<E['handler']>[0], 'session'>) {
+function execute<E extends Endpoint<any, any, any>>(this: E, req: GetServerSidePropsContext['req'], res: GetServerSidePropsContext['res'], content: Omit<Parameters<E['handler']>[0], 'session'>) {
     return new Promise(async resolve => {
         function ok(result: any) {
             resolve({
@@ -402,13 +404,18 @@ function execute<E extends Endpoint<any, any, any>>(this: E, req: IncomingMessag
         let session: Session | undefined;
     
         if (this.loginValidation !== false) {
-            session = await getSession({ req }) ?? undefined;
-            if (!session) {
-                return fail(Status.UNAUTHORIZED, 'Not logged in');
+            (req as any).cookies = parseCookie(req.headers.cookie ?? '');
+            const identityResult = await getIdentity(req as any, res);
+            switch (identityResult) {
+                case 'not-logged-in':
+                    return fail(Status.UNAUTHORIZED, 'Not logged in');
+                case 'cannot-impersonate':
+                    return fail(Status.FORBIDDEN, 'Either you do not have the rights to impersonate that user, or the Impersonate header is invalid');
             }
+            session = identityResult;
         }
 
         return this.handler({ ...content, session }, ok, fail);
-    })
+    });
 
 }

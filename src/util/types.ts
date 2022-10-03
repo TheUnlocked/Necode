@@ -22,6 +22,8 @@ export type Awaitable<T> = T | PromiseLike<T>;
 
 export type IfAny<T, A, B> = Omit<{ a: any, b: any }, T extends never ? 'a' : 'b'> extends { a: any } ? B : A;
 
+export type If<C, T, E = {}> = C extends true ? T : E;
+
 export type NonStrictDisjunction<A, B>
     // The simple implementation doesn't work because of https://github.com/microsoft/TypeScript/issues/46976
     // = (A & Partial<B>) | (B & Partial<A>);
@@ -34,4 +36,9 @@ export type NonStrictDisjunction<A, B>
                 : Key extends keyof B
                     ? B[Key] | undefined
                     : undefined
-    }
+    };
+
+export type Importable<T> = () => Promise<T>;
+
+export type Mutable<T> = { -readonly [P in keyof T]: T[P] extends ReadonlyArray<infer U> ? U[] : T[P] };
+

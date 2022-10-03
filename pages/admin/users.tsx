@@ -1,5 +1,5 @@
 import { Container } from "@mui/material";
-import { DataGrid, GridCallbackDetails, GridColDef, GridEventListener, GridEvents } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridEventListener, GridEvents } from "@mui/x-data-grid";
 import { constant } from "lodash";
 import { NextPage } from "next";
 import { useSnackbar } from "notistack";

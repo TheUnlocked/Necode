@@ -13,7 +13,7 @@ export default function Footer() {
     return <RealFooter>
         <Divider />
         <Stack component="section" spacing={6} direction="row" sx={{
-            margin: ({spacing}) => `${spacing(4)} auto`,
+            margin: ({ spacing }) => `${spacing(4)} auto`,
             width: "100%",
             maxWidth: "md"
         }}>

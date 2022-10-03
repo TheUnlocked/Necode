@@ -1,15 +1,13 @@
-import { Skeleton, TextField, Typography } from "@mui/material";
+import { Skeleton, TextField } from "@mui/material";
 import { NextPage } from "next";
 import FormPage from "../../src/components/FormPage";
 import { FormEventHandler, useCallback, useState } from "react";
-import { useSnackbar } from 'notistack';
 import { ClassroomEntity } from "../../src/api/entities/ClassroomEntity";
-import { Response } from "../../src/api/Response";
 import { useRouter } from "next/router";
 import { useGetRequestImmutable } from "../../src/api/client/GetRequestHook";
 import { UserEntity } from "../../src/api/entities/UserEntity";
 import AdminPageAlert from "../../src/components/AdminPageAlert";
-import fetch from '../../src/util/fetch';
+import useNecodeFetch from '../../src/hooks/useNecodeFetch';
 
 const MIN_NAME_LENGTH = 6;
 const MAX_NAME_LENGTH = 100;
@@ -20,27 +18,21 @@ const Page: NextPage = () => {
 
     const [displayName, setDisplayName] = useState<string>();
 
-    const { enqueueSnackbar } = useSnackbar();
+    const { upload } = useNecodeFetch();
 
     const onSubmit: FormEventHandler<HTMLFormElement> = useCallback(async e => {
         e.preventDefault();
         
-        const response = await fetch('/api/classroom', {
+        const classroom = await upload<ClassroomEntity>('/api/classroom', {
             method: 'POST',
             body: JSON.stringify({
                 displayName
             })
         });
 
-        const data = await response.json() as Response<ClassroomEntity>;
+        router.push(`/classroom/${classroom.id}`);
 
-        if (data.response === 'ok') {
-            router.push(`/classroom/${data.data.id}`);
-        }
-        else {
-            enqueueSnackbar(data.message, { variant: 'error' });
-        }
-    }, [displayName, enqueueSnackbar, router]);
+    }, [displayName, router, upload]);
 
 
     if (!me || !(me.attributes.rights === 'Admin' || me.attributes.rights === 'Faculty')) {

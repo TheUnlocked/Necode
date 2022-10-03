@@ -1,9 +1,9 @@
 const withTM = require('next-transpile-modules')([/* Problematic module names go here */]);
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 /** @type {import('next').NextConfig} */
 module.exports = withTM({
   reactStrictMode: true,
+  swcMinify: true,
   webpack(config, ctx) {
     return Object.assign({}, config, {
       // Support @babel/core
@@ -17,8 +17,9 @@ module.exports = withTM({
       }),
       plugins: [
         ...config.plugins ?? [],
-        // new BundleAnalyzerPlugin()
       ]
     });
   }
 });
+
+// module.exports = require('@next/bundle-analyzer')({ enabled: true })(module.exports);

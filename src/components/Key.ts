@@ -1,6 +1,6 @@
 import { styled } from "@mui/material";
 
-const Key = styled("code")(({theme}) => ({
+const Key = styled("code")(({ theme }) => ({
     backgroundColor: theme.palette.grey[800],
     color: theme.palette.text.primary,
     padding: "0 4px",

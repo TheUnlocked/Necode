@@ -34,9 +34,10 @@ const apiLessonAll = endpoint(makeLessonEntity, ['classroomId', 'include[]'] as 
         loginValidation: true,
         schema: Joi.object<LessonEntity['attributes']>({
             date: Joi.string().regex(iso8601DateRegex),
-            displayName: Joi.string().allow('').max(100),
+            displayName: Joi.string().allow(''),
             activities: Joi.array()
                 .items(Joi.object<ActivityEntity['attributes']>({
+                    displayName: Joi.string(),
                     activityType: Joi.string(),
                     configuration: Joi.any().optional(),
                     enabledLanguages: Joi.array().items(Joi.string())
@@ -62,14 +63,14 @@ const apiLessonAll = endpoint(makeLessonEntity, ['classroomId', 'include[]'] as 
                 });
 
                 await prisma.activity.createMany({
-                    data: (activities as unknown as (ActivityEntity['attributes'])[]).map((x, i) => ({
+                    data: (activities as unknown as (ActivityEntity['attributes'])[] | undefined)?.map((x, i) => ({
                         lessonId: lesson.id,
                         activityType: x.activityType,
-                        displayName: 'placeholder',
+                        displayName: x.displayName,
                         configuration: x.configuration,
                         enabledLanguages: x.enabledLanguages,
                         order: i
-                    }))
+                    })) ?? []
                 });
 
                 const acts = await prisma.activity.findMany({

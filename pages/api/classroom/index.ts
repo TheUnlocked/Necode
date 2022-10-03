@@ -1,4 +1,4 @@
-import { ClassroomRole } from ".prisma/client";
+import { ClassroomRole } from "@prisma/client";
 import Joi from "joi";
 import { prisma } from "../../../src/db/prisma";
 import { makeClassroomEntity } from "../../../src/api/entities/ClassroomEntity";
@@ -8,7 +8,7 @@ import { hasScope } from "../../../src/api/server/scopes";
 const apiClassroomAll = endpoint(makeClassroomEntity, [], {
     type: 'entityType',
     POST: {
-        requiresLogin: true,
+        loginValidation: true,
         schema: Joi.object({
             displayName: Joi.string().min(6).max(100)
         }),

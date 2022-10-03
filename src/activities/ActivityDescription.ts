@@ -1,8 +1,9 @@
 import { ComponentType } from "react";
 import { ConnectDragSource } from "react-dnd";
-import { SocketInfo } from "../hooks/SocketHook";
+import { PolicyConfiguration } from '../api/RtcNetwork';
 import FeatureDescription from "../languages/features/FeatureDescription";
 import LanguageDescription from "../languages/LangaugeDescription";
+import { Importable } from '../util/types';
 
 interface BaseActivityProps<ConfigData = undefined> {
     id: string;
@@ -14,12 +15,12 @@ interface BaseActivityProps<ConfigData = undefined> {
 
 export interface ActivityPageProps<ConfigData = undefined> extends BaseActivityProps<ConfigData> {
     language: LanguageDescription;
-
-    socketInfo: SocketInfo | undefined;
     
     saveData?: { data: any };
 
     onSaveDataChange: (newSaveData: { data: any } | undefined) => void;
+
+    onSubmit: (data: any) => Promise<void>;
 }
 
 export interface ActivityConfigPageProps<ConfigData = undefined> extends BaseActivityProps<ConfigData> {
@@ -29,6 +30,8 @@ export interface ActivityConfigPageProps<ConfigData = undefined> extends BaseAct
 }
 
 export interface ActivityConfigWidgetProps<ConfigData = undefined> extends BaseActivityProps<ConfigData> {
+    activityTypeId: string;
+
     onActivityConfigChange: (newConfig: ConfigData) => void;
     
     goToConfigPage: (() => void) | undefined;
@@ -37,7 +40,9 @@ export interface ActivityConfigWidgetProps<ConfigData = undefined> extends BaseA
     
     dragHandle: ConnectDragSource;
 
-    activity: ActivityDescription<ConfigData>;
+    displayName: string;
+    
+    onDisplayNameChange: (newDisplayName: string) => void;
 }
 
 interface ActivityDescription<ConfigData, Features extends readonly FeatureDescription<any>[] = readonly FeatureDescription<any>[]> {
@@ -49,13 +54,13 @@ interface ActivityDescription<ConfigData, Features extends readonly FeatureDescr
 
     defaultConfig: ConfigData;
 
-    rtcPolicy?: string;
+    configurePolicies?: (config: ConfigData) => readonly PolicyConfiguration[];
 
-    configWidget?: ComponentType<ActivityConfigWidgetProps<ConfigData>>;
+    configWidget?: Importable<ComponentType<ActivityConfigWidgetProps<ConfigData>>>;
 
-    configPage?: ComponentType<ActivityConfigPageProps<ConfigData>>;
+    configPage?: Importable<ComponentType<ActivityConfigPageProps<ConfigData>>>;
 
-    activityPage: ComponentType<ActivityPageProps<ConfigData>>;
+    activityPage: Importable<ComponentType<ActivityPageProps<ConfigData>>>;
 }
 
 export function activityDescription<ConfigData, Features extends readonly FeatureDescription<any>[]>(desc: ActivityDescription<ConfigData, Features>) {

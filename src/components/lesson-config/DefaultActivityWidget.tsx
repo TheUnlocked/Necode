@@ -1,21 +1,19 @@
-import { Button, Card, Stack, Typography } from "@mui/material";
+import { Info } from '@mui/icons-material';
+import { Box, Button, Tooltip } from "@mui/material";
 import { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
-import DragHandle, { dragHandleSelector } from "./DragHandle";
+import ActivityWidgetBase from './ActivityWidgetBase';
 
-export default function DefaultActivityWidget({
-    startActivity,
-    goToConfigPage,
-    dragHandle,
-    activity
-}: ActivityConfigWidgetProps) {
-    return <Card sx={{ p: 1, [`&:hover ${dragHandleSelector}`]: {
-        visibility: "visible"
-    } }}>
-        <Stack direction="row" spacing={1} alignItems="center">
-            <DragHandle innerRef={dragHandle}/>
-            <Typography variant="h6" flexGrow={1}>{activity.displayName}</Typography>
-            {goToConfigPage ? <Button variant="outlined" onClick={goToConfigPage}>Configure</Button> : undefined}
-            <Button variant="contained" onClick={startActivity}>Start Activity</Button>
-        </Stack>
-    </Card>;
+const infoIconClass = 'ActivityInfo-svg-icon';
+const infoIconSelector = `.${infoIconClass}`;
+
+export default function DefaultActivityWidget(props: ActivityConfigWidgetProps) {
+    return <Box sx={{ [`&:hover ${infoIconSelector}`]: { visibility: "visible" } }}>
+        <ActivityWidgetBase {...props}>
+            <Tooltip title={props.activityTypeId} className={infoIconClass}>
+                <Info sx={{ visibility: "hidden", color: ({ palette }) => palette.text.disabled }} />
+            </Tooltip>
+            {props.goToConfigPage ? <Button variant="outlined" onClick={props.goToConfigPage}>Configure</Button> : undefined}
+            <Button variant="contained" onClick={props.startActivity}>Start Activity</Button>
+        </ActivityWidgetBase>
+    </Box>;
 }

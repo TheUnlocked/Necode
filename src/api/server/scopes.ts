@@ -67,10 +67,12 @@ export interface Scopes {
     'user:impersonate': { userId: string };
     'user:simulated:create': { rights: SitewideRights };
     'classroom:create': undefined;
+    'classroom:view': { classroomId: string };
+    'classroom:detailed:view': { classroomId: string };
     'classroom:edit': { classroomId: string };
     'classroom:invite': { classroomId: string };
     'classroom:invite:refresh': { classroomId: string };
-    'classroom:view': { classroomId: string };
+    'classroom:member:all:view': { classroomId: string };
     'classroom:member:view': { classroomId: string, userId: string };
     'classroom:member:edit': { classroomId: string, userId: string };
     'activity:view': { classroomId: string };
@@ -82,7 +84,7 @@ export interface Scopes {
 
 type ScopeArgumentTuples = { [K in keyof Scopes]: Scopes[K] extends undefined ? [K] : [K, Scopes[K]] }[keyof Scopes];
 
-export async function hasScope<Scope extends keyof Scopes>(userId: string, scope: keyof { [K in keyof Scopes as Scopes[K] extends undefined ? K : never]: undefined }): Promise<boolean>;
+export async function hasScope(userId: string, scope: keyof { [K in keyof Scopes as Scopes[K] extends undefined ? K : never]: undefined }): Promise<boolean>;
 export async function hasScope<Scope extends keyof Scopes>(userId: string, scope: Scope, params: Scopes[Scope]): Promise<boolean>;
 export async function hasScope(userId: string, ...[scope, data]: ScopeArgumentTuples): Promise<boolean> {
     switch (scope) {
@@ -114,8 +116,9 @@ export async function hasScope(userId: string, ...[scope, data]: ScopeArgumentTu
             return hasControlOver(userId, data.userId);
         case 'user:edit':
             return hasControlOver(userId, data.userId);
-        case 'classroom:view':
+        case 'classroom:detailed:view':
         case 'classroom:edit':
+        case 'classroom:member:all:view':
         case 'classroom:member:edit':
         case 'classroom:invite':
         case 'classroom:invite:refresh':
@@ -133,6 +136,7 @@ export async function hasScope(userId: string, ...[scope, data]: ScopeArgumentTu
                     ]
                 }
             }) > 0;
+        case 'classroom:view':
         case 'activity:view':
         case 'submission:create':
             return await isAdmin(userId) || isInClass(userId, data.classroomId);

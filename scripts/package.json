@@ -1,0 +1,9 @@
+{
+    "devDependencies": {
+        "@types/glob": "^8.0.0",
+        "@types/madge": "^5.0.0",
+        "@vercel/nft": "^0.22.1",
+        "glob": "^8.0.3",
+        "madge": "^5.0.1"
+    }
+}

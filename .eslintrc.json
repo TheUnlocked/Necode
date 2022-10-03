@@ -1,16 +1,25 @@
 {
   "extends": "next/core-web-vitals",
-  "plugins": ["@grncdr/react-hooks"],
+  "plugins": ["@grncdr/react-hooks", "@typescript-eslint"],
   "rules": {
+    "@typescript-eslint/no-unused-vars": ["warn", { "args": "none", "varsIgnorePattern": "^_", "argsIgnorePattern": "^_", "destructuredArrayIgnorePattern": "^_" }],
+    "@typescript-eslint/semi": ["warn", "always", { "omitLastInOneLineBlock": true }],
+    "@typescript-eslint/brace-style": ["warn", "stroustrup", { "allowSingleLine": true }],
+    // Waiting on https://github.com/typescript-eslint/typescript-eslint/issues/3105 for TS support
+    "array-bracket-spacing": ["warn", "never"],
+    "@typescript-eslint/object-curly-spacing": ["warn", "always"],
+    // Indentation rules are very hard to get right, so it is currently not included
+
     "react-hooks/rules-of-hooks": "off",
     "react-hooks/exhaustive-deps": "off",
     "@grncdr/react-hooks/rules-of-hooks": "error",
     "@grncdr/react-hooks/exhaustive-deps": [
       "warn",
       {
+        "additionalHooks": "(useDrop|useDrag|useDragLayer)",
         "staticHooks": {
-          "useMergeReducer": [false, true],
-          "useDirty": [false, true, true, false, true]
+          "useDirty": [false, true, true, false, true],
+          "useLocalCachedState": [false, true, false, false]
         }
       }
     ]

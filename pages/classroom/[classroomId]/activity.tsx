@@ -1,25 +1,29 @@
 import { NextPage } from "next";
 import { useRouter } from "next/router";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Button, Chip, Stack, Toolbar } from "@mui/material";
 import { ArrowBack, AssignmentTurnedIn, Close } from "@mui/icons-material";
 import { Box } from "@mui/system";
 import { ClassroomMemberEntity } from "../../../src/api/entities/ClassroomMemberEntity";
 import { useGetRequest, useGetRequestImmutable } from "../../../src/api/client/GetRequestHook";
-import useSocket from "../../../src/hooks/SocketHook";
+import { useSocket } from "../../../src/hooks/useSocket";
 import StatusPage from "../../../src/components/StatusPage";
-import { useLoadingContext } from "../../../src/api/client/LoadingContext";
 import { ActivityEntity } from "../../../src/api/entities/ActivityEntity";
 import allActivities from "../../../src/activities/allActivities";
 import allLanguages from "../../../src/languages/allLanguages";
-import { useSubmissions } from "../../../src/hooks/SubmissionHook";
-import useImperativeDialog from "../../../src/hooks/ImperativeDialogHook";
+import { useSubmissions } from "../../../src/hooks/useSubmissions";
+import useImperativeDialog from "../../../src/hooks/useImperativeDialog";
 import SubmissionsDialog from "../../../src/components/dialogs/SubmissionsDialog";
-import { ClassroomRole } from ".prisma/client";
+import { ClassroomRole } from "@prisma/client";
 import NotFoundPage from "../../404";
 import supportsLanguage from "../../../src/activities/supportsLanguage";
 import { curry } from "lodash";
-import fetch from '../../../src/util/fetch';
+import useNecodeFetch from '../../../src/hooks/useNecodeFetch';
+import useImported from '../../../src/hooks/useImported';
+import { typeAssert } from '../../../src/util/typeguards';
+import { RtcProvider } from '../../../src/hooks/useRtc';
+import { useSnackbar } from 'notistack';
+import { useLoadingContext } from '../../../src/api/client/LoadingContext';
 
 interface StaticProps {
     classroomId: string;
@@ -45,7 +49,8 @@ const Page: NextPage = () => {
 
 const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
     const router = useRouter();
-    const { startUpload, finishUpload } = useLoadingContext();
+
+    const { upload } = useNecodeFetch();
 
     const isInstructor = role === 'Instructor';
 
@@ -57,14 +62,37 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
     const [submissionsDialog, openSubmissionsDialog] = useImperativeDialog(SubmissionsDialog, {
         submissions,
         onPickSubmission: s => setSaveData({ data: s.attributes.data })
-    })
+    });
 
     function viewSubmissions() {
         openSubmissionsDialog();
         setHasNewSubmissions(false);
     }
 
+    const { enqueueSnackbar } = useSnackbar();
+    const { startUpload, finishUpload } = useLoadingContext();
     const [saveData, setSaveData] = useState<{ data: any }>();
+
+    const handleSubmit = useCallback((data: any) => {
+        if (!socketInfo?.socket) {
+            enqueueSnackbar('A network error occurrred. Copy your work to a safe place and refresh the page.', { variant: 'error' });
+            return Promise.reject();
+        }
+        startUpload();
+        return new Promise<void>((resolve, reject) => {
+            socketInfo.socket.emit('submission', data, error => {
+                finishUpload();
+                if (error) {
+                    enqueueSnackbar(error, { variant: 'error' });
+                    reject(new Error(error));
+                }
+                else {
+                    enqueueSnackbar('Submission successful!', { variant: 'info' });
+                    resolve();
+                }
+            });
+        });
+    }, [socketInfo?.socket, enqueueSnackbar, startUpload, finishUpload]);
 
     const { data: activityEntity } = useGetRequest<ActivityEntity<{ lesson: 'deep' }>>(
         socketInfo?.liveActivityInfo
@@ -106,7 +134,9 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
         }
     }
 
-    if (!socketInfo) {
+    const ActivityPage = useImported(activity?.activityPage);
+
+    if (!socketInfo || (activity && !ActivityPage)) {
         return <>
             {instructorToolbar}
             <StatusPage primary="Loading..." />
@@ -136,12 +166,13 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
         }
     }
 
-    function endActivity() {
-        startUpload();
-        fetch(`/api/classroom/${classroomId}/activity/live`, { method: 'DELETE' })
-            .finally(finishUpload);
+    async function endActivity() {
+        await upload(`/api/classroom/${classroomId}/activity/live`, { method: 'DELETE' });
         goToManage();
     }
+
+    // Typescript isn't smart enough to infer this on its own
+    typeAssert(ActivityPage !== undefined);
 
     return <>
         {instructorToolbar}
@@ -155,15 +186,17 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
                 overflow: "hidden"
             }
         }}>
-            <activity.activityPage
-                key={activityEntity!.id}
-                id={activityEntity!.id}
-                activityConfig={activityEntity!.attributes.configuration}
-                classroomId={classroomId}
-                language={enabledLanguages[0]}
-                socketInfo={socketInfo}
-                saveData={saveData}
-                onSaveDataChange={setSaveData} />
+            <RtcProvider socketInfo={socketInfo}>
+                <ActivityPage
+                    key={activityEntity!.id}
+                    id={activityEntity!.id}
+                    activityConfig={activityEntity!.attributes.configuration}
+                    classroomId={classroomId}
+                    language={enabledLanguages[0]}
+                    onSubmit={handleSubmit}
+                    saveData={saveData}
+                    onSaveDataChange={setSaveData} />
+            </RtcProvider>
         </Box>
     </>;
 };

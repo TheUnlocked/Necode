@@ -1,9 +1,10 @@
 import Joi from "joi";
 import { importJWK, SignJWT } from "jose";
 import { endpoint, Status } from "../../../../../src/api/Endpoint";
+import { PolicyConfiguration } from '../../../../../src/api/RtcNetwork';
 import { hasScope } from "../../../../../src/api/server/scopes";
 import { prisma } from "../../../../../src/db/prisma";
-import { LiveActivityInfo } from "../../../../../websocketServer/src/types";
+import { CreateLiveActivityInfo } from "../../../../../websocketServer/src/types";
 
 async function makeJwt(content: { [propName: string]: unknown }, expireIn: string) {
     const keyObj = JSON.parse(process.env.JWT_SIGNING_PRIVATE_KEY!);
@@ -44,8 +45,10 @@ const apiActivityLive = endpoint(null, ['classroomId'], {
         loginValidation: true,
         schema: Joi.object({
             id: Joi.string(),
-            clientInformation: Joi.any().optional(),
-            rtcPolicy: Joi.string().optional()
+            networks: Joi.array().items(Joi.object<PolicyConfiguration>({
+                name: Joi.string(),
+                params: Joi.object().pattern(Joi.string(), Joi.any()).optional(),
+            })).optional(),
         }),
         async handler({ query: { classroomId }, body, session }, ok, fail) {
             if (!hasScope(session!.user.id, 'activity:run', { classroomId })) {
@@ -73,7 +76,7 @@ const apiActivityLive = endpoint(null, ['classroomId'], {
                 }
             });
             
-            const response = await fetch<true>(`${process.env.WEBSOCKET_SERVER?.replace(/\/$/, '')}/internal/${classroomId}/activity`, {
+            const response = await fetch(`${process.env.WEBSOCKET_SERVER?.replace(/\/$/, '')}/internal/${classroomId}/activity`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -83,9 +86,8 @@ const apiActivityLive = endpoint(null, ['classroomId'], {
                 },
                 body: JSON.stringify({
                     id: body.id,
-                    info: body.info,
-                    rtcPolicy: body.rtcPolicy
-                } as LiveActivityInfo)
+                    networks: body.networks ?? [],
+                } as CreateLiveActivityInfo)
             });
 
             // TODO: If fails to send, should also fail to start activity
@@ -114,7 +116,7 @@ const apiActivityLive = endpoint(null, ['classroomId'], {
                 return fail(Status.NOT_FOUND);
             }
 
-            const response = await fetch<true>(`${process.env.WEBSOCKET_SERVER?.replace(/\/$/, '')}/internal/${classroomId}/activity`, {
+            const response = await fetch(`${process.env.WEBSOCKET_SERVER?.replace(/\/$/, '')}/internal/${classroomId}/activity`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',

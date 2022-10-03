@@ -11,14 +11,11 @@ const pages = [
 export default function AdminPage() {
     return <>
         <Container maxWidth="sm">
-            <Typography variant="h1">Admin Pages</Typography>
-
-            <p>
-                <Alert severity="info" variant="filled">These pages are only accessible to administrators</Alert>
-            </p>
+            <Typography variant="h1" sx={{ mb: 2 }}>Admin Pages</Typography>
+            <Alert severity="info" variant="filled">These pages are only accessible to administrators</Alert>
 
             <ul>
-                {pages.map(x => <li key={x}><Link><NextLink href={x}>{x}</NextLink></Link></li>)}
+                {pages.map(x => <li key={x}><NextLink href={x} passHref><Link>{x}</Link></NextLink></li>)}
             </ul>
         </Container>
         <Footer />

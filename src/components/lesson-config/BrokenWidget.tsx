@@ -1,14 +1,12 @@
-import { Card, Stack, Typography } from "@mui/material";
+import { Error } from '@mui/icons-material';
+import { Tooltip } from '@mui/material';
 import { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
-import DragHandle, { dragHandleSelector } from "./DragHandle";
+import ActivityWidgetBase from './ActivityWidgetBase';
 
-export default function BrokenWidget({ dragHandle }: ActivityConfigWidgetProps) {
-    return <Card sx={{ p: 1, [`&:hover ${dragHandleSelector}`]: {
-        visibility: 'visible'
-    } }}>
-        <Stack direction="row" spacing={1} alignItems="center">
-            <DragHandle innerRef={dragHandle} />
-            <Typography variant="h6" flexGrow={1}>Unknown Activity</Typography>
-        </Stack>
-    </Card>;
+export default function BrokenWidget(props: ActivityConfigWidgetProps) {
+    return <ActivityWidgetBase {...props}>
+        <Tooltip title={`This activity has type '${props.activityTypeId}' which is no longer recognized by Necode. Please contact an administrator.`}>
+            <Error color="error" />
+        </Tooltip>
+    </ActivityWidgetBase>;
 }

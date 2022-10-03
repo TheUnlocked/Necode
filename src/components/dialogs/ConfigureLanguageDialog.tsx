@@ -1,4 +1,4 @@
-import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
+import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import { useEffect, useState } from "react";
 import LanguageDescription from "../../languages/LangaugeDescription";
 
@@ -17,7 +17,6 @@ export default function ConfigureLanguageDialog(props: ConfigureLanguageDialogPr
         onClose,
         availableLanguages,
         enabledLanguages,
-        unsupportedLanguages,
         saveEnabledLanguages
     } = props;
 
@@ -92,20 +91,6 @@ export default function ConfigureLanguageDialog(props: ConfigureLanguageDialogPr
         </DialogContent>
         <List>
             {transientAvailableLanguages.map(getMenuItem)}
-            {/* {unsupportedLanguages.length > 0 ? <>
-                <Divider>Unsupported Languages</Divider>
-                {unsupportedLanguages.map(language => <ListItem key={language.name}>
-                    <ListItemIcon>
-                        <Checkbox disabled />
-                    </ListItemIcon>
-                    {language.icon ? <ListItemIcon sx={{ minWidth: "48px" }}><language.icon sx={{
-                        color: ({ palette }) => palette.text.disabled
-                    }} /></ListItemIcon> : undefined}
-                    <ListItemText primary={language.displayName} primaryTypographyProps={{
-                        color: ({ palette }) => palette.text.disabled
-                    }} />
-                </ListItem>)}
-            </> : undefined} */}
         </List>
         <DialogActions>
             <Button onClick={close}>Cancel</Button>

@@ -1,4 +1,4 @@
-import { Classroom } from ".prisma/client";
+import { Classroom } from "@prisma/client";
 import { Entity, EntityType } from "./Entity";
 import { EntityReferenceArray, makeEntityReferenceArray, ReferenceDepth } from "./EntityReference";
 import { ClassroomMemberEntity } from "./ClassroomMemberEntity";

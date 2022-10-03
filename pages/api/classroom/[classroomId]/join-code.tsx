@@ -16,16 +16,16 @@ const apiJoinCode = endpoint(null, ['classroomId'], {
                 return fail(Status.FORBIDDEN);
             }
 
-            const existing = await prisma.joinCode.findUnique({ where: { classroomId } });
-
-            if (existing) {
-                return ok(existing.code);
-            }
-
             // We'll give it 50 attempts. If we're still getting collisions,
             // one more probably isn't going to fix it.
             for (let i = 0; i < 50; i++) {
                 try {
+                    // We'll check if one already exists each time to avoid race condition issues
+                    const existing = await prisma.joinCode.findUnique({ where: { classroomId } });
+                    if (existing) {
+                        return ok(existing.code);
+                    }
+
                     const result = await prisma.joinCode.create({
                         data: {
                             classroomId,

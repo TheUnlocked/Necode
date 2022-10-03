@@ -1,3 +1,4 @@
+import { NetworkId } from '../../../../src/api/RtcNetwork';
 import RtcManager from "../RtcManager";
 
 export interface ConnectionInfo {
@@ -8,10 +9,11 @@ export interface ConnectionInfo {
 
 export interface RtcPolicySettings {
     rtc: RtcManager;
+    params: { [key: string]: any };
 }
 
 export interface RtcPolicy {
-    new(users: Iterable<string>, settings: RtcPolicySettings): RtcCoordinator;
+    new(network: NetworkId, users: Iterable<string>, settings: RtcPolicySettings): RtcCoordinator;
     readonly policyId: string;
 }
 

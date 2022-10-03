@@ -9,5 +9,5 @@ export default function sortByProperty<T extends { [_ in U]: number | string }, 
             return aProp - bProp;
         }
         return 0;
-    })
+    });
 }

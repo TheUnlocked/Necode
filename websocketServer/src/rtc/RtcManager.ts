@@ -1,20 +1,20 @@
 import { nanoid } from "nanoid";
+import { NetworkId } from '../../../src/api/RtcNetwork';
 import tracked from "../../../src/util/trackedEventEmitter";
 import { IOServer } from "../types";
-import UserManager from "../UserManager";
 
 export default class RtcManager {
     constructor(private io: IOServer) {
 
     }
 
-    createWebRtcConnection(initiatorId: string, recipientId: string, initiatorInfo: unknown, recipientInfo: unknown) {
+    createWebRtcConnection(network: NetworkId, initiatorId: string, recipientId: string) {
         const connId = nanoid();
         const initiatorName = initiatorId;
         const recipientName = recipientId;
         const initiatorConnId = connId + '/' + nanoid();
         const recipientConnId = connId + '/' + nanoid();
-        console.log(`[${connId}]`, 'link', initiatorName, 'with', recipientName);
+        console.debug(`[${connId}]`, 'link', initiatorName, 'with', recipientName);
     
         if (!initiatorId) {
             console.log(`[${connId}]`, initiatorName, 'is not a valid user');
@@ -30,21 +30,26 @@ export default class RtcManager {
         const recipientSocket = tracked(this.io.sockets.sockets.get(recipientId));
     
         if (!initiatorSocket || !recipientSocket) {
-            // Socket is on a different node.
-            // We don't support this currently.
-            throw new Error(`Using multiple Socket.IO nodes is not supported`);
+            // Either a socket has been disconnected very recently,
+            // or a socket is on a different node which we don't support this currently.
+            console.warn(`Tried to create RTC connection with unknown socket`);
+            return {
+                connectionId: connId,
+                alive: false,
+                destroyWebRtcConnection() {},
+            };
         }
         
         initiatorSocket.on('provideWebRTCSignal', (conn, signal) => {
             if (conn === initiatorConnId) {
                 this.io.to(recipientId).emit('signalWebRTCConnection', recipientConnId, signal);
-                console.log(`[${recipientConnId}] signal`);
+                console.debug(`[${recipientConnId}] signal`);
             }
         });
         recipientSocket.on('provideWebRTCSignal', (conn, signal) => {
             if (conn === recipientConnId) {
                 this.io.to(initiatorId).emit('signalWebRTCConnection', initiatorConnId, signal);
-                console.log(`[${initiatorConnId}] signal`);
+                console.debug(`[${initiatorConnId}] signal`);
             }
         });
     
@@ -55,11 +60,11 @@ export default class RtcManager {
             recipientSocket.offTracked();
         });
     
-        this.io.to(initiatorId).emit('createWebRTCConnection', true, initiatorConnId, initiatorInfo);
-        console.log(`[${connId}]`, 'told', initiatorName, 'to initiate connection with', recipientName);
+        this.io.to(initiatorId).emit('createWebRTCConnection', network, true, initiatorConnId, null);
+        console.debug(`[${connId}]`, 'told', initiatorName, 'to initiate connection with', recipientName);
         
-        this.io.to(recipientId).emit('createWebRTCConnection', false, recipientConnId, recipientInfo);
-        console.log(`[${connId}]`, 'told', recipientName, 'to create connection with', initiatorName);
+        this.io.to(recipientId).emit('createWebRTCConnection', network, false, recipientConnId, null);
+        console.debug(`[${connId}]`, 'told', recipientName, 'to create connection with', initiatorName);
     
         const self = this;
 
@@ -71,7 +76,7 @@ export default class RtcManager {
                     throw new Error(`Cannot destroy already dead connection ${connId}`);
                 }
                 this.alive = false;
-                console.log(`[${connId}]`, 'unlink', initiatorName, 'from', recipientName);
+                console.debug(`[${connId}]`, 'unlink', initiatorName, 'from', recipientName);
                 self.io.to(initiatorId).emit('killWebRTCConnection', initiatorConnId);
                 self.io.to(recipientId).emit('killWebRTCConnection', recipientConnId);
             }

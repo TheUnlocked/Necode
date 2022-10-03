@@ -7,9 +7,9 @@ const Page: NextPage = () => {
 
 export default Page;
 
-export const getServerSideProps: GetServerSideProps = async ({ query: { classroomId }, req }) => {
+export const getServerSideProps: GetServerSideProps = async ({ query: { classroomId }, req, res }) => {
     if (typeof classroomId === 'string') {
-        const { data } = await apiClassroomMe.GET.execute(req, { query: { classroomId, include: [] } });
+        const { data } = await apiClassroomMe.GET.execute(req, res, { query: { classroomId, include: [] } });
 
         if (data?.attributes.role === 'Instructor') {
             return {
@@ -17,7 +17,7 @@ export const getServerSideProps: GetServerSideProps = async ({ query: { classroo
                     statusCode: 302,
                     destination: `/classroom/${classroomId}/manage`
                 }
-            }
+            };
         }
     }
 
@@ -26,5 +26,5 @@ export const getServerSideProps: GetServerSideProps = async ({ query: { classroo
             statusCode: 302,
             destination: `/classroom/${classroomId}/activity`
         }
-    }
+    };
 };

@@ -1,6 +1,5 @@
 import supportsEntryPoint from "../../languages/features/supportsEntryPoint";
 import { activityDescription } from "../ActivityDescription";
-import { CanvasActivity } from "./CanvasActivity";
 
 const canvasActivityDescription = activityDescription({
     id: 'core/canvas-ring',
@@ -8,8 +7,8 @@ const canvasActivityDescription = activityDescription({
     requiredFeatures: [
         supportsEntryPoint
     ] as const,
-    activityPage: CanvasActivity,
-    rtcPolicy: 'ring',
+    configurePolicies: () => [{ name: 'ring' }],
+    activityPage: async () => (await import('./CanvasActivity')).CanvasActivity,
     defaultConfig: undefined
 });
 

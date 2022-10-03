@@ -1,8 +1,8 @@
 import { Container, Stack, Typography, styled, ToggleButtonGroup, ToggleButton, Tooltip } from '@mui/material';
 import { Box } from '@mui/system';
 import type { NextPage } from 'next';
-import { PropsWithChildren, ReactNode, useState } from 'react';
-import { useGetRequest, useGetRequestImmutable } from '../src/api/client/GetRequestHook';
+import { PropsWithChildren, ReactNode, useMemo, useState } from 'react';
+import { useGetRequestImmutable } from '../src/api/client/GetRequestHook';
 import { UserEntity } from '../src/api/entities/UserEntity';
 import Footer from '../src/components/Footer';
 import NecodeLogo from '../src/components/NecodeLogo';
@@ -24,13 +24,13 @@ const Home: NextPage = () => {
 
     const [infoCategory, setInfoCategory] = useState('general');
 
-    function getInfo() {
+    const infoContent = useMemo(() => {
         switch (infoCategory) {
             case 'general': return generalInfo;
             case 'instructor': return instructorInfo(meInfo);
             case 'student': return studentInfo(meInfo);
         }
-    }
+    }, [infoCategory, meInfo]);
 
     return <>
         <Stack direction="column" alignItems="center" p={4}>
@@ -49,7 +49,7 @@ const Home: NextPage = () => {
                 </ToggleButtonGroup>
                 : null}
             <Container maxWidth="sm">
-                {getInfo()}
+                {infoContent}
             </Container>
         </Stack>
         <Footer />
@@ -80,12 +80,12 @@ const generalInfo = <>
             Additionally, Necode runs all user code in the browser. While this removes the ability to have trustworthy
             verification of task completion (Necode is NOT intended to be used for graded assignments), it provides many
             benefits over server-side computation:
-            <ul>
-                <li>Students can debug their code using native browser debugging tools</li>
-                <li>Realtime multi-media activities are possible, including those with canvas graphics, audio, and even WebGL</li>
-                <li>Intermittent server issues will not severely impact interactivity</li>
-            </ul>
         </p>
+        <ul>
+            <li>Students can debug their code using native browser debugging tools</li>
+            <li>Realtime multi-media activities are possible, including those with canvas graphics, audio, and even WebGL</li>
+            <li>Intermittent server issues will not severely impact interactivity</li>
+        </ul>
     </InfoSection>
     <InfoSection title="Is there a paper I can read?">
         <SubtleLink target="_blank" rel="noopener" href="https://digital.wpi.edu/show/6h440w69h">Yes!</SubtleLink>{' '}
@@ -111,7 +111,7 @@ const canIUsePhoneText = <>
     Probably not. <SubtleLink target="_blank" rel="noopener" href="https://microsoft.github.io/monaco-editor/">Monaco</SubtleLink>,
     the code editor Necode currently uses on all devices, does not officially support touch interaction,
     and while some activities do have responsive layouts, that is also not a guarantee. Using a laptop is strongly recommended.
-</>
+</>;
 
 const instructorInfo = (me: UserEntity<{ classes: 'deep' }> | undefined) => <>
     <InfoSection title="How can I use Necode in my classroom?">
@@ -142,10 +142,10 @@ const instructorInfo = (me: UserEntity<{ classes: 'deep' }> | undefined) => <>
         No. While there are future plans to make Necode mobile-friendly from the student view, there are no plans
         to do the same for the instructor view. The manage classroom/activity pages will not work on a phone.
     </InfoSection>
-    <InfoSection title="I have a classroom registered on Necode, but I lost the link.">
+    <InfoSection omitParagraph title="I have a classroom registered on Necode, but I lost the link.">
         {me?.attributes.classes.length! > 0
             ? <>
-                Is it one of these?
+                <p>Is it one of these?</p>
                 <ul>
                     {me?.attributes.classes.map(x => <li key={x.id}>
                         <SubtleLink href={`/classroom/${x.id}`}>{x.attributes.displayName}</SubtleLink>
@@ -166,14 +166,16 @@ const studentInfo = (me: UserEntity<{ classes: 'deep' }> | undefined) => <>
             you can always enter the code into the join classroom page again and it will send you right back!
         </p>
         {me?.attributes.classes.length! > 0
-            ? <p>
-                Or you can just come back here and select your class from this list <span style={{ whiteSpace: "nowrap" }}>/ᐠ｡ꞈ｡ᐟ\</span>
+            ? <>
+                <p>
+                    Or you can just come back here and select your class from this list <span style={{ whiteSpace: "nowrap" }}>/ᐠ｡ꞈ｡ᐟ\</span>
+                </p>
                 <ul>
                     {me?.attributes.classes.map(x => <li key={x.id}>
                         <SubtleLink href={`/classroom/${x.id}`}>{x.attributes.displayName}</SubtleLink>
                     </li>)}
                 </ul>
-            </p>
+            </>
             : null}
     </InfoSection>
     <InfoSection title="Can I use Necode on my phone?">

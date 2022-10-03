@@ -1,28 +1,26 @@
 import { NextPage } from "next";
 import { useRouter } from "next/router";
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Toolbar, Select, MenuItem, Stack, ToggleButton, Skeleton, Paper } from "@mui/material";
 import { ArrowBack, Code, Save } from "@mui/icons-material";
 import { Box, SxProps } from "@mui/system";
 import allLanguages from "../../../../../src/languages/allLanguages";
 import LanguageDescription from "../../../../../src/languages/LangaugeDescription";
-import useImperativeDialog from "../../../../../src/hooks/ImperativeDialogHook";
+import useImperativeDialog from "../../../../../src/hooks/useImperativeDialog";
 import sortByProperty from "../../../../../src/util/sortByProperty";
 import { flip, make } from "../../../../../src/util/fp";
-import Lazy from "../../../../../src/components/Lazy";
+import { LazyImportable } from "../../../../../src/components/Lazy";
 import ConfigureLanguageDialog from "../../../../../src/components/dialogs/ConfigureLanguageDialog";
 import { useGetRequest, useGetRequestImmutable } from "../../../../../src/api/client/GetRequestHook";
 import { ActivityEntity } from "../../../../../src/api/entities/ActivityEntity";
 import allActivities from "../../../../../src/activities/allActivities";
-import useDirty from "../../../../../src/hooks/DirtyHook";
-import { useLoadingContext } from "../../../../../src/api/client/LoadingContext";
-import { Response } from "../../../../../src/api/Response";
-import { useSnackbar } from "notistack";
+import useDirty from "../../../../../src/hooks/useDirty";
 import { ClassroomMemberEntity } from "../../../../../src/api/entities/ClassroomMemberEntity";
 import NotFoundPage from "../../../../404";
 import supportsLanguage from "../../../../../src/activities/supportsLanguage";
 import { curry } from "lodash";
-import fetch from '../../../../../src/util/fetch';
+import useNecodeFetch from '../../../../../src/hooks/useNecodeFetch';
+import { useSnackbar } from 'notistack';
 
 interface StaticProps {
     classroomId: string;
@@ -51,7 +49,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
     const router = useRouter();
 
     const activityEndpoint = `/api/classroom/${classroomId}/activity/${activityId}?include=lesson`;
-    const { data: activityEntity } = useGetRequest<ActivityEntity<{ lesson: 'deep' }>>(activityEndpoint);
+    const { data: activityEntity, mutate } = useGetRequest<ActivityEntity<{ lesson: 'deep' }>>(activityEndpoint);
 
     const activity = useMemo(() => allActivities.find(x => x.id === activityEntity?.attributes.activityType), [activityEntity]);
 
@@ -87,7 +85,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
                             .filter(x => x !== undefined) as LanguageDescription[];
                             
                     setEnabledLanguages(enabledLanguages);
-                    setSelectedLanguage(enabledLanguages[0])
+                    setSelectedLanguage(enabledLanguages[0]);
                 }
                 return false;
             });
@@ -99,31 +97,38 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
         enabledLanguages,
         saveEnabledLanguages: langs => {
             markDirty();
-            setEnabledLanguages(sortByProperty(langs, "name"))
+            setEnabledLanguages(sortByProperty(langs, "name"));
         },
         unsupportedLanguages: useMemo(() => allLanguages.filter(x => !supportedLanguages.includes(x)), [supportedLanguages])
     });
 
-    const { enqueueSnackbar } = useSnackbar();
-    const { startUpload, finishUpload, startDownload, finishDownload } = useLoadingContext();
+    const { download, upload } = useNecodeFetch();
 
-    function save() {
-        startUpload();
-        fetch(`/api/classroom/${classroomId}/activity/${activityId}`, {
-            method: 'PUT',
-            body: JSON.stringify({
-                configuration: activityConfig,
-                enabledLanguages: enabledLanguages.map(x => x.name)
-            })
-        }).then(async res => {
-            const data = await res.json() as Response<any>;
-            if (data.response === 'ok') {
-                clearDirty();
+    async function save() {
+        const patch = {
+            configuration: activityConfig,
+            enabledLanguages: enabledLanguages.map(x => x.name),
+        };
+
+        const updatedActivity = {
+            ...activityEntity!,
+            attributes: {
+                ...activityEntity!.attributes,
+                ...patch,
             }
-            else {
-                enqueueSnackbar(`HTTP ${res.status}: ${data.message}`, { variant: 'error' })
-            }
-        }).finally(finishUpload);
+        };
+
+        mutate(async () => {
+            await upload(`/api/classroom/${classroomId}/activity/${activityId}`, {
+                method: 'PATCH',
+                body: JSON.stringify(patch)
+            });
+            clearDirty();
+            return updatedActivity;
+        }, {
+            optimisticData: updatedActivity,
+            rollbackOnError: true,
+        });
     }
 
     const unsavedWarnMessage = 'Changes you made may not be saved.';
@@ -156,18 +161,8 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
     async function returnToManage() {
         let date = activityEntity?.attributes.lesson.attributes.date;
         if (!date) {
-            try {
-                startDownload();
-                const result = await fetch(`/api/classroom/${classroomId}/activity/${activityId}?include=lesson`);
-                const data = await result.json() as Response<ActivityEntity<{ lesson: 'deep' }>>;
-                if (data.response === 'ok') {
-                    date = data.data.attributes.lesson.attributes.date;
-                }
-            }
-            catch (e) {}
-            finally {
-                finishDownload();
-            }
+            const result = await download<ActivityEntity<{ lesson: 'deep' }>>(`/api/classroom/${classroomId}/activity/${activityId}?include=lesson`);
+            date = result.attributes.lesson.attributes.date;
         }
         router.push({
             pathname: `/classroom/${classroomId}/manage`,
@@ -180,6 +175,8 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
         unloadPreviewRef.current();
         setActivityConfig(newConfig);
     }, []);
+
+    const { enqueueSnackbar } = useSnackbar();
     
     if (isLoading) {
         return <>
@@ -236,7 +233,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
             </Button>
             <Button size="small" startIcon={<Save/>} onClick={save} disabled={!isDirty}>Save Changes</Button>
             <Stack direction="row" justifyContent="flex-end" flexGrow={1} spacing={1}>
-                <Button size="small" startIcon={<Code/>} onClick={openConfigureLanguagesDialog}>Configure Languages</Button>
+                <Button size="small" startIcon={<Code/>} onClick={() => openConfigureLanguagesDialog()}>Configure Languages</Button>
                 <Select size="small" sx={{ height: "32px" }}
                     id="language-select-box"
                     value={selectedLanguage}
@@ -260,23 +257,23 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
                 overflow: "hidden"
             }
         } as SxProps}>
-            <Lazy show={isPreview} keepInDom unloadRef={unloadPreviewRef}>
-                <activity.activityPage
+            <LazyImportable show={isPreview} keepInDom unloadRef={unloadPreviewRef} importable={activity.activityPage} render={
+                ActivityPage => <ActivityPage
                     id={""}
                     activityConfig={activityConfig}
                     classroomId={classroomId}
                     language={selectedLanguage}
-                    socketInfo={undefined}
-                    onSaveDataChange={() => {}} />
-            </Lazy>
-            <Lazy show={!isPreview}>
-                <activity.configPage
+                    onSaveDataChange={() => {}}
+                    onSubmit={async () => {
+                        enqueueSnackbar('Submissions are disabled during configuration.', { variant: 'info' });
+                    }} />} />
+            <LazyImportable show={!isPreview} importable={activity.configPage} render={
+                ActivityConfigPage => <ActivityConfigPage
                     id={""}
                     activityConfig={activityConfig}
                     onActivityConfigChange={handleActivityConfigChange}
                     classroomId={classroomId}
-                    language={selectedLanguage} />
-            </Lazy>
+                    language={selectedLanguage} />} />
         </Box>
     </>;
 };

@@ -14,7 +14,7 @@ import { UserEntity } from "../../src/api/entities/UserEntity";
 import { Response } from "../../src/api/Response";
 import AdminPageAlert from "../../src/components/AdminPageAlert";
 import FullPageLoader from "../../src/components/FullPageLoader";
-import { useImpersonation } from '../../src/hooks/ImpersonationHook';
+import { useImpersonation } from '../../src/hooks/useImpersonation';
 
 function SimulationToolbar(props: {
     onCreateSimulatedUser: () => void;
@@ -96,7 +96,7 @@ const Page: NextPage = () => {
                 upload(`/api/users/${id}`, { method: 'DELETE' })
                     .then(x => new Promise<void>((resolve, reject) => x.ok ? resolve() : reject())))
         );
-        console.log('a')
+        console.log('a');
 
         const { rejected = [], fulfilled = [] } = groupBy(result, x => x.status);
 

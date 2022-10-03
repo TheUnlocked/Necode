@@ -21,7 +21,7 @@ import TestsDialog from "./TestsDialog";
 import { editorStateReducer, EditorType } from "./editorStateReducer";
 import PaneEditor from "./PaneEditor";
 import Key from "../../components/Key";
-import { ActivityIframe, RunTestsCallback } from "./ActivityIframe";
+import { ActivityIframe, IframeActions } from "./ActivityIframe";
 import Lazy from "../../components/Lazy";
 import { useLoadingContext } from "../../api/client/LoadingContext";
 import { debounce } from "lodash";
@@ -75,6 +75,12 @@ const codeEditorOptions: editor.IStandaloneEditorConstructionOptions = {
     minimap: { enabled: false },
     "semanticHighlighting.enabled": true,
     fixedOverflowWidgets: true,
+};
+
+const noopIframeActions = {
+    async reload() {},
+    async runTests() {},
+    async waitForReload() {},
 };
 
 export default function createTestActivityPage({
@@ -135,8 +141,7 @@ export default function createTestActivityPage({
             }
         }, [saveData, onSaveDataChange]);
 
-        const reloadRef = useRef<() => Promise<void>>();
-        const runTestsRef = useRef<RunTestsCallback>();
+        const iframeActions = useRef<IframeActions>(noopIframeActions);
 
         const applyChanges = useCallback((type: EditorType) => {
             dispatchEditorsState({
@@ -191,6 +196,14 @@ export default function createTestActivityPage({
             }
         }, [isHtmlEnabled, isCodeEnabled, isCssEnabled]);
 
+        const applyChangesAndWait = useCallback(async () => {
+            const shouldWait = editorStates.html?.isDirty || editorStates.code?.isDirty || editorStates.css?.isDirty;
+            applyAllChanges();
+            if (shouldWait) {
+                return iframeActions.current.waitForReload();
+            }
+        }, [editorStates, applyAllChanges]);
+
         const codeGenerator = useImported(language.runnable);
         const [compiledJs, setCompiledJs] = useState('');
         const codeSource = editorStates.code?.value;
@@ -198,11 +211,10 @@ export default function createTestActivityPage({
         useEffect(() => {
             if (codeSource !== undefined && codeGenerator !== undefined) {
                 try {
-                    const compiledJs = codeGenerator.toRunnerCode(codeSource, {
+                    setCompiledJs(codeGenerator.toRunnerCode(codeSource, {
                         global: true,
                         isolated: true
-                    });
-                    setCompiledJs(compiledJs);
+                    }));
                 }
                 catch (e) {
                     console.error(e);
@@ -497,9 +509,11 @@ export default function createTestActivityPage({
             catch (e) {
                 if (e instanceof Error) {
                     if (e.message.startsWith('unknown: ')) {
-                        e.message = e.message.slice(9);
+                        const newError = new Error(e.message.slice(9));
+                        newError.name = e.name;
+                        e = newError;
                     }
-                    setTestsCompileError(e);
+                    setTestsCompileError(e as Error);
                 }
                 else {
                     setTestsCompileError(new Error(`${e}`));
@@ -568,8 +582,7 @@ export default function createTestActivityPage({
                         html={isHtmlEnabled ? editorStates.html?.value : undefined}
                         js={isCodeEnabled ? compiledJs : undefined}
                         css={isCssEnabled ? editorStates.css?.value : undefined}
-                        reloadRef={reloadRef}
-                        runTestsRef={runTestsRef}
+                        ref={iframeActions}
                         sx={{
                             width: "100%",
                             flexGrow: 1,
@@ -579,10 +592,11 @@ export default function createTestActivityPage({
             }
         }
 
-        function runTests() {
-            if (activityTypeHasTests && runTestsRef.current) {
+        async function runTests() {
+            if (activityTypeHasTests) {
                 openTestsDialog();
-                runTestsRef.current(
+                await applyChangesAndWait();
+                iframeActions.current.runTests(
                     testsSource ?? '',
                     startTests.current,
                     msg => {
@@ -640,7 +654,7 @@ export default function createTestActivityPage({
                 <IconButton onClick={applyAllChanges}><SyncIcon/></IconButton>
             </Tooltip>
             <Tooltip title="Reload" disableInteractive>
-                <IconButton onClick={() => reloadRef.current?.()}><RefreshIcon/></IconButton>
+                <IconButton onClick={() => iframeActions.current.reload()}><RefreshIcon/></IconButton>
             </Tooltip>
         </Stack>;
 

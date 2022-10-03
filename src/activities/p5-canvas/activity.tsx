@@ -13,6 +13,7 @@ import { NetworkId } from '../../api/RtcNetwork';
 import typeDeclarationFiles from '../p5js/typeDeclarationFiles';
 import { LazyImportable } from '../../components/Lazy';
 import Video from '../../components/Video';
+import { useCallback } from 'react';
 
 const importExtraLibs = () => Promise.all(typeDeclarationFiles.map(async x => ({ filePath: x, content: await (await fetch(x)).text() })));
 
@@ -87,7 +88,13 @@ export function Activity({ language }: ActivityPageProps) {
 
     const videoRef = useRef<HTMLVideoElement | null>(null);
 
-    const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
+    const [canvas, setCanvas] = useState<HTMLCanvasElement>();
+    const handleCanvasLoad = useCallback((canvas: HTMLCanvasElement) => {
+        // In order to create the media stream properly on Firefox, we need to create a context first.
+        canvas.getContext('2d');
+        setCanvas(canvas);
+    }, []);
+
     useEffect(() => {
         if (canvas) {
             setOutboundStream(canvas.captureStream(FRAME_RATE));
@@ -175,7 +182,7 @@ export function Activity({ language }: ActivityPageProps) {
                 alignItems: "center"
             }}>
                 <iframe style={{ width: 400, height: 400, border: 0 }} srcDoc={iframeSource} ref={setIframe} />
-                <canvas width={400} height={400} style={{ position: "absolute", left: -1e6 }} ref={setCanvas} />
+                <canvas width={400} height={400} style={{ position: "absolute", left: -1e6 }} ref={handleCanvasLoad} />
                 <Video width={400} height={400} style={{ position: "absolute", left: -1e6 }}
                     muted autoPlay srcObject={inboundStream} ref={videoRef} />
             </Box>

@@ -1,42 +1,53 @@
 import { styled } from "@mui/material";
 import { nanoid } from "nanoid";
-import { useCallback, useEffect, useRef } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, Ref } from "react";
 import iframeHtml from "raw-loader!./iframe.html";
 import testScaffoldingImpl from "raw-loader!./test-scaffolding-impl.js.raw";
 import transformTestScaffolding from "../../languages/transformers/babel-plugin-transform-test-scaffolding";
 import { SxProps } from "@mui/system";
-import { assignRef, SimpleRef } from "../../util/simpleRef";
 import { typescriptDescription } from '../../languages/typescript';
 
 const Iframe = styled('iframe')``;
 
-export type RunTestsCallback = (
+export type RunTestsFunction = (
     tests: string,
     startTests: () => void,
-    finishTests: (errorMessage?: string) => void
+    finishTests: (errorMessage?: string) => void,
 ) => Promise<void>;
 
-export interface ActivityIframeProps {
-    htmlTemplate?: string; 
+export type ReloadFunction = (
+    options?: HtmlCssJsBundle,
+) => Promise<void>;
+
+export interface IframeActions {
+    runTests: RunTestsFunction;
+    reload: ReloadFunction;
+    waitForReload: () => Promise<void>;
+}
+
+export interface HtmlCssJsBundle {
     html?: string;
     css?: string;
     js?: string;
+}
 
-    reloadRef?: SimpleRef<(() => Promise<void>) | undefined>;
-    runTestsRef?: SimpleRef<RunTestsCallback | undefined>;
+function createPromiseResolvePair() {
+    let resolver!: () => void;
+    return [new Promise<void>(resolve => resolver = resolve), resolver] as const;
+}
 
+export interface ActivityIframeProps extends HtmlCssJsBundle {
+    htmlTemplate?: string;
     sx: SxProps;
 }
 
-export function ActivityIframe({
+export const ActivityIframe = forwardRef(function ActivityIframe({
     htmlTemplate,
     html,
     css,
     js,
-    reloadRef,
-    runTestsRef,
     sx
-}: ActivityIframeProps) {
+}: ActivityIframeProps, ref: Ref<IframeActions>) {
 
     const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
@@ -44,10 +55,12 @@ export function ActivityIframe({
 
     const signatureRef = useRef<string>();
 
-    const reload = useCallback((options?: { html?: string, js?: string, css?: string }) => {
+    const waitForReloadResolverRef = useRef(createPromiseResolvePair());
+
+    const reload = useCallback<ReloadFunction>(async options => {
         let isResolved = false;
 
-        return new Promise<void>(resolve => {
+        await new Promise<void>(resolve => {
             const iframeElt = iframeRef.current;
             if (iframeElt) {
                 const signature = nanoid();
@@ -102,6 +115,9 @@ export function ActivityIframe({
                 }, 5000);
             }
         });
+
+        waitForReloadResolverRef.current[1]();
+        waitForReloadResolverRef.current = createPromiseResolvePair();
     }, [htmlTemplate, html, js, css]);
 
     const internalReloadRef = useRef(reload);
@@ -118,7 +134,7 @@ export function ActivityIframe({
         changeCssRef.current(css ?? '');
     }, [css]);
 
-    const runTests = useCallback<RunTestsCallback>(async (tests, startTests, finishTests) => {
+    const runTests = useCallback<RunTestsFunction>(async (tests, startTests, finishTests) => {
         const iframeElt = iframeRef.current!;
         await reload();
         return new Promise<void>(async resolve => {
@@ -171,13 +187,7 @@ export function ActivityIframe({
         });
     }, [reload]);
 
-    useEffect(() => {
-        assignRef(reloadRef, reload);
-    }, [reloadRef, reload]);
-    
-    useEffect(() => {
-        assignRef(runTestsRef, runTests);
-    }, [runTestsRef, runTests]);
+    useImperativeHandle(ref, () => ({ reload, runTests, waitForReload: () => waitForReloadResolverRef.current[0] }), [reload, runTests]);
 
     const onIframeLoad = useCallback((elt: HTMLIFrameElement | null) => {
         if (elt && iframeRef.current !== elt) {
@@ -187,4 +197,4 @@ export function ActivityIframe({
     }, [reload]);
 
     return <Iframe ref={onIframeLoad} sandbox="allow-scripts" sx={sx} />;
-}
+});

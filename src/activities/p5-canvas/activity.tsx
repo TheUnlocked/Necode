@@ -1,6 +1,6 @@
 import { Card } from "@mui/material";
 import { Box } from "@mui/system";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ReflexContainer, ReflexElement, ReflexSplitter } from "react-reflex";
 import dedent from "dedent-js";
 import Editor from "@monaco-editor/react";

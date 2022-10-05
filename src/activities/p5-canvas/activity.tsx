@@ -45,7 +45,7 @@ export function Activity({ language }: ActivityPageProps) {
             return `<html>
                 <head>
                     <style>
-                        body { margin: 0; }
+                        body { margin: 0; background: black; }
                         canvas { display: block; }
                     </style>
                     <script>
@@ -53,7 +53,7 @@ export function Activity({ language }: ActivityPageProps) {
                             window.frameElement.dispatchEvent(new CustomEvent('p5-error', { detail: error }));
                         });
                     </script>
-                    <script src="https://cdn.jsdelivr.net/npm/p5@1.4.2/lib/p5.js"></script>
+                    <script src="https://cdn.jsdelivr.net/npm/p5@1.4.2/lib/p5.min.js"></script>
                     <script>${codeGenerator.toRunnerCode(codeToRun, { global: true })}</script>
                 </head>
                 <body>
@@ -88,10 +88,10 @@ export function Activity({ language }: ActivityPageProps) {
 
     const videoRef = useRef<HTMLVideoElement | null>(null);
 
-    const [canvas, setCanvas] = useState<HTMLCanvasElement>();
-    const handleCanvasLoad = useCallback((canvas: HTMLCanvasElement) => {
+    const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
+    const handleCanvasLoad = useCallback((canvas: HTMLCanvasElement | null) => {
         // In order to create the media stream properly on Firefox, we need to create a context first.
-        canvas.getContext('2d');
+        canvas?.getContext('2d');
         setCanvas(canvas);
     }, []);
 
@@ -107,10 +107,15 @@ export function Activity({ language }: ActivityPageProps) {
             function loadHandler({ detail: frameWindow }: CustomEvent<Window & { p5: any, PREV_FRAME: any }>) {
                 const p5Canvas = frameWindow.document.getElementById('defaultCanvas0') as HTMLCanvasElement;
                 frameWindow.setInterval(() => {
-                    canvas?.getContext('2d')?.drawImage(p5Canvas, 0, 0, 400, 400);
+                    const ctx = canvas?.getContext('2d');
+                    if (ctx) {
+                        ctx.clearRect(0, 0, 400, 400);
+                        ctx.drawImage(p5Canvas, 0, 0, 400, 400);
+                    }
                 }, 1000 / FRAME_RATE / 2);
                 if (videoRef.current) {
                     frameWindow.PREV_FRAME = new frameWindow.p5.MediaElement(videoRef.current);
+                    frameWindow.PREV_FRAME.loadedmetadata = true;
                 }
                 else {
                     console.warn('video not yet loaded');
@@ -146,12 +151,16 @@ export function Activity({ language }: ActivityPageProps) {
                                 minimap: { enabled: false },
                                 "semanticHighlighting.enabled": true,
                                 automaticLayout: true,
+                                fixedOverflowWidgets: true,
                             }}
                             defaultLanguage={language.monacoName}
                             defaultValue={defaultCode}
                             value={code}
                             onMount={(editor, monaco) => {
-                                if (extraLibs) {
+                                const libs = [...extraLibs, { content: dedent`
+                                declare const PREV_FRAME: import("https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/master/types/p5/index").Element;
+                                ` }];
+                                if (libs) {
                                     monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
                                         ...monaco.languages.typescript.javascriptDefaults.getCompilerOptions(),
                                         moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs
@@ -161,8 +170,8 @@ export function Activity({ language }: ActivityPageProps) {
                                         moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs
                                     });
                             
-                                    monaco.languages.typescript.javascriptDefaults.setExtraLibs(extraLibs);
-                                    monaco.languages.typescript.typescriptDefaults.setExtraLibs(extraLibs);
+                                    monaco.languages.typescript.javascriptDefaults.setExtraLibs(libs);
+                                    monaco.languages.typescript.typescriptDefaults.setExtraLibs(libs);
                                 }
                             }}
                             onChange={v => setCode(v ?? "")} />
@@ -181,7 +190,7 @@ export function Activity({ language }: ActivityPageProps) {
                 justifyContent: "center",
                 alignItems: "center"
             }}>
-                <iframe style={{ width: 400, height: 400, border: 0 }} srcDoc={iframeSource} ref={setIframe} />
+                <iframe style={{ width: 400, height: 400, border: 0, backgroundColor: 'black' }} srcDoc={iframeSource} ref={setIframe} />
                 <canvas width={400} height={400} style={{ position: "absolute", left: -1e6 }} ref={handleCanvasLoad} />
                 <Video width={400} height={400} style={{ position: "absolute", left: -1e6 }}
                     muted autoPlay srcObject={inboundStream} ref={videoRef} />

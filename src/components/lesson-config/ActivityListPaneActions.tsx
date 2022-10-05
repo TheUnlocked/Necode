@@ -1,7 +1,7 @@
 import { Add, ContentCopy, Delete, TextFields } from '@mui/icons-material';
 import { Button, IconButton, Tooltip } from '@mui/material';
 import { Stack } from '@mui/system';
-import { DropTargetMonitor, useDrop } from 'react-dnd';
+import { useDrop } from 'use-dnd';
 import ActivityDescription from '../../activities/ActivityDescription';
 import textInputActivityDescription from '../../activities/text-input/textInputDescription';
 import { ActivityEntity } from '../../api/entities/ActivityEntity';
@@ -18,21 +18,21 @@ interface ActivityListPaneActionsProps {
     onCreate?(item: ActivityDescription<any>): void;
 }
 
-const dragTypes = [activityDragDropType, lessonDragDropType];
-
 export default function ActivityListPaneActions({ onCreate, onClone, onDeleteActivity, onDeleteLesson }: ActivityListPaneActionsProps) {
     const [{ isDragging: isDraggingActivity }, cloneDrop] = useDrop(() => ({
         accept: activityDragDropType,
-        collect: (monitor: DropTargetMonitor<ActivityEntity>) => ({ isDragging: monitor.getItemType() === activityDragDropType }),
-        drop(item) {
+        acceptForeign: true, // Cloning foreign objects is fine because references don't matter.
+        collect: ({ itemType }) => ({ isDragging: Boolean(itemType) }),
+        drop({ item }) {
             onClone?.(item);
         }
     }), [onClone]);
     
     const [{ isDragging: isDraggingActivityOrLesson }, trashDrop] = useDrop(() => ({
-        accept: [activityDragDropType, lessonDragDropType],
-        collect: (monitor: DropTargetMonitor<ActivityEntity | LessonEntity>) => ({ isDragging: dragTypes.includes(monitor.getItemType() as string) }),
-        drop(item) {
+        accept: [activityDragDropType, lessonDragDropType] as const,
+        acceptForeign: false,
+        collect: ({ itemType }) => ({ isDragging: Boolean(itemType) }),
+        drop({ item }) {
             if (item.type === EntityType.Activity) {
                 onDeleteActivity?.(item);
             }

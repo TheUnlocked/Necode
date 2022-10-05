@@ -1,5 +1,5 @@
 import { ComponentType } from "react";
-import { ConnectDragSource } from "react-dnd";
+import { RefConnector } from "use-dnd";
 import { PolicyConfiguration } from '../api/RtcNetwork';
 import FeatureDescription from "../languages/features/FeatureDescription";
 import LanguageDescription from "../languages/LangaugeDescription";
@@ -38,7 +38,7 @@ export interface ActivityConfigWidgetProps<ConfigData = undefined> extends BaseA
     
     startActivity: () => void;
     
-    dragHandle: ConnectDragSource;
+    dragHandle: RefConnector;
 
     displayName: string;
     

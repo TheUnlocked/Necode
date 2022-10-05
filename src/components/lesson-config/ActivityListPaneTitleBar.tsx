@@ -1,7 +1,6 @@
 import { Stack, TextField, Typography } from '@mui/material';
 import { useEffect, useMemo } from 'react';
-import { useDrag } from 'react-dnd';
-import { getEmptyImage } from 'react-dnd-html5-backend';
+import { useDrag, createEmptyPreviewImage } from 'use-dnd';
 import { LessonEntity } from '../../api/entities/LessonEntity';
 import { lessonDragDropType } from '../../dnd/types';
 import useLocalCachedState from '../../hooks/useLocalCachedState';
@@ -28,7 +27,7 @@ export default function AcitivityListPaneTitleBar({
     });
 
     useEffect(() => {
-        dragPreview(getEmptyImage());
+        dragPreview(createEmptyPreviewImage());
     }, [dragPreview]);
 
     const dragHandleVisible = useMemo(() => isContentfulLesson(lesson), [lesson]);

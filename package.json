@@ -56,8 +56,6 @@
     "next-mdx-remote": "^4.1.0",
     "notistack": "^2.0.5",
     "react": "^18.2.0",
-    "react-dnd": "^16.0.1",
-    "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^18.2.0",
     "react-error-boundary": "^3.1.4",
     "react-markdown": "^8.0.3",
@@ -71,7 +69,8 @@
     "socket.io": "^4.5.2",
     "socket.io-client": "^4.5.2",
     "swr": "^1.3.0",
-    "unist-util-visit": "^4.1.1"
+    "unist-util-visit": "^4.1.1",
+    "use-dnd": "^1.1.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.19.0",

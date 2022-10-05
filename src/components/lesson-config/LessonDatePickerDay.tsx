@@ -1,7 +1,7 @@
 import { Badge, Tooltip } from '@mui/material';
 import { PickersDay, PickersDayProps } from '@mui/x-date-pickers';
 import { DateTime } from 'luxon';
-import { useDrop } from 'react-dnd';
+import { useDrop } from 'use-dnd';
 import { ActivityEntity } from '../../api/entities/ActivityEntity';
 import { LessonEntity } from '../../api/entities/LessonEntity';
 import { EntityType } from '../../api/entities/Entity';
@@ -9,7 +9,6 @@ import { activityDragDropType, lessonDragDropType } from '../../dnd/types';
 import isContentfulLesson from '../../lessons/isContentfulLesson';
 import { Iso8601Date } from '../../util/iso8601';
 import { useState } from 'react';
-import { useEffect } from 'react';
 
 interface LessonDatePickerDayProps {
     pickerProps: PickersDayProps<DateTime>;
@@ -27,33 +26,26 @@ export default function LessonDatePickerDay({
     onDropLesson,
 }: LessonDatePickerDayProps) {
     const [copy, setCopy] = useState(false);
-
-    useEffect(() => {
-        const handler = (ev: DragEvent) => {
-            setCopy(ev.ctrlKey);
-        };
-        document.addEventListener('drag', handler);
-        document.addEventListener('drop', handler);
-        return () => {
-            document.removeEventListener('drag', handler);
-            document.removeEventListener('drop', handler);
-        };
-    }, []);
     
     const [{ isOver }, drop] = useDrop(() => ({
-        accept: [activityDragDropType, lessonDragDropType],
-        collect: monitor => ({
-            isOver: monitor.isOver(),
-        }),
-        drop: (item: ActivityEntity | LessonEntity<{ activities: 'deep' }>) => {
+        accept: [activityDragDropType, lessonDragDropType] as const,
+        acceptForeign: false, // TODO: Allow foreign copies
+        collect: ({ event }) => ({ isOver: false }),
+        hover: ({ event }) => {
+            setCopy(Boolean(event?.ctrlKey));
+            if (event?.dataTransfer) {
+                event.dataTransfer.dropEffect = event.ctrlKey ? 'copy' : 'move';
+            }
+        },
+        drop: ({ item, event }) => {
             if (item.type === EntityType.Activity) {
-                onDropActivity?.(item, isoDate, copy);
+                onDropActivity?.(item, isoDate, event.ctrlKey);
             }
             else if (item.type === EntityType.Lesson) {
-                onDropLesson?.(item, isoDate, copy);
+                onDropLesson?.(item, isoDate, event.ctrlKey);
             }
         }
-    }), [isoDate, copy, onDropActivity, onDropLesson]);
+    }), [isoDate, onDropActivity, onDropLesson]);
     
     if (pickerProps.outsideCurrentMonth || pickerProps.selected) {
         return <PickersDay {...pickerProps} />;

@@ -1,32 +1,29 @@
 import { Alert } from '@mui/material';
 import { truncate } from 'lodash';
 import { useMemo } from 'react';
-import { useDragLayer } from 'react-dnd';
-import { LessonEntity } from '../../api/entities/LessonEntity';
+import { useDragLayer } from 'use-dnd';
 import { lessonDragDropType } from '../../dnd/types';
 import DragLayer from '../DragLayer';
 
 const MAX_DISPLAY_CHARS = 40;
 
 export default function LessonDragLayer() {
-    const { isDragging, itemType, item, position } = useDragLayer(monitor => ({
-        item: monitor.getItem() as LessonEntity | undefined,
-        itemType: monitor.getItemType(),
-        position: monitor.getClientOffset(),
-        isDragging: monitor.isDragging(),
+    const { item, position } = useDragLayer(lessonDragDropType, ({ item, event }) => ({
+        item: item,
+        position: event ? { x: event.clientX, y: event.clientY } : undefined,
     }));
 
     const displayName = useMemo(() => {
-        if (!item || itemType !== lessonDragDropType) {
-            return null;
+        if (!item) {
+            return <em>(unknown lesson)</em>;
         }
         if (!item.attributes.displayName) {
             return <em>(untitled lesson)</em>;
         }
         return truncate(item.attributes.displayName, { length: MAX_DISPLAY_CHARS });
-    }, [item, itemType]);
+    }, [item]);
 
-    if (!isDragging || itemType !== lessonDragDropType || !position || !item) {
+    if (!position) {
         return null;
     }
 

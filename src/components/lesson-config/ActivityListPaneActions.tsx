@@ -23,6 +23,11 @@ export default function ActivityListPaneActions({ onCreate, onClone, onDeleteAct
         accept: activityDragDropType,
         acceptForeign: true, // Cloning foreign objects is fine because references don't matter.
         collect: ({ itemType }) => ({ isDragging: Boolean(itemType) }),
+        hover({ event }) {
+            if (event.dataTransfer) {
+                event.dataTransfer.dropEffect = 'copy';
+            }
+        },
         drop({ item }) {
             onClone?.(item);
         }

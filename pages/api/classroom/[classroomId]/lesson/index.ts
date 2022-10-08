@@ -67,7 +67,7 @@ const apiLessonAll = endpoint(makeLessonEntity, ['classroomId', 'include[]'] as 
                         lessonId: lesson.id,
                         activityType: x.activityType,
                         displayName: x.displayName,
-                        configuration: x.configuration,
+                        configuration: x.configuration ?? undefined,
                         enabledLanguages: x.enabledLanguages,
                         order: i
                     })) ?? []

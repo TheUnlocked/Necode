@@ -30,7 +30,7 @@ export default function LessonDatePickerDay({
     const [{ isOver }, drop] = useDrop(() => ({
         accept: [activityDragDropType, lessonDragDropType] as const,
         acceptForeign: false, // TODO: Allow foreign copies
-        collect: ({ event }) => ({ isOver: false }),
+        collect: ({ isOver }) => ({ isOver }),
         hover: ({ event }) => {
             setCopy(Boolean(event?.ctrlKey));
             if (event?.dataTransfer) {

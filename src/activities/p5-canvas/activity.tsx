@@ -14,13 +14,16 @@ import typeDeclarationFiles from '../p5js/typeDeclarationFiles';
 import { LazyImportable } from '../../components/Lazy';
 import Video from '../../components/Video';
 import { useCallback } from 'react';
+import { Configuration } from '../canvas';
 
 const importExtraLibs = () => Promise.all(typeDeclarationFiles.map(async x => ({ filePath: x, content: await (await fetch(x)).text() })));
 
 const FRAME_RATE = 10;
 
-export function Activity({ language }: ActivityPageProps) {
+export function Activity({ language, activityConfig }: ActivityPageProps<Configuration>) {
     const [[inboundStream], setOutboundStream] = useMediaChannel(NetworkId.NET_0, 'canvas');
+
+    const config = useMemo(() => activityConfig ?? { canvasWidth: 400, canvasHeight: 400 }, [activityConfig]);
 
     const defaultCode = useMemo(() => dedent
        `function setup() {
@@ -28,9 +31,9 @@ export function Activity({ language }: ActivityPageProps) {
         }
         
         function draw() {
-            image(PREV_FRAME, 0, 0, 400, 400);
+            image(PREV_FRAME, 0, 0, ${config.canvasWidth}, ${config.canvasHeight});
             
-        }`, []
+        }`, [config]
     );
 
     const [code, setCode] = useState<string>();
@@ -64,7 +67,7 @@ export function Activity({ language }: ActivityPageProps) {
                         const setup = window.setup;
                         window.setup = () => {
                             window.PREV_FRAME = createImage(1, 1);
-                            createCanvas(400, 400);
+                            createCanvas(${config.canvasWidth}, ${config.canvasHeight});
                             background('black');
                             window.createCanvas = () => {
                                 throw new Error("We'll handle the canvas for you. :)");
@@ -84,7 +87,7 @@ export function Activity({ language }: ActivityPageProps) {
             `;
         }
         return ``;
-    }, [codeToRun, codeGenerator]);
+    }, [config, codeToRun, codeGenerator]);
 
     const videoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -109,8 +112,8 @@ export function Activity({ language }: ActivityPageProps) {
                 frameWindow.setInterval(() => {
                     const ctx = canvas?.getContext('2d');
                     if (ctx) {
-                        ctx.clearRect(0, 0, 400, 400);
-                        ctx.drawImage(p5Canvas, 0, 0, 400, 400);
+                        ctx.clearRect(0, 0, config.canvasWidth, config.canvasHeight);
+                        ctx.drawImage(p5Canvas, 0, 0, config.canvasWidth, config.canvasHeight);
                     }
                 }, 1000 / FRAME_RATE / 2);
                 if (videoRef.current) {
@@ -133,7 +136,7 @@ export function Activity({ language }: ActivityPageProps) {
                 iframe.removeEventListener('p5-error', errorHandler as any);
             };
         }
-    }, [canvas, iframe]);
+    }, [canvas, iframe, config]);
 
     const isSmallScreen = useIsSizeOrSmaller("sm");
 
@@ -190,9 +193,9 @@ export function Activity({ language }: ActivityPageProps) {
                 justifyContent: "center",
                 alignItems: "center"
             }}>
-                <iframe style={{ width: 400, height: 400, border: 0, backgroundColor: 'black' }} srcDoc={iframeSource} ref={setIframe} />
-                <canvas width={400} height={400} style={{ position: "absolute", left: -1e6 }} ref={handleCanvasLoad} />
-                <Video width={400} height={400} style={{ position: "absolute", left: -1e6 }}
+                <iframe style={{ width: config.canvasWidth, height: config.canvasHeight, border: 0, backgroundColor: 'black' }} srcDoc={iframeSource} ref={setIframe} />
+                <canvas width={config.canvasWidth} height={config.canvasHeight} style={{ position: "absolute", left: -1e6 }} ref={handleCanvasLoad} />
+                <Video width={config.canvasWidth} height={config.canvasHeight} style={{ position: "absolute", left: -1e6 }}
                     muted autoPlay srcObject={inboundStream} ref={videoRef} />
             </Box>
         </ReflexElement>

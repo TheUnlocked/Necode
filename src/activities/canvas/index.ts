@@ -1,6 +1,11 @@
 import supportsEntryPoint from "../../languages/features/supportsEntryPoint";
 import { activityDescription } from "../ActivityDescription";
 
+export type Configuration = undefined | {
+    canvasWidth: number;
+    canvasHeight: number;
+};
+
 const canvasActivityDescription = activityDescription({
     id: 'core/canvas-ring',
     displayName: 'Canvas Ring',
@@ -9,7 +14,8 @@ const canvasActivityDescription = activityDescription({
     ] as const,
     configurePolicies: () => [{ name: 'ring' }],
     activityPage: async () => (await import('./CanvasActivity')).CanvasActivity,
-    defaultConfig: undefined
+    configWidget: async () => (await import('./Widget')).CanvasWidget,
+    defaultConfig: { canvasWidth: 400, canvasHeight: 400 } as Configuration,
 });
 
 export default canvasActivityDescription;

@@ -2,6 +2,7 @@ import supportsBabelPlugins from '../../languages/features/supportsBabelPlugins'
 import supportsGlobal from '../../languages/features/supportsGlobal';
 import supportsIsolated from '../../languages/features/supportsIsolated';
 import { activityDescription } from "../ActivityDescription";
+import { Configuration } from '../canvas';
 
 const canvasActivityDescription = activityDescription({
     id: 'core/canvas-ring/p5',
@@ -13,7 +14,8 @@ const canvasActivityDescription = activityDescription({
     ] as const,
     configurePolicies: () => [{ name: 'ring' }],
     activityPage: async () => (await import('./activity')).Activity,
-    defaultConfig: undefined
+    configWidget: async () => (await import('../canvas/Widget')).CanvasWidget,
+    defaultConfig: { canvasWidth: 400, canvasHeight: 400 } as Configuration
 });
 
 export default canvasActivityDescription;

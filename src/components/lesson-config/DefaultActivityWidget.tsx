@@ -10,10 +10,10 @@ const infoIconSelector = `.${infoIconClass}`;
 export default function DefaultActivityWidget(props: PropsWithChildren<ActivityConfigWidgetProps<any>>) {
     return <Box sx={{ [`&:hover ${infoIconSelector}`]: { visibility: "visible" } }}>
         <ActivityWidgetBase {...props}>
-            {props.children}
             <Tooltip title={props.activityTypeId} className={infoIconClass}>
                 <Info sx={{ visibility: "hidden", color: ({ palette }) => palette.text.disabled }} />
             </Tooltip>
+            {props.children}
             {props.goToConfigPage ? <Button variant="outlined" onClick={props.goToConfigPage}>Configure</Button> : undefined}
             <Button variant="contained" onClick={props.startActivity}>Start Activity</Button>
         </ActivityWidgetBase>

@@ -1,4 +1,5 @@
 import { Box } from "@mui/system";
+import { isEqual } from 'lodash';
 import { useRouter } from "next/router";
 import { ComponentType, useCallback, useEffect } from "react";
 import { useDrag, createEmptyPreviewImage } from "use-dnd";
@@ -62,8 +63,10 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
     const activityType = useActivityDescription(props.activity?.attributes.activityType);
 
     const configChangeHandler = useCallback((configuration: any) => {
-        onActivityChange?.({ configuration });
-    }, [onActivityChange]);
+        if (!isEqual(props.activity?.attributes.configuration, configuration)) {
+            onActivityChange?.({ configuration });
+        }
+    }, [props.activity?.attributes.configuration, onActivityChange]);
 
     const displayNameChangeHandler = useCallback((displayName: string) => {
         onActivityChange?.({ displayName });

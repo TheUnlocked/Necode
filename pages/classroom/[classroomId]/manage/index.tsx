@@ -72,7 +72,8 @@ const PageContent: NextPage<StaticProps> = ({ classroomId }) => {
     }, [router.asPath]);
 
     const { data: lessons } = useGetRequest<LessonEntity<{ activities: 'shallow' }>[]>(
-        classroomId === undefined ? null : `/api/classroom/${classroomId}/lesson`
+        classroomId === undefined ? null : `/api/classroom/${classroomId}/lesson`,
+        { revalidateOnFocus: false }
     );
 
     const [lessonsByDate, setLessonsByDate] = useState<{ [date: Iso8601Date]: LessonEntity<{ activities: 'shallow' }> | undefined }>({});

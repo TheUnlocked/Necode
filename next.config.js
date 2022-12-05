@@ -5,7 +5,7 @@ module.exports = withTM({
   reactStrictMode: true,
   swcMinify: true,
   experimental: {
-    outputFileTracingIgnores: ['**esbuild**'],
+    outputFileTracingIgnores: ['**esbuild-linux-64**', '**@mui**'],
   },
   webpack(config, ctx) {
     return Object.assign({}, config, {

@@ -30,6 +30,9 @@ import SubtleLink from "../../components/SubtleLink";
 import useImported from '../../hooks/useImported';
 import { typescriptDescription } from '../../languages/typescript';
 import { editor } from 'monaco-editor';
+import useY, { useYAwareness } from '../../hooks/useY';
+import { NetworkId } from '../../api/RtcNetwork';
+import * as Y from 'yjs';
 
 export interface HtmlTestActivityBaseConfig {
     description?: string;
@@ -225,6 +228,32 @@ export default function createTestActivityPage({
 
         const [isHiddenHtmlTabActive, setHiddenHtmlTabActive] = useState(!activityTypeHasHtml);
 
+        // `isEditor` is a constant.
+        // eslint-disable-next-line @grncdr/react-hooks/rules-of-hooks
+        const yDoc = isEditor ? undefined : useY(NetworkId.NET_0, 'shared-editors');
+        useEffect(() => {
+            if (yDoc) {
+                // Initialize "default content" doc
+                const initialStateDoc = new Y.Doc();
+                initialStateDoc.clientID = 0;
+
+                // Generate default content state
+                for (const type of ['html', 'css', 'code'] as const) {
+                    const initialValue = type === 'code'
+                        ? activityConfig.languages[type]?.defaultValue[language.name]
+                        : activityConfig.languages[type]?.defaultValue;
+                    if (initialValue) {
+                        initialStateDoc.getText(type === 'code' ? language.name : type).insert(0, initialValue);
+                    }
+                }
+
+                // Apply default content state
+                Y.applyUpdate(yDoc, Y.encodeStateAsUpdate(initialStateDoc));
+            }
+        }, [activityConfig.languages, language.name, yDoc]);
+        // eslint-disable-next-line @grncdr/react-hooks/rules-of-hooks
+        const yAwareness = isEditor ? undefined : useYAwareness(NetworkId.NET_0, 'shared-editors-awareness', yDoc!);
+
         const editorPane = useCallback((type: EditorType, language: LanguageDescription) => {
             const isHiddenHtmlOnly = type === 'html' && !activityTypeHasHtml;
             const editorState = editorStates[type];
@@ -232,10 +261,12 @@ export default function createTestActivityPage({
             const onEditorContainerRef = (elt: HTMLDivElement) => {
                 if (elt && !isEditor && !editorState) {
                     if (type === 'code') {
-                        dispatchEditorsState({ target: type, type: 'initialize', value: activityConfig.languages.code!.defaultValue![language.name] });
+                        const initialValue = activityConfig.languages.code!.defaultValue![language.name];
+                        dispatchEditorsState({ target: type, type: 'initialize', value: initialValue });
                     }
                     else {
-                        dispatchEditorsState({ target: type, type: 'initialize', value: activityConfig.languages[type]!.defaultValue! });
+                        const initialValue = activityConfig.languages[type]!.defaultValue!;
+                        dispatchEditorsState({ target: type, type: 'initialize', value: initialValue });
                     }
                 }
             };
@@ -342,9 +373,9 @@ export default function createTestActivityPage({
             const editorValue = isEditor
                 ? isHiddenHtmlOnly
                     ? ''
-                : type === 'code'
-                    ? activityConfig.languages.code!.defaultValue![language.name] ?? ''
-                    : activityConfig.languages[type]!.defaultValue
+                    : type === 'code'
+                        ? activityConfig.languages.code!.defaultValue![language.name] ?? ''
+                        : activityConfig.languages[type]!.defaultValue
                 : editorState?.uncommittedValue;
 
             const onHiddenHtmlChange: OnChange = value => {
@@ -416,7 +447,9 @@ export default function createTestActivityPage({
                     language={language}
                     value={editorValue}
                     applyChanges={() => applyChanges(type)}
-                    onChange={onChange} />;
+                    onChange={onChange}
+                    yDoc={yDoc}
+                    yAwareness={yAwareness} />;
             }
 
             return <ReflexElement key={language.name} minSize={40}>
@@ -435,7 +468,7 @@ export default function createTestActivityPage({
                     </Box>
                 </Stack>
             </ReflexElement>;
-        }, [isHiddenHtmlTabActive, isThinner, editorStates, applyChanges, activityConfig, onActivityConfigChange]);
+        }, [isHiddenHtmlTabActive, isThinner, editorStates, applyChanges, activityConfig, onActivityConfigChange, yDoc, yAwareness]);
 
         const monaco = useMonaco();
 

@@ -28,6 +28,7 @@ const testDomActivityDescription = activityDescription({
     ] as const,
     activityPage,
     configPage,
+    configurePolicies: () => [{ name: 'ring' }],
     defaultConfig: {
         description: dedent`
         # Problem Name

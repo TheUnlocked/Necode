@@ -1,3 +1,4 @@
+const path = require('path');
 const withTM = require('next-transpile-modules')([/* Problematic module names go here */]);
 
 /** @type {import('next').NextConfig} */
@@ -9,6 +10,12 @@ module.exports = withTM({
       // Support @babel/core
       // https://stackoverflow.com/a/34033159/4937286
       resolve: Object.assign({}, config.resolve, {
+        alias: {
+          ...config.resolve.alias,
+          // @monaco-editor/react loads monaco dynamically, but y-monaco does not.
+          // Loading from node_modules causes issues with Next.js, so we have to avoid it.
+          'monaco-editor$': path.resolve(__dirname, 'src/util/monaco-loader.ts')
+        },
         fallback: Object.assign({}, config.resolve.fallback, {
           fs: false,
           module: false,

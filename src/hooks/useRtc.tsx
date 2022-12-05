@@ -13,7 +13,10 @@ interface Peer extends SimplePeer.Instance {
 
 export type UsePeerCallback = (peer: Peer) => void | (() => void);
 
-type RtcContextValue = (network: NetworkId) => Set<UsePeerCallback>;
+type RtcContextValue = (network: NetworkId) => {
+    callbacks: Set<UsePeerCallback>,
+    peers: Set<Peer>,
+};
 
 const RtcContext = createContext<RtcContextValue | undefined>(undefined);
 
@@ -27,7 +30,10 @@ export function RtcProvider({ socketInfo, children }: PropsWithChildren<{ socket
             networkCallbacks = new Set();
             onPeerCallbacksRef.current.set(network, networkCallbacks);
         }
-        return networkCallbacks;
+        return {
+            callbacks: networkCallbacks,
+            peers: peersRef.current,
+        };
     });
 
     useEffect(() => {
@@ -37,7 +43,7 @@ export function RtcProvider({ socketInfo, children }: PropsWithChildren<{ socket
 
         const ws = tracked(socketInfo.socket);
 
-        ws.on('createWebRTCConnection', (network, initiator, connectionId, info) => {
+        function createPeerConnection(network: NetworkId, initiator: boolean, connectionId: string, info: unknown) {
             const peer = new SimplePeer({
                 initiator,
                 config: {
@@ -67,9 +73,12 @@ export function RtcProvider({ socketInfo, children }: PropsWithChildren<{ socket
                 }
             });
 
+            let intentionallyClosed = false;
+
             peerTrackedWs.on('killWebRTCConnection', (conn) => {
                 if (conn === connectionId) {
                     console.debug('killed connection', conn);
+                    intentionallyClosed = true;
                     peer.destroy();
                 }
             });
@@ -78,14 +87,20 @@ export function RtcProvider({ socketInfo, children }: PropsWithChildren<{ socket
                 peerTrackedWs.offTracked();
                 cleanupCallbacks.forEach(callWith());
                 peersRef.current.delete(peer);
+                if (!intentionallyClosed) {
+                    console.debug('attempting to revive', connectionId);
+                    createPeerConnection(network, initiator, connectionId, info);
+                }
             });
 
             peer.once('connect', () => {
                 console.debug('connected', connectionId);
             });
 
-            cleanupCallbacks.push(...[...getNetworkCallbacksRef.current(network)].map(cb => cb(peer) ?? (() => {})));
-        });
+            cleanupCallbacks.push(...[...getNetworkCallbacksRef.current(network).callbacks].map(cb => cb(peer) ?? (() => {})));
+        }
+
+        ws.on('createWebRTCConnection', createPeerConnection);
 
         ws.emit('joinRtc');
 
@@ -110,19 +125,27 @@ export function RtcProvider({ socketInfo, children }: PropsWithChildren<{ socket
 }
 
 function usePeer(network: NetworkId, callback: UsePeerCallback) {
-    const onPeerCallbacks = useContext(RtcContext)?.(network);
+    const rtcData = useContext(RtcContext)?.(network);
 
     useEffect(() => {
-        if (!onPeerCallbacks) {
+        if (rtcData) {
+            rtcData.peers.forEach(callback);
+        }
+    // Fire onPeer callback for each peer on initial load
+    // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
+        if (!rtcData) {
             return;
         }
-        if (onPeerCallbacks.has(callback)) {
+        if (rtcData.callbacks.has(callback)) {
             console.error('Cannot use the same listener for multiple instances of usePeer.');
             return;
         }
-        onPeerCallbacks.add(callback);
-        return () => { onPeerCallbacks.delete(callback) };
-    }, [onPeerCallbacks, callback]);
+        rtcData.callbacks.add(callback);
+        return () => { rtcData.callbacks.delete(callback) };
+    }, [rtcData, callback]);
 }
 
 export const usePeer_unstable = usePeer;
@@ -161,6 +184,7 @@ export function useDataChannel(
     network: NetworkId,
     channelName: string,
     onData: (data: Uint8Array) => void,
+    onCreated?: (emit: (data: Uint8Array) => void) => void,
 ): (data: Uint8Array) => void {
     const channelId = cyrb53(channelName);
 
@@ -175,16 +199,29 @@ export function useDataChannel(
             }
         };
         peer.on('data', dataHandler);
+        onCreated?.(data => {
+            if (peer.connected) {
+                peer.send(encode(channelId, data));
+            }
+            else if (!peer.destroyed) {
+                peer.once('connect', () => peer.send(encode(channelId, data)));
+            }
+        });
         return () => {
             peer.off('data', dataHandler);
             peersRef.current.delete(peer);
         };
-    }, [channelId, onData]));
+    }, [channelId, onData, onCreated]));
 
     return useCallback(data => {
         const encoded = encode(channelId, data);
         for (const peer of peersRef.current) {
-            peer.send(encoded);
+            if (peer.connected) {
+                peer.send(encoded);
+            }
+            else if (!peer.destroyed) {
+                peer.once('connect', () => peer.send(encoded));
+            }
         }
     }, [channelId]);
 };
@@ -193,13 +230,13 @@ export function useStringDataChannel(
     network: NetworkId,
     channelName: string,
     onData: (data: string) => void,
+    onCreated?: (emit: (data: string) => void) => void,
 ): (data: string) => void {
     const emitBuffer = useDataChannel(
         network,
         channelName,
-        useCallback(data => {
-            onData(new TextDecoder().decode(data));
-        }, [onData])
+        useCallback(data => onData(new TextDecoder().decode(data)), [onData]),
+        useCallback((emit: (data: Uint8Array) => void) => onCreated?.(data => emit(new TextEncoder().encode(data))), [onCreated]),
     );
     return useCallback((data: string) => {
         emitBuffer(new TextEncoder().encode(data));

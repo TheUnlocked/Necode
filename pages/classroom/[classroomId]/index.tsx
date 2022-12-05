@@ -1,30 +1,30 @@
-import { GetServerSideProps, NextPage } from "next";
-import apiClassroomMe from "../../api/classroom/[classroomId]/me";
+import { NextPage } from "next";
+import { useRouter } from 'next/router';
+import { useGetRequest } from '../../../src/api/client/GetRequestHook';
+import { ClassroomMemberEntity } from '../../../src/api/entities/ClassroomMemberEntity';
+import NotFoundPage from '../../404';
 
 const Page: NextPage = () => {
+    const router = useRouter();
+
+    const classroomId = router.query.classroomId;
+
+    const { data: me, error } = useGetRequest<ClassroomMemberEntity>(`/api/classroom/${classroomId}/me`);
+
+    if (error) {
+        return <NotFoundPage />;
+    }
+
+    if (me) {
+        if (me.attributes.role === 'Instructor') {
+            router.replace(`/classroom/${classroomId}/manage`);
+        }
+        else {
+            router.replace(`/classroom/${classroomId}/activity`);
+        }
+    }
+    
     return null;
 };
 
 export default Page;
-
-export const getServerSideProps: GetServerSideProps = async ({ query: { classroomId }, req, res }) => {
-    if (typeof classroomId === 'string') {
-        const { data } = await apiClassroomMe.GET.execute(req, res, { query: { classroomId, include: [] } });
-
-        if (data?.attributes.role === 'Instructor') {
-            return {
-                redirect: {
-                    statusCode: 302,
-                    destination: `/classroom/${classroomId}/manage`
-                }
-            };
-        }
-    }
-
-    return {
-        redirect: {
-            statusCode: 302,
-            destination: `/classroom/${classroomId}/activity`
-        }
-    };
-};

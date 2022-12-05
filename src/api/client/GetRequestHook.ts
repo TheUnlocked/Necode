@@ -102,7 +102,7 @@ function makeUseGetRequest(immutable: boolean) {
             data: data?.data,
             error: data?.message ?? error?.message,
             isValidating,
-            isLoading: isValidating || (!data?.data && !data?.message && !error?.message),
+            isLoading: !data?.data && !data?.message && !error?.message,
             mutate: mutateData,
             mutateDelete,
         };

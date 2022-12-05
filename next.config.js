@@ -4,6 +4,9 @@ const withTM = require('next-transpile-modules')([/* Problematic module names go
 module.exports = withTM({
   reactStrictMode: true,
   swcMinify: true,
+  experimental: {
+    outputFileTracingIgnores: ['**@mui**', '**react-dom**'],
+  },
   webpack(config, ctx) {
     return Object.assign({}, config, {
       // Support @babel/core

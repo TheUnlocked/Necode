@@ -4,7 +4,7 @@ import '../src/styles/hljs.scss';
 import '../src/styles/monaco-awareness.scss';
 
 import type { AppProps } from 'next/app';
-import React, { useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import theme from '../src/themes/theme';
 import { CssBaseline, ThemeProvider } from '@mui/material';
 import Head from 'next/head';

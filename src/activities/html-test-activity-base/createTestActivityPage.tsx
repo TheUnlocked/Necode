@@ -32,7 +32,7 @@ import { typescriptDescription } from '../../languages/typescript';
 import { editor } from 'monaco-editor';
 import useY, { useYAwareness } from '../../hooks/useY';
 import { NetworkId } from '../../api/RtcNetwork';
-import * as Y from 'yjs';
+import { applyTransaction, applyUnifiedUpdates } from '../../util/y-utils';
 
 export interface HtmlTestActivityBaseConfig {
     description?: string;
@@ -135,14 +135,45 @@ export default function createTestActivityPage({
         
         const [editorStates, dispatchEditorsState] = useReducer(editorStateReducer, {});
 
+        // `isEditor` is a constant.
+        // eslint-disable-next-line @grncdr/react-hooks/rules-of-hooks
+        const yDoc = isEditor ? undefined : useY(NetworkId.NET_0, 'shared-editors');
+        useEffect(() => {
+            if (yDoc) {
+                applyUnifiedUpdates(yDoc, doc => {
+                    for (const type of ['html', 'css', 'code'] as const) {
+                        const initialValue = type === 'code'
+                            ? activityConfig.languages[type]?.defaultValue[language.name]
+                            : activityConfig.languages[type]?.defaultValue;
+                        if (initialValue) {
+                            doc.getText(type).insert(0, initialValue);
+                            // Also update local state while we're at it
+                            dispatchEditorsState({ target: type, type: 'initialize', value: initialValue });
+                        }
+                    }
+                });
+            }
+        }, [activityConfig.languages, language.name, yDoc]);
+        // eslint-disable-next-line @grncdr/react-hooks/rules-of-hooks
+        const yAwareness = isEditor ? undefined : useYAwareness(NetworkId.NET_0, 'shared-editors-awareness', yDoc!);
+
         useEffect(() => {
             if (saveData) {
                 dispatchEditorsState({ type: 'valueChange', target: 'html', value: saveData.data?.html });
                 dispatchEditorsState({ type: 'valueChange', target: 'code', value: saveData.data?.code });
                 dispatchEditorsState({ type: 'valueChange', target: 'css', value: saveData.data?.css });
+                if (yDoc) {
+                    applyTransaction(yDoc, doc => {
+                        for (const type of ['html', 'code', 'css'] as const) {
+                            const text = doc.getText(type);
+                            text.delete(0, text.length);
+                            text.insert(0, saveData.data?.[type]);
+                        }
+                    });
+                }
                 onSaveDataChange?.(undefined);
             }
-        }, [saveData, onSaveDataChange]);
+        }, [saveData, onSaveDataChange, yDoc]);
 
         const iframeActions = useRef<IframeActions>(noopIframeActions);
 
@@ -228,48 +259,9 @@ export default function createTestActivityPage({
 
         const [isHiddenHtmlTabActive, setHiddenHtmlTabActive] = useState(!activityTypeHasHtml);
 
-        // `isEditor` is a constant.
-        // eslint-disable-next-line @grncdr/react-hooks/rules-of-hooks
-        const yDoc = isEditor ? undefined : useY(NetworkId.NET_0, 'shared-editors');
-        useEffect(() => {
-            if (yDoc) {
-                // Initialize "default content" doc
-                const initialStateDoc = new Y.Doc();
-                initialStateDoc.clientID = 0;
-
-                // Generate default content state
-                for (const type of ['html', 'css', 'code'] as const) {
-                    const initialValue = type === 'code'
-                        ? activityConfig.languages[type]?.defaultValue[language.name]
-                        : activityConfig.languages[type]?.defaultValue;
-                    if (initialValue) {
-                        initialStateDoc.getText(type === 'code' ? language.name : type).insert(0, initialValue);
-                    }
-                }
-
-                // Apply default content state
-                Y.applyUpdate(yDoc, Y.encodeStateAsUpdate(initialStateDoc));
-            }
-        }, [activityConfig.languages, language.name, yDoc]);
-        // eslint-disable-next-line @grncdr/react-hooks/rules-of-hooks
-        const yAwareness = isEditor ? undefined : useYAwareness(NetworkId.NET_0, 'shared-editors-awareness', yDoc!);
-
         const editorPane = useCallback((type: EditorType, language: LanguageDescription) => {
             const isHiddenHtmlOnly = type === 'html' && !activityTypeHasHtml;
             const editorState = editorStates[type];
-
-            const onEditorContainerRef = (elt: HTMLDivElement) => {
-                if (elt && !isEditor && !editorState) {
-                    if (type === 'code') {
-                        const initialValue = activityConfig.languages.code!.defaultValue![language.name];
-                        dispatchEditorsState({ target: type, type: 'initialize', value: initialValue });
-                    }
-                    else {
-                        const initialValue = activityConfig.languages[type]!.defaultValue!;
-                        dispatchEditorsState({ target: type, type: 'initialize', value: initialValue });
-                    }
-                }
-            };
 
             const Icon = language.icon;
 
@@ -448,7 +440,7 @@ export default function createTestActivityPage({
                     value={editorValue}
                     applyChanges={() => applyChanges(type)}
                     onChange={onChange}
-                    yDoc={yDoc}
+                    yText={yDoc?.getText(type)}
                     yAwareness={yAwareness} />;
             }
 
@@ -458,7 +450,7 @@ export default function createTestActivityPage({
                         <Stack direction="row" alignItems="center" sx={{ m: 1, flexGrow: 1, height: "24px" }}>{toolbarItems}</Stack>
                         {tabItems ? <Stack direction="row" alignItems="center" sx={{ height: "40px" }}>{tabItems}</Stack> : undefined}
                     </Stack>
-                    <Box ref={onEditorContainerRef} sx={{
+                    <Box sx={{
                         flexGrow: 1,
                         height: "calc(100% - 40px)", // need this because monaco does weird things without it.
                         ".monaco-editor .suggest-widget": { zIndex: 101 },

@@ -23,7 +23,7 @@ export const editorStateReducer = (state: { [Type in EditorType]?: EditorState }
         case 'valueChange':
             return { ...state, [action.target]: {
                 ...state[action.target],
-                isDirty: true,
+                isDirty: action.value !== state[action.target]?.value,
                 uncommittedValue: action.value
             } as EditorState };
         case 'applyChanges':

@@ -13,7 +13,7 @@ export interface PaneEditorProps {
     onChange: OnChange;
     language: LanguageDescription;
     applyChanges?: () => void;
-    yDoc?: Y.Doc;
+    yText?: Y.Text;
     yAwareness?: Awareness;
 }
 
@@ -23,7 +23,7 @@ const monacoOptions = {
     fixedOverflowWidgets: true,
 };
 
-export default function PaneEditor({ isConfig, language, value, onChange, applyChanges, yDoc, yAwareness }: PaneEditorProps) {
+export default function PaneEditor({ isConfig, language, value, onChange, applyChanges, yText, yAwareness }: PaneEditorProps) {
     const [editor, setEditor] = useState<editor.IStandaloneCodeEditor>();
 
     const onMount: OnMount = useCallback((editor, monaco) => {
@@ -34,9 +34,9 @@ export default function PaneEditor({ isConfig, language, value, onChange, applyC
     }, [isConfig, applyChanges]);
 
     useEffect(() => {
-        if (yDoc && editor) {
+        if (yText && editor) {
             const binding = new MonacoBinding(
-                yDoc.getText(language.name),
+                yText,
                 editor.getModel()!,
                 new Set([editor]),
                 yAwareness,
@@ -45,14 +45,14 @@ export default function PaneEditor({ isConfig, language, value, onChange, applyC
                 binding.destroy();
             };
         }
-    }, [yDoc, yAwareness, editor, language.name]);
+    }, [yText, yAwareness, editor, language.name]);
 
     return <Editor
         theme="vs-dark"
         options={monacoOptions}
         language={language.monacoName}
         onMount={onMount}
-        value={value}
+        // do not set value here because that is handled by the MonacoBinding
         onChange={onChange}
     />;
 }

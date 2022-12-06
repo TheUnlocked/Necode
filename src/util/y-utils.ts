@@ -17,3 +17,9 @@ export function applyUnifiedUpdates(doc: Y.Doc, update: (doc: Y.Doc) => void) {
     // Apply default content state
     Y.applyUpdate(doc, Y.encodeStateAsUpdate(unifiedDoc));
 }
+
+export function applyTransaction(doc: Y.Doc, update: (doc: Y.Doc) => void) {
+    Y.transact(doc, () => {
+        update(doc);
+    });
+}

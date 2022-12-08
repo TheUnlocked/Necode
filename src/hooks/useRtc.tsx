@@ -102,7 +102,11 @@ export function RtcProvider({ socketInfo, children }: PropsWithChildren<{ socket
 
         ws.on('createWebRTCConnection', createPeerConnection);
 
-        ws.emit('joinRtc');
+        if (ws.connected) {
+            ws.emit('joinRtc');
+        }
+        
+        ws.on('connect', () => ws.emit('joinRtc'));
 
         return () => {
             ws.offTracked();

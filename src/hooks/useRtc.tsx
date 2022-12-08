@@ -87,7 +87,11 @@ export function RtcProvider({ socketInfo, children }: PropsWithChildren<{ socket
             cleanupCallbacks.push(...[...getNetworkCallbacksRef.current(network)].map(cb => cb(peer) ?? (() => {})));
         });
 
-        ws.emit('joinRtc');
+        if (ws.connected) {
+            ws.emit('joinRtc');
+        }
+        
+        ws.on('connect', () => ws.emit('joinRtc'));
 
         return () => {
             ws.offTracked();

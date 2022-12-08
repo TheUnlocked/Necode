@@ -67,10 +67,9 @@ export default async function createMiKePolicy(filename: string) {
 
     mike.loadScript(filename, mikeSource);
     const jsCodeBuffer = mike.tryValidateAndEmit(filename);
-
     if (!jsCodeBuffer) {
         diagnostics.getDiagnostics().forEach(d => console.error(d.toString()));
-        throw new Error('MiKe Compilation Failed.');
+        throw new Error(`MiKe Compilation Failed.\n\t${diagnostics.getDiagnostics().join('\n\t')}`);
     }
 
     const jsModuleCode = `data:text/javascript;base64,${Buffer.from(jsCodeBuffer).toString('base64')}`;
@@ -91,7 +90,12 @@ export default async function createMiKePolicy(filename: string) {
 
         constructor(network: NetworkId, users: Iterable<string>, private settings: RtcPolicySettings) {
             this.program = createMiKeProgram({
-                debug: console.log,
+                debug: (...args) => {
+                    console.log(...args);
+                    if (typeof args[0] === 'string' && args[0].includes('BUG')) {
+                        console.log(JSON.stringify(Object.fromEntries(this.program.state.map(x => [x.name, x.default]))));
+                    }
+                },
                 link: (a: string, b: string) => {
                     console.debug(a, '->', b);
                     this.connectionMap.set([a, b], this.settings.rtc.createWebRtcConnection(network, a, b));

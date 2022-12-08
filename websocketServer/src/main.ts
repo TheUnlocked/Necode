@@ -57,6 +57,8 @@ io.on('connection', socket => {
     let userId: string;
     let socketId = socket.id;
     let classroom: Classroom;
+    let markClassroomSet: () => void;
+    let classroomSetGate = new Promise<void>(resolve => markClassroomSet = resolve);
 
     async function connect() {
         console.log(userId, 'connected with id', socketId);
@@ -66,7 +68,8 @@ io.on('connection', socket => {
         socket.join(classroomId);
 
         classroom = classrooms.getOrCreate(classroomId);
-
+        markClassroomSet();
+        
         io.to([...await classroom.getInstructors()]).emit('userJoin', userId);
         classroom.addMember(socketId);
     }
@@ -110,6 +113,8 @@ io.on('connection', socket => {
     });
 
     socket.on('joinRtc', async () => {
+        await classroomSetGate;
+        
         // if (process.env.NODE_ENV === 'development') {
         //     // Works better with hot reload on the client
         //     classroom.activity?.networks.forEach(net => net.onUserLeave(socketId));
@@ -122,6 +127,8 @@ io.on('connection', socket => {
     });
 
     socket.on('getParticipants', async (callback) => {
+        await classroomSetGate;
+
         if (!await hasScope(userId, 'classroom:view', { classroomId })) {
             // request likely sent by accident or out of curiosity, just send nothing
             return callback([]);
@@ -132,6 +139,8 @@ io.on('connection', socket => {
     });
 
     socket.on('command', async (to, data, callback) => {
+        await classroomSetGate;
+        
         if (await hasScope(userId, 'activity:run', { classroomId })) {
             if (to === undefined) {
                 to = [...classroom.membersCache];
@@ -146,6 +155,8 @@ io.on('connection', socket => {
     });
 
     socket.on('request', async (data, callback) => {
+        await classroomSetGate;
+
         if (await hasScope(userId, 'activity:view', { classroomId })) {
             io.to([...classroom.instructorsCache])
                 .emit('request', data);
@@ -155,6 +166,8 @@ io.on('connection', socket => {
     });
 
     socket.on('submission', async (data, callback) => {
+        await classroomSetGate;
+
         if (!classroom.activity) {
             return callback('No activity');
         }

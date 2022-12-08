@@ -70,7 +70,7 @@ on leave(user: User) {
 
                 if ring.get(item.next) |nextItem| {
                     nextItem.prev = item.prev;
-                    if item == headItem {
+                    if item.user == headItem.user {
                         // Update the head pointer if the user that left was the head user
                         head = some(nextItem);
                     }

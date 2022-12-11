@@ -8,7 +8,7 @@ const MuiSubtleLink = styled(Link)(({ theme }) => `
 `);
 
 export default forwardRef(function SubtleLink(props: Parameters<typeof Link>[0] & { href: string }, ref: ForwardedRef<HTMLAnchorElement | null>) {
-    return <NextLink href={props.href} passHref>
+    return <NextLink href={props.href} passHref legacyBehavior>
         <MuiSubtleLink {...props} ref={ref} />
     </NextLink>;
 });

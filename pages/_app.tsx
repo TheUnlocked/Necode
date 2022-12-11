@@ -3,7 +3,7 @@ import 'highlight.js/styles/vs2015.css';
 import '../src/styles/hljs.scss';
 
 import type { AppProps } from 'next/app';
-import React, { useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import theme from '../src/themes/theme';
 import { CssBaseline, ThemeProvider } from '@mui/material';
 import Head from 'next/head';
@@ -19,8 +19,9 @@ import { ErrorBoundary } from 'react-error-boundary';
 import ErrorBoundaryPage from '../src/components/ErrorBoundaryPage';
 import usePageTitle from '../src/hooks/usePageTitle';
 import { ConfirmProvider } from 'material-ui-confirm';
-import { loader } from '@monaco-editor/react';
 import { DragDropProvider } from 'use-dnd';
+import { loader } from '@monaco-editor/react';
+
 
 // Temporarily required due to https://github.com/microsoft/monaco-editor/issues/2947
 loader.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.31.1/min/vs' } });

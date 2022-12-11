@@ -53,7 +53,7 @@ export function RtcProvider({ socketInfo, children }: PropsWithChildren<{ socket
 
         const ws = tracked(socketInfo.socket);
 
-        function createPeerConnection(network: NetworkId, initiator: boolean, connectionId: string, info: { displayName: string }) {
+        function createPeerConnection(network: NetworkId, initiator: boolean, connectionId: string, info: { displayName: string } = { displayName: 'unknown' }) {
             const peer = new SimplePeer({
                 initiator,
                 config: {
@@ -117,7 +117,7 @@ export function RtcProvider({ socketInfo, children }: PropsWithChildren<{ socket
         if (ws.connected) {
             ws.emit('joinRtc');
         }
-        
+
         ws.on('connect', () => ws.emit('joinRtc'));
 
         return () => {

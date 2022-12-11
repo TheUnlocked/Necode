@@ -40,7 +40,10 @@ export interface ClientToServerEventMap {
 
 export interface ServerToClientEventMap {
     // Orders
-    createWebRTCConnection(network: NetworkId, initiator: boolean, connId: string, info: any): void;
+    createWebRTCConnection(network: NetworkId, initiator: boolean, connId: string, info: {
+        /** A name to display for the connected user */
+        displayName: string;
+    }): void;
     signalWebRTCConnection(connId: string, signal: SignalData): void;
     killWebRTCConnection(connId: string): void;
 

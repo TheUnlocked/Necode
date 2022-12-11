@@ -17,7 +17,7 @@ interface P5ActivityConfig extends HtmlTestActivityBaseConfig {
 const [activityPage, configPage] = createTestActivityPages({
     hasCss: false,
     hasHtml: false,
-    hasTests: false,
+    hasTests: true,
     hiddenHtml: {
         configurable: true
     },

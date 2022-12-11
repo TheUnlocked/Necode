@@ -21,7 +21,7 @@ import { curry } from "lodash";
 import useNecodeFetch from '../../../src/hooks/useNecodeFetch';
 import useImported from '../../../src/hooks/useImported';
 import { typeAssert } from '../../../src/util/typeguards';
-import { RtcProvider } from '../../../src/hooks/useRtc';
+import { RtcProvider } from '../../../src/hooks/RtcHooks';
 import { useSnackbar } from 'notistack';
 import { useLoadingContext } from '../../../src/api/client/LoadingContext';
 

@@ -7,7 +7,17 @@ import { callWith } from '../util/fp';
 import tracked from '../util/trackedEventEmitter';
 import { SocketInfo } from './useSocket';
 
-interface Peer extends SimplePeer.Instance {
+/**
+ * Information about a remote user.
+ */
+export interface RemoteUserInfo {
+    /** An ID representing the connection. This is randomly generated and is not associated with the user's permanent ID */
+    id: string;
+    /** The display name of the user on the other side of the connection. */
+    displayName: string;
+}
+
+interface Peer extends SimplePeer.Instance, RemoteUserInfo {
     isInitiator: boolean;
 }
 
@@ -43,13 +53,15 @@ export function RtcProvider({ socketInfo, children }: PropsWithChildren<{ socket
 
         const ws = tracked(socketInfo.socket);
 
-        function createPeerConnection(network: NetworkId, initiator: boolean, connectionId: string, info: unknown) {
+        function createPeerConnection(network: NetworkId, initiator: boolean, connectionId: string, info: { displayName: string }) {
             const peer = new SimplePeer({
                 initiator,
                 config: {
                     iceServers: socketInfo.iceServers,
                 },
             }) as Peer;
+            peer.id = connectionId;
+            peer.displayName = info.displayName;
             peer.isInitiator = initiator;
 
             const cleanupCallbacks = [] as (() => void)[];
@@ -184,42 +196,18 @@ function decodeString(id: bigint, data: Uint8Array) {
     }
 }
 
-export function useDataChannel(
-    network: NetworkId,
-    channelName: string,
-    onData: (data: Uint8Array) => void,
-    onCreated?: (emit: (data: Uint8Array) => void) => void,
-): (data: Uint8Array) => void {
-    const channelId = cyrb53(channelName);
+export type DataChannelEmit<T> = (data: T, options?: {
+    /**
+     * A list of peer IDs to send the message to, or `'broadcast'` to send it to all peers.
+     * @default 'broadcast'
+     */
+    target?: 'broadcast' | string[]
+}) => void;
 
-    const peersRef = useRef(new Set<Peer>());
-
-    usePeer(network, useCallback(peer => {
-        peersRef.current.add(peer);
-        const dataHandler = (data: Uint8Array) => {
-            const decoded = decode(channelId, data);
-            if (decoded) {
-                onData(decoded);
-            }
-        };
-        peer.on('data', dataHandler);
-        onCreated?.(data => {
-            if (peer.connected) {
-                peer.send(encode(channelId, data));
-            }
-            else if (!peer.destroyed) {
-                peer.once('connect', () => peer.send(encode(channelId, data)));
-            }
-        });
-        return () => {
-            peer.off('data', dataHandler);
-            peersRef.current.delete(peer);
-        };
-    }, [channelId, onData, onCreated]));
-
-    return useCallback(data => {
+function useEmitFunction(channelId: bigint, getPeers: () => Iterable<Peer>): DataChannelEmit<Uint8Array> {
+    return useCallback((data, { target = 'broadcast' } = { }) => {
         const encoded = encode(channelId, data);
-        for (const peer of peersRef.current) {
+        for (const peer of target === 'broadcast' ? getPeers() : [...getPeers()].filter(x => target.includes(x.id))) {
             if (peer.connected) {
                 peer.send(encoded);
             }
@@ -227,25 +215,157 @@ export function useDataChannel(
                 peer.once('connect', () => peer.send(encoded));
             }
         }
-    }, [channelId]);
+    }, [channelId, getPeers]);
+}
+
+type DataChannelLifecycle<T> = (
+    ...args: [
+        event: 'connect',
+        data: {
+            /** Information about the user who connected */
+            who: RemoteUserInfo,
+        },
+        emit: DataChannelEmit<T>,
+    ]
+    | [
+        event: 'message',
+        data: {
+            /** The data that was sent */
+            content: T,
+            /** Information about the user who sent the message */
+            from: RemoteUserInfo,
+        },
+        emit: DataChannelEmit<T>,
+    ]
+    | [
+        event: 'disconnect',
+        data: {
+            /** Information about the user who disconnected */
+            who: RemoteUserInfo,
+        },
+        emit?: undefined,
+    ]
+) => void;
+
+export function useDataChannelLifecycle(
+    network: NetworkId,
+    channelName: string,
+    handler: DataChannelLifecycle<Uint8Array>
+): DataChannelEmit<Uint8Array> {
+    const channelId = cyrb53(channelName);
+
+    const emit = useEmitFunction(channelId, useCallback(() => peersRef.current, []));
+
+    const peersRef = useRef(new Set<Peer>());
+
+    const recvHandler = useCallback((peer: Peer, data: Uint8Array) => {
+        const decoded = decode(channelId, data);
+        if (decoded) {
+            handler('message', { content: decoded, from: peer }, emit);
+        }
+    }, [channelId, handler, emit]);
+
+    const peerRecvHandlerMap = useRef(new Map<Peer, (data: Uint8Array) => void>);
+
+    useEffect(() => {
+        for (const peer of peersRef.current) {
+            peer.off('data', peerRecvHandlerMap.current.get(peer)!);
+
+            const myRecvHandler = (data: Uint8Array) => recvHandler(peer, data);
+            peer.on('data', myRecvHandler);
+            peerRecvHandlerMap.current.set(peer, myRecvHandler);
+        }
+    }, [recvHandler]);
+
+    const disconnectHandlerRef = useRef<(peer: Peer) => void>(null!);
+    disconnectHandlerRef.current = peer => {
+        handler('disconnect', { who: peer });
+    };
+
+    usePeer(network, useCallback(peer => {
+        peersRef.current.add(peer);
+
+        const myRecvHandler = (data: Uint8Array) => recvHandler(peer, data);
+        peer.on('data', myRecvHandler);
+        peerRecvHandlerMap.current.set(peer, myRecvHandler);
+
+        handler('connect', { who: peer }, emit);
+        return () => {
+            peer.off('data', peerRecvHandlerMap.current.get(peer)!);
+            peerRecvHandlerMap.current.delete(peer);
+            
+            peersRef.current.delete(peer);
+            disconnectHandlerRef.current(peer);
+        };
+    }, [handler, emit, recvHandler]));
+
+    return emit;
+}
+
+export function useDataChannel(
+    network: NetworkId,
+    channelName: string,
+    onData: (
+        /**
+         * The data received
+         */
+        data: Uint8Array,
+        /**
+         * The peer that the data was sent by
+         */
+        from: RemoteUserInfo
+    ) => void,
+): DataChannelEmit<Uint8Array> {
+    return useDataChannelLifecycle(network, channelName, useCallback((...[event, data]) => {
+        if (event === 'message') {
+            onData(data.content, data.from);
+        }
+    }, [onData]));
 };
+
+function convertEmitBytesToEmitString(emitBytes: DataChannelEmit<Uint8Array>): DataChannelEmit<string> {
+    return (data, options) => emitBytes(new TextEncoder().encode(data), options);
+}
+
+export function useStringDataChannelLifecycle(
+    network: NetworkId,
+    channelName: string,
+    handler: DataChannelLifecycle<string>
+): DataChannelEmit<string> {
+    const emitBytes = useDataChannelLifecycle(network, channelName, useCallback((...[event, data, emit]) => {
+        switch (event) {
+            case 'connect':
+                return handler('connect', data, convertEmitBytesToEmitString(emit));
+            case 'message':
+                return handler('message', { content: new TextDecoder().decode(data.content), from: data.from }, convertEmitBytesToEmitString(emit));
+            case 'disconnect':
+                return handler(event, data);
+        }
+    }, [handler]));
+
+    return convertEmitBytesToEmitString(emitBytes);
+}
 
 export function useStringDataChannel(
     network: NetworkId,
     channelName: string,
-    onData: (data: string) => void,
-    onCreated?: (emit: (data: string) => void) => void,
-): (data: string) => void {
-    const emitBuffer = useDataChannel(
-        network,
-        channelName,
-        useCallback(data => onData(new TextDecoder().decode(data)), [onData]),
-        useCallback((emit: (data: Uint8Array) => void) => onCreated?.(data => emit(new TextEncoder().encode(data))), [onCreated]),
-    );
-    return useCallback((data: string) => {
-        emitBuffer(new TextEncoder().encode(data));
-    }, [emitBuffer]);
-}
+    onData: (
+        /**
+         * The data received
+         */
+        data: string,
+        /**
+         * The peer that the data was sent by
+         */
+        from: RemoteUserInfo
+    ) => void,
+): DataChannelEmit<string> {
+    return useStringDataChannelLifecycle(network, channelName, useCallback((...[event, data]) => {
+        if (event === 'message') {
+            onData(data.content, data.from);
+        }
+    }, [onData]));
+};
 
 export function useMediaChannel(
     network: NetworkId,

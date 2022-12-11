@@ -9,7 +9,7 @@ import { ActivityPageProps } from "../ActivityDescription";
 import useIsSizeOrSmaller from "../../hooks/useIsSizeOrSmaller";
 import CodeAlert from "../../components/CodeAlert";
 import useImported from '../../hooks/useImported';
-import { useMediaChannel } from '../../hooks/useRtc';
+import { useMediaChannel } from '../../hooks/RtcHooks';
 import { NetworkId } from '../../api/RtcNetwork';
 import Video from '../../components/Video';
 import { Configuration } from '.';

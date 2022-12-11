@@ -33,6 +33,8 @@ import { editor } from 'monaco-editor';
 import useY, { useYAwareness } from '../../hooks/useY';
 import { NetworkId } from '../../api/RtcNetwork';
 import { applyTransaction, applyUnifiedUpdates } from '../../util/y-utils';
+import { useGetRequestImmutable } from '../../api/client/GetRequestHook';
+import { UserEntity } from '../../api/entities/UserEntity';
 
 export interface HtmlTestActivityBaseConfig {
     description?: string;
@@ -154,8 +156,13 @@ export default function createTestActivityPage({
                 });
             }
         }, [activityConfig.languages, language.name, yDoc]);
+
+        const { data } = useGetRequestImmutable<UserEntity>('/api/me');
+
         // eslint-disable-next-line @grncdr/react-hooks/rules-of-hooks
-        const yAwareness = isEditor ? undefined : useYAwareness(NetworkId.NET_0, 'shared-editors-awareness', yDoc!);
+        const yAwareness = isEditor ? undefined : useYAwareness(NetworkId.NET_0, 'shared-editors-awareness', yDoc!, {
+            displayName: data?.attributes.displayName,
+        });
 
         useEffect(() => {
             if (saveData) {

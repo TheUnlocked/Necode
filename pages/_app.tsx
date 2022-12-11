@@ -1,7 +1,6 @@
 import 'react-reflex/styles.css';
 import 'highlight.js/styles/vs2015.css';
 import '../src/styles/hljs.scss';
-import '../src/styles/monaco-awareness.scss';
 
 import type { AppProps } from 'next/app';
 import { useMemo, useRef } from 'react';

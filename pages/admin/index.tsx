@@ -15,7 +15,7 @@ export default function AdminPage() {
             <Alert severity="info" variant="filled">These pages are only accessible to administrators</Alert>
 
             <ul>
-                {pages.map(x => <li key={x}><NextLink href={x} passHref><Link>{x}</Link></NextLink></li>)}
+                {pages.map(x => <li key={x}><NextLink href={x} passHref legacyBehavior><Link>{x}</Link></NextLink></li>)}
             </ul>
         </Container>
         <Footer />

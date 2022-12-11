@@ -108,7 +108,7 @@ export default function useBreadcrumbs() {
     const info = useBreadcrumbsData();
 
     return <Breadcrumbs sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}>
-        {info.map((crumb, i) => <NextLink href={crumb.href} passHref key={i}>
+        {info.map((crumb, i) => <NextLink href={crumb.href} passHref legacyBehavior key={i}>
                 <Link onClick={() => false}
                     variant="h6" noWrap
                     underline="hover" color={i === info.length - 1 ? "text.primary" : "inherit"}>{crumb.label}</Link>

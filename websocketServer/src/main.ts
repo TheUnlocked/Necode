@@ -106,6 +106,10 @@ io.on('connection', socket => {
                     connect();
                     return callback(true);
                 }
+                else {
+                    // Connection invalid, let's kill it.
+                    socket.disconnect();
+                }
             }
         }
         catch (e) { }

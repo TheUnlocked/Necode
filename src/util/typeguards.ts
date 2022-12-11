@@ -10,7 +10,13 @@ export function includes<A extends readonly any[], T>(arr: A, x: A[number] exten
     return arr.includes(x);
 }
 
-export function typeAssert(condition: boolean): asserts condition { }
+export function typeAssert(condition: boolean): asserts condition {
+    if (process.env.NODE_ENV === 'development') {
+        if (!condition) {
+            throw new Error("Asserted condition failed");
+        }
+    }
+}
 
 export function singleArg<T extends (arg: A, ...rest: undefined[]) => R, A, R>(f: T) {
     return (arg: A) => f(arg);

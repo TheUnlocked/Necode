@@ -29,7 +29,10 @@ function makeUseGetRequest(immutable: boolean) {
             return fetch(url)
                 .then(res => res.json())
                 .finally(finishDownload);
-        }, options);
+        }, {
+            ...options,
+            ...options?.fallbackData ? { fallbackData: { data: options.fallbackData } } : {},
+        });
         
         const volatileEndpointAndImpersonatingChanged = useChanged(Boolean(useImpersonation()) && isVolatileEndpoint(endpoint));
 
@@ -55,7 +58,7 @@ function makeUseGetRequest(immutable: boolean) {
                     : (result, currentData) => ({
                         response: 'ok',
                         data: (_options.populateCache as (result: any, currentData: T) => T)(result, currentData.data!)
-                    })
+                    }),
             };
 
             const obj: Parameters<typeof mutate>[0]

@@ -35,7 +35,6 @@ const apiActivityIce = endpoint(null, ['classroomId'], {
                 
                 iceServers.push({
                     urls: process.env.WEBRTC_TURN_SERVER_URL,
-                    credentialType: 'password',
                     username,
                     credential: password,
                 });

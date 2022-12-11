@@ -4,7 +4,6 @@ import tracked from "../util/trackedEventEmitter";
 import { SocketInfo } from "./useSocket";
 import ActivityDescription from '../activities/ActivityDescription';
 import { useGetRequest } from '../api/client/GetRequestHook';
-import { typeAssert } from '../util/typeguards';
 
 export function useSubmissions(
     classroomId: string | undefined,

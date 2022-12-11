@@ -47,7 +47,7 @@ export default function PaneEditor({ isConfig, language, value, onChange, applyC
                 new Set([editor]),
                 yAwareness,
             );
-            console.log('created binding', language.name)
+            
             return () => {
                 binding.destroy();
             };

@@ -75,7 +75,8 @@ export default async function createMiKePolicy(filename: string) {
     const jsModuleCode = `data:text/javascript;base64,${Buffer.from(jsCodeBuffer).toString('base64')}`;
     const createMiKeProgram: MiKeProgramWithoutExternals = (await loadModule(jsModuleCode)).default;
 
-    @rtcPolicy
+    // TODO: Watch https://github.com/microsoft/TypeScript/issues/33892
+    // @rtcPolicy
     class Policy implements RtcCoordinator {
         static readonly policyId = policyName;
 

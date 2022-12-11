@@ -149,7 +149,7 @@ export default function createTestActivityPage({
 
         // `isEditor` and `networked` are constants.
         // eslint-disable-next-line @grncdr/react-hooks/rules-of-hooks
-        const yDoc = isEditor ? undefined : !networked ? useY(NetworkId.NET_0, 'shared-editors') : useMemo(() => new Y.Doc(), []);
+        const yDoc = isEditor ? undefined : networked ? useY(NetworkId.NET_0, 'shared-editors') : useMemo(() => new Y.Doc(), []);
 
         // Basically a "force refresh" state, since yjs operates outside of the reactive model
         const [, signalChange] = useDirty();

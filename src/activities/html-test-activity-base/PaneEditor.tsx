@@ -1,5 +1,5 @@
 import Editor, { OnChange, OnMount } from "@monaco-editor/react";
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import LanguageDescription from "../../languages/LangaugeDescription";
 import * as Y from 'yjs';
 import { Awareness } from 'y-protocols/awareness';
@@ -35,8 +35,8 @@ export default function PaneEditor({ isConfig, language, value, onChange, applyC
     const onMount: OnMount = useCallback((editor, monaco) => {
         if (!isConfig) {
             editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, applyChanges!);
-            setEditor(editor);
         }
+        setEditor(editor);
     }, [isConfig, applyChanges]);
 
     useEffect(() => {
@@ -47,6 +47,7 @@ export default function PaneEditor({ isConfig, language, value, onChange, applyC
                 new Set([editor]),
                 yAwareness,
             );
+            console.log('created binding', language.name)
             return () => {
                 binding.destroy();
             };
@@ -59,7 +60,6 @@ export default function PaneEditor({ isConfig, language, value, onChange, applyC
             displayName?: string;
         }
     ][]>([]);
-    console.log(awarenessEntries);
 
     useEffect(() => {
         if (yAwareness) {
@@ -128,7 +128,8 @@ export default function PaneEditor({ isConfig, language, value, onChange, applyC
             options={monacoOptions}
             language={language.monacoName}
             onMount={onMount}
-            // do not set value here because that is handled by the MonacoBinding
+            // do not set value here because if it is handled by the MonacoBinding
+            value={yText ? undefined : value}
             onChange={onChange}
         />
     </>;

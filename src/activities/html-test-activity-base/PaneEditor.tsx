@@ -33,6 +33,7 @@ export default function PaneEditor({ isConfig, language, value, onChange, applyC
     const [editor, setEditor] = useState<editor.IStandaloneCodeEditor>();
 
     const onMount: OnMount = useCallback((editor, monaco) => {
+        editor.getModel()?.setEOL(0);
         if (!isConfig) {
             editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, applyChanges!);
         }

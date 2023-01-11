@@ -159,7 +159,10 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
 
     function goToManage() {
         if (activityEntity) {
-            router.push(`/classroom/${classroomId}/manage#${activityEntity?.attributes.lesson.attributes.date}`);
+            router.push({
+                pathname: `/classroom/${classroomId}/manage/lessons`,
+                hash: activityEntity.attributes.lesson.attributes.date,
+            });
         }
         else {
             router.push(`/classroom/${classroomId}/manage`);

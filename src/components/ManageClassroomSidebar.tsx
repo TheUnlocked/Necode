@@ -36,7 +36,8 @@ export default function ManageClassroomSidebar({ page, classroomId }: ManageClas
     ) {
         const selected = id === page;
     
-        return <ListItemButton selected={selected} disableRipple={selected} sx={{ borderRadius: 100, my: 1 }} onClick={() => clickHandler(id)}>
+        // Click ripple doesn't work for some reason. Probably something to do with how Next handles soft navigation.
+        return <ListItemButton disableTouchRipple selected={selected} sx={{ borderRadius: 100, my: 1 }} onClick={() => clickHandler(id)}>
             <ListItemIcon>{icon}</ListItemIcon>
             <ListItemText>{label}</ListItemText>
         </ListItemButton>;

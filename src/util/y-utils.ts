@@ -18,8 +18,8 @@ export function applyUnifiedUpdates(doc: Y.Doc, update: (doc: Y.Doc) => void) {
     Y.applyUpdate(doc, Y.encodeStateAsUpdate(unifiedDoc));
 }
 
-export function applyTransaction(doc: Y.Doc, update: (doc: Y.Doc) => void) {
+export function applyTransaction(doc: Y.Doc, update: (doc: Y.Doc) => void, origin?: any) {
     Y.transact(doc, () => {
         update(doc);
-    });
+    }, origin);
 }

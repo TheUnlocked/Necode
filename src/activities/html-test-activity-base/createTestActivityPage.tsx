@@ -179,18 +179,13 @@ export default function createTestActivityPage({
 
         useEffect(() => {
             if (saveData && yDoc) {
-                setCommittedState({
-                    html: saveData.data?.html,
-                    code: saveData.data?.code,
-                    css: saveData.data?.css,
-                });
                 applyTransaction(yDoc, doc => {
                     for (const type of ['html', 'code', 'css'] as const) {
                         const text = doc.getText(type);
                         text.delete(0, text.length);
                         text.insert(0, saveData.data?.[type]);
                     }
-                });
+                }, 'submission');
                 onSaveDataChange?.(undefined);
             }
         }, [saveData, onSaveDataChange, yDoc]);

@@ -1,4 +1,4 @@
-import Editor, { OnChange, OnMount } from "@monaco-editor/react";
+import Editor, { Monaco, OnChange, OnMount } from "@monaco-editor/react";
 import { useCallback, useEffect, useState } from 'react';
 import LanguageDescription from "../../languages/LangaugeDescription";
 import * as Y from 'yjs';
@@ -30,30 +30,35 @@ function safeCssString(str: string) {
 }
 
 export default function PaneEditor({ isConfig, language, value, onChange, applyChanges, yText, yAwareness }: PaneEditorProps) {
-    const [editor, setEditor] = useState<editor.IStandaloneCodeEditor>();
+    const [editorData, setEditorData] = useState<[editor.IStandaloneCodeEditor, Monaco]>();
 
     const onMount: OnMount = useCallback((editor, monaco) => {
         editor.getModel()?.setEOL(0);
         if (!isConfig) {
             editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, applyChanges!);
         }
-        setEditor(editor);
+        setEditorData([editor, monaco]);
     }, [isConfig, applyChanges]);
 
     useEffect(() => {
-        if (yText && editor) {
+        if (yText && editorData) {
+            const [editor, monaco] = editorData;
             const binding = new MonacoBinding(
                 yText,
                 editor.getModel()!,
                 new Set([editor]),
                 yAwareness,
             );
+
+            const undoManager = new Y.UndoManager(yText, { trackedOrigins: new Set([binding, 'submission']) });
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyZ, () => undoManager.undo());
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ, () => undoManager.redo());
             
             return () => {
                 binding.destroy();
             };
         }
-    }, [yText, yAwareness, editor, language.name]);
+    }, [yText, yAwareness, editorData, language.name]);
 
     const [awarenessEntries, setAwarenessEntries] = useState<[
         id: number,

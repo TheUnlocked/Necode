@@ -1,6 +1,6 @@
 import { Skeleton, TextField } from "@mui/material";
 import { NextPage } from "next";
-import FormPage from "../../src/components/FormPage";
+import FormPage from "../../src/components/layouts/FormPage";
 import { FormEventHandler, useCallback, useState } from "react";
 import { ClassroomEntity } from "../../src/api/entities/ClassroomEntity";
 import { useRouter } from "next/router";

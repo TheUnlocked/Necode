@@ -2,7 +2,7 @@ import { Button, Skeleton, TextField, Typography } from "@mui/material";
 import { NextPage } from "next";
 import { useRouter } from "next/dist/client/router";
 import { FormEventHandler, useEffect, useState } from "react";
-import FormPage from "../../src/components/FormPage";
+import FormPage from "../../src/components/layouts/FormPage";
 import { signIn } from "next-auth/react";
 import { ClassroomEntity } from "../../src/api/entities/ClassroomEntity";
 import { useSnackbar } from "notistack";

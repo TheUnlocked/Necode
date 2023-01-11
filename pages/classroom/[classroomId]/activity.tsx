@@ -7,7 +7,7 @@ import { Box } from "@mui/system";
 import { ClassroomMemberEntity } from "../../../src/api/entities/ClassroomMemberEntity";
 import { useGetRequest, useGetRequestImmutable } from "../../../src/api/client/GetRequestHook";
 import { useSocket } from "../../../src/hooks/useSocket";
-import StatusPage from "../../../src/components/StatusPage";
+import StatusPage from "../../../src/components/layouts/StatusPage";
 import { ActivityEntity } from "../../../src/api/entities/ActivityEntity";
 import allActivities from "../../../src/activities/allActivities";
 import allLanguages from "../../../src/languages/allLanguages";

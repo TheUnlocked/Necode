@@ -3,7 +3,7 @@ import { Container, Divider, Stack, Typography } from "@mui/material";
 import { BaseProps } from "@mui/material/OverridableComponent";
 import { Box, BoxTypeMap } from "@mui/system";
 import { ComponentProps, PropsWithChildren, ReactNode, useState } from "react";
-import Footer from "./Footer";
+import Footer from "../Footer";
 
 export default function FormPage(props: PropsWithChildren<{
     title: string,

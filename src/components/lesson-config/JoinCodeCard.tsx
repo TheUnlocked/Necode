@@ -1,5 +1,5 @@
 import { ContentCopy, Refresh, Share } from '@mui/icons-material';
-import { Card, CardContent, IconButton, Skeleton, Stack, Tooltip, Typography } from '@mui/material';
+import { IconButton, Skeleton, Stack, Tooltip, Typography } from '@mui/material';
 import { useConfirm } from 'material-ui-confirm';
 import { useSnackbar } from 'notistack';
 import { useCallback, useEffect, useState } from 'react';
@@ -50,25 +50,23 @@ export default function JoinCodeCard({ classroomId }: JoinCodeCardProps) {
         catch (e) {}
     }, [classroomId, confirm, upload]);
 
-    return <Card variant="outlined">
-        <Stack direction="row">
-            <CardContent sx={{ px: 3, pt: 3, flexGrow: 1 }}>
-                <Stack direction="row" sx={{ alignItems: "center", my: "-6px" }}>
-                    <Typography variant="body1">Join Code</Typography>
-                    {joinCode ? <Tooltip title="Reset Join Code" disableInteractive>
-                        <IconButton onClick={resetJoinCode}>
-                            <Refresh fontSize="small"/>
-                        </IconButton>
-                    </Tooltip> : null}
-                </Stack>
-                {joinCode
-                    ? <Typography variant="h3" component="div" sx={{ mt: 1 }}>{joinCode}</Typography>
-                    : <Typography variant="h3" component="div" sx={{ mt: 1 }}><Skeleton /></Typography>}
-            </CardContent>
-            {joinCode ? <Stack direction="column" justifyContent="flex-end" spacing={1} sx={{ p: 1 }}>
-                <Tooltip title="Copy Join Code" disableInteractive><IconButton onClick={copyJoinCodeToKeyboard}><ContentCopy/></IconButton></Tooltip>
-                <Tooltip title="Copy Join Link" disableInteractive><IconButton onClick={copyJoinLinkToKeyboard}><Share/></IconButton></Tooltip>
-            </Stack> : undefined}
+    return <Stack direction="row" sx={{ width: 'max-content' }}>
+        <Stack direction="column" sx={{ pr: 2 }}>
+            <Stack direction="row" sx={{ alignItems: "center", my: "-6px" }}>
+                <Typography variant="body1">Join Code</Typography>
+                {joinCode ? <Tooltip title="Reset Join Code" disableInteractive>
+                    <IconButton onClick={resetJoinCode}>
+                        <Refresh fontSize="small"/>
+                    </IconButton>
+                </Tooltip> : null}
+            </Stack>
+            {joinCode
+                ? <Typography variant="h3" component="div" sx={{ mt: 1 }}>{joinCode}</Typography>
+                : <Typography variant="h3" component="div" sx={{ mt: 1 }}><Skeleton /></Typography>}
         </Stack>
-    </Card>;
+        {joinCode ? <Stack direction="column" justifyContent="flex-end" spacing={1} sx={{ py: 1 }}>
+            <Tooltip title="Copy Join Code" disableInteractive><IconButton onClick={copyJoinCodeToKeyboard}><ContentCopy/></IconButton></Tooltip>
+            <Tooltip title="Copy Join Link" disableInteractive><IconButton onClick={copyJoinLinkToKeyboard}><Share/></IconButton></Tooltip>
+        </Stack> : undefined}
+    </Stack>;
 }

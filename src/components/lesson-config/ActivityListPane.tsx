@@ -24,6 +24,7 @@ interface ActivityListPaneProps {
     sx: SxProps;
     date: Iso8601Date;
     classroomId: string;
+    forTodayOnly?: boolean;
     skeletonActivityCount?: number;
     onLessonChange?: Dispatch<LessonEntity<{ activities: 'shallow' }> | undefined>;
     refreshRef?: SimpleRef<(() => void) | undefined>;
@@ -63,6 +64,7 @@ export default function ActivityListPane({
     classroomId,
     skeletonActivityCount,
     date,
+    forTodayOnly,
     onLessonChange,
     refreshRef,
 }: ActivityListPaneProps) {
@@ -378,7 +380,7 @@ export default function ActivityListPane({
     return <>
         <WidgetDragLayer dropIndicatorPos={dropIndicatorPos} />
         <Card variant="outlined" sx={sx}>
-            <AcitivityListPaneTitleBar date={date} lesson={lessonEntity} onDisplayNameChange={handleDisplayNameChange} />
+            <AcitivityListPaneTitleBar date={date} forTodayOnly={forTodayOnly ?? false} lesson={lessonEntity} onDisplayNameChange={handleDisplayNameChange} />
             <Divider />
             <Box sx={{ m: 1 }}>
                 <ActivityListPaneActions

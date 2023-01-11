@@ -16,7 +16,7 @@ import { callWith } from '../src/util/fp';
 import LoadingSpinners from '../src/components/LoadingSpinners';
 import CustomAdapterLuxon from '../src/util/CustomLuxonAdapter';
 import { ErrorBoundary } from 'react-error-boundary';
-import ErrorBoundaryPage from '../src/components/ErrorBoundaryPage';
+import ErrorBoundaryPage from '../src/components/layouts/ErrorBoundaryPage';
 import usePageTitle from '../src/hooks/usePageTitle';
 import { ConfirmProvider } from 'material-ui-confirm';
 import { DragDropProvider } from 'use-dnd';

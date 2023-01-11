@@ -105,7 +105,7 @@ export async function hasScope(userId: string, ...[scope, data]: ScopeArgumentTu
             return false;
         case 'user:rights:edit':
             if (data.rights !== 'None' && !await isAdmin(userId)) {
-                return true;
+                return false;
             }
             return hasControlOver(userId, data.userId);
         case 'user:delete':

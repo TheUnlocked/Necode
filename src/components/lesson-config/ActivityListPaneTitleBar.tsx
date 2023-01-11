@@ -1,4 +1,4 @@
-import { Stack, TextField, Typography } from '@mui/material';
+import { Box, Stack, TextField, Typography } from '@mui/material';
 import { useEffect, useMemo } from 'react';
 import { useDrag, createEmptyPreviewImage } from 'use-dnd';
 import { LessonEntity } from '../../api/entities/LessonEntity';
@@ -10,12 +10,14 @@ import DragHandle, { dragHandleSelector } from '../widgets/DragHandle';
 
 export interface AcitivityListPaneTitleBarProps {
     date: Iso8601Date;
+    forTodayOnly: boolean;
     lesson: LessonEntity<{ activities: 'shallow' }> | undefined;
     onDisplayNameChange: (displayName: string) => void;
 }
 
 export default function AcitivityListPaneTitleBar({
     date,
+    forTodayOnly,
     lesson,
     onDisplayNameChange,
 }: AcitivityListPaneTitleBarProps) {
@@ -30,10 +32,10 @@ export default function AcitivityListPaneTitleBar({
         dragPreview(createEmptyPreviewImage());
     }, [dragPreview]);
 
-    const dragHandleVisible = useMemo(() => isContentfulLesson(lesson), [lesson]);
+    const dragHandleVisible = useMemo(() => isContentfulLesson(lesson) && !forTodayOnly, [lesson, forTodayOnly]);
     
-    return <Stack direction="row" sx={{ px: 1, [`&:hover ${dragHandleSelector}`]: dragHandleVisible ? { visibility: 'visible' } : undefined }}>
-        <DragHandle innerRef={dragHandleVisible ? drag : undefined} sx={{ px: 1 }} />
+    return <Stack direction="row" alignItems="center" sx={{ px: 1, [`&:hover ${dragHandleSelector}`]: dragHandleVisible ? { visibility: 'visible' } : undefined }}>
+        {forTodayOnly ? <Box p={1} /> : <DragHandle innerRef={dragHandleVisible ? drag : undefined} sx={{ px: 1 }} />}
         <Stack sx={{ flexGrow: 1, p: 2, pl: 0 }}>
             <TextField placeholder="New Lesson"
                 variant="standard"
@@ -62,7 +64,11 @@ export default function AcitivityListPaneTitleBar({
                         })
                     }
                 }) }} />
-            <Typography variant="body2" component="span">{toLuxon(date).toFormat("DDDD")}</Typography>
+            <Typography variant="body2" component="span">{
+                forTodayOnly
+                    ? "Today"
+                    : toLuxon(date).toFormat("DDDD")
+                }</Typography>
         </Stack>
     </Stack>;
 }

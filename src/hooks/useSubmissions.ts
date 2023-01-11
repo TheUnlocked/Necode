@@ -1,44 +1,43 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { ActivitySubmissionEntity } from "../api/entities/ActivitySubmissionEntity";
 import tracked from "../util/trackedEventEmitter";
 import { SocketInfo } from "./useSocket";
-import useNecodeFetch from './useNecodeFetch';
+import ActivityDescription from '../activities/ActivityDescription';
+import { useGetRequest } from '../api/client/GetRequestHook';
 
-export function useSubmissions(classroomId: string | undefined, socketInfo: SocketInfo | undefined, onSubmission?: (submissionEntity: ActivitySubmissionEntity<{
-    user: 'deep',
-    activity: 'none'
-}>) => void) {
+export function useSubmissions(
+    classroomId: string | undefined,
+    activity: ActivityDescription<unknown> | undefined,
+    socketInfo: SocketInfo | undefined,
+    onSubmission?: (submissionEntity: ActivitySubmissionEntity<{ user: 'deep', activity: 'none' }>) => void
+) {
     const onSubmissionRef = useRef(onSubmission);
 
     useEffect(() => {
         onSubmissionRef.current = onSubmission;
     }, [onSubmission]);
 
-    const [submissions, setSubmissions] = useState<ActivitySubmissionEntity<{ user: 'deep', activity: 'none' }>[]>([]);
-
-    const { download } = useNecodeFetch();
+    const { data: submissions, mutate } = useGetRequest<ActivitySubmissionEntity<{ user: 'deep', activity: 'none' }>[]>(
+        activity ? `/api/classroom/${classroomId}/activity/submission?include=user` : undefined,
+        {
+            fallbackData: [],
+        }
+    );
 
     useEffect(() => {
         if (socketInfo?.socket) {
             const ws = tracked(socketInfo.socket);
 
             ws.on('startActivity', async () => {
-                if (classroomId) {
-                    try {
-                        const submissions = await download<ActivitySubmissionEntity<{ user: 'deep', activity: 'none' }>[]>(
-                            `/api/classroom/${classroomId}/activity/submission?include=user`,
-                            { errorMessage: null },
-                        );
-                        setSubmissions(submissions);
-                    }
-                    catch (err) {
-                        setSubmissions([]);
-                    }
-                }
+                mutate();
             });
 
             ws.on('submission', submission => {
-                setSubmissions(submissions => {
+                mutate(submissions => {
+                    if (!submissions) {
+                        submissions = [];
+                    }
+
                     const existingIndex = submissions.findIndex(x => x.attributes.user.id === submission.attributes.user.id);
                     
                     if (existingIndex === -1) {
@@ -60,7 +59,7 @@ export function useSubmissions(classroomId: string | undefined, socketInfo: Sock
 
             return () => ws.offTracked();
         }
-    }, [socketInfo, classroomId, download]);
+    }, [socketInfo, classroomId, mutate]);
 
-    return submissions;
+    return submissions!;
 }

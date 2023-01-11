@@ -7,7 +7,7 @@ import { htmlDescription } from "../../languages/html";
 import LanguageDescription from "../../languages/LangaugeDescription";
 import { ActivityConfigPageProps, ActivityPageProps } from "../ActivityDescription";
 import { Refresh as RefreshIcon, Sync as SyncIcon } from "@mui/icons-material";
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm';
@@ -18,7 +18,6 @@ import transformTestScaffolding from "../../languages/transformers/babel-plugin-
 import CodeAlert from "../../components/CodeAlert";
 import useImperativeDialog from "../../hooks/useImperativeDialog";
 import TestsDialog from "./TestsDialog";
-import { editorStateReducer, EditorType } from "./editorStateReducer";
 import PaneEditor from "./PaneEditor";
 import Key from "../../components/Key";
 import { ActivityIframe, IframeActions } from "./ActivityIframe";
@@ -30,6 +29,13 @@ import SubtleLink from "../../components/SubtleLink";
 import useImported from '../../hooks/useImported';
 import { typescriptDescription } from '../../languages/typescript';
 import { editor } from 'monaco-editor';
+import useY, { useYAwareness } from '../../hooks/useY';
+import { NetworkId } from '../../api/RtcNetwork';
+import { applyTransaction, applyUnifiedUpdates } from '../../util/y-utils';
+import { useGetRequestImmutable } from '../../api/client/GetRequestHook';
+import { UserEntity } from '../../api/entities/UserEntity';
+import * as Y from 'yjs';
+import useDirty from '../../hooks/useDirty';
 
 export interface HtmlTestActivityBaseConfig {
     description?: string;
@@ -54,6 +60,8 @@ export interface HtmlTestActivityOptions {
     hasCode?: boolean;
     hiddenHtml?: { configurable: true } | { configurable: false, value?: string };
 
+    networked?: boolean;
+
     typeDeclarations?: string | URLString[];
 }
 
@@ -61,6 +69,8 @@ interface HtmlTestActivityMetaProps {
     isEditor: boolean;
     options: HtmlTestActivityOptions;
 }
+
+type EditorType = 'html' | 'code' | 'css';
 
 const markdownEditorOptions: editor.IStandaloneEditorConstructionOptions = {
     minimap: { enabled: false },
@@ -91,7 +101,8 @@ export default function createTestActivityPage({
         hasCss: activityTypeHasCss = true,
         hasCode: activityTypeHasCode = true,
         hiddenHtml: activityTypeHiddenHtml = { configurable: true },
-        typeDeclarations: typeDeclarationsSource
+        typeDeclarations: typeDeclarationsSource,
+        networked = false,
     }
 }: HtmlTestActivityMetaProps) {
     const hasTypeDeclarations = Boolean(typeDeclarationsSource);
@@ -130,25 +141,65 @@ export default function createTestActivityPage({
         const isThinner = useIsSizeOrSmaller("md");
         const isMediumLayout = useIsSizeOrSmaller("lg") && showIframeTestPane;
         
-        const [editorStates, dispatchEditorsState] = useReducer(editorStateReducer, {});
+        const [committedState, setCommittedState] = useState<{
+            readonly html?: string;
+            readonly code?: string;
+            readonly css?: string;
+        }>({});
+
+        // `isEditor` and `networked` are constants.
+        // eslint-disable-next-line @grncdr/react-hooks/rules-of-hooks
+        const yDoc = isEditor ? undefined : networked ? useY(NetworkId.NET_0, 'shared-editors') : useMemo(() => new Y.Doc(), []);
+
+        // Basically a "force refresh" state, since yjs operates outside of the reactive model
+        const [, signalChange] = useDirty();
 
         useEffect(() => {
-            if (saveData) {
-                dispatchEditorsState({ type: 'valueChange', target: 'html', value: saveData.data?.html });
-                dispatchEditorsState({ type: 'valueChange', target: 'code', value: saveData.data?.code });
-                dispatchEditorsState({ type: 'valueChange', target: 'css', value: saveData.data?.css });
+            if (yDoc) {
+                applyUnifiedUpdates(yDoc, doc => {
+                    for (const type of ['html', 'css', 'code'] as const) {
+                        const initialValue = type === 'code'
+                            ? activityConfig.languages[type]?.defaultValue[language.name]
+                            : activityConfig.languages[type]?.defaultValue;
+                        if (initialValue) {
+                            doc.getText(type).insert(0, initialValue);
+                        }
+                        setCommittedState(st => ({ ...st, [type]: initialValue ?? '' }));
+                    }
+                });
+            }
+        }, [activityConfig.languages, language.name, yDoc]);
+
+        const { data } = useGetRequestImmutable<UserEntity>('/api/me');
+
+        // eslint-disable-next-line @grncdr/react-hooks/rules-of-hooks
+        const yAwareness = !yDoc || !networked ? undefined : useYAwareness(NetworkId.NET_0, 'shared-editors-awareness', yDoc, {
+            displayName: data?.attributes.displayName,
+        });
+
+        useEffect(() => {
+            if (saveData && yDoc) {
+                applyTransaction(yDoc, doc => {
+                    for (const type of ['html', 'code', 'css'] as const) {
+                        const text = doc.getText(type);
+                        text.delete(0, text.length);
+                        text.insert(0, saveData.data?.[type]);
+                    }
+                }, 'submission');
                 onSaveDataChange?.(undefined);
             }
-        }, [saveData, onSaveDataChange]);
+        }, [saveData, onSaveDataChange, yDoc]);
 
         const iframeActions = useRef<IframeActions>(noopIframeActions);
 
         const applyChanges = useCallback((type: EditorType) => {
-            dispatchEditorsState({
-                target: type,
-                type: 'applyChanges'
-            });
-        }, []);
+            if (yDoc) {
+                setCommittedState(st => ({
+                    ...st,
+                    [type]: yDoc.getText(type).toString(),
+                }));
+            }
+        }, [yDoc]);
 
         const { startDownload, finishDownload } = useLoadingContext();
 
@@ -158,11 +209,7 @@ export default function createTestActivityPage({
 
         async function makeSubmission() {
             if (onSubmit) {
-                await onSubmit({
-                    html: editorStates.html?.value,
-                    code: editorStates.code?.value,
-                    css: editorStates.css?.value
-                });
+                await onSubmit(committedState);
                 closeTestsDialog();
             }
         }
@@ -176,37 +223,49 @@ export default function createTestActivityPage({
         });
 
         const applyAllChanges = useCallback(() => {
-            if (isHtmlEnabled) {
-                dispatchEditorsState({
-                    target: 'html',
-                    type: 'applyChanges'
-                });
+            if (yDoc) {
+                if (isHtmlEnabled) {
+                    setCommittedState(st => ({
+                        ...st,
+                        html: yDoc.getText('html').toString(),
+                    }));
+                }
+                if (isCodeEnabled) {
+                    setCommittedState(st => ({
+                        ...st,
+                        code: yDoc.getText('code').toString(),
+                    }));
+                }
+                if (isCssEnabled) {
+                    setCommittedState(st => ({
+                        ...st,
+                        css: yDoc.getText('css').toString(),
+                    }));
+                }
             }
-            if (isCodeEnabled) {
-                dispatchEditorsState({
-                    target: 'code',
-                    type: 'applyChanges'
-                });
-            }
-            if (isCssEnabled) {
-                dispatchEditorsState({
-                    target: 'css',
-                    type: 'applyChanges'
-                });
-            }
-        }, [isHtmlEnabled, isCodeEnabled, isCssEnabled]);
+        }, [isHtmlEnabled, isCodeEnabled, isCssEnabled, yDoc]);
 
         const applyChangesAndWait = useCallback(async () => {
-            const shouldWait = editorStates.html?.isDirty || editorStates.code?.isDirty || editorStates.css?.isDirty;
-            applyAllChanges();
-            if (shouldWait) {
-                return iframeActions.current.waitForReload();
+            if (yDoc) {
+                setCommittedState(st => {
+                    for (const type of ['html', 'code', 'css'] as const) {
+                        if (yDoc.getText(type).toString() !== st[type]) {
+                            iframeActions.current.waitForReload();
+                            return {
+                                html: yDoc.getText('html').toString(),
+                                code: yDoc.getText('code').toString(),
+                                css: yDoc.getText('css').toString(),
+                            };
+                        }
+                    }
+                    return st;
+                });
             }
-        }, [editorStates, applyAllChanges]);
+        }, [yDoc]);
 
         const codeGenerator = useImported(language.runnable);
         const [compiledJs, setCompiledJs] = useState('');
-        const codeSource = editorStates.code?.value;
+        const codeSource = committedState.code;
 
         useEffect(() => {
             if (codeSource !== undefined && codeGenerator !== undefined) {
@@ -227,22 +286,10 @@ export default function createTestActivityPage({
 
         const editorPane = useCallback((type: EditorType, language: LanguageDescription) => {
             const isHiddenHtmlOnly = type === 'html' && !activityTypeHasHtml;
-            const editorState = editorStates[type];
-
-            const onEditorContainerRef = (elt: HTMLDivElement) => {
-                if (elt && !isEditor && !editorState) {
-                    if (type === 'code') {
-                        dispatchEditorsState({ target: type, type: 'initialize', value: activityConfig.languages.code!.defaultValue![language.name] });
-                    }
-                    else {
-                        dispatchEditorsState({ target: type, type: 'initialize', value: activityConfig.languages[type]!.defaultValue! });
-                    }
-                }
-            };
-
+            
             const Icon = language.icon;
-
-            const showKeybindingHint = !isThinner && editorState?.isDirty;
+            
+            const uncommittedValue = yDoc?.getText(type).toString();
 
             let toolbarItems: JSX.Element;
             let tabItems: JSX.Element | undefined = undefined;
@@ -325,6 +372,9 @@ export default function createTestActivityPage({
                 }
             }
             else {
+                const isDirty = !isEditor && uncommittedValue !== committedState[type];
+                const showKeybindingHint = !isThinner && isDirty;
+
                 toolbarItems = <>
                     {Icon ? <Icon /> : undefined}
                     <Typography variant="overline" sx={{ ml: 1 }}>{language.displayName}</Typography>
@@ -332,7 +382,7 @@ export default function createTestActivityPage({
                         ? <Typography variant="overline" sx={{ pl: 2, ml: "auto", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                             Press <Key>Ctrl</Key>+<Key>S</Key> to apply changes
                         </Typography> : undefined}
-                    <Button size="small" onClick={() => applyChanges(type)} disabled={!editorState?.isDirty}
+                    <Button size="small" onClick={() => applyChanges(type)} disabled={!isDirty}
                         sx={{ ml: showKeybindingHint ? 0.5 : "auto", flexShrink: 0 }}>
                         Apply changes
                     </Button>
@@ -342,10 +392,10 @@ export default function createTestActivityPage({
             const editorValue = isEditor
                 ? isHiddenHtmlOnly
                     ? ''
-                : type === 'code'
-                    ? activityConfig.languages.code!.defaultValue![language.name] ?? ''
-                    : activityConfig.languages[type]!.defaultValue
-                : editorState?.uncommittedValue;
+                    : type === 'code'
+                        ? activityConfig.languages.code!.defaultValue![language.name] ?? ''
+                        : activityConfig.languages[type]!.defaultValue
+                : uncommittedValue;
 
             const onHiddenHtmlChange: OnChange = value => {
                 if (activityConfig.hiddenHtml !== value) {
@@ -376,9 +426,7 @@ export default function createTestActivityPage({
                         });
                     }
                 }
-                else {
-                    dispatchEditorsState({ target: type, type: 'valueChange', value: value ?? '' });
-                }
+                signalChange();
             };
 
             let editor: JSX.Element;
@@ -416,7 +464,9 @@ export default function createTestActivityPage({
                     language={language}
                     value={editorValue}
                     applyChanges={() => applyChanges(type)}
-                    onChange={onChange} />;
+                    onChange={onChange}
+                    yText={yDoc?.getText(type)}
+                    yAwareness={yAwareness} />;
             }
 
             return <ReflexElement key={language.name} minSize={40}>
@@ -425,7 +475,7 @@ export default function createTestActivityPage({
                         <Stack direction="row" alignItems="center" sx={{ m: 1, flexGrow: 1, height: "24px" }}>{toolbarItems}</Stack>
                         {tabItems ? <Stack direction="row" alignItems="center" sx={{ height: "40px" }}>{tabItems}</Stack> : undefined}
                     </Stack>
-                    <Box ref={onEditorContainerRef} sx={{
+                    <Box sx={{
                         flexGrow: 1,
                         height: "calc(100% - 40px)", // need this because monaco does weird things without it.
                         ".monaco-editor .suggest-widget": { zIndex: 101 },
@@ -435,7 +485,7 @@ export default function createTestActivityPage({
                     </Box>
                 </Stack>
             </ReflexElement>;
-        }, [isHiddenHtmlTabActive, isThinner, editorStates, applyChanges, activityConfig, onActivityConfigChange]);
+        }, [isHiddenHtmlTabActive, isThinner, committedState, applyChanges, activityConfig, onActivityConfigChange, yDoc, yAwareness]);
 
         const monaco = useMonaco();
 
@@ -579,9 +629,9 @@ export default function createTestActivityPage({
                 iframeOrTestPane
                     = <ActivityIframe
                         htmlTemplate={activityTypeHiddenHtml.configurable ? hiddenHtml : activityTypeHiddenHtml.value}
-                        html={isHtmlEnabled ? editorStates.html?.value : undefined}
+                        html={isHtmlEnabled ? committedState.html : undefined}
                         js={isCodeEnabled ? compiledJs : undefined}
-                        css={isCssEnabled ? editorStates.css?.value : undefined}
+                        css={isCssEnabled ? committedState.css : undefined}
                         ref={iframeActions}
                         sx={{
                             width: "100%",

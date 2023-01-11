@@ -40,7 +40,7 @@ const apiUsers = endpoint(makeClassroomMemberEntity, ['userId', 'classroomId'], 
             }
 
             const user = await prisma.classroomMembership.update({
-                where: { userId_classroomId: { userId: session!.user.id, classroomId } },
+                where: { userId_classroomId: { userId, classroomId } },
                 data: {
                     role: body.role
                 },
@@ -63,7 +63,7 @@ const apiUsers = endpoint(makeClassroomMemberEntity, ['userId', 'classroomId'], 
             }
 
             const user = await prisma.classroomMembership.delete({
-                where: { userId_classroomId: { userId: session!.user.id, classroomId } },
+                where: { userId_classroomId: { userId, classroomId } },
             });
 
             if (user) {

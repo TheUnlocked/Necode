@@ -7,7 +7,7 @@ import { Box } from "@mui/system";
 import { ClassroomMemberEntity } from "../../../src/api/entities/ClassroomMemberEntity";
 import { useGetRequest, useGetRequestImmutable } from "../../../src/api/client/GetRequestHook";
 import { useSocket } from "../../../src/hooks/useSocket";
-import StatusPage from "../../../src/components/StatusPage";
+import StatusPage from "../../../src/components/layouts/StatusPage";
 import { ActivityEntity } from "../../../src/api/entities/ActivityEntity";
 import allActivities from "../../../src/activities/allActivities";
 import allLanguages from "../../../src/languages/allLanguages";
@@ -21,7 +21,7 @@ import { curry } from "lodash";
 import useNecodeFetch from '../../../src/hooks/useNecodeFetch';
 import useImported from '../../../src/hooks/useImported';
 import { typeAssert } from '../../../src/util/typeguards';
-import { RtcProvider } from '../../../src/hooks/useRtc';
+import { RtcProvider } from '../../../src/hooks/RtcHooks';
 import { useSnackbar } from 'notistack';
 import { useLoadingContext } from '../../../src/api/client/LoadingContext';
 
@@ -56,19 +56,6 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
 
     const socketInfo = useSocket(classroomId);
 
-    const submissions = useSubmissions(isInstructor ? classroomId : undefined, socketInfo, () => setHasNewSubmissions(true));
-    const [hasNewSubmissions, setHasNewSubmissions] = useState(false);
-
-    const [submissionsDialog, openSubmissionsDialog] = useImperativeDialog(SubmissionsDialog, {
-        submissions,
-        onPickSubmission: s => setSaveData({ data: s.attributes.data })
-    });
-
-    function viewSubmissions() {
-        openSubmissionsDialog();
-        setHasNewSubmissions(false);
-    }
-
     const { enqueueSnackbar } = useSnackbar();
     const { startUpload, finishUpload } = useLoadingContext();
     const [saveData, setSaveData] = useState<{ data: any }>();
@@ -101,6 +88,19 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
     );
 
     const activity = allActivities.find(x => x.id === activityEntity?.attributes.activityType);
+
+    const submissions = useSubmissions(isInstructor ? classroomId : undefined, activity, socketInfo, () => setHasNewSubmissions(true));
+    const [hasNewSubmissions, setHasNewSubmissions] = useState(false);
+
+    const [submissionsDialog, openSubmissionsDialog] = useImperativeDialog(SubmissionsDialog, {
+        submissions,
+        onPickSubmission: s => setSaveData({ data: s.attributes.data })
+    });
+
+    function viewSubmissions() {
+        openSubmissionsDialog();
+        setHasNewSubmissions(false);
+    }
 
     let instructorToolbar: JSX.Element | undefined;
     
@@ -159,7 +159,10 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
 
     function goToManage() {
         if (activityEntity) {
-            router.push(`/classroom/${classroomId}/manage#${activityEntity?.attributes.lesson.attributes.date}`);
+            router.push({
+                pathname: `/classroom/${classroomId}/manage/lessons`,
+                hash: activityEntity.attributes.lesson.attributes.date,
+            });
         }
         else {
             router.push(`/classroom/${classroomId}/manage`);

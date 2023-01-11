@@ -1,9 +1,8 @@
 import { Alert, Box } from '@mui/material';
 import { truncate } from 'lodash';
 import { useMemo } from 'react';
-import { useDragLayer } from 'react-dnd';
+import { useDragLayer } from 'use-dnd';
 import textInputActivityDescription from '../../activities/text-input/textInputDescription';
-import { ActivityEntity } from '../../api/entities/ActivityEntity';
 import { activityDragDropType } from '../../dnd/types';
 import DragLayer from '../DragLayer';
 
@@ -20,16 +19,14 @@ interface WidgetDragLayerProps {
 }
 
 export default function WidgetDragLayer({ dropIndicatorPos }: WidgetDragLayerProps) {
-    const { isDragging, itemType, item, position } = useDragLayer(monitor => ({
-        item: monitor.getItem() as ActivityEntity | undefined,
-        itemType: monitor.getItemType(),
-        position: monitor.getClientOffset(),
-        isDragging: monitor.isDragging(),
+    const { item, position } = useDragLayer(activityDragDropType, ({ item, event }) => ({
+        item: item,
+        position: event ? { x: event.clientX, y: event.clientY } : undefined,
     }));
 
     const widgetDisplayName = useMemo(() => {
-        if (!item || itemType !== activityDragDropType) {
-            return null;
+        if (!item) {
+            return <em>(unknown activity)</em>;
         }
         if (item.attributes.activityType === textInputActivityDescription.id) {
             const { language, value } = item.attributes.configuration as typeof textInputActivityDescription['defaultConfig'];
@@ -37,9 +34,9 @@ export default function WidgetDragLayer({ dropIndicatorPos }: WidgetDragLayerPro
             return language == null ? text : <code>{text}</code>;
         }
         return truncate(item.attributes.displayName, { length: MAX_DISPLAY_CHARS });
-    }, [item, itemType]);
+    }, [item]);
 
-    if (!isDragging || itemType !== activityDragDropType || !position || !item) {
+    if (!position) {
         return null;
     }
 

@@ -165,7 +165,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
             date = result.attributes.lesson.attributes.date;
         }
         router.push({
-            pathname: `/classroom/${classroomId}/manage`,
+            pathname: `/classroom/${classroomId}/manage/lessons`,
             hash: date
         });
     }

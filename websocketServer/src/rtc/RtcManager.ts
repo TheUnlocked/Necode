@@ -60,10 +60,14 @@ export default class RtcManager {
             recipientSocket.offTracked();
         });
     
-        this.io.to(initiatorId).emit('createWebRTCConnection', network, true, initiatorConnId, null);
+        this.io.to(initiatorId).emit('createWebRTCConnection', network, true, initiatorConnId, {
+            displayName: recipientName,
+        });
         console.debug(`[${connId}]`, 'told', initiatorName, 'to initiate connection with', recipientName);
         
-        this.io.to(recipientId).emit('createWebRTCConnection', network, false, recipientConnId, null);
+        this.io.to(recipientId).emit('createWebRTCConnection', network, false, recipientConnId, {
+            displayName: initiatorName,
+        });
         console.debug(`[${connId}]`, 'told', recipientName, 'to create connection with', initiatorName);
     
         const self = this;

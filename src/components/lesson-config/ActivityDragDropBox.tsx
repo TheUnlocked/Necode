@@ -1,8 +1,8 @@
 import { Box } from "@mui/system";
+import { isEqual } from 'lodash';
 import { useRouter } from "next/router";
-import { ComponentType, useCallback, useEffect, useRef } from "react";
-import { ConnectableElement, useDrag } from "react-dnd";
-import { getEmptyImage } from 'react-dnd-html5-backend';
+import { ComponentType, useCallback, useEffect } from "react";
+import { useDrag, createEmptyPreviewImage } from "use-dnd";
 import { CreateLiveActivityInfo } from "../../../websocketServer/src/types";
 import { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
 import { PartialAttributesOf } from '../../api/Endpoint';
@@ -51,26 +51,22 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
     const [{ isDragging }, drag, dragPreview] = useDrag(() => ({
         type: activityDragDropType,
         item: props.activity,
-        collect: (monitor) => ({
-            isDragging: monitor.isDragging()
+        collect: ev => ({
+            isDragging: Boolean(ev),
         }),
     }), [props.activity]);
 
     useEffect(() => {
-        dragPreview(getEmptyImage());
+        dragPreview(createEmptyPreviewImage());
     }, [dragPreview]);
-
-    const boxRef = useRef<Element | null>(null);
-    function setBoxRef(x: ConnectableElement) {
-        boxRef.current = x as Element;
-        return x;
-    }
 
     const activityType = useActivityDescription(props.activity?.attributes.activityType);
 
     const configChangeHandler = useCallback((configuration: any) => {
-        onActivityChange?.({ configuration });
-    }, [onActivityChange]);
+        if (!isEqual(props.activity?.attributes.configuration, configuration)) {
+            onActivityChange?.({ configuration });
+        }
+    }, [props.activity?.attributes.configuration, onActivityChange]);
 
     const displayNameChangeHandler = useCallback((displayName: string) => {
         onActivityChange?.({ displayName });
@@ -119,7 +115,7 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
         }
     }
 
-    return <Box ref={setBoxRef} sx={{ opacity: isDragging ? 0 : 1 }}>
+    return <Box sx={{ opacity: isDragging ? 0 : 1 }}>
         <Widget
             id={id}
             classroomId={classroomId}

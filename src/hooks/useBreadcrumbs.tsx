@@ -75,18 +75,28 @@ export function useBreadcrumbsData(): BreadcrumbData[] {
                     switch (pathFragments[2]) {
                         case 'manage':
                             crumbs.push({ href: `/classroom/${classroomId}/manage`, label: 'Manage' });
-                            if (pathFragments[3] === 'activity' && pathFragments[4] === '[activityId]') {
-                                const lessonName = activityData?.attributes.lesson.attributes.displayName || activityData?.attributes.lesson.attributes.date;
-                                crumbs.push({
-                                    href: `/classroom/${classroomId}/manage#${activityData?.attributes.lesson.attributes.date}`,
-                                    label: <AsyncBreadcrumb label={lessonName} status={activityLoading ? 'loading' : activityError ? 'error' : 'done'} />,
-                                    title: lessonName
-                                });
-                                crumbs.push({
-                                    href: `/classroom/${classroomId}/manage/activity/${activityId}`,
-                                    label: <AsyncBreadcrumb label={activityData?.attributes.displayName} status={activityLoading ? 'loading' : activityError ? 'error' : 'done'} />,
-                                    title: activityData?.attributes.displayName
-                                });
+                            switch (pathFragments[3]) {
+                                case 'activity':
+                                    if (pathFragments[4] === '[activityId]') {
+                                        const lessonName = activityData?.attributes.lesson.attributes.displayName || activityData?.attributes.lesson.attributes.date;
+                                        crumbs.push({
+                                            href: `/classroom/${classroomId}/manage#${activityData?.attributes.lesson.attributes.date}`,
+                                            label: <AsyncBreadcrumb label={lessonName} status={activityLoading ? 'loading' : activityError ? 'error' : 'done'} />,
+                                            title: lessonName
+                                        });
+                                        crumbs.push({
+                                            href: `/classroom/${classroomId}/manage/activity/${activityId}`,
+                                            label: <AsyncBreadcrumb label={activityData?.attributes.displayName} status={activityLoading ? 'loading' : activityError ? 'error' : 'done'} />,
+                                            title: activityData?.attributes.displayName
+                                        });
+                                    }
+                                    break;
+                                case 'lessons':
+                                    crumbs.push({ href: `/classroom/${classroomId}/manage/lessons`, label: 'Lessons' });
+                                    break;
+                                case 'members':
+                                    crumbs.push({ href: `/classroom/${classroomId}/manage/members`, label: 'Members' });
+                                    break;
                             }
                             break;
                         case 'activity':
@@ -108,7 +118,7 @@ export default function useBreadcrumbs() {
     const info = useBreadcrumbsData();
 
     return <Breadcrumbs sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}>
-        {info.map((crumb, i) => <NextLink href={crumb.href} passHref key={i}>
+        {info.map((crumb, i) => <NextLink href={crumb.href} passHref legacyBehavior key={i}>
                 <Link onClick={() => false}
                     variant="h6" noWrap
                     underline="hover" color={i === info.length - 1 ? "text.primary" : "inherit"}>{crumb.label}</Link>

@@ -9,9 +9,10 @@ import { ActivityPageProps } from "../ActivityDescription";
 import useIsSizeOrSmaller from "../../hooks/useIsSizeOrSmaller";
 import CodeAlert from "../../components/CodeAlert";
 import useImported from '../../hooks/useImported';
-import { useMediaChannel } from '../../hooks/useRtc';
+import { useMediaChannel } from '../../hooks/RtcHooks';
 import { NetworkId } from '../../api/RtcNetwork';
 import Video from '../../components/Video';
+import { Configuration } from '.';
 
 const DrawingCanvas = styled('canvas')({
     maxWidth: "100%",
@@ -21,11 +22,13 @@ const DrawingCanvas = styled('canvas')({
 
 const FRAME_RATE = 10;
 
-export function CanvasActivity({ language }: ActivityPageProps) {
+export function CanvasActivity({ language, activityConfig }: ActivityPageProps<Configuration>) {
     const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
     const [context2d, setContext2d] = useState<CanvasRenderingContext2D | null>(null);
 
     const [[inboundStream], setOutboundStream] = useMediaChannel(NetworkId.NET_0, 'canvas');
+
+    const config = useMemo(() => activityConfig ?? { canvasWidth: 400, canvasHeight: 400 }, [activityConfig]);
 
     const onCanvasRefChange = useCallback((canvas: HTMLCanvasElement) => {
         if (canvas) {
@@ -75,7 +78,7 @@ export function CanvasActivity({ language }: ActivityPageProps) {
                              *   Draw it on your canvas using \`ctx.drawImage(v, x, y, w, h)\`.
                              */
                             function draw(ctx, v) {
-                                ctx.drawImage(v, 0, 0, 400, 400);
+                                ctx.drawImage(v, 0, 0, ${config.canvasWidth}, ${config.canvasHeight});
                                 
                             }`,
         python3: dedent`def draw(ctx, v):
@@ -86,7 +89,7 @@ export function CanvasActivity({ language }: ActivityPageProps) {
                             :param v: A video element containing the previous user's frame.
                                       Draw it on your canvas using \`ctx.drawImage(v, x, y, w, h)\`
                             """
-                            ctx.drawImage(v, 0, 0, 400, 400)
+                            ctx.drawImage(v, 0, 0, ${config.canvasWidth}, ${config.canvasHeight})
                             
                         
                         `,
@@ -99,10 +102,10 @@ export function CanvasActivity({ language }: ActivityPageProps) {
                                  */
                                 v: HTMLVideoElement
                             ) {
-                                ctx.drawImage(v, 0, 0, 400, 400);
+                                ctx.drawImage(v, 0, 0, ${config.canvasWidth}, ${config.canvasHeight});
                                 
                             }`
-    } as { [language: string]: string }), []);
+    } as { [language: string]: string }), [config]);
 
     const [code, setCode] = useState<string>();
 
@@ -187,8 +190,8 @@ export function CanvasActivity({ language }: ActivityPageProps) {
                 justifyContent: "center",
                 alignItems: "center"
             }}>
-                <DrawingCanvas id="canvas-activity--canvas" width={400} height={400} ref={onCanvasRefChange} />
-                <Video width={400} height={400} style={{ position: "absolute", left: -1e6 }}
+                <DrawingCanvas id="canvas-activity--canvas" width={config.canvasWidth} height={config.canvasHeight} ref={onCanvasRefChange} />
+                <Video width={config.canvasWidth} height={config.canvasHeight} style={{ position: "absolute", left: -1e6 }}
                     muted autoPlay srcObject={inboundStream} ref={setInboundVideoElt} />
             </Box>
         </ReflexElement>

@@ -3,25 +3,25 @@ import 'highlight.js/styles/vs2015.css';
 import '../src/styles/hljs.scss';
 
 import type { AppProps } from 'next/app';
-import React, { useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import theme from '../src/themes/theme';
 import { CssBaseline, ThemeProvider } from '@mui/material';
 import Head from 'next/head';
 import Header from '../src/components/Header';
 import { SnackbarProvider } from 'notistack';
 import { LocalizationProvider } from '@mui/x-date-pickers';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Box, SxProps } from '@mui/system';
 import LoadingContext, { LoadingContextInfo } from '../src/api/client/LoadingContext';
 import { callWith } from '../src/util/fp';
 import LoadingSpinners from '../src/components/LoadingSpinners';
 import CustomAdapterLuxon from '../src/util/CustomLuxonAdapter';
 import { ErrorBoundary } from 'react-error-boundary';
-import ErrorBoundaryPage from '../src/components/ErrorBoundaryPage';
+import ErrorBoundaryPage from '../src/components/layouts/ErrorBoundaryPage';
 import usePageTitle from '../src/hooks/usePageTitle';
 import { ConfirmProvider } from 'material-ui-confirm';
+import { DragDropProvider } from 'use-dnd';
 import { loader } from '@monaco-editor/react';
+
 
 // Temporarily required due to https://github.com/microsoft/monaco-editor/issues/2947
 loader.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.31.1/min/vs' } });
@@ -58,7 +58,7 @@ function MyApp({ Component, pageProps }: AppProps) {
             <LocalizationProvider dateAdapter={CustomAdapterLuxon}>
             <ConfirmProvider defaultOptions={{ confirmationText: "Yes, I'm sure" }}>
             <SnackbarProvider hideIconVariant>
-            <DndProvider backend={HTML5Backend}>
+            <DragDropProvider>
             <LoadingContext.Provider value={loadingContext}>
                 <Header />
                 <Box sx={{
@@ -73,7 +73,7 @@ function MyApp({ Component, pageProps }: AppProps) {
                 </Box>
                 <LoadingSpinners />
             </LoadingContext.Provider>
-            </DndProvider>
+            </DragDropProvider>
             </SnackbarProvider>
             </ConfirmProvider>
             </LocalizationProvider>

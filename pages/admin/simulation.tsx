@@ -1,6 +1,6 @@
 import { DeleteForever } from '@mui/icons-material';
 import { Alert, Button, Container, IconButton, Stack } from "@mui/material";
-import { DataGrid, GridColDef, GridEventListener, GridEvents, GridSelectionModel, GridToolbarContainer } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridEventListener, GridEvents, GridRowId, GridSelectionModel, GridToolbarContainer } from "@mui/x-data-grid";
 import { SitewideRights } from '@prisma/client';
 import { groupBy } from 'lodash';
 import { useConfirm } from 'material-ui-confirm';
@@ -9,12 +9,11 @@ import { NextPage } from "next";
 import { useSnackbar } from "notistack";
 import { useMemo, useState } from "react";
 import { useGetRequestImmutable } from "../../src/api/client/GetRequestHook";
-import { useLoadingFetch } from "../../src/api/client/LoadingFetchHook";
 import { UserEntity } from "../../src/api/entities/UserEntity";
-import { Response } from "../../src/api/Response";
 import AdminPageAlert from "../../src/components/AdminPageAlert";
 import FullPageLoader from "../../src/components/FullPageLoader";
 import { useImpersonation } from '../../src/hooks/useImpersonation';
+import useNecodeFetch from '../../src/hooks/useNecodeFetch';
 
 function SimulationToolbar(props: {
     onCreateSimulatedUser: () => void;
@@ -31,27 +30,37 @@ function SimulationToolbar(props: {
 }
 
 const Page: NextPage = () => {
-    const { data, isLoading, mutate } = useGetRequestImmutable<UserEntity<{ simulatedUsers: 'deep' }>>('/api/me?include=simulatedUsers');
+    const { data, isLoading, mutate } = useGetRequestImmutable<UserEntity<{ simulatedUsers: 'deep' }>>('/api/me?include=simulatedUsers', {
+        revalidateOnFocus: false,
+    });
 
-    const { upload } = useLoadingFetch();
+    const { upload } = useNecodeFetch();
     const { enqueueSnackbar } = useSnackbar();
 
     const handleCellEdited: GridEventListener<GridEvents.cellEditCommit> = async info => {
         setPerformingAction(true);
 
-        const res: Response<UserEntity> = await upload(`/api/users/${info.id}`, {
+        await upload<UserEntity>(`/api/users/${info.id}`, {
             method: 'PATCH',
             body: JSON.stringify({
                 [info.field]: info.value
-            })
-        }).then(x => x.json());
+            }),
+            errorMessage: err => `Failed to update user (${err.message})`,
+        });
 
-        if (res.response === 'error') {
-            enqueueSnackbar(`Failed to update user (${res.message})`, { variant: 'error' });
-        }
-        else {
-            mutate();
-        }
+        mutate(data => data ? {
+            ...data,
+            attributes: {
+                ...data.attributes,
+                simulatedUsers: data.attributes.simulatedUsers.map(user => user.id === info.id ? {
+                    ...user,
+                    attributes: {
+                        ...user.attributes,
+                        [info.field]: info.value,
+                    }
+                } : user)
+            }
+        } : undefined);
 
         setPerformingAction(false);
     };
@@ -61,7 +70,7 @@ const Page: NextPage = () => {
         setPerformingAction(true);
 
         const simulationId = nanoid();
-        const res: Response<UserEntity> = await upload(`/api/users/simulated`, {
+        const res = await upload<UserEntity>(`/api/users/simulated`, {
             method: 'POST',
             body: JSON.stringify({
                 username: `user_${simulationId}`,
@@ -70,15 +79,17 @@ const Page: NextPage = () => {
                 lastName: simulationId,
                 email: `simulated-noreply-${simulationId}@necode.invalid`,
                 rights: SitewideRights.None,
-            })
-        }).then(x => x.json());
+            }),
+            errorMessage: err => `Failed to create simulated user (${err.message})`,
+        });
 
-        if (res.response === 'error') {
-            enqueueSnackbar(`Failed to create simulated user (${res.message})`, { variant: 'error' });
-        }
-        else {
-            mutate();
-        }
+        mutate(data => data ? {
+            ...data,
+            attributes: {
+                ...data.attributes,
+                simulatedUsers: [...data.attributes.simulatedUsers, res],
+            }
+        } : undefined);
 
         setPerformingAction(false);
     }
@@ -91,14 +102,15 @@ const Page: NextPage = () => {
         }
         catch (e) { return }
 
-        const result = await Promise.allSettled(
-            selectedUsers.map(id =>
-                upload(`/api/users/${id}`, { method: 'DELETE' })
-                    .then(x => new Promise<void>((resolve, reject) => x.ok ? resolve() : reject())))
-        );
-        console.log('a');
+        const result = await Promise.allSettled(selectedUsers.map(async id => {
+            await upload(`/api/users/${id}`, { method: 'DELETE', errorMessage: null });
+            return id;
+        }));
 
-        const { rejected = [], fulfilled = [] } = groupBy(result, x => x.status);
+        const { rejected = [], fulfilled = [] } = groupBy(result, x => x.status) as {
+            fulfilled: PromiseFulfilledResult<GridRowId>[],
+            rejected: PromiseRejectedResult[],
+        };
 
         if (rejected.length === 0) {
             enqueueSnackbar(`Successfully deleted ${fulfilled.length} user(s)`, {
@@ -116,7 +128,13 @@ const Page: NextPage = () => {
             });
         }
 
-        mutate();
+        mutate(data => data ? {
+            ...data,
+            attributes: {
+                ...data.attributes,
+                simulatedUsers: data.attributes.simulatedUsers.filter(user => fulfilled.some(x => user.id === x.value)),
+            }
+        } : undefined);
     }
 
     const [hiddenCols, setHiddenCols] = useState({

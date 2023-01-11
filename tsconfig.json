@@ -19,7 +19,6 @@
     "jsx": "preserve",
     "experimentalDecorators": true,
     "removeComments": true,
-    "importHelpers": true,
     "incremental": true,
   },
   "include": [

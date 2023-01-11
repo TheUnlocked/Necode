@@ -1,7 +1,7 @@
 import { Card, Divider, Stack } from "@mui/material";
 import { Box, SxProps } from "@mui/system";
 import { Dispatch, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DropTargetMonitor, useDrop } from "react-dnd";
+import { useDrop } from "use-dnd";
 import composeRefs from '@seznam/compose-react-refs';
 import ActivityDescription from "../../activities/ActivityDescription";
 import { useGetRequest } from "../../api/client/GetRequestHook";
@@ -24,6 +24,7 @@ interface ActivityListPaneProps {
     sx: SxProps;
     date: Iso8601Date;
     classroomId: string;
+    forTodayOnly?: boolean;
     skeletonActivityCount?: number;
     onLessonChange?: Dispatch<LessonEntity<{ activities: 'shallow' }> | undefined>;
     refreshRef?: SimpleRef<(() => void) | undefined>;
@@ -63,6 +64,7 @@ export default function ActivityListPane({
     classroomId,
     skeletonActivityCount,
     date,
+    forTodayOnly,
     onLessonChange,
     refreshRef,
 }: ActivityListPaneProps) {
@@ -108,21 +110,19 @@ export default function ActivityListPane({
 
     const [{ isDragging }, drop] = useDrop(() => ({
         accept: activityDragDropType,
-        collect(monitor: DropTargetMonitor<ActivityEntity>) {
-            return { isDragging: monitor.getItemType() === activityDragDropType };
+        acceptForeign: false, // TODO: Allow foreign activities
+        collect({ itemType }) {
+            return { isDragging: Boolean(itemType) };
         },
-        hover(item, monitor) {
+        hover({ event, item }) {
             const container = widgetContainerRef.current;
             if (container) {
                 setLastHoveredWidgetIndex(oldWidgetIndex => {
-                    if (!monitor.isOver()) {
-                        return oldWidgetIndex;
-                    }
                     if (activities.length === 1) {
                         setDropIntoPos(0);
                         return 0;
                     }
-                    const fracDropPos = findWidgetInsertPosition(container, monitor.getClientOffset()!.y, oldWidgetIndex);
+                    const fracDropPos = findWidgetInsertPosition(container, event.clientY, oldWidgetIndex);
     
                     const intDropPos = Math.ceil(fracDropPos);
                     if (activities[intDropPos]?.id === item.id) {
@@ -148,8 +148,8 @@ export default function ActivityListPane({
                 });
             }
         },
-        drop({ id }, monitor) {
-            if (!monitor.isOver() || dropIntoPos === undefined) {
+        drop({ item: { id } }) {
+            if (dropIntoPos === undefined) {
                 return;
             }
             const newActivities = [...activities];
@@ -380,7 +380,7 @@ export default function ActivityListPane({
     return <>
         <WidgetDragLayer dropIndicatorPos={dropIndicatorPos} />
         <Card variant="outlined" sx={sx}>
-            <AcitivityListPaneTitleBar date={date} lesson={lessonEntity} onDisplayNameChange={handleDisplayNameChange} />
+            <AcitivityListPaneTitleBar date={date} forTodayOnly={forTodayOnly ?? false} lesson={lessonEntity} onDisplayNameChange={handleDisplayNameChange} />
             <Divider />
             <Box sx={{ m: 1 }}>
                 <ActivityListPaneActions

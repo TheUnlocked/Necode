@@ -31,7 +31,7 @@ on join(user: User) {
             prevItem.next = user;
         }
         else {
-            debug "BUG: previous user", beforeHead, "should have been in the ring but isn't";
+            debug BUG, "previous user", beforeHead, "should have been in the ring but isn't";
         }
         headItem.prev = user;
         debug user, "joined between", beforeHead, "and", headItem.user;
@@ -76,13 +76,13 @@ on leave(user: User) {
                     }
                 }
                 else {
-                    debug "BUG: next user", user, "should have been in the ring but isn't";
+                    debug BUG, "next user", user, "should have been in the ring but isn't";
                 }
                 if ring.get(item.prev) |prevItem| {
                     prevItem.next = item.next;
                 }
                 else {
-                    debug "BUG: previous user", user, "should have been in the ring but isn't";
+                    debug BUG, "previous user", user, "should have been in the ring but isn't";
                 }
 
                 unlink(item.prev, item.user);
@@ -94,10 +94,10 @@ on leave(user: User) {
             ring.remove(user);
         }
         else {
-            debug "BUG:", user, "left even though they weren't in the ring";
+            debug BUG, user, "left even though they weren't in the ring";
         }
     }
     else {
-        debug "BUG:", user, "left even though the ring was supposedly empty";
+        debug BUG, user, "left even though the ring was supposedly empty";
     }
 }

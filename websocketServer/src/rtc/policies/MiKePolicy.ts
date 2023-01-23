@@ -1,36 +1,13 @@
 import * as path from 'path';
 import { readFile } from 'fs/promises';
-import { ConnectionInfo, RtcCoordinator, rtcPolicy, RtcPolicySettings } from './RtcPolicy';
+import { ConnectionInfo, RtcCoordinator, RtcPolicySettings } from './RtcPolicy';
 import { MiKe } from '@necode-org/mike';
-import { functionOf, SimpleType, TypeKind,unitType } from '@necode-org/mike/types';
-import { createMiKeDiagnosticsManager } from '@necode-org/mike/diagnostics/DiagnosticCodes';
-import { LibraryInterface } from '@necode-org/mike/library/Library';
-import { TypeAttributeKind } from '@necode-org/mike/types/Attribute';
+import { createMiKeDiagnosticsManager } from '@necode-org/mike/diagnostics';
 import { JavascriptTarget, JsLibraryImplementation, MiKeProgram, MiKeProgramWithoutExternals } from '@necode-org/mike/codegen/js';
 import { ArrayKeyMap } from '../../../../src/util/maps/ArrayKeyMap';
 import loadModule from '@brillout/load-module';
 import { NetworkId } from '../../../../src/api/RtcNetwork';
-
-const userType: SimpleType = { kind: TypeKind.Simple, name: 'User', typeArguments: [] };
-const policyType: SimpleType = { kind: TypeKind.Simple, name: 'Policy', typeArguments: [] };
-const groupType: SimpleType = { kind: TypeKind.Simple, name: 'Group', typeArguments: [] };
-
-const necodeLib: LibraryInterface = {
-    types: [
-        { name: 'User', numParameters: 0, quantify: () => ({ attributes: [], members: {} }) },
-        { name: 'Policy', numParameters: 0, quantify: () => ({ attributes: [{ kind: TypeAttributeKind.IsLegalParameter }], members: {} }) },
-        { name: 'Group', numParameters: 0, quantify: () => ({ attributes: [], members: {
-            join: functionOf([userType], unitType),
-            leave: functionOf([userType], unitType),
-            forget: functionOf([userType], unitType),
-        } }) },
-    ],
-    values: [
-        { name: 'link', type: functionOf([userType, userType], unitType) },
-        { name: 'unlink', type: functionOf([userType, userType], unitType) },
-        { name: 'Group', type: functionOf([policyType], groupType) },
-    ]
-} as const;
+import { events, necodeLib } from '../../../../tools/mike/mikeconfig';
 
 const EXTERNALS = 'externals';
 const necodeLibImpl: JsLibraryImplementation<typeof necodeLib> = {
@@ -38,19 +15,22 @@ const necodeLibImpl: JsLibraryImplementation<typeof necodeLib> = {
         User: () => ({ serialize: 'x=>x', deserialize: 'x=>x', }),
         Policy: () => ({ serialize: 'x=>x', deserialize: 'x=>x', }), // TODO
         Group: () => ({ serialize: 'x=>x._id', deserialize: `id=>${EXTERNALS}.fetchGroupById(id)` }), // TODO
+        SignalData: () => ({ serialize: 'x=>{throw new Error("SignalData is not serializable")}', deserialize: 'x=>x' }),
+        // Internal types (unspeakable)
+        $Bug: () => ({ serialize: '', deserialize: '' }),
+        $Branch: () => ({ serialize: '', deserialize: '' }),
     },
     values: {
         link: () => ({ emit: `${EXTERNALS}.link` }),
         unlink: () => ({ emit: `${EXTERNALS}.unlink` }),
         Group: () => ({ emit: `${EXTERNALS}.makeGroup` }), // TODO
+        BUG: () => ({ emit: `${EXTERNALS}.BUG` }),
+        _$BRANCH: () => ({ emit: '' }), // Should never appear
     },
 };
 
 const mike = new MiKe();
-mike.setEvents([
-    { name: 'join', required: false, argumentTypes: [userType] },
-    { name: 'leave', required: false, argumentTypes: [userType] },
-]);
+mike.setEvents(events);
 
 mike.addLibrary(necodeLib);
 mike.setTarget(JavascriptTarget);
@@ -65,8 +45,8 @@ export default async function createMiKePolicy(filename: string) {
     const diagnostics = createMiKeDiagnosticsManager();
     mike.setDiagnosticsManager(diagnostics);
 
-    mike.loadScript(filename, mikeSource);
-    const jsCodeBuffer = mike.tryValidateAndEmit(filename);
+    mike.loadScript(mikeSource);
+    const jsCodeBuffer = mike.tryValidateAndEmit();
     if (!jsCodeBuffer) {
         diagnostics.getDiagnostics().forEach(d => console.error(d.toString()));
         throw new Error(`MiKe Compilation Failed.\n\t${diagnostics.getDiagnostics().join('\n\t')}`);
@@ -90,11 +70,13 @@ export default async function createMiKePolicy(filename: string) {
         private leaveListener?: MiKeProgram['listeners'][any];
 
         constructor(network: NetworkId, users: Iterable<string>, private settings: RtcPolicySettings) {
+            const bugSym = Symbol('BUG');
             this.program = createMiKeProgram({
+                BUG: bugSym,
                 debug: (...args) => {
-                    console.log(...args);
-                    if (typeof args[0] === 'string' && args[0].includes('BUG')) {
-                        console.log(JSON.stringify(Object.fromEntries(this.program.state.map(x => [x.name, x.default]))));
+                    console.log('[Debug]', ...args);
+                    if (args[0] === bugSym) {
+                        console.log(JSON.stringify(this.mikeState));
                     }
                 },
                 link: (a: string, b: string) => {
@@ -114,7 +96,7 @@ export default async function createMiKePolicy(filename: string) {
                 },
             });
 
-            this.mikeState = Object.fromEntries(this.program.state.map(x => [x.name, x.default]));
+            this.mikeState = this.program.createInitialState();
 
             this.joinListener = this.program.listeners.find(x => x.event === 'join');
             this.leaveListener = this.program.listeners.find(x => x.event === 'leave');

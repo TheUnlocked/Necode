@@ -1,0 +1,94 @@
+state groups: Map<int, Group> = {};
+state groupMembership: Map<User, Group> = {};
+
+param numGroups: int;
+param roomPolicy: Policy;
+
+on signal(user: User, kind: string, data: SignalData) {
+    if data.getInt("room") |room| {
+        if kind == "joinRoom" {
+            // joinRoom Event
+            if room > 0 && room <= numGroups {
+                // Leave current group, if applicable
+                if groupMembership.get(user) |group| {
+                    group.leave(user);
+                    groupMembership.remove(user);
+                }
+
+                // Join existing group or create a new group
+                if groups.get(room) |group| {
+                    group.join(user);
+                    groupMembership.set(user, group);
+                }
+                else {
+                    let group = Group(roomPolicy);
+                    groups.set(room, group);
+                    group.join(user);
+                    groupMembership.set(user, group);
+                }
+            }
+            else {
+                debug "Client error:", user, "tried to join room", room, "but that room doesn't exist";
+            }
+
+        }
+        else if kind == "leaveRoom" {
+            // leaveRoom event
+            if room > 0 && room <= numGroups {
+                if groups.get(room) |group| {
+                    if group.has(user) {
+                        group.leave(user);
+                        groupMembership.remove(user);
+                    }
+                    else {
+                        debug "Client error:", user, "tried to leave room", room, "but they weren't in it";
+                    }
+                }
+                else {
+                    debug "Client error:", user, "tried to leave room", room, "but that room hasn't been created yet";
+                }
+            }
+            else {
+                debug "Client error:", user, "tried to leave room", room, "but that room doesn't exist";
+            }
+
+        }
+        else {
+            debug BUG, "Unrecognized signal kind", kind;
+        }
+    }
+    else {
+        debug BUG, "Signal data missing room field";
+    }
+}
+
+on leave(user: User) {
+    if groupMembership.get(user) |group| {
+        group.leave(user);
+        groupMembership.remove(user);
+    }
+}
+
+// -- PARAMETER CONFIGURATION --
+//% {
+//%     "params": {
+//%         "numGroups": {
+//%             "type": "int",
+//%             "ge": 2,
+//%             "le": 50
+//%         }
+//%     },
+//%     "signal": {
+//%         "type": [
+//%             "joinRoom",
+//%             "leaveRoom"
+//%         ],
+//%         "data": {
+//%             "room": {
+//%                 "type": "int",
+//%                 "ge": 2,
+//%                 "le": 50
+//%             }
+//%         }
+//%     }
+//% }

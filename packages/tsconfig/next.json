@@ -1,0 +1,31 @@
+{
+    "display": "NextJS",
+    "extends": "./default.json",
+    "compilerOptions": {
+        "lib": [
+            "DOM",
+            "DOM.Iterable",
+            "ESNext"
+        ],
+        "allowJs": true,
+        "noEmit": true,
+        "esModuleInterop": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "jsx": "preserve",
+        "experimentalDecorators": true,
+        "removeComments": true,
+        "incremental": true,
+        "paths": {
+            "common/*": ["common/src/*"],
+            "api/*": ["api/src/*"],
+            "backend/*": ["backend/src/*"],
+            "*": ["../packages/*/src"],
+        }
+    },
+    "include": [
+        "next-env.d.ts",
+        "src"
+    ],
+    "exclude": ["node_modules"]
+}

@@ -1,0 +1,8 @@
+{
+    "scripts": {
+        "server:dev": "webpack --watch --config ./webpack.config.js"
+    },
+    "devDependencies": {
+        "tsconfig": "workspace:*"
+    }
+}

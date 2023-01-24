@@ -1,0 +1,29 @@
+{
+    "private": true,
+    "name": "database",
+    "version": "0.0.0",
+    "license": "MIT",
+    "scripts": {
+        "clean": "rimraf .turbo node_modules dist",
+        "db:migrate:deploy": "prisma migrate deploy",
+        "db:migrate:dev": "prisma migrate dev",
+        "db:push": "prisma db push",
+        "db:seed": "ts-node --transpile-only src/seed.ts",
+        "format": "prisma format",
+        "generate": "prisma generate",
+        "prebuild": "npm run generate",
+        "predev": "npm run generate",
+        "studio": "prisma studio"
+    },
+    "dependencies": {
+        "@prisma/client": "^3.10.0"
+    },
+    "devDependencies": {
+        "@types/node": "^18.11.18",
+        "eslint": "^8.12.0",
+        "prisma": "^3.10.0",
+        "rimraf": "^3.0.2",
+        "tsconfig": "workspace:*",
+        "typescript": "^4.5.5"
+    }
+}

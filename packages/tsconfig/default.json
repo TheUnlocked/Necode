@@ -1,0 +1,19 @@
+{
+    "display": "Default",
+    "compilerOptions": {
+        "lib": ["ESNext"],
+        "module": "ESNext",
+        "moduleResolution": "Node",
+        "target": "ESNext",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "outDir": "dist",
+        "declaration": true,
+        "baseUrl": "..",
+        "paths": {
+            "*": ["*/src"]
+        }
+    },
+}

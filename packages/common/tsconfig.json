@@ -1,0 +1,8 @@
+{
+    "extends": "tsconfig/next.json",
+    "include": ["src", "../backend/src/identity.ts"],
+    "exclude": ["node_modules"],
+    "compilerOptions": {
+        "outDir": "dist"
+    }
+}

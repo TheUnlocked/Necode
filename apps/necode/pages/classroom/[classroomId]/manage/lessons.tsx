@@ -11,7 +11,7 @@ import { useRouter } from "next/router";
 import { useSnackbar } from "notistack";
 import LessonDatePicker from 'common/components/lesson-config/LessonDatePicker';
 import useNecodeFetch from 'common/hooks/useNecodeFetch';
-import { ActivityEntity } from 'common/api/entities/ActivityEntity';
+import { ActivityEntity } from 'api/entities/ActivityEntity';
 import LessonDragLayer from 'common/components/lesson-config/LessonDragLayer';
 import useImperativeDialog from 'common/hooks/useImperativeDialog';
 import LessonMergeDialog from 'common/components/dialogs/LessonMergeDialog';

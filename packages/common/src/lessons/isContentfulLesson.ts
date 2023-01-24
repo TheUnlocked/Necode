@@ -1,4 +1,4 @@
-import { LessonEntity } from '../api/entities/LessonEntity';
+import { LessonEntity } from 'api/entities/LessonEntity';
 
 export default function isContentfulLesson(
     lesson: LessonEntity<{ activities: 'shallow' }> | undefined

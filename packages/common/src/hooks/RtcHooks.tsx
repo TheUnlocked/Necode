@@ -1,7 +1,7 @@
 import { omit } from 'lodash';
 import { createContext, PropsWithChildren, useCallback, useEffect, useRef, useState, useContext } from 'react';
 import SimplePeer from 'simple-peer';
-import { NetworkId } from '../api/RtcNetwork';
+import { NetworkId } from 'api/RtcNetwork';
 import cyrb53 from '../util/cyrb53';
 import { callWith } from '../util/fp';
 import tracked from '../util/trackedEventEmitter';

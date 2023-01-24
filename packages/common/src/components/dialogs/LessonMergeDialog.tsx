@@ -1,7 +1,7 @@
 import { Button, Chip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, InputLabel, MenuItem, Select, Typography } from "@mui/material";
 import { DateTime } from 'luxon';
 import { useMemo, useState } from 'react';
-import { LessonEntity } from '../../api/entities/LessonEntity';
+import { LessonEntity } from 'api/entities/LessonEntity';
 import { toLuxon } from '../../util/iso8601';
 
 interface LessonMergeDialogProps {

@@ -1,5 +1,4 @@
-import { Card, Typography } from "@mui/material";
-import { Box, styled } from "@mui/system";
+import { Card, Typography, Box, styled } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ReflexContainer, ReflexElement, ReflexSplitter } from "react-reflex";
 import { BrowserRunner } from "../../runner/BrowserRunner";
@@ -10,7 +9,7 @@ import useIsSizeOrSmaller from "../../hooks/useIsSizeOrSmaller";
 import CodeAlert from "../../components/CodeAlert";
 import useImported from '../../hooks/useImported';
 import { useMediaChannel } from '../../hooks/RtcHooks';
-import { NetworkId } from '../../api/RtcNetwork';
+import { NetworkId } from 'api/RtcNetwork';
 import Video from '../../components/Video';
 import { Configuration } from '.';
 

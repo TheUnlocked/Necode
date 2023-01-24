@@ -1,23 +1,21 @@
 import { Server } from 'socket.io';
-import { IOServer, CreateLiveActivityInfo } from './types';
+import { IOServer, CreateLiveActivityInfo } from 'api/ws';
 import { jwtVerify, importJWK } from 'jose';
 import * as dotenv from 'dotenv';
-import { isNotNull } from '../../src/util/typeguards';
+import { isNotNull } from 'common/util/typeguards';
 import UserManager from './UserManager';
 import RtcManager from './rtc/RtcManager';
 import * as fs from 'fs';
-import SocketJWT from '../../src/api/server/SocketJWT';
-import { PrismaClient } from '@prisma/client';
+import SocketJWT from 'backend/SocketJWT';
+import { prisma } from 'database';
 import ClassroomManager, { Classroom } from './ClassroomManager';
-import * as express from 'express';
+import express from 'express';
 import { DateTime, Duration } from 'luxon';
-import { makeActivitySubmissionEntity } from '../../src/api/entities/ActivitySubmissionEntity';
-import { makeUserEntity } from '../../src/api/entities/UserEntity';
-import { hasScope } from '../../src/api/server/scopes';
+import { makeActivitySubmissionEntity } from 'api/entities/ActivitySubmissionEntity';
+import { makeUserEntity } from 'api/entities/UserEntity';
+import { hasScope } from 'backend/scopes';
 
 dotenv.config();
-
-const prisma = new PrismaClient();
 
 let server;
 

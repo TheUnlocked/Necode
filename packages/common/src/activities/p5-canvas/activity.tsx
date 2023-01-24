@@ -1,5 +1,4 @@
-import { Card } from "@mui/material";
-import { Box } from "@mui/system";
+import { Card, Box } from "@mui/material";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ReflexContainer, ReflexElement, ReflexSplitter } from "react-reflex";
 import dedent from "dedent-js";
@@ -9,7 +8,7 @@ import useIsSizeOrSmaller from "../../hooks/useIsSizeOrSmaller";
 import CodeAlert from "../../components/CodeAlert";
 import useImported from '../../hooks/useImported';
 import { useMediaChannel } from '../../hooks/RtcHooks';
-import { NetworkId } from '../../api/RtcNetwork';
+import { NetworkId } from 'api/RtcNetwork';
 import typeDeclarationFiles from '../p5js/typeDeclarationFiles';
 import { LazyImportable } from '../../components/Lazy';
 import Video from '../../components/Video';

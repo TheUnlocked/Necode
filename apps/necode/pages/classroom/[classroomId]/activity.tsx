@@ -1,9 +1,8 @@
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useCallback, useState } from "react";
-import { Button, Chip, Stack, Toolbar } from "@mui/material";
+import { Button, Chip, Stack, Toolbar, Box } from "@mui/material";
 import { ArrowBack, AssignmentTurnedIn, Close } from "@mui/icons-material";
-import { Box } from "@mui/system";
 import { ClassroomMemberEntity } from "api/entities/ClassroomMemberEntity";
 import { useGetRequest, useGetRequestImmutable } from "common/api/client/GetRequestHook";
 import { useSocket } from "common/hooks/useSocket";

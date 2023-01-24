@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { endpoint, Status } from "common/api/Endpoint";
+import { AttributesOf, endpoint, Status } from "common/api/Endpoint";
 import { ActivityEntity, makeActivityEntity } from "api/entities/ActivityEntity";
 import { hasScope } from "backend/scopes";
 import { prisma } from "database";
@@ -22,7 +22,7 @@ const apiActivityAll = endpoint(makeActivityEntity, ['classroomId', 'lessonId'] 
     },
     POST: {
         loginValidation: true,
-        schema: Joi.object<ActivityEntity['attributes']>({
+        schema: Joi.object<AttributesOf<ActivityEntity>>({
             activityType: Joi.string(),
             displayName: Joi.string().allow(''),
             configuration: Joi.any().optional(),

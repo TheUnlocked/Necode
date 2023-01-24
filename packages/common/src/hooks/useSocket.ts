@@ -1,7 +1,7 @@
 import { isEqual } from 'lodash';
 import { useEffect, useMemo, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { ClientToServerEventMap, ServerToClientEventMap, SignalLiveActivityInfo } from '../../websocketServer/src/types';
+import { ClientToServerEventMap, ServerToClientEventMap, SignalLiveActivityInfo } from 'api/ws';
 import { useGetRequest } from '../api/client/GetRequestHook';
 
 export interface SocketInfo {

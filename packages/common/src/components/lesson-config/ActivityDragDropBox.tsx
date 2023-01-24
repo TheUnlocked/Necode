@@ -1,12 +1,12 @@
-import { Box } from "@mui/system";
+import { Box } from "@mui/material";
 import { isEqual } from 'lodash';
 import { useRouter } from "next/router";
 import { ComponentType, useCallback, useEffect } from "react";
 import { useDrag, createEmptyPreviewImage } from "use-dnd";
-import { CreateLiveActivityInfo } from "../../../websocketServer/src/types";
+import { CreateLiveActivityInfo } from "api/ws";
 import { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
 import { PartialAttributesOf } from '../../api/Endpoint';
-import { ActivityEntity } from '../../api/entities/ActivityEntity';
+import { ActivityEntity } from 'api/entities/ActivityEntity';
 import { activityDragDropType } from '../../dnd/types';
 import useActivityDescription from '../../hooks/useActivityDescription';
 import useImported from '../../hooks/useImported';

@@ -1,9 +1,8 @@
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Button, Toolbar, Select, MenuItem, Stack, ToggleButton, Skeleton, Paper } from "@mui/material";
+import { Button, Toolbar, Select, MenuItem, Stack, ToggleButton, Skeleton, Paper, Box, SxProps } from "@mui/material";
 import { ArrowBack, Code, Save } from "@mui/icons-material";
-import { Box, SxProps } from "@mui/system";
 import allLanguages from "common/languages/allLanguages";
 import LanguageDescription from "common/languages/LangaugeDescription";
 import useImperativeDialog from "common/hooks/useImperativeDialog";

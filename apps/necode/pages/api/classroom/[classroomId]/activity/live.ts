@@ -1,10 +1,10 @@
 import Joi from "joi";
 import { importJWK, SignJWT } from "jose";
 import { endpoint, Status } from "common/api/Endpoint";
-import { PolicyConfiguration } from 'common/api/RtcNetwork';
+import { PolicyConfiguration } from 'api/RtcNetwork';
 import { hasScope } from "backend/scopes";
 import { prisma } from "database";
-import { CreateLiveActivityInfo } from "../../../../../websocketServer/src/types";
+import { CreateLiveActivityInfo } from "api/ws";
 
 async function makeJwt(content: { [propName: string]: unknown }, expireIn: string) {
     const keyObj = JSON.parse(process.env.JWT_SIGNING_PRIVATE_KEY!);

@@ -2,11 +2,11 @@ import { Button, Stack, Toolbar, Typography } from "@mui/material";
 import { NextPage } from "next";
 import { PropsWithChildren, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/router";
-import NotFoundPage from '../../../pages/404';
+import NotFoundPage from './NotFoundPage';
 import useNecodeFetch from '../../hooks/useNecodeFetch';
 import { useGetRequest, useGetRequestImmutable } from '../../api/client/GetRequestHook';
 import ManageClassroomSidebar, { ManageClassroomSubPageId } from '../ManageClassroomSidebar';
-import { ClassroomMemberEntity } from '../../api/entities/ClassroomMemberEntity';
+import { ClassroomMemberEntity } from 'api/entities/ClassroomMemberEntity';
 
 
 export interface ManageClassroomPageProps {

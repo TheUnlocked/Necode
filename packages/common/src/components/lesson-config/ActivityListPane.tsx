@@ -1,12 +1,11 @@
-import { Card, Divider, Stack } from "@mui/material";
-import { Box, SxProps } from "@mui/system";
+import { Card, Divider, Stack, Box, SxProps } from "@mui/material";
 import { Dispatch, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDrop } from "use-dnd";
 import composeRefs from '@seznam/compose-react-refs';
 import ActivityDescription from "../../activities/ActivityDescription";
 import { useGetRequest } from "../../api/client/GetRequestHook";
-import { ActivityEntity } from "../../api/entities/ActivityEntity";
-import { LessonEntity } from "../../api/entities/LessonEntity";
+import { ActivityEntity } from "api/entities/ActivityEntity";
+import { LessonEntity } from "api/entities/LessonEntity";
 import { Iso8601Date } from "../../util/iso8601";
 import { ActivityDragDropBox } from "./ActivityDragDropBox";
 import SkeletonActivityListPane from "./SkeletonActivityListPane";

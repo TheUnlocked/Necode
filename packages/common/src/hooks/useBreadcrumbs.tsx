@@ -4,8 +4,8 @@ import NextLink from "next/link";
 import { useRouter } from 'next/router';
 import { ReactNode } from 'react';
 import { useGetRequestImmutable } from '../api/client/GetRequestHook';
-import { ActivityEntity } from '../api/entities/ActivityEntity';
-import { ClassroomMemberEntity } from '../api/entities/ClassroomMemberEntity';
+import { ActivityEntity } from 'api/entities/ActivityEntity';
+import { ClassroomMemberEntity } from 'api/entities/ClassroomMemberEntity';
 
 export type BreadcrumbData = {
     href: string;

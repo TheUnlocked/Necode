@@ -1,3 +1,4 @@
+import { LibraryInterface } from '@necode-org/mike/library/Library';
 import { EventRegistration } from '@necode-org/mike/semantics/Validator';
 import { booleanType, floatType, functionOf, intType, optionOf, simpleTypeOf, stringType, unitType } from '@necode-org/mike/types';
 import { TypeAttributeKind } from '@necode-org/mike/types/Attribute';
@@ -10,7 +11,7 @@ export const signalDataType = simpleTypeOf('SignalData');
 export const internalUniqueBugType = simpleTypeOf('$Bug');
 export const internalUniqueBranchType = simpleTypeOf('$Branch');
 
-export const necodeLib = {
+export const necodeLib = ({
     types: [
         { name: 'User', numParameters: 0, quantify: () => ({ attributes: [], members: {} }) },
         { name: 'Policy', numParameters: 0, quantify: () => ({ attributes: [{ kind: TypeAttributeKind.IsLegalParameter }], members: {} }) },
@@ -37,7 +38,7 @@ export const necodeLib = {
         { name: 'BUG', type: internalUniqueBugType },
         { name: '_$BRANCH', type: internalUniqueBranchType },
     ]
-} as const;
+} as const) satisfies LibraryInterface;
 
 /* For mike-lsp */
 export const libraries = [necodeLib];

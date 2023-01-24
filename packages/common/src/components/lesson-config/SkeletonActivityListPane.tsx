@@ -1,5 +1,4 @@
-import { Card, CardContent, Divider, Skeleton, Stack, Typography } from "@mui/material";
-import { Box, SxProps } from "@mui/system";
+import { Card, CardContent, Divider, Skeleton, Stack, Typography, Box, SxProps } from "@mui/material";
 import { ActivityDragDropBox } from "./ActivityDragDropBox";
 
 interface SkeletonActivityListPaneProps {

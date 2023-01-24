@@ -1,7 +1,7 @@
 import { Box, Stack, TextField, Typography } from '@mui/material';
 import { useEffect, useMemo } from 'react';
 import { useDrag, createEmptyPreviewImage } from 'use-dnd';
-import { LessonEntity } from '../../api/entities/LessonEntity';
+import { LessonEntity } from 'api/entities/LessonEntity';
 import { lessonDragDropType } from '../../dnd/types';
 import useLocalCachedState from '../../hooks/useLocalCachedState';
 import isContentfulLesson from '../../lessons/isContentfulLesson';

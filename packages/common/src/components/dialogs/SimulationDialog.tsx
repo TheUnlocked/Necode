@@ -1,8 +1,7 @@
-import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, List, ListItemButton } from "@mui/material";
-import { Box } from '@mui/system';
+import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, List, ListItemButton, Box } from "@mui/material";
 import { useRouter } from 'next/router';
 import { useGetRequestImmutable } from '../../api/client/GetRequestHook';
-import { UserEntity } from '../../api/entities/UserEntity';
+import { UserEntity } from 'api/entities/UserEntity';
 import { setImpersonation, useImpersonation } from '../../hooks/useImpersonation';
 
 interface SubmissionsDialogProps {

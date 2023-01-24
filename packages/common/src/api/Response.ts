@@ -9,11 +9,11 @@ export interface ResponsePaginationPart {
     prev?: string;
 }
 
-interface RequestOptions {
+export interface RequestOptions {
     pagination?: boolean;
 }
 
-interface DefaultRequestOptions extends RequestOptions {
+export interface DefaultRequestOptions extends RequestOptions {
     pagination: false;
 }
 

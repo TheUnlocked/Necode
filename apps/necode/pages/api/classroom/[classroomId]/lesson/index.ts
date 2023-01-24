@@ -1,9 +1,9 @@
 import Joi from "joi";
-import { endpoint, Status } from "common/api/Endpoint";
+import { AttributesOf, endpoint, Status } from "common/api/Endpoint";
 import { ActivityEntity, makeActivityEntity } from "api/entities/ActivityEntity";
 import { LessonEntity, makeLessonEntity } from "api/entities/LessonEntity";
 import { hasScope } from "backend/scopes";
-import { prisma } from "database";
+import { Activity, prisma } from "database";
 import { iso8601DateRegex } from "common/util/iso8601";
 import { singleArg } from "common/util/typeguards";
 
@@ -25,14 +25,14 @@ const apiLessonAll = endpoint(makeLessonEntity, ['classroomId', 'include[]'] as 
 
             return ok(lessons.map(x => makeLessonEntity(x, {
                 activities: includeActivities
-                    ? x.activities.map(singleArg(makeActivityEntity))
+                    ? (x.activities as Activity[]).map(singleArg(makeActivityEntity))
                     : x.activities.map(x => x.id)
             })));
         }
     },
     POST: {
         loginValidation: true,
-        schema: Joi.object<LessonEntity['attributes']>({
+        schema: Joi.object<AttributesOf<LessonEntity>>({
             date: Joi.string().regex(iso8601DateRegex),
             displayName: Joi.string().allow(''),
             activities: Joi.array()

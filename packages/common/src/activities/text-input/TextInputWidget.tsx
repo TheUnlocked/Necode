@@ -1,6 +1,5 @@
-import { ClickAwayListener, Grow, IconButton, MenuItem, MenuList, Paper, Popper, Stack, TextField, Theme } from "@mui/material";
+import { ClickAwayListener, Grow, IconButton, MenuItem, MenuList, Paper, Stack, TextField, Theme, SxProps, Popper } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { SxProps } from "@mui/system";
 import { Code as CodeIcon, TextFields as TextFieldsIcon } from "@mui/icons-material";
 import Editor, { useMonaco } from "@monaco-editor/react";
 import { usePopupState, bindTrigger, bindPopper } from "material-ui-popup-state/hooks";
@@ -130,7 +129,7 @@ export default function TextInputWidget({
                 options={monacoOptions} />
             <span><IconButton size="small" className={dragHandleClass} sx={{ ml: 0.5 }}
                 {...bindTrigger(languageSelectPopup)}>{languageDescription?.icon ? <languageDescription.icon /> : <CodeIcon/>}</IconButton></span>
-            <Popper {...bindPopper(languageSelectPopup)}
+            <Popper {...bindPopper(languageSelectPopup)} 
                 placement="left" transition>
                 {({ TransitionProps }) => <ClickAwayListener onClickAway={() => languageSelectPopup.close()}>
                     <Grow {...TransitionProps}>

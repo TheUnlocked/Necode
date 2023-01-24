@@ -3,8 +3,8 @@ import { PickersDayProps, StaticDatePicker } from '@mui/x-date-pickers';
 import { DateTime } from 'luxon';
 import { useRouter } from 'next/router';
 import { useCallback, useMemo } from 'react';
-import { ActivityEntity } from '../../api/entities/ActivityEntity';
-import { LessonEntity } from '../../api/entities/LessonEntity';
+import { ActivityEntity } from 'api/entities/ActivityEntity';
+import { LessonEntity } from 'api/entities/LessonEntity';
 import { fromLuxon, Iso8601Date, toLuxon } from '../../util/iso8601';
 import LessonDatePickerDay from './LessonDatePickerDay';
 

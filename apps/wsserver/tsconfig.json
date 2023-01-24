@@ -1,0 +1,11 @@
+{
+    "extends": "tsconfig/app.json",
+    "include": ["**/*.ts"],
+    "exclude": ["node_modules"],
+    "compilerOptions": {
+        "inlineSourceMap": true,
+        "removeComments": true,
+        "forceConsistentCasingInFileNames": true,
+        "noEmit": false
+    }
+}

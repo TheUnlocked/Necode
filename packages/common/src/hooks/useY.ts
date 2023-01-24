@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { Awareness, applyAwarenessUpdate, encodeAwarenessUpdate } from 'y-protocols/awareness';
 import * as Y from 'yjs';
-import { NetworkId } from '../api/RtcNetwork';
+import { NetworkId } from 'api/RtcNetwork';
 import { useDataChannel, useDataChannelLifecycle } from './RtcHooks';
 
 

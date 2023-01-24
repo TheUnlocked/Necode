@@ -1,7 +1,7 @@
 import { DragIndicator } from "@mui/icons-material";
-import { SvgIconTypeMap } from "@mui/material";
+import { SvgIconTypeMap, Box } from "@mui/material";
+import type { BoxTypeMap } from "@mui/system";
 import { DefaultComponentProps } from "@mui/material/OverridableComponent";
-import { Box, BoxTypeMap } from "@mui/system";
 import { omit } from 'lodash';
 import { Ref } from "react";
 

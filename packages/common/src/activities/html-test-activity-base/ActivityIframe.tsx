@@ -1,10 +1,9 @@
-import { styled } from "@mui/material";
+import { styled, SxProps } from "@mui/material";
 import { nanoid } from "nanoid";
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, Ref } from "react";
 import iframeHtml from "raw-loader!./iframe.html";
 import testScaffoldingImpl from "raw-loader!./test-scaffolding-impl.js.raw";
 import transformTestScaffolding from "../../languages/transformers/babel-plugin-transform-test-scaffolding";
-import { SxProps } from "@mui/system";
 import { typescriptDescription } from '../../languages/typescript';
 
 const Iframe = styled('iframe')``;

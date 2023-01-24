@@ -7,7 +7,7 @@ import { NextPage } from "next";
 import { useSnackbar } from "notistack";
 import { useEffect, useState, useMemo } from "react";
 import { useGetRequest } from 'common/api/client/GetRequestHook';
-import { ClassroomMemberEntity } from 'common/api/entities/ClassroomMemberEntity';
+import { ClassroomMemberEntity } from 'api/entities/ClassroomMemberEntity';
 import ManageClassroomPage, { ManageClassroomPageContentProps } from 'common/components/layouts/ManageClassroomPage';
 import useNecodeFetch from 'common/hooks/useNecodeFetch';
 

@@ -1,13 +1,13 @@
 import * as path from 'path';
 import { readFile } from 'fs/promises';
-import { ConnectionInfo, RtcCoordinator, RtcPolicySettings } from './RtcPolicy';
+import { ConnectionInfo, RtcCoordinator, RtcPolicy, RtcPolicySettings } from './RtcPolicy';
 import { MiKe } from '@necode-org/mike';
 import { createMiKeDiagnosticsManager } from '@necode-org/mike/diagnostics';
 import { JavascriptTarget, JsLibraryImplementation, MiKeProgram, MiKeProgramWithoutExternals } from '@necode-org/mike/codegen/js';
-import { ArrayKeyMap } from '../../../../src/util/maps/ArrayKeyMap';
+import { ArrayKeyMap } from 'common/util/maps/ArrayKeyMap';
 import loadModule from '@brillout/load-module';
-import { NetworkId } from '../../../../src/api/RtcNetwork';
-import { events, necodeLib } from '../../../../packages/mike-config/mikeconfig';
+import { NetworkId } from 'api/RtcNetwork';
+import { events, necodeLib } from 'mike-config';
 
 const EXTERNALS = 'externals';
 const necodeLibImpl: JsLibraryImplementation<typeof necodeLib> = {
@@ -38,7 +38,7 @@ mike.addLibraryImplementation(necodeLibImpl);
 
 mike.init();
 
-export default async function createMiKePolicy(filename: string) {
+export default async function createMiKePolicy(filename: string): Promise<RtcPolicy> {
     const mikeSource = await readFile(path.join(__dirname, filename), { encoding: 'utf-8' });
     const policyName = path.basename(filename, '.mike');
 

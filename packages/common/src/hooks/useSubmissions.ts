@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { ActivitySubmissionEntity } from "../api/entities/ActivitySubmissionEntity";
+import { ActivitySubmissionEntity } from "api/entities/ActivitySubmissionEntity";
 import tracked from "../util/trackedEventEmitter";
 import { SocketInfo } from "./useSocket";
 import ActivityDescription from '../activities/ActivityDescription';

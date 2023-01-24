@@ -30,10 +30,10 @@ import useImported from '../../hooks/useImported';
 import { typescriptDescription } from '../../languages/typescript';
 import { editor } from 'monaco-editor';
 import useY, { useYAwareness } from '../../hooks/useY';
-import { NetworkId } from '../../api/RtcNetwork';
+import { NetworkId } from 'api/RtcNetwork';
 import { applyTransaction, applyUnifiedUpdates } from '../../util/y-utils';
 import { useGetRequestImmutable } from '../../api/client/GetRequestHook';
-import { UserEntity } from '../../api/entities/UserEntity';
+import { UserEntity } from 'api/entities/UserEntity';
 import * as Y from 'yjs';
 import useDirty from '../../hooks/useDirty';
 

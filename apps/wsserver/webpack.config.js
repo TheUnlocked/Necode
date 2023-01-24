@@ -9,23 +9,29 @@ module.exports = {
     mode: 'development',
     target: 'node',
     devtool: 'inline-source-map',
-    entry: rel('src/main.ts'),
+    entry: './src/main.ts',
     output: {
         path: path.resolve(rel('dist')),
         filename: 'index.js'
     },
     resolve: {
-        extensions: ['.ts', '.tsx', '.js']
+        extensions: ['.ts', '.tsx', '.js'],
+        alias: {
+            ...Object.fromEntries(
+                ['api', 'common', 'database', 'mike-config', 'backend']
+                    .map(x => [x, `${x}/src`])
+            ),
+        },
     },
     module: {
         rules: [
             {
                 loader: 'ts-loader',
                 test: /\.tsx?$/,
-                exclude: /node_modules/,
+                // Intentionally not excluding node_modules since our code is there.
+                // exclude: /node_modules/,
                 options: {
-                    context: path.resolve('./websocketServer'),
-                    onlyCompileBundledFiles: true,
+                    allowTsInNodeModules: true,
                 }
             }
         ]

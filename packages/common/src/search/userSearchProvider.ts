@@ -1,4 +1,4 @@
-import { UserEntity } from '../api/entities/UserEntity';
+import { UserEntity } from 'api/entities/UserEntity';
 import SearchProvider from './SearchProvider';
 
 function invertedScore(field: string, query: string) {

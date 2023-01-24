@@ -1,6 +1,6 @@
 import { ComponentType } from "react";
 import { RefConnector } from "use-dnd";
-import { PolicyConfiguration } from '../api/RtcNetwork';
+import { PolicyConfiguration } from 'api/RtcNetwork';
 import FeatureDescription from "../languages/features/FeatureDescription";
 import LanguageDescription from "../languages/LangaugeDescription";
 import { Importable } from '../util/types';

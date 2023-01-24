@@ -1,10 +1,10 @@
 import { Schema } from "joi";
 import { GetServerSidePropsContext, NextApiHandler, NextApiRequest, NextApiResponse } from "next";
-import { Entity } from "./entities/Entity";
+import { Entity } from "api/entities/Entity";
 import { Response, ResponsePaginationPart } from "./Response";
 import { Session } from "next-auth";
 import { IfAny, UndefinedIsOptional } from "../util/types";
-import { EntityReference, EntityReferenceArray, ReferenceDepth } from "./entities/EntityReference";
+import { EntityReference, EntityReferenceArray, ReferenceDepth } from "api/entities/EntityReference";
 import getIdentity from '../../../backend/src/identity';
 import { parse as parseCookie } from 'cookie';
 
@@ -32,7 +32,7 @@ const defaultStatusMessages: { [Code in Status]: string } = {
     [Status.NOT_IMPLEMENTED]: 'Not Yet Implemented',
 };
 
-interface OkOptions {
+export interface OkOptions {
     pagination?: ({
         cursor: string,
         index?: number
@@ -151,7 +151,7 @@ export type PartialAttributesOf<E extends EntityReference<Entity<any, any>, Refe
             }
         : {};
 
-type EntityEndpoints<E extends Entity<any, any>, QueryParams extends string> = {
+export type EntityEndpoints<E extends Entity<any, any>, QueryParams extends string> = {
     type: 'entity'
 } & EndpointMap<
     QueryParams,
@@ -162,7 +162,7 @@ type EntityEndpoints<E extends Entity<any, any>, QueryParams extends string> = {
     undefined, void
 >;
 
-type EntityTypeEndpoints<E extends Entity<any, any>, QueryParams extends string> = {
+export type EntityTypeEndpoints<E extends Entity<any, any>, QueryParams extends string> = {
     type: 'entityType'
 } & EndpointMap<
     QueryParams,
@@ -173,7 +173,7 @@ type EntityTypeEndpoints<E extends Entity<any, any>, QueryParams extends string>
     unknown, unknown
 >;
 
-type SortableEntityTypeEndpoints<E extends Entity<any, any>, QueryParams extends string> = {
+export type SortableEntityTypeEndpoints<E extends Entity<any, any>, QueryParams extends string> = {
     type: 'entityType.sortable'
 } & EndpointMap<
     QueryParams,
@@ -184,7 +184,7 @@ type SortableEntityTypeEndpoints<E extends Entity<any, any>, QueryParams extends
     unknown, unknown
 >;
 
-type EndpointResult<P extends string, Endpoints extends Partial<EndpointMap<any>>> = NextApiHandler<any> & {
+export type EndpointResult<P extends string, Endpoints extends Partial<EndpointMap<any>>> = NextApiHandler<any> & {
     [Method in keyof Endpoints]: Endpoints[Method] extends Endpoint<any, any, P>
         ? Endpoints[Method] & { execute: ExecuteMethod<P, Endpoints[Method]> }
         : Endpoints[Method]
@@ -192,7 +192,7 @@ type EndpointResult<P extends string, Endpoints extends Partial<EndpointMap<any>
 
 // Proper typing causes issues with express middleware. While express middleware
 // are not guaranteed to work with nodejs, most of the time they will.
-type Middleware = (req: any, res: any, next: (resultOrError?: any) => void) => void;
+export type Middleware = (req: any, res: any, next: (resultOrError?: any) => void) => void;
 
 function runMiddleware(req: NextApiRequest, res: NextApiResponse, fn: Middleware) {
     return new Promise((resolve, reject) => {

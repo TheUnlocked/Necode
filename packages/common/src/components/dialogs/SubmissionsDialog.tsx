@@ -1,6 +1,6 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, List, ListItemButton, ListItemText, Stack, TextField, Tooltip } from "@mui/material";
 import { useCallback, useMemo, useState } from 'react';
-import { ActivitySubmissionEntity } from "../../api/entities/ActivitySubmissionEntity";
+import { ActivitySubmissionEntity } from "api/entities/ActivitySubmissionEntity";
 import userSearchProvider from '../../search/userSearchProvider';
 
 interface SubmissionsDialogProps {

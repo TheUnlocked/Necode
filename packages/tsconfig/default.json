@@ -13,7 +13,8 @@
         "declaration": true,
         "baseUrl": "..",
         "paths": {
+            "@necode-org/*": ["*/src"],
             "*": ["*/src"]
-        }
+        },
     },
 }

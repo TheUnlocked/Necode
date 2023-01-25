@@ -31,7 +31,7 @@ const Page: NextPage = () => {
     const classroomId = router.query.classroomId;
     const activityId = router.query.activityId;
 
-    const { data, error, isLoading } = useGetRequestImmutable<ClassroomMemberEntity>(classroomId ? `/~api/classroom/${classroomId}/me` : null);
+    const { data, error, isLoading } = useGetRequestImmutable<ClassroomMemberEntity>(classroomId ? `/api/classroom/${classroomId}/me` : null);
 
     if (!classroomId || !activityId || isLoading) {
         return null;
@@ -47,7 +47,7 @@ const Page: NextPage = () => {
 const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
     const router = useRouter();
 
-    const activityEndpoint = `/~api/classroom/${classroomId}/activity/${activityId}?include=lesson`;
+    const activityEndpoint = `/api/classroom/${classroomId}/activity/${activityId}?include=lesson`;
     const { data: activityEntity, mutate } = useGetRequest<ActivityEntity<{ lesson: 'deep' }>>(activityEndpoint);
 
     const activity = useMemo(() => allActivities.find(x => x.id === activityEntity?.attributes.activityType), [activityEntity]);
@@ -118,7 +118,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
         };
 
         mutate(async () => {
-            await upload(`/~api/classroom/${classroomId}/activity/${activityId}`, {
+            await upload(`/api/classroom/${classroomId}/activity/${activityId}`, {
                 method: 'PATCH',
                 body: JSON.stringify(patch)
             });
@@ -160,7 +160,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
     async function returnToManage() {
         let date = activityEntity?.attributes.lesson.attributes.date;
         if (!date) {
-            const result = await download<ActivityEntity<{ lesson: 'deep' }>>(`/~api/classroom/${classroomId}/activity/${activityId}?include=lesson`);
+            const result = await download<ActivityEntity<{ lesson: 'deep' }>>(`/api/classroom/${classroomId}/activity/${activityId}?include=lesson`);
             date = result.attributes.lesson.attributes.date;
         }
         router.push({

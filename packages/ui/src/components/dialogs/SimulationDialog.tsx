@@ -13,7 +13,7 @@ export default function SimulationDialog({
     open,
     onClose,
 }: SubmissionsDialogProps) {
-    const { data: session, isLoading } = useGetRequestImmutable<UserEntity<{ simulatedUsers: 'deep' }>>('/~api/me?include=simulatedUsers');
+    const { data: session, isLoading } = useGetRequestImmutable<UserEntity<{ simulatedUsers: 'deep' }>>('/api/me?include=simulatedUsers');
     const impersonation = useImpersonation();
     const router = useRouter();
 

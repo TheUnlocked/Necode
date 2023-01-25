@@ -12,7 +12,7 @@ export function setImpersonation(impersonate?: string) {
         Cookies.set(IMPERSONATION_COOKIE, impersonate);
         (async () => {
             try {
-                const res = await fetch('/~api/me');
+                const res = await fetch('/api/me');
                 if (res.ok) {
                     impersonationState[2](impersonate);
                     return;

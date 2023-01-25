@@ -19,7 +19,7 @@ function InfoSection({ title, omitParagraph = false, children }: PropsWithChildr
 }
 
 const Home: NextPage = () => {
-    const { data: meInfo } = useGetRequestImmutable<UserEntity<{ classes: 'deep' }>>('/~api/me?include=classes');
+    const { data: meInfo } = useGetRequestImmutable<UserEntity<{ classes: 'deep' }>>('/api/me?include=classes');
 
     const [infoCategory, setInfoCategory] = useState('general');
 

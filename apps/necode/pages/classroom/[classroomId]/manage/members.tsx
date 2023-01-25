@@ -33,7 +33,7 @@ const PageContent: NextPage<ManageClassroomPageContentProps> = ({ classroomId, m
 
     const { upload } = useNecodeFetch();
 
-    const { data, isLoading, error, mutate } = useGetRequest<ClassroomMemberEntity[]>(`/~api/classroom/${classroomId}/members`);
+    const { data, isLoading, error, mutate } = useGetRequest<ClassroomMemberEntity[]>(`/api/classroom/${classroomId}/members`);
 
     const { enqueueSnackbar } = useSnackbar();
     const confirm = useConfirm();
@@ -65,7 +65,7 @@ const PageContent: NextPage<ManageClassroomPageContentProps> = ({ classroomId, m
         catch (e) { return }
 
         const result = await Promise.allSettled(selectedMembers.map(async id => {
-            await upload(`/~api/classroom/${classroomId}/members/${id}`, { method: 'DELETE', errorMessage: null });
+            await upload(`/api/classroom/${classroomId}/members/${id}`, { method: 'DELETE', errorMessage: null });
             return id;
         }));
 
@@ -100,7 +100,7 @@ const PageContent: NextPage<ManageClassroomPageContentProps> = ({ classroomId, m
             return;
         }
 
-        await upload<ClassroomMemberEntity>(`/~api/classroom/${classroomId}/members/${info.id}`, {
+        await upload<ClassroomMemberEntity>(`/api/classroom/${classroomId}/members/${info.id}`, {
             method: 'PATCH',
             body: JSON.stringify({
                 [info.field]: info.value

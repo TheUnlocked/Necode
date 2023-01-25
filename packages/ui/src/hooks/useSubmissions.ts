@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { ActivitySubmissionEntity } from "~api/entities/ActivitySubmissionEntity";
-import tracked from "../util/trackedEventEmitter";
+import tracked from "~shared/trackedEventEmitter";
 import { SocketInfo } from "./useSocket";
 import ActivityDescription from '../activities/ActivityDescription';
 import { useGetRequest } from './useGetRequest';
@@ -18,7 +18,7 @@ export function useSubmissions(
     }, [onSubmission]);
 
     const { data: submissions, mutate } = useGetRequest<ActivitySubmissionEntity<{ user: 'deep', activity: 'none' }>[]>(
-        activity ? `/~api/classroom/${classroomId}/activity/submission?include=user` : undefined,
+        activity ? `/api/classroom/${classroomId}/activity/submission?include=user` : undefined,
         {
             fallbackData: [],
         }

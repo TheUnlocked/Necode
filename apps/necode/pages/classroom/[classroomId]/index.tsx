@@ -9,7 +9,7 @@ const Page: NextPage = () => {
 
     const classroomId = router.query.classroomId;
 
-    const { data: me, error } = useGetRequest<ClassroomMemberEntity>(`/~api/classroom/${classroomId}/me`);
+    const { data: me, error } = useGetRequest<ClassroomMemberEntity>(`/api/classroom/${classroomId}/me`);
 
     if (error) {
         return <NotFoundPage />;

@@ -8,7 +8,7 @@ module.exports = {
         // `getStaticProps` is still fine to use, since it happens during build time.
         outputFileTracingIgnores: ['**esbuild-linux-64**', '**@mui**'],
     },
-    transpilePackages: ["y-monaco", "~common", "~api", "~backend", "~database", "~utils"],
+    transpilePackages: ["~common", "~api", "~backend", "~database", "~utils", "~shared"],
     modularizeImports: {
         lodash: {
             transform: 'lodash/{{member}}',
@@ -28,12 +28,6 @@ module.exports = {
             // Support @babel/core
             // https://stackoverflow.com/a/34033159/4937286
             resolve: Object.assign({}, config.resolve, {
-                alias: {
-                    ...config.resolve.alias,
-                    // @monaco-editor/react loads monaco dynamically, but y-monaco does not.
-                    // Loading from node_modules causes issues with Next.js, so we have to avoid it.
-                    'monaco-editor': require.resolve('~ui/src/util/monaco-loader.ts'),
-                },
                 fallback: Object.assign({}, config.resolve.fallback, {
                     fs: false,
                     module: false,

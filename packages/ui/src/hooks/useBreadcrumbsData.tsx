@@ -38,11 +38,11 @@ export default function useBreadcrumbsData(): BreadcrumbData[] {
     const activityId = router.query.activityId;
 
     const { data: classroomMemberData, error: classroomError, isLoading: classroomLoading } = useGetRequestImmutable<ClassroomMemberEntity<{ classroom: 'deep' }>>(
-        classroomId ? `/~api/classroom/${classroomId}/me?include=classroom` : null
+        classroomId ? `/api/classroom/${classroomId}/me?include=classroom` : null
     );
 
     const { data: activityData, error: activityError, isLoading: activityLoading } = useGetRequestImmutable<ActivityEntity<{ lesson: 'deep' }>>(
-        activityId && classroomMemberData ? `/~api/classroom/${classroomId}/activity/${activityId}${classroomMemberData.attributes.role === 'Instructor' ? '?include=lesson' : ''}` : null
+        activityId && classroomMemberData ? `/api/classroom/${classroomId}/activity/${activityId}${classroomMemberData.attributes.role === 'Instructor' ? '?include=lesson' : ''}` : null
     );
 
     switch (pathFragments[0]) {

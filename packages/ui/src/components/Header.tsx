@@ -25,7 +25,7 @@ export default function Header() {
         threshold: 0
     });
 
-    const { data: session, isLoading } = useGetRequestImmutable<UserEntity>('/~api/me');
+    const { data: session, isLoading } = useGetRequestImmutable<UserEntity>('/api/me');
 
     const isImpersonating = Boolean(useImpersonation());
 

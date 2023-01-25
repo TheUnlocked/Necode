@@ -16,7 +16,7 @@ export default function JoinCodeCard({ classroomId }: JoinCodeCardProps) {
 
     useEffect(() => {
         if (classroomId && joinCode === undefined) {
-            download<string>(`/~api/classroom/${classroomId}/join-code`, { method: 'POST' })
+            download<string>(`/api/classroom/${classroomId}/join-code`, { method: 'POST' })
                 .then(setJoinCode);
         }
     }, [classroomId, joinCode, download]);
@@ -44,7 +44,7 @@ export default function JoinCodeCard({ classroomId }: JoinCodeCardProps) {
     const resetJoinCode = useCallback(async () => {
         try {
             await confirm({ description: 'Are you sure you want to reset the join code? The old join code can never be recovered.' });
-            await upload(`/~api/classroom/${classroomId}/join-code`, { method: 'DELETE' });
+            await upload(`/api/classroom/${classroomId}/join-code`, { method: 'DELETE' });
             setJoinCode(undefined);
         }
         catch (e) {}

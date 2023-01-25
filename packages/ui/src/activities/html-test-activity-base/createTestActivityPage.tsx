@@ -168,7 +168,7 @@ export default function createTestActivityPage({
             }
         }, [activityConfig.languages, language.name, yDoc]);
 
-        const { data } = useGetRequestImmutable<UserEntity>('/~api/me');
+        const { data } = useGetRequestImmutable<UserEntity>('/api/me');
 
         // eslint-disable-next-line @grncdr/react-hooks/rules-of-hooks
         const yAwareness = !yDoc || !networked ? undefined : useYAwareness(NetworkId.NET_0, 'shared-editors-awareness', yDoc, {

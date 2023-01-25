@@ -103,7 +103,7 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
 
     async function startActivity() {
         if (activityType) {
-            await upload(`/~api/classroom/${classroomId}/activity/live`, {
+            await upload(`/api/classroom/${classroomId}/activity/live`, {
                 method: 'POST',
                 body: JSON.stringify({
                     id,

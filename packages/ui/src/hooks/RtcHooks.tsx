@@ -4,7 +4,7 @@ import SimplePeer from 'simple-peer';
 import { NetworkId } from '~api/RtcNetwork';
 import cyrb53 from '~utils/cyrb53';
 import { callWith } from '~utils/fp';
-import tracked from '../util/trackedEventEmitter';
+import tracked from '~shared/trackedEventEmitter';
 import { SocketInfo } from './useSocket';
 
 /**

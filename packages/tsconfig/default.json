@@ -12,10 +12,11 @@
         "outDir": "dist",
         "baseUrl": ".",
         "paths": {
-            "~api/*": ["../../packages/api/src/*"],
-            "~utils/*": ["../../packages/utils/src/*"],
             "~backend/*": ["../../packages/backend/src/*"],
             "~ui/*": ["../../packages/ui/src/*"],
+            "~api/*": ["../../packages/api/src/*"],
+            "~shared/*": ["../../packages/shared/src/*"],
+            "~utils/*": ["../../packages/utils/src/*"],
             
             "@necode-org/*": ["../../packages/*/src"],
             "~*": ["../../packages/*/src"]

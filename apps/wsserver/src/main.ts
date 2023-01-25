@@ -218,7 +218,7 @@ io.on('connection', socket => {
         }
         catch (e) {
             // Most trying to add a submission with a version that already exists,
-            // but it's possible that other ~database errors could occur.
+            // but it's possible that other database errors could occur.
             console.error(e);
             callback('An unexpected error occurred');
         }

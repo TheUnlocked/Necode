@@ -30,7 +30,7 @@ function SimulationToolbar(props: {
 }
 
 const Page: NextPage = () => {
-    const { data, isLoading, mutate } = useGetRequestImmutable<UserEntity<{ simulatedUsers: 'deep' }>>('/~api/me?include=simulatedUsers', {
+    const { data, isLoading, mutate } = useGetRequestImmutable<UserEntity<{ simulatedUsers: 'deep' }>>('/api/me?include=simulatedUsers', {
         revalidateOnFocus: false,
     });
 
@@ -40,7 +40,7 @@ const Page: NextPage = () => {
     const handleCellEdited: GridEventListener<GridEvents.cellEditCommit> = async info => {
         setPerformingAction(true);
 
-        await upload<UserEntity>(`/~api/users/${info.id}`, {
+        await upload<UserEntity>(`/api/users/${info.id}`, {
             method: 'PATCH',
             body: JSON.stringify({
                 [info.field]: info.value
@@ -70,7 +70,7 @@ const Page: NextPage = () => {
         setPerformingAction(true);
 
         const simulationId = nanoid();
-        const res = await upload<UserEntity>(`/~api/users/simulated`, {
+        const res = await upload<UserEntity>(`/api/users/simulated`, {
             method: 'POST',
             body: JSON.stringify({
                 username: `user_${simulationId}`,
@@ -103,7 +103,7 @@ const Page: NextPage = () => {
         catch (e) { return }
 
         const result = await Promise.allSettled(selectedUsers.map(async id => {
-            await upload(`/~api/users/${id}`, { method: 'DELETE', errorMessage: null });
+            await upload(`/api/users/${id}`, { method: 'DELETE', errorMessage: null });
             return id;
         }));
 

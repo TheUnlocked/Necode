@@ -14,7 +14,7 @@ const MAX_NAME_LENGTH = 100;
 
 const Page: NextPage = () => {
     const router = useRouter();
-    const { data: me, isLoading } = useGetRequestImmutable<UserEntity>('/~api/me');
+    const { data: me, isLoading } = useGetRequestImmutable<UserEntity>('/api/me');
 
     const [displayName, setDisplayName] = useState<string>();
 
@@ -23,7 +23,7 @@ const Page: NextPage = () => {
     const onSubmit: FormEventHandler<HTMLFormElement> = useCallback(async e => {
         e.preventDefault();
         
-        const classroom = await upload<ClassroomEntity>('/~api/classroom', {
+        const classroom = await upload<ClassroomEntity>('/api/classroom', {
             method: 'POST',
             body: JSON.stringify({
                 displayName

@@ -15,12 +15,12 @@ export function useSocket(classroomId: string) {
     const [liveActivityInfo, setLiveActivityInfo] = useState<SignalLiveActivityInfo>();
 
     const { data: socketData } = useGetRequest<{ server: string, token: string }>(
-        classroomId ? `/~api/classroom/${classroomId}/activity/live` : null,
+        classroomId ? `/api/classroom/${classroomId}/activity/live` : null,
         { revalidateOnFocus: false }
     );
 
     const { data: iceServers } = useGetRequest<RTCIceServer[]>(
-        classroomId ? `/~api/classroom/${classroomId}/activity/ice` : null,
+        classroomId ? `/api/classroom/${classroomId}/activity/ice` : null,
         {
             revalidateOnFocus: false,
             refreshInterval: /* Refresh every 90 minutes */ 1000 * 60 * 90,

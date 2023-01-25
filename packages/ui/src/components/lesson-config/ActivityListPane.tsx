@@ -67,7 +67,7 @@ export default function ActivityListPane({
     onLessonChange,
     refreshRef,
 }: ActivityListPaneProps) {
-    const lessonEndpoint = `/~api/classroom/${classroomId}/lesson/${date}?include=activities`;
+    const lessonEndpoint = `/api/classroom/${classroomId}/lesson/${date}?include=activities`;
     const { data: lessonEntity, isLoading, mutate: mutateLesson, mutateDelete: deleteLesson }
         = useGetRequest<LessonEntity<{ activities: 'deep', classroom: 'shallow' }>>(lessonEndpoint);
 
@@ -171,7 +171,7 @@ export default function ActivityListPane({
 
             mutateLesson(
                 async () => {
-                    await upload(`/~api/classroom/${classroomId}/activity/${id}`, {
+                    await upload(`/api/classroom/${classroomId}/activity/${id}`, {
                         method: 'PATCH',
                         body: JSON.stringify({
                             order: dropIntoPos > fromPos ? dropIntoPos - 1 : dropIntoPos
@@ -201,7 +201,7 @@ export default function ActivityListPane({
             return creatingLessonPromiseRef.current;
         }
 
-        creatingLessonPromiseRef.current = upload(`/~api/classroom/${classroomId}/lesson`, {
+        creatingLessonPromiseRef.current = upload(`/api/classroom/${classroomId}/lesson`, {
             method: 'POST',
             body: JSON.stringify({
                 date,
@@ -241,7 +241,7 @@ export default function ActivityListPane({
 
         mutateLesson(
             async () => {
-                await upload(`/~api/classroom/${classroomId}/lesson/${lessonEntity.id}`, {
+                await upload(`/api/classroom/${classroomId}/lesson/${lessonEntity.id}`, {
                     method: 'PATCH',
                     body: JSON.stringify({ displayName }),
                 });
@@ -255,7 +255,7 @@ export default function ActivityListPane({
     const createActivityHandler = useCallback(async (activity: ActivityDescription<any>) => {
         const lesson = await getOrCreateLesson({ date, displayName });
 
-        const activityEntity = await upload<ActivityEntity>(`/~api/classroom/${classroomId}/lesson/${lesson.id}/activity`, {
+        const activityEntity = await upload<ActivityEntity>(`/api/classroom/${classroomId}/lesson/${lesson.id}/activity`, {
             method: 'POST',
             body: JSON.stringify({
                 activityType: activity.id,
@@ -281,7 +281,7 @@ export default function ActivityListPane({
             return;
         }
 
-        const activityEntity = await upload<ActivityEntity>(`/~api/classroom/${classroomId}/lesson/${lessonEntity.id}/activity`, {
+        const activityEntity = await upload<ActivityEntity>(`/api/classroom/${classroomId}/lesson/${lessonEntity.id}/activity`, {
             method: 'POST',
             body: JSON.stringify({
                 activityType: activity.attributes.activityType,
@@ -314,7 +314,7 @@ export default function ActivityListPane({
 
         mutateLesson(
             async () => {
-                await upload(`/~api/classroom/${classroomId}/activity/${activity.id}`, { method: 'DELETE' });
+                await upload(`/api/classroom/${classroomId}/activity/${activity.id}`, { method: 'DELETE' });
                 onLessonChange?.(updatedObject);
                 return updatedObject;
             },
@@ -329,7 +329,7 @@ export default function ActivityListPane({
         try {
             await confirm({ description: `Are you sure you want to delete this lesson? This cannot be undone.` });
             deleteLesson(async () => {
-                await upload(`/~api/classroom/${classroomId}/lesson/${lesson.id}`, { method: 'DELETE' });
+                await upload(`/api/classroom/${classroomId}/lesson/${lesson.id}`, { method: 'DELETE' });
                 onLessonChange?.(undefined);
             });
         }
@@ -350,7 +350,7 @@ export default function ActivityListPane({
 
         mutateLesson(
             async () => {
-                await upload(`/~api/classroom/${classroomId}/activity/${activity.id}`, {
+                await upload(`/api/classroom/${classroomId}/activity/${activity.id}`, {
                     method: 'PATCH',
                     body: JSON.stringify(changes),
                 });

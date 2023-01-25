@@ -28,7 +28,7 @@ export default function ManageClassroomPage({ component: Content, page }: Manage
     const router = useRouter();
     const classroomId = router.query.classroomId;
 
-    const { data, error, isLoading } = useGetRequestImmutable<ClassroomMemberEntity>(classroomId ? `/~api/classroom/${classroomId}/me` : null);
+    const { data, error, isLoading } = useGetRequestImmutable<ClassroomMemberEntity>(classroomId ? `/api/classroom/${classroomId}/me` : null);
 
     useEffect(() => {
         if (data?.attributes.role === 'Student') {
@@ -58,10 +58,10 @@ const PageContent: NextPage<PageContentProps> = ({ classroomId, page, children }
         live: boolean,
         server: string,
         token: string,
-    }>(classroomId ? `/~api/classroom/${classroomId}/activity/live` : null);
+    }>(classroomId ? `/api/classroom/${classroomId}/activity/live` : null);
 
     const endActivity = useCallback(() => {
-        upload(`/~api/classroom/${classroomId}/activity/live`, { method: 'DELETE' })
+        upload(`/api/classroom/${classroomId}/activity/live`, { method: 'DELETE' })
             .then(() => mutateLiveActivityData(undefined, true));
     }, [classroomId, upload, mutateLiveActivityData]);
 

@@ -33,7 +33,7 @@ const Page: NextPage = () => {
     const router = useRouter();
     const classroomId = router.query.classroomId;
 
-    const { data, error } = useGetRequestImmutable<ClassroomMemberEntity>(classroomId ? `/~api/classroom/${classroomId}/me` : null);
+    const { data, error } = useGetRequestImmutable<ClassroomMemberEntity>(classroomId ? `/api/classroom/${classroomId}/me` : null);
 
     if (!classroomId) {
         return null;
@@ -82,7 +82,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
 
     const { data: activityEntity } = useGetRequest<ActivityEntity<{ lesson: 'deep' }>>(
         socketInfo?.liveActivityInfo
-            ? `/~api/classroom/${classroomId}/activity/${socketInfo?.liveActivityInfo.id}${isInstructor ? '?include=lesson' : ''}`
+            ? `/api/classroom/${classroomId}/activity/${socketInfo?.liveActivityInfo.id}${isInstructor ? '?include=lesson' : ''}`
             : null
     );
 
@@ -169,7 +169,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
     }
 
     async function endActivity() {
-        await upload(`/~api/classroom/${classroomId}/activity/live`, { method: 'DELETE' });
+        await upload(`/api/classroom/${classroomId}/activity/live`, { method: 'DELETE' });
         goToManage();
     }
 

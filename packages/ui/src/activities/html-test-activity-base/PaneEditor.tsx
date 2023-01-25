@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import LanguageDescription from "../../languages/LangaugeDescription";
 import * as Y from 'yjs';
 import { Awareness } from 'y-protocols/awareness';
-import { MonacoBinding } from 'y-monaco';
+import { MonacoBinding, setMonaco } from 'y-monaco';
 import { editor } from 'monaco-editor';
 import cyrb53 from '~utils/cyrb53';
 
@@ -33,6 +33,7 @@ export default function PaneEditor({ isConfig, language, value, onChange, applyC
     const [editorData, setEditorData] = useState<[editor.IStandaloneCodeEditor, Monaco]>();
 
     const onMount: OnMount = useCallback((editor, monaco) => {
+        setMonaco(monaco);
         editor.getModel()?.setEOL(0);
         if (!isConfig) {
             editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, applyChanges!);

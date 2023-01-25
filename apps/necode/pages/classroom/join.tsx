@@ -13,7 +13,7 @@ import useNecodeFetch from '~ui/hooks/useNecodeFetch';
 
 const Join: NextPage = () => {
     const router = useRouter();
-    const { data: me, isLoading } = useGetRequestImmutable<UserEntity>('/~api/me');
+    const { data: me, isLoading } = useGetRequestImmutable<UserEntity>('/api/me');
 
     const { upload } = useNecodeFetch();
 
@@ -39,7 +39,7 @@ const Join: NextPage = () => {
     const onSubmit: FormEventHandler<HTMLFormElement> = async e => {
         e.preventDefault();
 
-        const classroom = await upload<ClassroomEntity>('/~api/classroom/join', {
+        const classroom = await upload<ClassroomEntity>('/api/classroom/join', {
             method: "POST",
             body: JSON.stringify({ code: joinCode.toLowerCase() }),
             errorMessage: 'Failed to apply code. Make sure that you entered it correctly.',

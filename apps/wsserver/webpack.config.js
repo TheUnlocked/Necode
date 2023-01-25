@@ -23,7 +23,7 @@ module.exports = {
         extensions: ['.ts', '.tsx', '.js'],
         alias: {
             ...Object.fromEntries(
-                ['api', 'common', 'database', 'mike-config', 'backend']
+                ['~api', '~utils', '~database', '~mike-config', '~backend', '~shared']
                     .map(x => [x, `${x}/src`])
             ),
         },

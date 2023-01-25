@@ -5,7 +5,7 @@ import { makeLessonEntity } from "api/entities/LessonEntity";
 import Joi from "joi";
 import { hasScope } from "backend/scopes";
 import { clamp } from 'lodash';
-import { Activity, Lesson } from '@prisma/client';
+import { Activity, Lesson } from 'database';
 
 const apiActivityOne = endpoint(makeActivityEntity, ['classroomId', 'activityId', 'include[]'] as const, {
     type: 'entity',

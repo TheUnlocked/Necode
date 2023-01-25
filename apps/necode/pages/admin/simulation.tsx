@@ -1,7 +1,7 @@
 import { DeleteForever } from '@mui/icons-material';
 import { Alert, Button, Container, IconButton, Stack } from "@mui/material";
 import { DataGrid, GridColDef, GridEventListener, GridEvents, GridRowId, GridSelectionModel, GridToolbarContainer } from "@mui/x-data-grid";
-import { SitewideRights } from '@prisma/client';
+import { SitewideRights } from 'database';
 import { groupBy } from 'lodash';
 import { useConfirm } from 'material-ui-confirm';
 import { nanoid } from 'nanoid';

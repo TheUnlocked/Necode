@@ -1,4 +1,4 @@
-import { SitewideRights } from '@prisma/client';
+import { SitewideRights } from 'database';
 import { prisma } from "database";
 
 async function isAdmin(user: string) {

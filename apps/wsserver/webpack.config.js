@@ -1,10 +1,15 @@
+// @ts-check
+
 const { spawn } = require('child_process');
 const path = require('path');
+
+/** @typedef {import('webpack').Compiler} Compiler */
 
 const rel = x => './' + path.join(path.relative(process.cwd(), __dirname), x);
 
 let child;
 
+/** @type {import('webpack').Configuration} */
 module.exports = {
     mode: 'development',
     target: 'node',
@@ -38,8 +43,8 @@ module.exports = {
     },
     plugins: [
         {
-            apply: compiler => {
-                if (process.env.NODE_ENV !== 'production') {
+            apply: (/** @type {Compiler} */ compiler) => {
+                if (compiler.options.mode === 'development') {
                     compiler.hooks.afterEmit.tap('AfterEmitPlugin', () => {
                         if (child) {
                             child.kill();

@@ -33,6 +33,7 @@
         "validate": {
             "dependsOn": ["lint", "typecheck"]
         },
+        "wsserver:build": {},
         "typecheck": {},
         "lint": {},
         "lint:fix": {}

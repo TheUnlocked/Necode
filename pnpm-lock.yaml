@@ -8233,7 +8233,7 @@ packages:
       micromatch: 4.0.5
       semver: 7.3.8
       typescript: 4.9.4
-      webpack: 5.75.0_dscivcikr7qcnoxge67rg2v3se
+      webpack: 5.75.0
     dev: true
 
   /ts-node/10.9.1_typescript@4.9.4:

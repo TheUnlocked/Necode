@@ -4,8 +4,8 @@
     "version": "0.0.0",
     "license": "MIT",
     "scripts": {
-        "wsserver:build": "webpack --config ./webpack.config.js",
-        "dev": "webpack --watch --config ./webpack.config.js",
+        "wsserver:build": "webpack --mode=production",
+        "dev": "webpack --watch",
         "typecheck": "tsc --noEmit"
     },
     "devDependencies": {

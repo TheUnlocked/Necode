@@ -9,8 +9,8 @@
   "scripts": {
     "dev": "turbo run dev",
     "necode:build": "turbo run necode:build",
-    "ssl-proxy": "npx local-ssl-proxy --source 3010 --target 3000 --key .dev-ssl-certs/localhost-key.pem --cert .dev-ssl-certs/localhost.pem",
     "wsserver:build": "turbo run wsserver:build",
+    "ssl-proxy": "npx local-ssl-proxy --source 3010 --target 3000 --key .dev-ssl-certs/localhost-key.pem --cert .dev-ssl-certs/localhost.pem",
     "validate": "turbo run validate",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",

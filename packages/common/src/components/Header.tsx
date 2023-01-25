@@ -1,13 +1,23 @@
-import { AppBar, Button, Stack, Toolbar, Typography, useScrollTrigger } from "@mui/material";
+import { AppBar, Breadcrumbs, Button, Stack, Toolbar, Typography, useScrollTrigger } from "@mui/material";
 import { signIn, signOut } from "next-auth/react";
-import React from "react";
 import { UserEntity } from "api/entities/UserEntity";
 import { useGetRequestImmutable } from "../api/client/GetRequestHook";
 import { setImpersonation, useImpersonation } from '../hooks/useImpersonation';
 import useImperativeDialog from '../hooks/useImperativeDialog';
 import SimulationDialog from './dialogs/SimulationDialog';
-import { SitewideRights } from '@prisma/client';
-import useBreadcrumbs from '../hooks/useBreadcrumbs';
+import { SitewideRights } from 'database';
+import useBreadcrumbsData from '../hooks/useBreadcrumbsData';
+import { UnstyledLink } from './SubtleLink';
+
+function NecodeBreadcrumbs() {
+    const info = useBreadcrumbsData();
+
+    return <Breadcrumbs sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}>
+        {info.map((crumb, i) => <UnstyledLink href={crumb.href} key={crumb.href}
+                    variant="h6" noWrap
+                    underline="hover" color={i === info.length - 1 ? "text.primary" : "inherit"}>{crumb.label}</UnstyledLink>)}
+    </Breadcrumbs>;
+}
 
 export default function Header() {
     const shouldElevate = useScrollTrigger({
@@ -24,7 +34,7 @@ export default function Header() {
     return <>
         <AppBar elevation={shouldElevate ? 4 : 0} position="sticky">
             <Toolbar disableGutters sx={{ px: 2 }}>
-                {useBreadcrumbs()}
+                <NecodeBreadcrumbs />
                 {isLoading
                     ? undefined
                     : <Stack direction="row" justifyContent="end" alignItems="baseline" spacing={4}>

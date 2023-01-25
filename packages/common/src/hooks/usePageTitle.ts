@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useBreadcrumbsData } from './useBreadcrumbs';
+import useBreadcrumbsData from './useBreadcrumbsData';
 
 export default function usePageTitle() {
     const breadcrumbs = useBreadcrumbsData();

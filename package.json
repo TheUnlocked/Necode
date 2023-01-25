@@ -24,6 +24,11 @@
     "seed": "ts-node --transpile-only packages/database/src/seed.ts"
   },
   "devDependencies": {
+    "@grncdr/eslint-plugin-react-hooks": "5.0.0-p30d423311.0",
+    "@typescript-eslint/eslint-plugin": "^5.49.0",
+    "eslint": "^8.32.0",
+    "eslint-config-next": "^13.1.5",
+    "next": "^13.1.5",
     "turbo": "^1.7.0"
   }
 }

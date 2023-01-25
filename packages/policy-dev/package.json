@@ -11,13 +11,13 @@
         "@necode-org/mike": "^0.3.3",
         "cli-progress": "^3.11.2",
         "common": "workspace:*",
-        "fast-check": "^3.5.0",
+        "fast-check": "^3.6.2",
         "mike-config": "workspace:*"
     },
     "devDependencies": {
         "@types/cli-progress": "^3.11.0",
         "@types/node": "^18.11.18",
         "tsconfig": "workspace:*",
-        "tsup": "^5.11.13"
+        "tsup": "^5.12.9"
     }
 }

@@ -11,10 +11,10 @@
         "forceConsistentCasingInFileNames": true,
         "outDir": "dist",
         "declaration": true,
-        "baseUrl": "..",
+        "baseUrl": ".",
         "paths": {
-            "@necode-org/*": ["*/src"],
-            "*": ["*/src"]
+            "@necode-org/*": ["../*/src"],
+            "*": ["../*/src"]
         },
     },
 }

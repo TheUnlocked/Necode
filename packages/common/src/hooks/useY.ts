@@ -29,7 +29,9 @@ export default function useY(network: NetworkId, channel: string) {
             emit(Y.convertUpdateFormatV1ToV2(update));
         };
         yDoc.on('update', handler);
-        return () => yDoc.off('update', handler);
+        return () => {
+            yDoc.off('update', handler);
+        };
     }, [yDoc, emit]);
 
     return yDoc;

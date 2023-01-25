@@ -1,6 +1,5 @@
 import { ErrorOutline } from '@mui/icons-material';
-import { Breadcrumbs, CircularProgress, Link } from '@mui/material';
-import NextLink from "next/link";
+import { CircularProgress } from '@mui/material';
 import { useRouter } from 'next/router';
 import { ReactNode } from 'react';
 import { useGetRequestImmutable } from '../api/client/GetRequestHook';
@@ -28,7 +27,7 @@ function AsyncBreadcrumb({ label, status }: { label?: string, status: 'done' | '
     }
 }
 
-export function useBreadcrumbsData(): BreadcrumbData[] {
+export default function useBreadcrumbsData(): BreadcrumbData[] {
     const router = useRouter();
     const crumbs: BreadcrumbData[] = [
         { href: '/', label: 'Necode' },
@@ -112,16 +111,4 @@ export function useBreadcrumbsData(): BreadcrumbData[] {
     }
 
     return crumbs;
-}
-
-export default function useBreadcrumbs() {
-    const info = useBreadcrumbsData();
-
-    return <Breadcrumbs sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}>
-        {info.map((crumb, i) => <NextLink href={crumb.href} passHref legacyBehavior key={i}>
-                <Link onClick={() => false}
-                    variant="h6" noWrap
-                    underline="hover" color={i === info.length - 1 ? "text.primary" : "inherit"}>{crumb.label}</Link>
-            </NextLink>)}
-    </Breadcrumbs>;
 }

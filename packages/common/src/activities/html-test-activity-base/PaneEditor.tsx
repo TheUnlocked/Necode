@@ -54,9 +54,8 @@ export default function PaneEditor({ isConfig, language, value, onChange, applyC
             editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyZ, () => undoManager.undo());
             editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ, () => undoManager.redo());
             
-            return () => {
-                binding.destroy();
-            };
+            // MonacoBinding will clean itself up when the editor is destroyed.
+            // Trying to clean it up ourselves will just log an error message.
         }
     }, [yText, yAwareness, editorData, language.name]);
 

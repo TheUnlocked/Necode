@@ -13,12 +13,12 @@ declare const SHOW_TEST: unique symbol;
  * **Do not use this function in starter code, it will not work.**
  * 
  * @param assertion
- *      The assertion to be run. Assertion conditions are automatically transformed
- *      into lambdas before being run, so you do not need to write your own error handling code.
- *      However, you may still use an explicit lambda if you wish.
+ *  The assertion to be run. Assertion conditions are automatically transformed
+ *  into lambdas before being run, so you do not need to write your own error handling code.
+ *  However, you may still use an explicit lambda if you wish.
  * @param display
- *      If the assertion fails, the test will fail and this will be displayed.
- *      If set to {@link SHOW_TEST}, the source code of the assertion will be shown.
+ *  If the assertion fails, the test will fail and this will be displayed.
+ *  If set to {@link SHOW_TEST}, the source code of the assertion will be shown.
  */
 // @ts-ignore
 declare function check(
@@ -31,16 +31,16 @@ declare function check(
  * **Do not use this function in starter code, it will not work.**
  * 
  * @param shouldFail
- *    The code to be run, which should throw an error. The code is automatically transformed
- *    into a lambda before being run, so you are not required to use a lambda in this parameter.
- *    However, you may still use an explicit lambda if you wish.
+ *  The code to be run, which should throw an error. The code is automatically transformed
+ *  into a lambda before being run, so you are not required to use a lambda in this parameter.
+ *  However, you may still use an explicit lambda if you wish.
  * @param display
- *    If the assertion fails, the test will fail and this will be displayed.
- *    If set to SHOW_TEST, the source code of the assertion will be shown.
+ *  If the assertion fails, the test will fail and this will be displayed.
+ *  If set to SHOW_TEST, the source code of the assertion will be shown.
  * @param validateError
- *    If shouldFail throws an error, this predicate can optionally be used to
- *    check properties of the error thrown. If the predicate returns true,
- *    the check will pass, otherwise it will fail. If omitted, any error will pass the check.
+ *  If shouldFail throws an error, this predicate can optionally be used to
+ *  check properties of the error thrown. If the predicate returns true,
+ *  the check will pass, otherwise it will fail. If omitted, any error will pass the check.
  */
 // @ts-ignore
 declare function checkError(

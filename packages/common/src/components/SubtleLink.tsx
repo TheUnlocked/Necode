@@ -1,14 +1,15 @@
+import { Link, LinkTypeMap } from "@mui/material";
+import { OverrideProps } from '@mui/material/OverridableComponent';
 import NextLink from "next/link";
-import { Link, styled } from "@mui/material";
-import { ForwardedRef, forwardRef } from 'react';
 
-const MuiSubtleLink = styled(Link)(({ theme }) => `
-    color: ${theme.palette.text.primary};
-    text-decoration-color: ${theme.palette.text.primary};
-`);
+export function UnstyledLink(props: OverrideProps<LinkTypeMap<{}, "a">, typeof NextLink>) {
+    return <Link component={NextLink} {...props} />;
+}
 
-export default forwardRef(function SubtleLink(props: Parameters<typeof Link>[0] & { href: string }, ref: ForwardedRef<HTMLAnchorElement | null>) {
-    return <NextLink href={props.href} passHref legacyBehavior>
-        <MuiSubtleLink {...props} ref={ref} />
-    </NextLink>;
-});
+export default function SubtleLink(props: OverrideProps<LinkTypeMap<{}, "a">, typeof NextLink>) {
+    return <UnstyledLink {...props} sx={{
+        color: ({ palette }) => palette.text.primary,
+        textDecorationColor: ({ palette }) => palette.text.primary,
+        ...props.sx
+    }} />;
+}

@@ -8,7 +8,21 @@ module.exports = {
         // `getStaticProps` is still fine to use, since it happens during build time.
         outputFileTracingIgnores: ['**esbuild-linux-64**', '**@mui**'],
     },
-    transpilePackages: ["common", "api"],
+    transpilePackages: ["common", "api", "y-monaco"],
+    modularizeImports: {
+        lodash: {
+            transform: 'lodash/{{member}}',
+            preventFullImport: true,
+        },
+        '@material/icons-material': {
+            transform: '@material/icons-material/{{member}}',
+            preventFullImport: true,
+        },
+        '@material/material': {
+            transform: '@material/material/{{member}}',
+            preventFullImport: true,
+        },
+    },
     webpack(config, ctx) {
         return Object.assign({}, config, {
             // Support @babel/core

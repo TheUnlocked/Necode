@@ -1,7 +1,8 @@
 import { Html, Head, Main, NextScript } from 'next/document';
 
-function MyDocument() {
-  return <Html>
+
+export default function MyDocument() {
+    return <Html>
         <Head>
             <link
                 rel="stylesheet"
@@ -14,5 +15,3 @@ function MyDocument() {
         </body>
     </Html>;
 }
-
-export default MyDocument;

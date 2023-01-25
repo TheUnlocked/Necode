@@ -4,9 +4,9 @@
     "private": true,
     "license": "MIT",
     "dependencies": {
-        "@types/luxon": "^3.0.1",
+        "@types/luxon": "^3.2.0",
         "database": "workspace:*",
-        "luxon": "^2.5.0"
+        "luxon": "^2.5.2"
     },
     "devDependencies": {
         "@types/simple-peer": "^9.11.5",

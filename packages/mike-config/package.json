@@ -8,5 +8,8 @@
     },
     "devDependencies": {
         "tsconfig": "workspace:*"
+    },
+    "dependencies": {
+        "@necode-org/mike": "^0.3.3"
     }
 }

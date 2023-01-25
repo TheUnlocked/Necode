@@ -16,7 +16,7 @@
     "@grncdr/react-hooks/exhaustive-deps": [
       "warn",
       {
-        "additionalHooks": "(useDrop|useDrag|useDragLayer)",
+        "additionalHooks": "(useAsyncMemo|useDrop|useDrag|useDragLayer)",
         "staticHooks": {
           "useDirty": [false, true, true, false, true],
           "useLocalCachedState": [false, true, false, false]

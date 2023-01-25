@@ -22,13 +22,12 @@ import PaneEditor from "./PaneEditor";
 import Key from "../../components/Key";
 import { ActivityIframe, IframeActions } from "./ActivityIframe";
 import Lazy from "../../components/Lazy";
-import { useLoadingContext } from "../../api/client/LoadingContext";
 import { debounce } from "lodash";
 import { ImplicitNewType, NonStrictDisjunction } from "../../util/types";
 import SubtleLink from "../../components/SubtleLink";
 import useImported from '../../hooks/useImported';
 import { typescriptDescription } from '../../languages/typescript';
-import { editor } from 'monaco-editor';
+import { editor, languages } from 'monaco-editor';
 import useY, { useYAwareness } from '../../hooks/useY';
 import { NetworkId } from 'api/RtcNetwork';
 import { applyTransaction, applyUnifiedUpdates } from '../../util/y-utils';
@@ -36,6 +35,7 @@ import { useGetRequestImmutable } from '../../api/client/GetRequestHook';
 import { UserEntity } from 'api/entities/UserEntity';
 import * as Y from 'yjs';
 import useDirty from '../../hooks/useDirty';
+import { useLoadingFetch } from '../../api/client/LoadingFetchHook';
 
 export interface HtmlTestActivityBaseConfig {
     description?: string;
@@ -105,8 +105,6 @@ export default function createTestActivityPage({
         networked = false,
     }
 }: HtmlTestActivityMetaProps) {
-    const hasTypeDeclarations = Boolean(typeDeclarationsSource);
-
     return function TestActivityPage<Config extends HtmlTestActivityBaseConfig>(props: ActivityConfigPageProps<Config> | ActivityPageProps<Config>) {
         const {
             language,
@@ -201,7 +199,7 @@ export default function createTestActivityPage({
             }
         }, [yDoc]);
 
-        const { startDownload, finishDownload } = useLoadingContext();
+        const { download } = useLoadingFetch();
 
         const startTests = useRef(() => {});
         const passTests = useRef(() => {});
@@ -489,38 +487,44 @@ export default function createTestActivityPage({
 
         const monaco = useMonaco();
 
-        const [typeDeclarationFiles, setTypeDeclarationFiles] = useState<{ content: string, filePath?: string }[]>();
+        const typeDeclarationFiles = useImported<{ content: string, filePath?: string }[]>(useCallback(async () => {
+            if (typeDeclarationsSource) {
+                if (typeof typeDeclarationsSource === 'string') {
+                    return [{
+                        content: typeDeclarationsSource,
+                        filePath: 'activity-declarations.d.ts'
+                    }];
+                }
+                else {
+                    const results = await Promise.allSettled(
+                        typeDeclarationsSource.map(url =>
+                            download(url as string).then(x => x.text())
+                                .then(x => [x, url as string])
+                        )
+                    );
 
-        if (typeDeclarationsSource && typeDeclarationFiles === undefined) {
-            if (typeof typeDeclarationsSource === 'string') {
-                setTypeDeclarationFiles([{
-                    content: typeDeclarationsSource,
-                    filePath: 'activity-declarations.d.ts'
-                }]);
-            }
-            else {
-                setTypeDeclarationFiles(x => x ?? []);
-                startDownload();
-                Promise.allSettled(typeDeclarationsSource.map(url => fetch(url as string).then(x => x.text()).then(x => [x, url as string])))
-                    .then(results => results
+                    return results
                         .filter((x): x is PromiseFulfilledResult<[string, string]> => x.status === 'fulfilled')
                         .map(x => x.value)
-                        .map(([content, filePath]) => ({ content, filePath })))
-                    .then(setTypeDeclarationFiles)
-                    .finally(finishDownload);
+                        .map(([content, filePath]) => {
+                            return { content, filePath: filePath.replace(/^https?/, 'file') };
+                        });
+                }
             }
-        }
+            return [];
+        }, [download]));
 
         useEffect(() => {
             if (monaco) {
-                monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-                    ...monaco.languages.typescript.javascriptDefaults.getCompilerOptions(),
-                    moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs
-                });
-                monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+                const compilerOptions: languages.typescript.CompilerOptions = {
                     ...monaco.languages.typescript.typescriptDefaults.getCompilerOptions(),
-                    moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs
-                });
+                    moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+                    target: monaco.languages.typescript.ScriptTarget.ESNext,
+                    allowJs: true,
+                };
+
+                monaco.languages.typescript.javascriptDefaults.setCompilerOptions(compilerOptions);
+                monaco.languages.typescript.typescriptDefaults.setCompilerOptions(compilerOptions);
 
                 const tsLibs = [] as { content: string, filePath?: string }[];
                 const jsLibs = [] as { content: string, filePath?: string }[];
@@ -531,13 +535,14 @@ export default function createTestActivityPage({
                         filePath: 'test-scaffolding.d.ts'
                     });
                 }
-                if (hasTypeDeclarations && typeDeclarationFiles) {
-                    jsLibs.push(...typeDeclarationFiles);
-                    tsLibs.push(...typeDeclarationFiles);
+
+                for (const decl of typeDeclarationFiles ?? []) {
+                    jsLibs.push(decl);
+                    tsLibs.push(decl);
                 }
-                
-                if (jsLibs.length > 0) monaco.languages.typescript.javascriptDefaults.setExtraLibs(jsLibs);
-                if (tsLibs.length > 0) monaco.languages.typescript.typescriptDefaults.setExtraLibs(tsLibs);
+
+                monaco.languages.typescript.javascriptDefaults.setExtraLibs(jsLibs);
+                monaco.languages.typescript.typescriptDefaults.setExtraLibs(tsLibs);
             }
         }, [monaco, typeDeclarationFiles]);
 

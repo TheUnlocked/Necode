@@ -3,7 +3,10 @@ import * as monaco from 'monaco-editor';
 
 
 let _monaco: typeof monaco; 
-loader.init().then(m => _monaco = m);
+
+if (typeof window !== 'undefined') {
+    loader.init().then(m => _monaco = m);
+}
 
 module.exports = new Proxy({}, {
     get(_, p, reciever) {

@@ -4,8 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "necode:build": "cross-env NODE_ENV=production next build",
-    "start": "cross-env NODE_ENV=production node run-production.js",
+    "necode:build": "next build",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "typecheck": "tsc --noEmit",

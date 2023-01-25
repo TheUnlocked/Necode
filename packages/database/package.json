@@ -10,7 +10,7 @@
         "db:migrate:deploy": "prisma migrate deploy",
         "db:migrate:dev": "prisma migrate dev",
         "db:push": "prisma db push",
-        "db:seed": "ts-node --transpile-only src/seed.ts",
+        "db:seed": "ts-node --compilerOptions=\"{\\\"module\\\":\\\"commonjs\\\"}\" --transpile-only src/seed.ts",
         "format": "prisma format",
         "generate": "prisma generate",
         "postinstall": "npm run generate",
@@ -24,6 +24,7 @@
         "eslint": "^8.32.0",
         "prisma": "^4.9.0",
         "rimraf": "^3.0.2",
+        "ts-node": "^10.9.1",
         "tsconfig": "workspace:*",
         "typescript": "^4.9.4"
     }

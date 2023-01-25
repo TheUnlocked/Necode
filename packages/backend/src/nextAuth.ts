@@ -85,11 +85,11 @@ export const nextAuthOptions: NextAuthOptions = {
                 id: 'dev_credentials',
                 name: 'Username/Password (DEV ONLY)',
                 credentials: {
-                    username: { label: "Username", type: "text", placeholder: 'admin' },
+                    username: { label: "Username", type: "text", placeholder: 'e.g. admin' },
                     password: { label: "Password", type: "password" },
                 },
                 async authorize(credentials, req): Promise<User | null> {
-                    if (credentials && credentials.password === process.env.DEV_PASSWORD) {
+                    if (credentials?.username && credentials.password === process.env.DEV_PASSWORD) {
                         const username = `@dev_` + credentials.username;
                         return await prisma.user.upsert({
                             where: { username },

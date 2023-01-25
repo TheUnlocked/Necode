@@ -3,22 +3,22 @@ import { useRouter } from "next/router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Toolbar, Select, MenuItem, Stack, ToggleButton, Skeleton, Paper, Box, SxProps } from "@mui/material";
 import { ArrowBack, Code, Save } from "@mui/icons-material";
-import allLanguages from "common/languages/allLanguages";
-import LanguageDescription from "common/languages/LangaugeDescription";
-import useImperativeDialog from "common/hooks/useImperativeDialog";
-import sortByProperty from "common/util/sortByProperty";
-import { flip, make } from "common/util/fp";
-import { LazyImportable } from "common/components/Lazy";
-import ConfigureLanguageDialog from "common/components/dialogs/ConfigureLanguageDialog";
-import { useGetRequest, useGetRequestImmutable } from "common/api/client/GetRequestHook";
-import { ActivityEntity } from "api/entities/ActivityEntity";
-import allActivities from "common/activities/allActivities";
-import useDirty from "common/hooks/useDirty";
-import { ClassroomMemberEntity } from "api/entities/ClassroomMemberEntity";
+import allLanguages from "~ui/languages/allLanguages";
+import LanguageDescription from "~ui/languages/LangaugeDescription";
+import useImperativeDialog from "~ui/hooks/useImperativeDialog";
+import sortByProperty from "~utils/sortByProperty";
+import { flip, make } from "~utils/fp";
+import { LazyImportable } from "~ui/components/Lazy";
+import ConfigureLanguageDialog from "~ui/components/dialogs/ConfigureLanguageDialog";
+import { useGetRequest, useGetRequestImmutable } from "~ui/hooks/useGetRequest";
+import { ActivityEntity } from "~api/entities/ActivityEntity";
+import allActivities from "~ui/activities/allActivities";
+import useDirty from "~ui/hooks/useDirty";
+import { ClassroomMemberEntity } from "~api/entities/ClassroomMemberEntity";
 import NotFoundPage from "../../../../404";
-import supportsLanguage from "common/activities/supportsLanguage";
+import supportsLanguage from "~ui/activities/supportsLanguage";
 import { curry } from "lodash";
-import useNecodeFetch from 'common/hooks/useNecodeFetch';
+import useNecodeFetch from '~ui/hooks/useNecodeFetch';
 import { useSnackbar } from 'notistack';
 
 interface StaticProps {
@@ -31,7 +31,7 @@ const Page: NextPage = () => {
     const classroomId = router.query.classroomId;
     const activityId = router.query.activityId;
 
-    const { data, error, isLoading } = useGetRequestImmutable<ClassroomMemberEntity>(classroomId ? `/api/classroom/${classroomId}/me` : null);
+    const { data, error, isLoading } = useGetRequestImmutable<ClassroomMemberEntity>(classroomId ? `/~api/classroom/${classroomId}/me` : null);
 
     if (!classroomId || !activityId || isLoading) {
         return null;
@@ -47,7 +47,7 @@ const Page: NextPage = () => {
 const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
     const router = useRouter();
 
-    const activityEndpoint = `/api/classroom/${classroomId}/activity/${activityId}?include=lesson`;
+    const activityEndpoint = `/~api/classroom/${classroomId}/activity/${activityId}?include=lesson`;
     const { data: activityEntity, mutate } = useGetRequest<ActivityEntity<{ lesson: 'deep' }>>(activityEndpoint);
 
     const activity = useMemo(() => allActivities.find(x => x.id === activityEntity?.attributes.activityType), [activityEntity]);
@@ -118,7 +118,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
         };
 
         mutate(async () => {
-            await upload(`/api/classroom/${classroomId}/activity/${activityId}`, {
+            await upload(`/~api/classroom/${classroomId}/activity/${activityId}`, {
                 method: 'PATCH',
                 body: JSON.stringify(patch)
             });
@@ -160,7 +160,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
     async function returnToManage() {
         let date = activityEntity?.attributes.lesson.attributes.date;
         if (!date) {
-            const result = await download<ActivityEntity<{ lesson: 'deep' }>>(`/api/classroom/${classroomId}/activity/${activityId}?include=lesson`);
+            const result = await download<ActivityEntity<{ lesson: 'deep' }>>(`/~api/classroom/${classroomId}/activity/${activityId}?include=lesson`);
             date = result.attributes.lesson.attributes.date;
         }
         router.push({

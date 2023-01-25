@@ -1,7 +1,7 @@
 import { nanoid } from "nanoid";
-import { NetworkId } from 'api/RtcNetwork';
-import tracked from "common/util/trackedEventEmitter";
-import { IOServer } from "api/ws";
+import { NetworkId } from '~api/RtcNetwork';
+import tracked from "~ui/util/trackedEventEmitter";
+import { IOServer } from "~api/ws";
 
 export default class RtcManager {
     constructor(private io: IOServer) {

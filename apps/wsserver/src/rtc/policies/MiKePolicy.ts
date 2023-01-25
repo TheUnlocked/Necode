@@ -4,10 +4,10 @@ import { ConnectionInfo, RtcCoordinator, RtcPolicy, RtcPolicySettings } from './
 import { MiKe } from '@necode-org/mike';
 import { createMiKeDiagnosticsManager } from '@necode-org/mike/diagnostics';
 import { JavascriptTarget, JsLibraryImplementation, MiKeProgram, MiKeProgramWithoutExternals } from '@necode-org/mike/codegen/js';
-import { ArrayKeyMap } from 'common/util/maps/ArrayKeyMap';
+import { ArrayKeyMap } from '~utils/maps/ArrayKeyMap';
 import loadModule from '@brillout/load-module';
-import { NetworkId } from 'api/RtcNetwork';
-import { events, necodeLib } from 'mike-config';
+import { NetworkId } from '~api/RtcNetwork';
+import { events, necodeLib } from '~mike-config';
 
 const EXTERNALS = 'externals';
 const necodeLibImpl: JsLibraryImplementation<typeof necodeLib> = {

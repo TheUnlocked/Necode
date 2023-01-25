@@ -1,4 +1,4 @@
-import { SitewideRights, User } from "database";
+import { SitewideRights, User } from "~database";
 import { Entity, EntityType } from "./Entity";
 import { EntityReferenceArray, makeEntityReferenceArray, ReferenceDepth } from "./EntityReference";
 import { ClassroomEntity } from "./ClassroomEntity";

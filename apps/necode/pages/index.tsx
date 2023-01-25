@@ -1,11 +1,11 @@
 import { Container, Stack, Typography, styled, ToggleButtonGroup, ToggleButton, Tooltip, Box } from '@mui/material';
 import type { NextPage } from 'next';
 import { PropsWithChildren, ReactNode, useMemo, useState } from 'react';
-import { useGetRequestImmutable } from 'common/api/client/GetRequestHook';
-import { UserEntity } from 'api/entities/UserEntity';
-import Footer from 'common/components/Footer';
-import NecodeLogo from 'common/components/NecodeLogo';
-import SubtleLink from 'common/components/SubtleLink';
+import { useGetRequestImmutable } from '~ui/hooks/useGetRequest';
+import { UserEntity } from '~api/entities/UserEntity';
+import Footer from '~ui/components/Footer';
+import NecodeLogo from '~ui/components/NecodeLogo';
+import SubtleLink from '~ui/components/SubtleLink';
 
 const InfoBox = styled('section')`
     padding-bottom: 32px;
@@ -19,7 +19,7 @@ function InfoSection({ title, omitParagraph = false, children }: PropsWithChildr
 }
 
 const Home: NextPage = () => {
-    const { data: meInfo } = useGetRequestImmutable<UserEntity<{ classes: 'deep' }>>('/api/me?include=classes');
+    const { data: meInfo } = useGetRequestImmutable<UserEntity<{ classes: 'deep' }>>('/~api/me?include=classes');
 
     const [infoCategory, setInfoCategory] = useState('general');
 

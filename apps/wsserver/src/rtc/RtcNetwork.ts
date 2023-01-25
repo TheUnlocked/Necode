@@ -1,4 +1,4 @@
-import { NetworkId, PolicyConfiguration } from 'api/RtcNetwork';
+import { NetworkId, PolicyConfiguration } from '~api/RtcNetwork';
 import allPolicies from './policies/allPolicies';
 import { RtcCoordinator } from './policies/RtcPolicy';
 import RtcManager from './RtcManager';

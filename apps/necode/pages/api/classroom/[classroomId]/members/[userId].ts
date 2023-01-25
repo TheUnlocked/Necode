@@ -1,9 +1,9 @@
-import { ClassroomRole } from "database";
+import { ClassroomRole } from "~database";
 import Joi from "joi";
-import { ClassroomMemberEntity, makeClassroomMemberEntity } from "api/entities/ClassroomMemberEntity";
-import { endpoint, Status } from "common/api/Endpoint";
-import { hasScope } from "backend/scopes";
-import { prisma } from "database";
+import { ClassroomMemberEntity, makeClassroomMemberEntity } from "~api/entities/ClassroomMemberEntity";
+import { endpoint, Status } from "~backend/Endpoint";
+import { hasScope } from "~backend/scopes";
+import { prisma } from "~database";
 
 const apiUsers = endpoint(makeClassroomMemberEntity, ['userId', 'classroomId'], {
     type: 'entity',

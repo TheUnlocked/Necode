@@ -13,22 +13,22 @@
         "@types/luxon": "^3.2.0",
         "@types/node": "^18.11.18",
         "ts-loader": "^9.4.2",
-        "tsconfig": "workspace:*",
+        "~tsconfig": "workspace:*",
         "typescript": "^4.9.4",
         "webpack": "^5.75.0"
     },
     "dependencies": {
         "@brillout/load-module": "^0.1.1",
         "@necode-org/mike": "^0.3.3",
-        "api": "workspace:*",
-        "backend": "workspace:*",
-        "common": "workspace:*",
-        "database": "workspace:*",
+        "~api": "workspace:*",
+        "~backend": "workspace:*",
+        "~ui": "workspace:*",
+        "~database": "workspace:*",
         "dotenv": "^16.0.3",
         "express": "^4.18.2",
         "jose": "^4.11.2",
         "luxon": "^2.5.2",
-        "mike-config": "workspace:*",
+        "~mike-config": "workspace:*",
         "nanoid": "^4.0.0",
         "socket.io": "^4.5.4"
     }

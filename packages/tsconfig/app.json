@@ -1,14 +1,4 @@
 {
     "display": "App",
-    "extends": "./default.json",
-    "include": ["types"],
-    "compilerOptions": {
-        "paths": {
-            "common/*": ["../../packages/common/src/*"],
-            "api/*": ["../../packages/api/src/*"],
-            "backend/*": ["../../packages/backend/src/*"],
-            "@necode-org/*": ["../../packages/*/src"],
-            "*": ["../../packages/*/src"],
-        }
-    }
+    "extends": "./default.json"
 }

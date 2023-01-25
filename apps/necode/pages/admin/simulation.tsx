@@ -1,19 +1,19 @@
 import { DeleteForever } from '@mui/icons-material';
 import { Alert, Button, Container, IconButton, Stack } from "@mui/material";
 import { DataGrid, GridColDef, GridEventListener, GridEvents, GridRowId, GridSelectionModel, GridToolbarContainer } from "@mui/x-data-grid";
-import { SitewideRights } from 'database';
+import { SitewideRights } from '~database';
 import { groupBy } from 'lodash';
 import { useConfirm } from 'material-ui-confirm';
 import { nanoid } from 'nanoid';
 import { NextPage } from "next";
 import { useSnackbar } from "notistack";
 import { useMemo, useState } from "react";
-import { useGetRequestImmutable } from "common/api/client/GetRequestHook";
-import { UserEntity } from "api/entities/UserEntity";
-import AdminPageAlert from "common/components/AdminPageAlert";
-import FullPageLoader from "common/components/FullPageLoader";
-import { useImpersonation } from 'common/hooks/useImpersonation';
-import useNecodeFetch from 'common/hooks/useNecodeFetch';
+import { useGetRequestImmutable } from "~ui/hooks/useGetRequest";
+import { UserEntity } from "~api/entities/UserEntity";
+import AdminPageAlert from "~ui/components/AdminPageAlert";
+import FullPageLoader from "~ui/components/FullPageLoader";
+import { useImpersonation } from '~ui/hooks/useImpersonation';
+import useNecodeFetch from '~ui/hooks/useNecodeFetch';
 
 function SimulationToolbar(props: {
     onCreateSimulatedUser: () => void;
@@ -30,7 +30,7 @@ function SimulationToolbar(props: {
 }
 
 const Page: NextPage = () => {
-    const { data, isLoading, mutate } = useGetRequestImmutable<UserEntity<{ simulatedUsers: 'deep' }>>('/api/me?include=simulatedUsers', {
+    const { data, isLoading, mutate } = useGetRequestImmutable<UserEntity<{ simulatedUsers: 'deep' }>>('/~api/me?include=simulatedUsers', {
         revalidateOnFocus: false,
     });
 
@@ -40,7 +40,7 @@ const Page: NextPage = () => {
     const handleCellEdited: GridEventListener<GridEvents.cellEditCommit> = async info => {
         setPerformingAction(true);
 
-        await upload<UserEntity>(`/api/users/${info.id}`, {
+        await upload<UserEntity>(`/~api/users/${info.id}`, {
             method: 'PATCH',
             body: JSON.stringify({
                 [info.field]: info.value
@@ -70,7 +70,7 @@ const Page: NextPage = () => {
         setPerformingAction(true);
 
         const simulationId = nanoid();
-        const res = await upload<UserEntity>(`/api/users/simulated`, {
+        const res = await upload<UserEntity>(`/~api/users/simulated`, {
             method: 'POST',
             body: JSON.stringify({
                 username: `user_${simulationId}`,
@@ -103,7 +103,7 @@ const Page: NextPage = () => {
         catch (e) { return }
 
         const result = await Promise.allSettled(selectedUsers.map(async id => {
-            await upload(`/api/users/${id}`, { method: 'DELETE', errorMessage: null });
+            await upload(`/~api/users/${id}`, { method: 'DELETE', errorMessage: null });
             return id;
         }));
 

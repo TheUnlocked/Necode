@@ -3,26 +3,26 @@ import { useRouter } from "next/router";
 import { useCallback, useState } from "react";
 import { Button, Chip, Stack, Toolbar, Box } from "@mui/material";
 import { ArrowBack, AssignmentTurnedIn, Close } from "@mui/icons-material";
-import { ClassroomMemberEntity } from "api/entities/ClassroomMemberEntity";
-import { useGetRequest, useGetRequestImmutable } from "common/api/client/GetRequestHook";
-import { useSocket } from "common/hooks/useSocket";
-import StatusPage from "common/components/layouts/StatusPage";
-import { ActivityEntity } from "api/entities/ActivityEntity";
-import allActivities from "common/activities/allActivities";
-import allLanguages from "common/languages/allLanguages";
-import { useSubmissions } from "common/hooks/useSubmissions";
-import useImperativeDialog from "common/hooks/useImperativeDialog";
-import SubmissionsDialog from "common/components/dialogs/SubmissionsDialog";
-import { ClassroomRole } from "database";
+import { ClassroomMemberEntity } from "~api/entities/ClassroomMemberEntity";
+import { useGetRequest, useGetRequestImmutable } from "~ui/hooks/useGetRequest";
+import { useSocket } from "~ui/hooks/useSocket";
+import StatusPage from "~ui/components/layouts/StatusPage";
+import { ActivityEntity } from "~api/entities/ActivityEntity";
+import allActivities from "~ui/activities/allActivities";
+import allLanguages from "~ui/languages/allLanguages";
+import { useSubmissions } from "~ui/hooks/useSubmissions";
+import useImperativeDialog from "~ui/hooks/useImperativeDialog";
+import SubmissionsDialog from "~ui/components/dialogs/SubmissionsDialog";
+import { ClassroomRole } from "~database";
 import NotFoundPage from "../../404";
-import supportsLanguage from "common/activities/supportsLanguage";
+import supportsLanguage from "~ui/activities/supportsLanguage";
 import { curry } from "lodash";
-import useNecodeFetch from 'common/hooks/useNecodeFetch';
-import useImported from 'common/hooks/useImported';
-import { typeAssert } from 'common/util/typeguards';
-import { RtcProvider } from 'common/hooks/RtcHooks';
+import useNecodeFetch from '~ui/hooks/useNecodeFetch';
+import useImported from '~ui/hooks/useImported';
+import { typeAssert } from '~utils/typeguards';
+import { RtcProvider } from '~ui/hooks/RtcHooks';
 import { useSnackbar } from 'notistack';
-import { useLoadingContext } from 'common/api/client/LoadingContext';
+import { useLoadingContext } from '~ui/hooks/useLoadingContext';
 
 interface StaticProps {
     classroomId: string;
@@ -33,7 +33,7 @@ const Page: NextPage = () => {
     const router = useRouter();
     const classroomId = router.query.classroomId;
 
-    const { data, error } = useGetRequestImmutable<ClassroomMemberEntity>(classroomId ? `/api/classroom/${classroomId}/me` : null);
+    const { data, error } = useGetRequestImmutable<ClassroomMemberEntity>(classroomId ? `/~api/classroom/${classroomId}/me` : null);
 
     if (!classroomId) {
         return null;
@@ -82,7 +82,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
 
     const { data: activityEntity } = useGetRequest<ActivityEntity<{ lesson: 'deep' }>>(
         socketInfo?.liveActivityInfo
-            ? `/api/classroom/${classroomId}/activity/${socketInfo?.liveActivityInfo.id}${isInstructor ? '?include=lesson' : ''}`
+            ? `/~api/classroom/${classroomId}/activity/${socketInfo?.liveActivityInfo.id}${isInstructor ? '?include=lesson' : ''}`
             : null
     );
 
@@ -169,7 +169,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
     }
 
     async function endActivity() {
-        await upload(`/api/classroom/${classroomId}/activity/live`, { method: 'DELETE' });
+        await upload(`/~api/classroom/${classroomId}/activity/live`, { method: 'DELETE' });
         goToManage();
     }
 

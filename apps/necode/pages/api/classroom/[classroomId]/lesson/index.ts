@@ -1,11 +1,11 @@
 import Joi from "joi";
-import { AttributesOf, endpoint, Status } from "common/api/Endpoint";
-import { ActivityEntity, makeActivityEntity } from "api/entities/ActivityEntity";
-import { LessonEntity, makeLessonEntity } from "api/entities/LessonEntity";
-import { hasScope } from "backend/scopes";
-import { Activity, prisma } from "database";
-import { iso8601DateRegex } from "common/util/iso8601";
-import { singleArg } from "common/util/typeguards";
+import { AttributesOf, endpoint, Status } from "~backend/Endpoint";
+import { ActivityEntity, makeActivityEntity } from "~api/entities/ActivityEntity";
+import { LessonEntity, makeLessonEntity } from "~api/entities/LessonEntity";
+import { hasScope } from "~backend/scopes";
+import { Activity, prisma } from "~database";
+import { iso8601DateRegex } from "~utils/iso8601";
+import { singleArg } from "~utils/typeguards";
 
 const apiLessonAll = endpoint(makeLessonEntity, ['classroomId', 'include[]'] as const, {
     type: 'entityType',

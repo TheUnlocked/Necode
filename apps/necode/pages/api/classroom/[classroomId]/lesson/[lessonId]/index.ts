@@ -1,14 +1,14 @@
-import { Activity, Classroom, Lesson } from "database";
+import { Activity, Classroom, Lesson } from "~database";
 import Joi from "joi";
-import { endpoint, PartialAttributesOf, Status } from "common/api/Endpoint";
-import { makeActivityEntity } from "api/entities/ActivityEntity";
-import { makeClassroomEntity } from "api/entities/ClassroomEntity";
-import { ReferenceDepth } from "api/entities/EntityReference";
-import { LessonEntity, makeLessonEntity } from "api/entities/LessonEntity";
-import { hasScope } from "backend/scopes";
-import { prisma } from "database";
-import { isIso8601Date, iso8601DateRegex } from "common/util/iso8601";
-import { includes, singleArg } from "common/util/typeguards";
+import { endpoint, PartialAttributesOf, Status } from "~backend/Endpoint";
+import { makeActivityEntity } from "~api/entities/ActivityEntity";
+import { makeClassroomEntity } from "~api/entities/ClassroomEntity";
+import { ReferenceDepth } from "~api/entities/EntityReference";
+import { LessonEntity, makeLessonEntity } from "~api/entities/LessonEntity";
+import { hasScope } from "~backend/scopes";
+import { prisma } from "~database";
+import { isIso8601Date, iso8601DateRegex } from "~utils/iso8601";
+import { includes, singleArg } from "~utils/typeguards";
 
 async function maybeGetByIsoDate(lessonIdOrDate: string, classroomId: string) {
     if (isIso8601Date(lessonIdOrDate)) {

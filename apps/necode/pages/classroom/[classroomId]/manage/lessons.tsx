@@ -1,22 +1,22 @@
 import { Paper } from "@mui/material";
 import { NextPage } from "next";
 import { Dispatch, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import ActivityListPane from "common/components/lesson-config/ActivityListPane";
-import { LessonEntity } from "api/entities/LessonEntity";
-import { useGetRequest } from "common/api/client/GetRequestHook";
-import { fromLuxon, Iso8601Date, iso8601DateRegex, toLuxon } from "common/util/iso8601";
-import SkeletonActivityListPane from "common/components/lesson-config/SkeletonActivityListPane";
+import ActivityListPane from "~ui/components/lesson-config/ActivityListPane";
+import { LessonEntity } from "~api/entities/LessonEntity";
+import { useGetRequest } from "~ui/hooks/useGetRequest";
+import { fromLuxon, Iso8601Date, iso8601DateRegex, toLuxon } from "~utils/iso8601";
+import SkeletonActivityListPane from "~ui/components/lesson-config/SkeletonActivityListPane";
 import { DateTime } from "luxon";
 import { useRouter } from "next/router";
 import { useSnackbar } from "notistack";
-import LessonDatePicker from 'common/components/lesson-config/LessonDatePicker';
-import useNecodeFetch from 'common/hooks/useNecodeFetch';
-import { ActivityEntity } from 'api/entities/ActivityEntity';
-import LessonDragLayer from 'common/components/lesson-config/LessonDragLayer';
-import useImperativeDialog from 'common/hooks/useImperativeDialog';
-import LessonMergeDialog from 'common/components/dialogs/LessonMergeDialog';
-import isContentfulLesson from 'common/lessons/isContentfulLesson';
-import ManageClassroomPage, { ManageClassroomPageContentProps } from 'common/components/layouts/ManageClassroomPage';
+import LessonDatePicker from '~ui/components/lesson-config/LessonDatePicker';
+import useNecodeFetch from '~ui/hooks/useNecodeFetch';
+import { ActivityEntity } from '~api/entities/ActivityEntity';
+import LessonDragLayer from '~ui/components/lesson-config/LessonDragLayer';
+import useImperativeDialog from '~ui/hooks/useImperativeDialog';
+import LessonMergeDialog from '~ui/components/dialogs/LessonMergeDialog';
+import isContentfulLesson from '~ui/lessons/isContentfulLesson';
+import ManageClassroomPage, { ManageClassroomPageContentProps } from '~ui/components/layouts/ManageClassroomPage';
 
 
 function getDateFromPath(path: string) {
@@ -47,7 +47,7 @@ const PageContent: NextPage<ManageClassroomPageContentProps> = ({ classroomId })
     }, [router.asPath]);
 
     const { data: lessons } = useGetRequest<LessonEntity<{ activities: 'shallow' }>[]>(
-        classroomId === undefined ? null : `/api/classroom/${classroomId}/lesson`,
+        classroomId === undefined ? null : `/~api/classroom/${classroomId}/lesson`,
         { revalidateOnFocus: false }
     );
 
@@ -71,12 +71,12 @@ const PageContent: NextPage<ManageClassroomPageContentProps> = ({ classroomId })
     const refreshLessonPaneRef = useRef<() => void>();
 
     const handleCalendarDropActivity = useCallback(async (activity: ActivityEntity, date: Iso8601Date, copy: boolean) => {
-        const lesson = lessonsByDate[date] ?? await upload<LessonEntity<{ activities: 'shallow' }>>(`/api/classroom/${classroomId}/lesson`, {
+        const lesson = lessonsByDate[date] ?? await upload<LessonEntity<{ activities: 'shallow' }>>(`/~api/classroom/${classroomId}/lesson`, {
             method: 'POST',
             body: JSON.stringify({ date, displayName: '' })
         });
         const newActivity = copy
-            ? await upload<ActivityEntity>(`/api/classroom/${classroomId}/lesson/${lesson.id}/activity`, {
+            ? await upload<ActivityEntity>(`/~api/classroom/${classroomId}/lesson/${lesson.id}/activity`, {
                 method: 'POST',
                 body: JSON.stringify({
                     activityType: activity.attributes.activityType,
@@ -85,7 +85,7 @@ const PageContent: NextPage<ManageClassroomPageContentProps> = ({ classroomId })
                     enabledLanguages: activity.attributes.enabledLanguages,
                 })
             })
-            : await upload<ActivityEntity>(`/api/classroom/${classroomId}/activity/${activity.id}`, {
+            : await upload<ActivityEntity>(`/~api/classroom/${classroomId}/activity/${activity.id}`, {
                 method: 'PATCH',
                 body: JSON.stringify({ lesson: lesson.id })
             });
@@ -137,7 +137,7 @@ const PageContent: NextPage<ManageClassroomPageContentProps> = ({ classroomId })
             }
             if (copy) {
                 // Copying to existing lesson
-                const newLesson = await upload<LessonEntity>(`/api/classroom/${classroomId}/lesson/${toLesson.id}?merge=${mergeMethod}`, {
+                const newLesson = await upload<LessonEntity>(`/~api/classroom/${classroomId}/lesson/${toLesson.id}?merge=${mergeMethod}`, {
                     method: 'POST',
                     body: JSON.stringify({ lesson: lesson.id })
                 });
@@ -151,7 +151,7 @@ const PageContent: NextPage<ManageClassroomPageContentProps> = ({ classroomId })
         }
         if (copy) {
             // Copying to new lesson
-            const newLesson = await upload<LessonEntity>(`/api/classroom/${classroomId}/lesson`, {
+            const newLesson = await upload<LessonEntity>(`/~api/classroom/${classroomId}/lesson`, {
                 method: 'POST',
                 body: JSON.stringify({
                     date,
@@ -173,7 +173,7 @@ const PageContent: NextPage<ManageClassroomPageContentProps> = ({ classroomId })
         }
         else {
             // Moving to date
-            const newLesson = await upload<LessonEntity>(`/api/classroom/${classroomId}/lesson/${lesson.id}?merge=${mergeMethod}`, {
+            const newLesson = await upload<LessonEntity>(`/~api/classroom/${classroomId}/lesson/${lesson.id}?merge=${mergeMethod}`, {
                 method: 'PATCH',
                 body: JSON.stringify({ date }),
             });

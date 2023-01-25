@@ -1,8 +1,8 @@
 
 import { Session, unstable_getServerSession as getServerSession } from 'next-auth';
-import { prisma } from 'database';
+import { prisma } from '~database';
 import { hasScope } from './scopes';
-import { IMPERSONATION_COOKIE } from '../../common/src/hooks/useImpersonation';
+import { IMPERSONATION_COOKIE } from '~api/constants';
 import { nextAuthOptions } from './nextAuth';
 import { GetServerSidePropsContext } from 'next';
 

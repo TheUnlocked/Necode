@@ -1,1 +1,1 @@
-export { default } from 'common/components/layouts/NotFoundPage';
+export { default } from '~ui/components/layouts/NotFoundPage';

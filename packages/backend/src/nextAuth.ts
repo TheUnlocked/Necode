@@ -1,7 +1,7 @@
 import { ISODateString, NextAuthOptions, User } from "next-auth";
-import { SitewideRights } from "database";
+import { SitewideRights } from "~database";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { prisma } from "database";
+import { prisma } from "~database";
 import Credentials from 'next-auth/providers/credentials';
 import { OAuthConfig, OAuthUserConfig } from 'next-auth/providers';
 

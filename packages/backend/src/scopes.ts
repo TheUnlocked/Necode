@@ -1,5 +1,5 @@
-import { SitewideRights } from 'database';
-import { prisma } from "database";
+import { SitewideRights } from '~database';
+import { prisma } from "~database";
 
 async function isAdmin(user: string) {
     return await prisma.user.count({ where: {

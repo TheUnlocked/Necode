@@ -1,5 +1,5 @@
 {
-    "name": "mike-config",
+    "name": "~mike-config",
     "version": "0.0.0",
     "private": true,
     "license": "MIT",
@@ -7,7 +7,7 @@
         "@necode-org/mike": "^0.3.3"
     },
     "devDependencies": {
-        "tsconfig": "workspace:*"
+        "~tsconfig": "workspace:*"
     },
     "dependencies": {
         "@necode-org/mike": "^0.3.3"

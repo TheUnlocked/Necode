@@ -1,20 +1,20 @@
 import { Skeleton, TextField } from "@mui/material";
 import { NextPage } from "next";
-import FormPage from "common/components/layouts/FormPage";
+import FormPage from "~ui/components/layouts/FormPage";
 import { FormEventHandler, useCallback, useState } from "react";
-import { ClassroomEntity } from "api/entities/ClassroomEntity";
+import { ClassroomEntity } from "~api/entities/ClassroomEntity";
 import { useRouter } from "next/router";
-import { useGetRequestImmutable } from "common/api/client/GetRequestHook";
-import { UserEntity } from "api/entities/UserEntity";
-import AdminPageAlert from "common/components/AdminPageAlert";
-import useNecodeFetch from 'common/hooks/useNecodeFetch';
+import { useGetRequestImmutable } from "~ui/hooks/useGetRequest";
+import { UserEntity } from "~api/entities/UserEntity";
+import AdminPageAlert from "~ui/components/AdminPageAlert";
+import useNecodeFetch from '~ui/hooks/useNecodeFetch';
 
 const MIN_NAME_LENGTH = 6;
 const MAX_NAME_LENGTH = 100;
 
 const Page: NextPage = () => {
     const router = useRouter();
-    const { data: me, isLoading } = useGetRequestImmutable<UserEntity>('/api/me');
+    const { data: me, isLoading } = useGetRequestImmutable<UserEntity>('/~api/me');
 
     const [displayName, setDisplayName] = useState<string>();
 
@@ -23,7 +23,7 @@ const Page: NextPage = () => {
     const onSubmit: FormEventHandler<HTMLFormElement> = useCallback(async e => {
         e.preventDefault();
         
-        const classroom = await upload<ClassroomEntity>('/api/classroom', {
+        const classroom = await upload<ClassroomEntity>('/~api/classroom', {
             method: 'POST',
             body: JSON.stringify({
                 displayName

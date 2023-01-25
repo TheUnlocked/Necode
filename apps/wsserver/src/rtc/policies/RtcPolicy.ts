@@ -1,4 +1,4 @@
-import { NetworkId } from 'api/RtcNetwork';
+import { NetworkId } from '~api/RtcNetwork';
 import RtcManager from "../RtcManager";
 
 export interface ConnectionInfo {

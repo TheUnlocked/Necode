@@ -1,7 +1,7 @@
 import { NextPage } from "next";
 import { useRouter } from 'next/router';
-import { useGetRequest } from 'common/api/client/GetRequestHook';
-import { ClassroomMemberEntity } from 'api/entities/ClassroomMemberEntity';
+import { useGetRequest } from '~ui/hooks/useGetRequest';
+import { ClassroomMemberEntity } from '~api/entities/ClassroomMemberEntity';
 import NotFoundPage from '../../404';
 
 const Page: NextPage = () => {
@@ -9,7 +9,7 @@ const Page: NextPage = () => {
 
     const classroomId = router.query.classroomId;
 
-    const { data: me, error } = useGetRequest<ClassroomMemberEntity>(`/api/classroom/${classroomId}/me`);
+    const { data: me, error } = useGetRequest<ClassroomMemberEntity>(`/~api/classroom/${classroomId}/me`);
 
     if (error) {
         return <NotFoundPage />;

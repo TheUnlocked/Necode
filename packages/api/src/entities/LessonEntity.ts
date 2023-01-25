@@ -1,6 +1,6 @@
-import { Lesson } from "database";
+import { Lesson } from "~database";
 import { DateTime } from "luxon";
-import { fromLuxon, Iso8601Date } from "../../../common/src/util/iso8601";
+import { fromLuxon, Iso8601Date } from "~utils/iso8601";
 import { ActivityEntity } from "./ActivityEntity";
 import { ClassroomEntity } from "./ClassroomEntity";
 import { Entity, EntityType } from "./Entity";

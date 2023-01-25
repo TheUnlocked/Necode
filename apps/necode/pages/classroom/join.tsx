@@ -2,18 +2,18 @@ import { Button, Skeleton, TextField, Typography } from "@mui/material";
 import { NextPage } from "next";
 import { useRouter } from "next/dist/client/router";
 import { FormEventHandler, useEffect, useState } from "react";
-import FormPage from "common/components/layouts/FormPage";
+import FormPage from "~ui/components/layouts/FormPage";
 import { signIn } from "next-auth/react";
-import { ClassroomEntity } from "api/entities/ClassroomEntity";
+import { ClassroomEntity } from "~api/entities/ClassroomEntity";
 import { useSnackbar } from "notistack";
-import { useGetRequestImmutable } from "common/api/client/GetRequestHook";
-import { UserEntity } from "api/entities/UserEntity";
-import useNecodeFetch from 'common/hooks/useNecodeFetch';
+import { useGetRequestImmutable } from "~ui/hooks/useGetRequest";
+import { UserEntity } from "~api/entities/UserEntity";
+import useNecodeFetch from '~ui/hooks/useNecodeFetch';
 
 
 const Join: NextPage = () => {
     const router = useRouter();
-    const { data: me, isLoading } = useGetRequestImmutable<UserEntity>('/api/me');
+    const { data: me, isLoading } = useGetRequestImmutable<UserEntity>('/~api/me');
 
     const { upload } = useNecodeFetch();
 
@@ -39,7 +39,7 @@ const Join: NextPage = () => {
     const onSubmit: FormEventHandler<HTMLFormElement> = async e => {
         e.preventDefault();
 
-        const classroom = await upload<ClassroomEntity>('/api/classroom/join', {
+        const classroom = await upload<ClassroomEntity>('/~api/classroom/join', {
             method: "POST",
             body: JSON.stringify({ code: joinCode.toLowerCase() }),
             errorMessage: 'Failed to apply code. Make sure that you entered it correctly.',

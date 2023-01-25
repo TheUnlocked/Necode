@@ -5,14 +5,14 @@ import { PropsWithChildren } from "react";
 import { Alert, Button, Card, Checkbox, Container, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Typography } from "@mui/material";
 import { serialize } from 'next-mdx-remote/serialize';
 import { MDXRemote, MDXRemoteSerializeResult } from 'next-mdx-remote';
-import Footer from "common/components/Footer";
+import Footer from "~ui/components/Footer";
 import rehypeHighlight from "rehype-highlight";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 import remarkToc from "remark-toc";
-import WithState from "common/components/WithState";
-import remarkUnwrapMdx from 'common/remark/remark-unwrap-mdx';
+import WithState from "~ui/components/WithState";
+import remarkUnwrapMdx from '~ui/remark/remark-unwrap-mdx';
 
 const h1 = (props: PropsWithChildren<{}>) => <>
     <Typography sx={{ marginTop: 6 }} variant="h3" fontWeight="500" {...props} component="h1" />

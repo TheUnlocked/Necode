@@ -1,5 +1,5 @@
-import { endpoint, Status } from 'common/api/Endpoint';
-import { hasScope } from 'backend/scopes';
+import { endpoint, Status } from '~backend/Endpoint';
+import { hasScope } from '~backend/scopes';
 import { createHmac } from 'crypto';
 
 const apiActivityIce = endpoint(null, ['classroomId'], {

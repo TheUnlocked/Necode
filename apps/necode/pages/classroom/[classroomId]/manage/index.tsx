@@ -1,10 +1,10 @@
 import { Stack } from "@mui/material";
 import { NextPage } from "next";
-import ActivityListPane from "common/components/lesson-config/ActivityListPane";
-import { fromLuxon } from "common/util/iso8601";
+import ActivityListPane from "~ui/components/lesson-config/ActivityListPane";
+import { fromLuxon } from "~utils/iso8601";
 import { DateTime } from "luxon";
-import JoinCodeCard from 'common/components/lesson-config/JoinCodeCard';
-import ManageClassroomPage, { ManageClassroomPageContentProps } from 'common/components/layouts/ManageClassroomPage';
+import JoinCodeCard from '~ui/components/lesson-config/JoinCodeCard';
+import ManageClassroomPage, { ManageClassroomPageContentProps } from '~ui/components/layouts/ManageClassroomPage';
 
 
 const Page: NextPage = () => {

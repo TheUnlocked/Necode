@@ -1,6 +1,6 @@
 import { Alert, Container, Link, Typography } from "@mui/material";
 import NextLink from "next/link";
-import Footer from "common/components/Footer";
+import Footer from "~ui/components/Footer";
 
 const pages = [
     '/admin/createClassroom',

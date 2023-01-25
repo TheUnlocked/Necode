@@ -4,15 +4,15 @@ import { constant } from "lodash";
 import { NextPage } from "next";
 import { useSnackbar } from "notistack";
 import { useCallback, useEffect, useState } from "react";
-import { useGetRequestImmutable } from "common/api/client/GetRequestHook";
-import { useLoadingFetch } from "common/api/client/LoadingFetchHook";
-import { UserEntity } from "api/entities/UserEntity";
-import { Response } from "common/api/Response";
-import AdminPageAlert from "common/components/AdminPageAlert";
-import FullPageLoader from "common/components/FullPageLoader";
+import { useGetRequestImmutable } from "~ui/hooks/useGetRequest";
+import { useLoadingFetch } from "~ui/hooks/useLoadingFetch";
+import { UserEntity } from "~api/entities/UserEntity";
+import { Response } from "~api/Response";
+import AdminPageAlert from "~ui/components/AdminPageAlert";
+import FullPageLoader from "~ui/components/FullPageLoader";
 
 const Page: NextPage = () => {
-    const { data: me, isLoading } = useGetRequestImmutable<UserEntity>('/api/me');
+    const { data: me, isLoading } = useGetRequestImmutable<UserEntity>('/~api/me');
 
     const [rowsPerPage, setRowsPerPage] = useState(25);
 
@@ -35,7 +35,7 @@ const Page: NextPage = () => {
         const data: Response<UserEntity[], { pagination: true }> = await download(
             newPage === page + 1 && nextLink !== undefined
                 ? nextLink
-                : `/api/users?page:index=${newPage}&page:count=${rowsPerPage}`
+                : `/~api/users?page:index=${newPage}&page:count=${rowsPerPage}`
         ).then(x => x.json());
         
         if (data.response === 'ok') {
@@ -69,7 +69,7 @@ const Page: NextPage = () => {
     }, [reloadNow, page, handlePageChange]);
 
     const handleCellEdited: GridEventListener<GridEvents.cellEditCommit> = async info => {
-        const res: Response<UserEntity> = await upload(`/api/users/${info.id}`, {
+        const res: Response<UserEntity> = await upload(`/~api/users/${info.id}`, {
             method: 'PATCH',
             body: JSON.stringify({
                 [info.field]: info.value

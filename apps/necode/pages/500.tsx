@@ -2,7 +2,7 @@ import { NextPage } from "next";
 import { Stack, Typography, Link, styled } from "@mui/material";
 import { MouseEvent } from "react";
 import dedent from "dedent-js";
-import SubtleLink from "common/components/SubtleLink";
+import SubtleLink from "~ui/components/SubtleLink";
 
 const AsciiArt = styled('pre')`
     text-align: left;

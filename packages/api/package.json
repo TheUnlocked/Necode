@@ -1,16 +1,16 @@
 {
-    "name": "api",
+    "name": "~api",
     "version": "0.0.0",
     "private": true,
     "license": "MIT",
     "dependencies": {
         "@types/luxon": "^3.2.0",
-        "database": "workspace:*",
+        "~database": "workspace:*",
         "luxon": "^2.5.2"
     },
     "devDependencies": {
         "@types/simple-peer": "^9.11.5",
         "socket.io": "^4.5.4",
-        "tsconfig": "workspace:*"
+        "~tsconfig": "workspace:*"
     }
 }

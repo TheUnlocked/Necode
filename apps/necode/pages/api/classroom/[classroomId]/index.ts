@@ -1,10 +1,10 @@
-import { endpoint, Status } from "common/api/Endpoint";
-import { makeClassroomEntity } from "api/entities/ClassroomEntity";
-import { makeClassroomMemberEntity } from "api/entities/ClassroomMemberEntity";
-import { makeLessonEntity } from "api/entities/LessonEntity";
-import { hasScope } from "backend/scopes";
-import { prisma } from "database";
-import { singleArg } from "common/util/typeguards";
+import { endpoint, Status } from "~backend/Endpoint";
+import { makeClassroomEntity } from "~api/entities/ClassroomEntity";
+import { makeClassroomMemberEntity } from "~api/entities/ClassroomMemberEntity";
+import { makeLessonEntity } from "~api/entities/LessonEntity";
+import { hasScope } from "~backend/scopes";
+import { prisma } from "~database";
+import { singleArg } from "~utils/typeguards";
 
 const apiClassroomOne = endpoint(makeClassroomEntity, ['classroomId', 'include[]'], {
     type: 'entity',

@@ -1,4 +1,4 @@
-import { ClassroomMembership, ClassroomRole, User } from "database";
+import { ClassroomMembership, ClassroomRole, User } from "~database";
 import { ClassroomEntity } from "./ClassroomEntity";
 import { Entity, EntityType } from "./Entity";
 import { EntityReference, makeEntityReference, ReferenceDepth } from "./EntityReference";

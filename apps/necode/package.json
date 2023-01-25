@@ -6,12 +6,10 @@
     "dev": "next dev",
     "necode:build": "cross-env NODE_ENV=production next build",
     "start": "cross-env NODE_ENV=production node run-production.js",
-    "validate": "run-p lint typecheck",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
-    "typecheck": "tsc --noemit",
-    "test": "mocha",
-    "vercel-build": "prisma generate && prisma migrate deploy && next build"
+    "typecheck": "tsc --noEmit",
+    "test": "mocha"
   },
   "dependencies": {
     "@babel/core": "^7.20.12",

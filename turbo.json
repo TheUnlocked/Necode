@@ -7,11 +7,17 @@
         "NODE_ENV"
     ],
     "pipeline": {
-        "build": {
-            "dependsOn": ["^build"],
-            "outputs": ["dist/**", ".next/**"]
+        "vercel-build": {
+            "dependsOn": ["^db:migrate:deploy", "necode:build"]
         },
-        "db:migrate:deploy": {},
+        "necode:build": {
+            "dependsOn": ["database#generate"],
+            "outputs": [".next/**"]
+        },
+        "db:migrate:deploy": {
+            "dependsOn": ["generate"],
+            "cache": false
+        },
         "db:push": {
             "cache": false
         },
@@ -24,6 +30,11 @@
             "dependsOn": ["^generate"],
             "cache": false
         },
-        "lint": {}
+        "validate": {
+            "dependsOn": ["lint", "typecheck"]
+        },
+        "typecheck": {},
+        "lint": {},
+        "lint:fix": {}
     }
 }

@@ -5,7 +5,8 @@
     "license": "MIT",
     "scripts": {
         "wsserver:build": "webpack --config ./webpack.config.js",
-        "dev": "webpack --watch --config ./webpack.config.js"
+        "dev": "webpack --watch --config ./webpack.config.js",
+        "typecheck": "tsc --noEmit"
     },
     "devDependencies": {
         "@types/express": "^4.17.16",

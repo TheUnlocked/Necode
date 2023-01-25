@@ -2,8 +2,9 @@ import { PrismaClient } from '@prisma/client';
 
 declare global {
     var _prisma: PrismaClient | undefined;
-    var window: typeof globalThis | undefined;
 };
+
+declare var window: unknown;
 
 const isBrowser = typeof window !== 'undefined';
 

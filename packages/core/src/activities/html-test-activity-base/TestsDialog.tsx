@@ -1,6 +1,6 @@
 import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Box } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
-import useOnOpen from "../../hooks/useOnOpen";
+import useOnOpen from "../../../../ui/src/hooks/useOnOpen";
 
 type RunningState 
     = { type: 'pending' }

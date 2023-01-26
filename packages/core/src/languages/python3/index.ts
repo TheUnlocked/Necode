@@ -1,5 +1,5 @@
 import { languageDescription } from '../LangaugeDescription';
-import PythonIcon from '../../util/icons/PythonIcon';
+import PythonIcon from '../../../../ui/src/util/icons/PythonIcon';
 import supportsGlobal from "../features/supportsGlobal";
 import supportsEntryPoint from "../features/supportsEntryPoint";
 import supportsIsolated from '../features/supportsIsolated';

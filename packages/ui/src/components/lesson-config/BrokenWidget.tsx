@@ -1,6 +1,6 @@
 import { Error } from '@mui/icons-material';
 import { Tooltip } from '@mui/material';
-import { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
+import { ActivityConfigWidgetProps } from "../../../../core/src/activities/ActivityDescription";
 import ActivityWidgetBase from './ActivityWidgetBase';
 
 export default function BrokenWidget(props: ActivityConfigWidgetProps) {

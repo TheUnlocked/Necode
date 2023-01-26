@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { ActivitySubmissionEntity } from "~api/entities/ActivitySubmissionEntity";
 import tracked from "~shared/trackedEventEmitter";
 import { SocketInfo } from "./useSocket";
-import ActivityDescription from '../activities/ActivityDescription';
+import ActivityDescription from '../../../core/src/activities/ActivityDescription';
 import { useGetRequest } from './useGetRequest';
 
 export function useSubmissions(

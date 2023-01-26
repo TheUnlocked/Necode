@@ -1,0 +1,36 @@
+{
+    "name": "~core",
+    "version": "0.0.0",
+    "license": "MIT",
+    "dependencies": {
+        "@babel/core": "^7.20.12",
+        "@babel/plugin-transform-typescript": "^7.20.13",
+        "@monaco-editor/react": "^4.4.6",
+        "@necode-org/activity-dev": "workspace:*",
+        "@necode-org/language-dev": "workspace:*",
+        "@necode-org/policy-dev": "workspace:*",
+        "brython": "^3.11.0",
+        "dedent-js": "^1.0.1",
+        "lodash": "^4.17.21",
+        "nanoid": "^4.0.0",
+        "react-markdown": "^8.0.5",
+        "rehype-highlight": "^5.0.2",
+        "remark-gfm": "^3.0.1",
+        "yjs": "^13.5.44",
+        "~utils": "workspace:*"
+    },
+    "peerDependencies": {
+        "@mui/material": "^5.11.6",
+        "react": "^18.2.0"
+    },
+    "devDependencies": {
+        "@mui/material": "^5.11.6",
+        "@types/babel__core": "^7.20.0",
+        "@types/babel__traverse": "^7.18.3",
+        "@types/lodash": "^4.14.191",
+        "@types/react": "^18.0.27",
+        "monaco-editor": "^0.31.1",
+        "react": "^18.2.0",
+        "~tsconfig": "workspace:*"
+    }
+}

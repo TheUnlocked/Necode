@@ -2,7 +2,7 @@ import { Card, Divider, Stack, Box, SxProps } from "@mui/material";
 import { Dispatch, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDrop } from "use-dnd";
 import composeRefs from '@seznam/compose-react-refs';
-import ActivityDescription from "../../activities/ActivityDescription";
+import ActivityDescription from "../../../../core/src/activities/ActivityDescription";
 import { useGetRequest } from "../../hooks/useGetRequest";
 import { ActivityEntity } from "~api/entities/ActivityEntity";
 import { LessonEntity } from "~api/entities/LessonEntity";

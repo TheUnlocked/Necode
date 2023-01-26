@@ -1,0 +1,15 @@
+{
+    "display": "NextJS",
+    "extends": "./app.json",
+    "compilerOptions": {
+        "lib": [
+            "DOM",
+            "ESNext"
+        ],
+    },
+    "include": [
+        "next-env.d.ts",
+        "src"
+    ],
+    "exclude": ["node_modules"]
+}

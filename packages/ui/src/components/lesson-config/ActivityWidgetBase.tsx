@@ -1,6 +1,6 @@
 import { Card, Stack, TextField } from "@mui/material";
 import { PropsWithChildren } from 'react';
-import { ActivityConfigWidgetProps } from "../../activities/ActivityDescription";
+import { ActivityConfigWidgetProps } from "../../../../core/src/activities/ActivityDescription";
 import useLocalCachedState from '../../hooks/useLocalCachedState';
 import DragHandle, { dragHandleSelector } from "../widgets/DragHandle";
 

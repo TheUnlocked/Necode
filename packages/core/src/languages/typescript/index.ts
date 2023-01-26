@@ -1,5 +1,5 @@
 import { languageDescription } from "../LangaugeDescription";
-import TypescriptIcon from "../../util/icons/TypescriptIcon";
+import TypescriptIcon from "../../../../ui/src/util/icons/TypescriptIcon";
 import supportsGlobal from "../features/supportsGlobal";
 import supportsIsolated from "../features/supportsIsolated";
 import supportsEntryPoint from "../features/supportsEntryPoint";

@@ -1,12 +1,7 @@
 {
     "display": "NextJS",
-    "extends": "./app.json",
+    "extends": "./react.json",
     "compilerOptions": {
-        "lib": [
-            "DOM",
-            "DOM.Iterable",
-            "ESNext"
-        ],
         "allowJs": true,
         "noEmit": true,
         "esModuleInterop": true,

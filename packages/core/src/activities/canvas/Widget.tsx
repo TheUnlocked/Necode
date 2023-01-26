@@ -1,7 +1,7 @@
 import { TextField, Tooltip } from '@mui/material';
 import { useState } from 'react';
 import type { Configuration } from '.';
-import DefaultActivityWidget from '../../components/lesson-config/DefaultActivityWidget';
+import DefaultActivityWidget from '../../../../ui/src/components/lesson-config/DefaultActivityWidget';
 import { ActivityConfigWidgetProps } from '../ActivityDescription';
 
 function validate(str: string) {

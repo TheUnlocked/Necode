@@ -1,19 +1,14 @@
-import { Card, Box } from "@mui/material";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ReflexContainer, ReflexElement, ReflexSplitter } from "react-reflex";
-import dedent from "dedent-js";
 import Editor from "@monaco-editor/react";
-import { ActivityPageProps } from "../ActivityDescription";
-import useIsSizeOrSmaller from "../../hooks/useIsSizeOrSmaller";
-import CodeAlert from "../../components/CodeAlert";
-import useImported from '../../hooks/useImported';
-import { useMediaChannel } from '../../hooks/RtcHooks';
+import { Box, Card } from "@mui/material";
+import { CodeAlert, LazyImportable, Pane, Panes, PanesLayouts, PassthroughPane, useImported } from '@necode-org/activity-dev';
+import dedent from "dedent-js";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NetworkId } from '~api/RtcNetwork';
-import typeDeclarationFiles from '../p5js/typeDeclarationFiles';
-import { LazyImportable } from '../../components/Lazy';
-import Video from '../../components/Video';
-import { useCallback } from 'react';
+import Video from '../../../../ui/src/components/Video';
+import { useMediaChannel } from '../../../../ui/src/hooks/RtcHooks';
+import { ActivityPageProps } from "../ActivityDescription";
 import { Configuration } from '../canvas';
+import typeDeclarationFiles from '../p5js/typeDeclarationFiles';
 
 const importExtraLibs = () => Promise.all(typeDeclarationFiles.map(async x => ({ filePath: x, content: await (await fetch(x)).text() })));
 
@@ -136,11 +131,15 @@ export function Activity({ language, activityConfig }: ActivityPageProps<Configu
             };
         }
     }, [canvas, iframe, config]);
+    
+    const layouts: PanesLayouts = {
+        thin: { panesPerColumn: [2] },
+        medium: { panesPerColumn: [1, 1], weights: [1, 1] },
+        wide: { panesPerColumn: [1, 1], weights: [2, 1] },
+    };
 
-    const isSmallScreen = useIsSizeOrSmaller("sm");
-
-    return <ReflexContainer orientation={isSmallScreen ? "horizontal" : "vertical"}>
-        <ReflexElement flex={2}>
+    return <Panes layouts={layouts}>
+        <Pane label={language.displayName}>
             <Card sx={{ height: "100%", flexGrow: 1, display: "flex", flexDirection: "column" }}>
                 <Box sx={{
                     flexGrow: 1,
@@ -181,9 +180,8 @@ export function Activity({ language, activityConfig }: ActivityPageProps<Configu
                 </Box>
                 <CodeAlert error={codeError} />
             </Card>
-        </ReflexElement>
-        <ReflexSplitter/>
-        <ReflexElement flex={1}>
+        </Pane>
+        <PassthroughPane>
             <Box sx={{
                 height: "100%",
                 width: "100%",
@@ -197,6 +195,6 @@ export function Activity({ language, activityConfig }: ActivityPageProps<Configu
                 <Video width={config.canvasWidth} height={config.canvasHeight} style={{ position: "absolute", left: -1e6 }}
                     muted autoPlay srcObject={inboundStream} ref={videoRef} />
             </Box>
-        </ReflexElement>
-    </ReflexContainer>;
+        </PassthroughPane>
+    </Panes>;
 }

@@ -1,5 +1,5 @@
 import { languageDescription } from "../LangaugeDescription";
-import JavascriptIcon from "../../util/icons/JavascriptIcon";
+import JavascriptIcon from "../../../../ui/src/util/icons/JavascriptIcon";
 import supportsGlobal from "../features/supportsGlobal";
 import supportsIsolated from "../features/supportsIsolated";
 import supportsEntryPoint from "../features/supportsEntryPoint";

@@ -1,17 +1,15 @@
-import { Card, Typography, Box, styled } from "@mui/material";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ReflexContainer, ReflexElement, ReflexSplitter } from "react-reflex";
-import { BrowserRunner } from "../../runner/BrowserRunner";
-import dedent from "dedent-js";
 import Editor from "@monaco-editor/react";
-import { ActivityPageProps } from "../ActivityDescription";
-import useIsSizeOrSmaller from "../../hooks/useIsSizeOrSmaller";
-import CodeAlert from "../../components/CodeAlert";
-import useImported from '../../hooks/useImported';
-import { useMediaChannel } from '../../hooks/RtcHooks';
+import { Box, Card, styled, Typography } from "@mui/material";
+import { CodeAlert, Pane, Panes, PanesLayouts, PassthroughPane } from "@necode-org/activity-dev";
+import dedent from "dedent-js";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { NetworkId } from '~api/RtcNetwork';
-import Video from '../../components/Video';
+import useImported from '~shared-ui/hooks/useImported';
 import { Configuration } from '.';
+import Video from '../../../../ui/src/components/Video';
+import { useMediaChannel } from '../../../../ui/src/hooks/RtcHooks';
+import { BrowserRunner } from "../../../../ui/src/runner/BrowserRunner";
+import { ActivityPageProps } from "../ActivityDescription";
 
 const DrawingCanvas = styled('canvas')({
     maxWidth: "100%",
@@ -155,10 +153,14 @@ export function CanvasActivity({ language, activityConfig }: ActivityPageProps<C
         }
     }, [context2d, inboundVideoElt, runner]);
 
-    const isSmallScreen = useIsSizeOrSmaller("sm");
+    const layouts: PanesLayouts = {
+        thin: { panesPerColumn: [2] },
+        medium: { panesPerColumn: [1, 1], weights: [1, 1] },
+        wide: { panesPerColumn: [1, 1], weights: [2, 1] },
+    };
 
-    return <ReflexContainer orientation={isSmallScreen ? "horizontal" : "vertical"}>
-        <ReflexElement flex={2}>
+    return <Panes layouts={layouts}>
+        <Pane label={language.displayName}>
             <Card sx={{ height: "100%", flexGrow: 1, display: "flex", flexDirection: "column" }}>
                 <Typography variant="body1" component="div" sx={{ pl: 2, pr: 1, py: 1 }}>Write code to modify the canvas!</Typography>
                 <Box sx={{
@@ -178,9 +180,8 @@ export function CanvasActivity({ language, activityConfig }: ActivityPageProps<C
                 </Box>
                 <CodeAlert error={codeError} />
             </Card>
-        </ReflexElement>
-        <ReflexSplitter/>
-        <ReflexElement flex={1}>
+        </Pane>
+        <PassthroughPane>
             <Box sx={{
                 height: "100%",
                 width: "100%",
@@ -193,6 +194,6 @@ export function CanvasActivity({ language, activityConfig }: ActivityPageProps<C
                 <Video width={config.canvasWidth} height={config.canvasHeight} style={{ position: "absolute", left: -1e6 }}
                     muted autoPlay srcObject={inboundStream} ref={setInboundVideoElt} />
             </Box>
-        </ReflexElement>
-    </ReflexContainer>;
+        </PassthroughPane>
+    </Panes>;
 }

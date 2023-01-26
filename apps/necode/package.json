@@ -46,7 +46,9 @@
     "use-dnd": "^1.2.3",
     "~api": "workspace:*",
     "~backend": "workspace:*",
+    "~core": "workspace:*",
     "~database": "workspace:*",
+    "~shared-ui": "workspace:*",
     "~ui": "workspace:*",
     "~utils": "workspace:*"
   },

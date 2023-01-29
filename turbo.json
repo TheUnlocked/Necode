@@ -11,7 +11,7 @@
             "dependsOn": ["^db:migrate:deploy", "necode:build"]
         },
         "necode:build": {
-            "dependsOn": ["~database#generate"],
+            "dependsOn": ["~database#generate", "^build"],
             "outputs": [".next/**"]
         },
         "db:migrate:deploy": {
@@ -25,6 +25,10 @@
         "dev": {
             "cache": false,
             "persistent": true
+        },
+        "build": {
+            "dependsOn": ["^build"],
+            "outputs": ["dist/**"]
         },
         "generate": {
             "dependsOn": ["^generate"],

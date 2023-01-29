@@ -1,6 +1,6 @@
 import { useSnackbar } from 'notistack';
 import { useCallback, useMemo } from 'react';
-import { useLoadingFetch } from './useLoadingFetch';
+import useLoadingFetch from '~shared-ui/hooks/useLoadingFetch';
 import { Response } from '~api/Response';
 
 export interface NecodeFetchRequestOptions {

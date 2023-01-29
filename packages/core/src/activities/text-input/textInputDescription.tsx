@@ -1,4 +1,4 @@
-import { activityDescription } from "../ActivityDescription";
+import { activityDescription } from '@necode-org/activity-dev';
 
 /** The "activity" representing a text input. It exists for its utility as a widget. */
 const textInputActivityDescription = activityDescription({

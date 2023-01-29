@@ -1,6 +1,5 @@
-import RunnableLanguage from '../RunnableLanguage';
 import dedent from 'dedent-js';
-import { FeatureOptionsOf } from '../LangaugeDescription';
+import { FeatureOptionsOf, RunnableLanguage } from '@necode-org/activity-dev';
 import { pythonDescription } from '.';
 import brythonRaw from 'raw-loader!brython/brython.min.js';
 import brythonStdlibRaw from 'raw-loader!brython/brython_stdlib.js';

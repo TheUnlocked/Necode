@@ -1,40 +1,8 @@
-import { IRunner, IRunnerProvider } from "./IRunner";
-
-export class BrowserRunnerProvider implements IRunnerProvider<BrowserRunner> {
-    async requisition(): Promise<BrowserRunner> {
-        const runner = new BrowserRunner();
-        await runner.start();
-        return runner;
-    }
-
-    async release(runner: BrowserRunner): Promise<void> {
-        runner.shutdown();
-    }
-
-    async use(callback: (runner: BrowserRunner) => Promise<void>): Promise<void> {
-        const runner = await this.requisition();
-        await callback(runner);
-        await this.release(runner);
-    }
-}
-
-export class BrowserRunner implements IRunner {
+export class CodeRunner {
     wasStarted = false;
     isAlive = false;
-    private code: string = "";
     private compiled: Function | undefined;
     private entryPoint: Function | undefined;
-
-    async start() {
-        if (this.wasStarted) {
-            if (this.isAlive) {
-                throw new Error(`Cannot start an already started runner`);
-            }
-            else {
-                throw new Error(`Cannot re-start a dead runner, create a new instance instead`);
-            }
-        }
-    }
 
     /**
      * 
@@ -78,12 +46,5 @@ export class BrowserRunner implements IRunner {
 
     private async runHot(args: any[], timeout: number) {
         this.entryPoint!(...args);
-    }
-
-    /**
-     * Shuts down the SecureRunner
-     */
-    shutdown() {
-        this.isAlive = false;
     }
 }

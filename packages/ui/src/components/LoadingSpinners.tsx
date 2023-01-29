@@ -1,6 +1,6 @@
 import { useTheme, Box } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useLoadingContext } from "../hooks/useLoadingContext";
+import { useLoadingContext } from "~shared-ui/hooks/useLoadingContext";
 import Spinner from "./Spinner";
 
 export default function LoadingSpinners() {

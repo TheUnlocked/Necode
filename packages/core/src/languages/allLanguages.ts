@@ -3,7 +3,7 @@ import { cssDescription } from "./css";
 import { glslDescription } from "./glsl";
 import { htmlDescription } from "./html";
 import { javascriptDescription } from "./javascript";
-import LanguageDescription from "./LangaugeDescription";
+import { LanguageDescription } from '@necode-org/activity-dev';
 import { markdownDescription } from "./markdown";
 import { plainTextDescription } from "./plaintext";
 import { pythonDescription } from "./python3";

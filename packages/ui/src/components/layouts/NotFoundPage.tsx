@@ -1,7 +1,7 @@
 import { NextPage } from "next";
 import { Link } from "@mui/material";
 import { MouseEvent } from "react";
-import StatusPage from "~ui/components/layouts/StatusPage";
+import StatusPage from "./StatusPage";
 
 const NotFoundPage: NextPage = () => {
     function goBack(e: MouseEvent) {

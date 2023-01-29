@@ -5,7 +5,7 @@ import { useGetRequestImmutable } from '~ui/hooks/useGetRequest';
 import { UserEntity } from '~api/entities/UserEntity';
 import Footer from '~ui/components/Footer';
 import NecodeLogo from '~ui/components/NecodeLogo';
-import SubtleLink from '~ui/components/SubtleLink';
+import SubtleLink from '~shared-ui/components/SubtleLink';
 
 const InfoBox = styled('section')`
     padding-bottom: 32px;

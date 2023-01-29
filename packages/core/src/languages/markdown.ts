@@ -1,5 +1,5 @@
-import MarkdownIcon from "../../../ui/src/util/icons/MarkdownIcon";
-import { languageDescription } from "./LangaugeDescription";
+import MarkdownIcon from "../icons/MarkdownIcon";
+import { languageDescription } from '@necode-org/activity-dev';
 
 export const markdownDescription = languageDescription({
     name: 'markdown',

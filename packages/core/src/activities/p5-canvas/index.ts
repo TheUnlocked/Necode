@@ -1,7 +1,7 @@
 import supportsBabelPlugins from '../../languages/features/supportsBabelPlugins';
 import supportsGlobal from '../../languages/features/supportsGlobal';
 import supportsIsolated from '../../languages/features/supportsIsolated';
-import { activityDescription } from "../ActivityDescription";
+import { activityDescription } from '@necode-org/activity-dev';
 import { Configuration } from '../canvas';
 
 const canvasActivityDescription = activityDescription({

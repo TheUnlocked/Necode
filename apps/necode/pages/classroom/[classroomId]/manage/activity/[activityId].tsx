@@ -5,7 +5,7 @@ import { Button, Toolbar, Select, MenuItem, Stack, ToggleButton, Skeleton, Paper
 import { ArrowBack, Code, Save } from "@mui/icons-material";
 import allLanguages from "~core/languages/allLanguages";
 import LanguageDescription from "~core/languages/LangaugeDescription";
-import useImperativeDialog from "~ui/hooks/useImperativeDialog";
+import useImperativeDialog from "~shared-ui/hooks/useImperativeDialog";
 import sortByProperty from "~utils/sortByProperty";
 import { flip, make } from "~utils/fp";
 import { LazyImportable } from "~shared-ui/components/Lazy";
@@ -13,7 +13,7 @@ import ConfigureLanguageDialog from "~ui/components/dialogs/ConfigureLanguageDia
 import { useGetRequest, useGetRequestImmutable } from "~ui/hooks/useGetRequest";
 import { ActivityEntity } from "~api/entities/ActivityEntity";
 import allActivities from "~core/activities/allActivities";
-import useDirty from "~ui/hooks/useDirty";
+import useDirty from "~shared-ui/hooks/useDirty";
 import { ClassroomMemberEntity } from "~api/entities/ClassroomMemberEntity";
 import NotFoundPage from "../../../../404";
 import supportsLanguage from "~core/activities/supportsLanguage";

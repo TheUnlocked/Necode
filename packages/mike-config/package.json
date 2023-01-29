@@ -1,15 +1,22 @@
 {
-    "name": "~mike-config",
-    "version": "0.0.0",
-    "private": true,
-    "license": "MIT",
-    "peerDependencies": {
-        "@necode-org/mike": "^0.3.3"
-    },
-    "devDependencies": {
-        "~tsconfig": "workspace:*"
-    },
-    "dependencies": {
-        "@necode-org/mike": "^0.3.3"
-    }
+  "name": "~mike-config",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "_exports": {
+    ".": "./dist/index.js",
+    "./*": "./dist/*"
+  },
+  "scripts": {
+    "_dev": "tsc --watch",
+    "_build": "tsc"
+  },
+  "peerDependencies": {
+    "@necode-org/mike": "^0.3.3"
+  },
+  "devDependencies": {
+    "@necode-org/mike": "^0.3.3",
+    "typescript": "^4.9.4",
+    "~tsconfig": "workspace:*"
+  }
 }

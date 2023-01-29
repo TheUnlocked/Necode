@@ -1,4 +1,5 @@
 import { styled } from '@mui/material';
+import { PropsWithChildren } from 'react';
 
 export default styled('div')`
     position: fixed;
@@ -10,4 +11,4 @@ export default styled('div')`
     top: 0;
     width: 100vw;
     height: 100vh;
-`;
+` as React.FC<PropsWithChildren>;

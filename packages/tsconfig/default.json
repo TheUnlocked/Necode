@@ -1,6 +1,7 @@
 {
     "display": "Default",
     "compilerOptions": {
+        "baseUrl": ".",
         "lib": ["ESNext"],
         "module": "ESNext",
         "moduleResolution": "Node",
@@ -10,19 +11,21 @@
         "isolatedModules": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
+        "experimentalDecorators": true,
         "outDir": "dist",
-        "baseUrl": ".",
+        // "declaration": true,
+        // "declarationMap": true,
         "paths": {
-            "~backend/*": ["../../packages/backend/src/*"],
-            "~core/*": ["../../packages/core/src/*"],
-            "~ui/*": ["../../packages/ui/src/*"],
-            "~shared-ui/*": ["../../packages/shared-ui/src/*"],
-            "~api/*": ["../../packages/api/src/*"],
-            "~shared/*": ["../../packages/shared/src/*"],
-            "~utils/*": ["../../packages/utils/src/*"],
+            "~core/*": ["node_modules/~core/src/*"],
+            "~ui/*": ["node_modules/~ui/src/*"],
+            "~shared-ui/*": ["node_modules/~shared-ui/src/*"],
+            "~backend/*": ["node_modules/~backend/src/*"],
+            "~api/*": ["node_modules/~api/src/*"],
+            "~shared/*": ["node_modules/~shared/src/*"],
+            "~utils/*": ["node_modules/~utils/src/*"],
             
-            "@necode-org/*": ["../../packages/*/src"],
-            "~*": ["../../packages/*/src"]
+            "@necode-org/*": ["node_modules/@necode-org/*/src"],
+            "~*": ["node_modules/~*/src"]
         },
     },
 }

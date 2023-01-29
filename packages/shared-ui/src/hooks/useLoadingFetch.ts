@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useLoadingContext } from "./useLoadingContext";
 
-export function useLoadingFetch(): {
+export default function useLoadingFetch(): {
     download: typeof fetch,
     upload: typeof fetch
 } {

@@ -1,4 +1,4 @@
-import FeatureDescription from "./FeatureDescription";
+import { FeatureDescription } from '@necode-org/activity-dev';
 
 const supportsGlobal: FeatureDescription<{
     global: true;

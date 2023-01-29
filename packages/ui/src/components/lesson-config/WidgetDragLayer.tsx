@@ -2,7 +2,7 @@ import { Alert, Box } from '@mui/material';
 import { truncate } from 'lodash';
 import { useMemo } from 'react';
 import { useDragLayer } from 'use-dnd';
-import textInputActivityDescription from '../../../../core/src/activities/text-input/textInputDescription';
+import textInputActivityDescription from '~core/activities/text-input/textInputDescription';
 import { activityDragDropType } from '../../dnd/types';
 import DragLayer from '../DragLayer';
 

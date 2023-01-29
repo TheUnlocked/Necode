@@ -5,7 +5,7 @@ import { NextPage } from "next";
 import { useSnackbar } from "notistack";
 import { useCallback, useEffect, useState } from "react";
 import { useGetRequestImmutable } from "~ui/hooks/useGetRequest";
-import { useLoadingFetch } from "~ui/hooks/useLoadingFetch";
+import useLoadingFetch from "~shared-ui/hooks/useLoadingFetch";
 import { UserEntity } from "~api/entities/UserEntity";
 import { Response } from "~api/Response";
 import AdminPageAlert from "~ui/components/AdminPageAlert";

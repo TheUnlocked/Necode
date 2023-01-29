@@ -1,4 +1,4 @@
-import FeatureDescription from "./FeatureDescription";
+import { FeatureDescription } from '@necode-org/activity-dev';
 import type { PluginObj } from '@babel/core';
 import type * as BabelCoreNamespace from '@babel/core';
 

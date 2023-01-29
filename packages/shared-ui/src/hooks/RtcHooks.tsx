@@ -5,7 +5,7 @@ import { NetworkId } from '~api/RtcNetwork';
 import cyrb53 from '~utils/cyrb53';
 import { callWith } from '~utils/fp';
 import tracked from '~shared/trackedEventEmitter';
-import { SocketInfo } from './useSocket';
+import SocketInfo from '../types/SocketInfo';
 
 /**
  * Information about a remote user.
@@ -35,6 +35,9 @@ export function RtcProvider({ socketInfo, children }: PropsWithChildren<{ socket
     const peersRef = useRef(new Set<Peer>());
 
     const getNetworkCallbacksRef = useRef((network: NetworkId) => {
+        if (network === NetworkId.OFFLINE) {
+            return { callbacks: new Set<UsePeerCallback>(), peers: new Set<Peer>() };
+        }
         let networkCallbacks = onPeerCallbacksRef.current.get(network);
         if (!networkCallbacks) {
             networkCallbacks = new Set();

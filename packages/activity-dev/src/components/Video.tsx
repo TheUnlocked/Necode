@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, forwardRef } from 'react';
-import { assignRef, SimpleRef } from '../util/simpleRef';
+import { assignRef, SimpleRef } from '~shared-ui/util/simpleRef';
 
 export interface VideoProps extends React.DetailedHTMLProps<React.VideoHTMLAttributes<HTMLVideoElement>, HTMLVideoElement> {
     srcObject?: HTMLVideoElement['srcObject'];

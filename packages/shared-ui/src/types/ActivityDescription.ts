@@ -1,8 +1,8 @@
 import { ComponentType } from "react";
 import { RefConnector } from "use-dnd";
 import { PolicyConfiguration } from '~api/RtcNetwork';
-import FeatureDescription from "../languages/features/FeatureDescription";
-import LanguageDescription from "../languages/LangaugeDescription";
+import FeatureDescription from "./FeatureDescription";
+import LanguageDescription from "./LanguageDescription";
 import { Importable } from '~utils/types';
 
 interface BaseActivityProps<ConfigData = undefined> {

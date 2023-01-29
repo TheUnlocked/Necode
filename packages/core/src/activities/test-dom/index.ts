@@ -1,4 +1,4 @@
-import { activityDescription } from "../ActivityDescription";
+import { activityDescription } from '@necode-org/activity-dev';
 import { HtmlTestActivityBaseConfig } from "../html-test-activity-base/createTestActivityPage";
 import supportsGlobal from "../../languages/features/supportsGlobal";
 import supportsIsolated from "../../languages/features/supportsIsolated";

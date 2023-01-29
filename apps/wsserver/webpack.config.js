@@ -3,6 +3,8 @@
 const { spawn } = require('child_process');
 const path = require('path');
 
+const { TsconfigPathsPlugin } = require('tsconfig-paths-webpack-plugin');
+
 /** @typedef {import('webpack').Compiler} Compiler */
 
 const rel = x => './' + path.join(path.relative(process.cwd(), __dirname), x);
@@ -16,17 +18,12 @@ module.exports = {
     devtool: 'inline-source-map',
     entry: './src/main.ts',
     output: {
-        path: path.resolve(rel('dist')),
+        path: path.join(__dirname, 'dist'),
         filename: 'index.js'
     },
     resolve: {
         extensions: ['.ts', '.tsx', '.js'],
-        alias: {
-            ...Object.fromEntries(
-                ['~api', '~utils', '~database', '~mike-config', '~backend', '~shared']
-                    .map(x => [x, `${x}/src`])
-            ),
-        },
+        plugins: [new TsconfigPathsPlugin({ configFile: path.join(__dirname, 'tsconfig.json') })],
     },
     module: {
         rules: [

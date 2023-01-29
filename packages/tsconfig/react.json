@@ -2,10 +2,13 @@
     "display": "NextJS",
     "extends": "./app.json",
     "compilerOptions": {
+        "baseUrl": ".",
         "lib": [
             "DOM",
+            "DOM.Iterable",
             "ESNext"
         ],
+        "jsx": "preserve",
     },
     "include": [
         "next-env.d.ts",

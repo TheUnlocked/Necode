@@ -1,7 +1,7 @@
 import Editor, { OnChange, useMonaco } from "@monaco-editor/react";
 import { Refresh as RefreshIcon, Sync as SyncIcon } from "@mui/icons-material";
 import { Box, Button, CardContent, Checkbox, IconButton, Stack, Tooltip, Typography, useTheme } from "@mui/material";
-import { CodeAlert, Pane, Panes, PanesLayouts, PaneTab, PaneTitle, PassthroughPane, TabbedPane, useImported, useIsSizeOrSmaller } from "@necode-org/activity-dev";
+import { applyTransaction, useChanged, ActivityConfigPageProps, ActivityPageProps, applyUnifiedUpdates, CodeAlert, Key, LanguageDescription, Link, Pane, Panes, PanesLayouts, PaneTab, PaneTitle, PassthroughPane, TabbedPane, useFetch, useImperativeDialog, useImported, useIsSizeOrSmaller, useY, useYAwareness, useYText } from "@necode-org/activity-dev";
 import { debounce } from "lodash";
 import { editor, languages } from 'monaco-editor';
 import testScaffoldingTypes from "raw-loader!./test-scaffolding.d.ts.raw";
@@ -9,25 +9,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from 'rehype-highlight';
 import remarkGfm from 'remark-gfm';
-import * as Y from 'yjs';
-import { UserEntity } from '~api/entities/UserEntity';
 import { NetworkId } from '~api/RtcNetwork';
 import { ImplicitNewType, NonStrictDisjunction } from "~utils/types";
-import Key from "../../../../ui/src/components/Key";
-import SubtleLink from "../../../../ui/src/components/SubtleLink";
-import useDirty from '../../../../ui/src/hooks/useDirty';
-import { useGetRequestImmutable } from '../../../../ui/src/hooks/useGetRequest';
-import useImperativeDialog from "../../../../ui/src/hooks/useImperativeDialog";
-import { useLoadingFetch } from '../../../../ui/src/hooks/useLoadingFetch';
-import useY, { useYAwareness } from '../../../../ui/src/hooks/useY';
-import TypescriptIcon from "../../../../ui/src/util/icons/TypescriptIcon";
-import { applyTransaction, applyUnifiedUpdates } from '../../../../ui/src/util/y-utils';
+import TypescriptIcon from "../../icons/TypescriptIcon";
 import { cssDescription } from "../../languages/css";
 import { htmlDescription } from "../../languages/html";
-import LanguageDescription from "../../languages/LangaugeDescription";
 import transformTestScaffolding from "../../languages/transformers/babel-plugin-transform-test-scaffolding";
 import { typescriptDescription } from '../../languages/typescript';
-import { ActivityConfigPageProps, ActivityPageProps } from "../ActivityDescription";
 import { ActivityIframe, IframeActions } from "./ActivityIframe";
 import PaneEditor from "./PaneEditor";
 import TestsDialog from "./TestsDialog";
@@ -107,7 +95,7 @@ export default function createTestActivityPage({
             onActivityConfigChange,
             onSubmit,
             saveData,
-            onSaveDataChange
+            onSaveDataChange,
         } = props as NonStrictDisjunction<ActivityConfigPageProps<Config>, ActivityPageProps<Config>>;
         
         const {
@@ -129,12 +117,6 @@ export default function createTestActivityPage({
         const isCssEnabled = activityTypeHasCss && (isEditor || css?.enabled);
 
         const showIframeTestPane = !isEditor || activityTypeHasTests;
-
-        const layouts: PanesLayouts = {
-            thin: { panesPerColumn: [5], weights: [{ column: 1, rows: [0, 0, 0, 0, 1] }] },
-            medium: { panesPerColumn: [4, 1], weights: [5, 2] },
-            wide: { panesPerColumn: [1, 3, 1], weights: [2, showIframeTestPane ? 3 : 5, 2] },
-        };
         
         const [committedState, setCommittedState] = useState<{
             readonly html?: string;
@@ -142,16 +124,24 @@ export default function createTestActivityPage({
             readonly css?: string;
         }>({});
 
-        // `isEditor` and `networked` are constants.
-        // eslint-disable-next-line @grncdr/react-hooks/rules-of-hooks
-        const yDoc = isEditor ? undefined : networked ? useY(NetworkId.NET_0, 'shared-editors') : useMemo(() => new Y.Doc(), []);
+        const network = networked && !isEditor ? NetworkId.NET_0 : NetworkId.OFFLINE;
 
-        // Basically a "force refresh" state, since yjs operates outside of the reactive model
-        const [, signalChange] = useDirty();
+        const y = useY(network, 'shared-editors');
+        
+        const uncommittedHtml = useYText(y, 'html');        
+        const uncommittedCode = useYText(y, 'code');        
+        const uncommittedCss = useYText(y, 'css');        
+        const uncommittedValues = useMemo(() => ({
+            html: uncommittedHtml.value,
+            code: uncommittedCode.value,
+            css: uncommittedCss.value,
+        }), [uncommittedHtml, uncommittedCode, uncommittedCss]);
+
+        const yChanged = useChanged(y, true);
 
         useEffect(() => {
-            if (yDoc) {
-                applyUnifiedUpdates(yDoc, doc => {
+            if (!isEditor) {
+                applyUnifiedUpdates(y, doc => {
                     for (const type of ['html', 'css', 'code'] as const) {
                         const initialValue = type === 'code'
                             ? activityConfig.languages[type]?.defaultValue[language.name]
@@ -163,18 +153,16 @@ export default function createTestActivityPage({
                     }
                 });
             }
-        }, [activityConfig.languages, language.name, yDoc]);
+        }, [activityConfig.languages, language.name, y, yChanged]);
 
-        const { data } = useGetRequestImmutable<UserEntity>('/api/me');
-
-        // eslint-disable-next-line @grncdr/react-hooks/rules-of-hooks
-        const yAwareness = !yDoc || !networked ? undefined : useYAwareness(NetworkId.NET_0, 'shared-editors-awareness', yDoc, {
-            displayName: data?.attributes.displayName,
+        const yAwareness = useYAwareness(network, 'shared-editors-awareness', y, {
+            // TODO: Get names back for awareness
+            // displayName: me?.attributes.displayName,
         });
 
         useEffect(() => {
-            if (saveData && yDoc) {
-                applyTransaction(yDoc, doc => {
+            if (saveData && y) {
+                applyTransaction(y, doc => {
                     for (const type of ['html', 'code', 'css'] as const) {
                         const text = doc.getText(type);
                         text.delete(0, text.length);
@@ -183,20 +171,18 @@ export default function createTestActivityPage({
                 }, 'submission');
                 onSaveDataChange?.(undefined);
             }
-        }, [saveData, onSaveDataChange, yDoc]);
+        }, [saveData, onSaveDataChange, y]);
 
         const iframeActions = useRef<IframeActions>(noopIframeActions);
 
         const applyChanges = useCallback((type: EditorType) => {
-            if (yDoc) {
-                setCommittedState(st => ({
-                    ...st,
-                    [type]: yDoc.getText(type).toString(),
-                }));
-            }
-        }, [yDoc]);
+            setCommittedState(st => ({
+                ...st,
+                [type]: uncommittedValues[type],
+            }));
+        }, [uncommittedValues]);
 
-        const { download } = useLoadingFetch();
+        const { download } = useFetch();
 
         const startTests = useRef(() => {});
         const passTests = useRef(() => {});
@@ -218,45 +204,20 @@ export default function createTestActivityPage({
         });
 
         const applyAllChanges = useCallback(() => {
-            if (yDoc) {
-                if (isHtmlEnabled) {
-                    setCommittedState(st => ({
-                        ...st,
-                        html: yDoc.getText('html').toString(),
-                    }));
-                }
-                if (isCodeEnabled) {
-                    setCommittedState(st => ({
-                        ...st,
-                        code: yDoc.getText('code').toString(),
-                    }));
-                }
-                if (isCssEnabled) {
-                    setCommittedState(st => ({
-                        ...st,
-                        css: yDoc.getText('css').toString(),
-                    }));
-                }
-            }
-        }, [isHtmlEnabled, isCodeEnabled, isCssEnabled, yDoc]);
+            setCommittedState(uncommittedValues);
+        }, [uncommittedValues]);
 
         const applyChangesAndWait = useCallback(async () => {
-            if (yDoc) {
-                setCommittedState(st => {
-                    for (const type of ['html', 'code', 'css'] as const) {
-                        if (yDoc.getText(type).toString() !== st[type]) {
-                            iframeActions.current.waitForReload();
-                            return {
-                                html: yDoc.getText('html').toString(),
-                                code: yDoc.getText('code').toString(),
-                                css: yDoc.getText('css').toString(),
-                            };
-                        }
+            setCommittedState(st => {
+                for (const type of ['html', 'code', 'css'] as const) {
+                    if (uncommittedValues[type] !== st[type]) {
+                        iframeActions.current.waitForReload();
+                        return uncommittedValues;
                     }
-                    return st;
-                });
-            }
-        }, [yDoc]);
+                }
+                return st;
+            });
+        }, [uncommittedValues]);
 
         const codeGenerator = useImported(language.runnable);
         const [compiledJs, setCompiledJs] = useState('');
@@ -283,11 +244,20 @@ export default function createTestActivityPage({
         const [selectedHtmlTab, setSelectedHtmlTab] = useState(activityTypeHasHtml ? 'starter' : 'hidden');
 
         const editorPane = useCallback((type: EditorType, language: LanguageDescription, hidden: boolean) => {
+            if (hidden) {
+                return <PassthroughPane hidden />;
+            }
+
             const isHiddenHtmlOnly = type === 'html' && !activityTypeHasHtml;
             
             const Icon = language.icon;
-            
-            const uncommittedValue = yDoc?.getText(type).toString();
+
+            const text = {
+                html: uncommittedHtml,
+                code: uncommittedCode,
+                css: uncommittedCss,
+            }[type];
+            const uncommittedValue = text.value;
 
             const editorValue = isEditor
                 ? isHiddenHtmlOnly
@@ -326,18 +296,22 @@ export default function createTestActivityPage({
                         });
                     }
                 }
-                signalChange();
             };
 
             if (isEditor) {
                 function tabLabelWithCheckbox(active: boolean) {
                     const langConfig = activityConfig.languages[type as Exclude<EditorType, 'hidden-html'>];
+
+                    if (!langConfig) {
+                        return <></>;
+                    }
+
                     return <>
                         <PaneTitle selectable={false} color={active ? undefined : 'disabled'} sx={{ mx: 1 }}>Starter</PaneTitle>
                         <Checkbox sx={{ ml: "-9px", my: "-9px" }}
-                            checked={langConfig!.enabled}
+                            checked={langConfig.enabled}
                             disabled={!active}
-                            onChange={ev => ev.target.checked === langConfig!.enabled ? undefined : onActivityConfigChange!({
+                            onChange={ev => ev.target.checked === langConfig.enabled ? undefined : onActivityConfigChange!({
                                 ...activityConfig,
                                 languages: {
                                     ...activityConfig.languages,
@@ -376,7 +350,7 @@ export default function createTestActivityPage({
                             value={editorValue}
                             applyChanges={() => applyChanges(type)}
                             onChange={onChange}
-                            yText={yDoc?.getText(type)}
+                            yText={text}
                             yAwareness={yAwareness} />
                     </Pane>;
                 }
@@ -403,12 +377,11 @@ export default function createTestActivityPage({
                         value={editorValue}
                         applyChanges={() => applyChanges(type)}
                         onChange={onChange}
-                        yText={yDoc?.getText(type)}
+                        yText={text}
                         yAwareness={yAwareness} />
                 </Pane>;
             }
-
-        }, [selectedHtmlTab, isThinish, committedState, applyChanges, activityConfig, onActivityConfigChange, yDoc, yAwareness]);
+        }, [selectedHtmlTab, isThinish, committedState, applyChanges, activityConfig, onActivityConfigChange, uncommittedHtml, uncommittedCode, uncommittedCss, yAwareness]);
 
         const monaco = useMonaco();
 
@@ -523,7 +496,7 @@ export default function createTestActivityPage({
         let iframeOrTestPane = isEditor
             ? <Pane
                 icon={<TypescriptIcon />}
-                label={<>Tests<SubtleLink href="/docs/tests" target="_blank"><sup>?</sup></SubtleLink></>}
+                label={<>Tests<Link href="/docs/tests" target="_blank"><sup>?</sup></Link></>}
                 hidden={!showIframeTestPane}
                 toolbar={<>
                     <PaneTitle sx={{ mr: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Require checks to submit</PaneTitle>
@@ -611,6 +584,12 @@ export default function createTestActivityPage({
                         linkTarget="_blank">{description ?? ''}</ReactMarkdown>
                 </CardContent>}
         </Pane>;
+
+        const layouts: PanesLayouts = {
+            thin: { panesPerColumn: [5], weights: [{ column: 1, rows: [1, 1, 1, 1, 100] }] },
+            medium: { panesPerColumn: [4, 1], weights: [5, 2] },
+            wide: { panesPerColumn: [1, 3, 1], weights: [2, showIframeTestPane ? 3 : 5, 2] },
+        };
 
         const panes = <Panes layouts={layouts}>
             {descriptionPane}

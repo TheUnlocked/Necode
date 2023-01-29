@@ -1,5 +1,4 @@
-import RunnableLanguage from "../RunnableLanguage";
-import { FeatureOptionsOf, languageDescription } from "../LangaugeDescription";
+import { RunnableLanguage, FeatureOptionsOf, languageDescription } from '@necode-org/activity-dev';
 import injectionCode from "raw-loader!./inject.js.raw";
 
 export const glslDescription = languageDescription({

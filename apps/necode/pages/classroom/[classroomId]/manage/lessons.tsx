@@ -13,7 +13,7 @@ import LessonDatePicker from '~ui/components/lesson-config/LessonDatePicker';
 import useNecodeFetch from '~ui/hooks/useNecodeFetch';
 import { ActivityEntity } from '~api/entities/ActivityEntity';
 import LessonDragLayer from '~ui/components/lesson-config/LessonDragLayer';
-import useImperativeDialog from '~ui/hooks/useImperativeDialog';
+import useImperativeDialog from '~shared-ui/hooks/useImperativeDialog';
 import LessonMergeDialog from '~ui/components/dialogs/LessonMergeDialog';
 import isContentfulLesson from '~ui/lessons/isContentfulLesson';
 import ManageClassroomPage, { ManageClassroomPageContentProps } from '~ui/components/layouts/ManageClassroomPage';

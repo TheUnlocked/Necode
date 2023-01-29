@@ -1,4 +1,4 @@
-import RunnableLanguage from "./RunnableLanguage";
+import { RunnableLanguage } from '@necode-org/activity-dev';
 
 export class NoLanguage implements RunnableLanguage<[]> {
     toRunnerCode(code: string): never {

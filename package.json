@@ -1,6 +1,5 @@
 {
-  "name": "tmpaley-mqp",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "private": true,
   "workspaces": [
     "apps/*",
@@ -16,7 +15,9 @@
     "lint:fix": "turbo run lint:fix",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "vercel-build": "turbo run vercel-build"
+    "vercel-build": "turbo run vercel-build",
+    "postinstall": "syncpack list-mismatches",
+    "sync-packages": "syncpack fix-mismatches"
   },
   "prisma": {
     "schema": "packages/database/prisma/schema.prisma",
@@ -27,13 +28,17 @@
     "@typescript-eslint/eslint-plugin": "^5.49.0",
     "eslint": "^8.32.0",
     "eslint-config-next": "^13.1.5",
-    "next": "^13.1.5",
+    "next": "^13.1.2",
     "npm-run-all": "^4.1.5",
+    "raw-loader": "^4.0.2",
+    "syncpack": "^8.4.11",
     "turbo": "^1.7.0"
   },
   "pnpm": {
     "patchedDependencies": {
-      "y-monaco@0.1.4": "patches/y-monaco@0.1.4.patch"
+      "y-monaco@0.1.4": "patches/y-monaco@0.1.4.patch",
+      "yjs@13.5.44": "patches/yjs@13.5.44.patch",
+      "@prisma/client@4.9.0": "patches/@prisma__client@4.9.0.patch"
     }
   }
 }

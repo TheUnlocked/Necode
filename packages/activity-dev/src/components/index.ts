@@ -14,7 +14,14 @@ export { default as PaneTitle } from './PaneTitle';
 
 export * from './CodeAlert';
 export { default as CodeAlert } from './CodeAlert';
+export { default as Key } from './Key';
+export { default as Video } from './Video';
 
 // Re-exports from other libraries
 export * from '~shared-ui/components/Lazy';
 export { default as Lazy } from '~shared-ui/components/Lazy';
+export { default as Link } from '~shared-ui/components/SubtleLink';
+export * from '~shared-ui/components/DragHandle';
+export { default as DragHandle } from '~shared-ui/components/DragHandle';
+export { default as DefaultActivityWidget } from '~shared-ui/components/DefaultActivityWidget';
+export { default as ActivityWidgetBase } from '~shared-ui/components/ActivityWidgetBase';

@@ -1,0 +1,28 @@
+diff --git a/generator-build/index.js b/generator-build/index.js
+index 888e53268d94ba836cad78fd2d24e59066449657..33b9f49bf94f67caf5425851d84a272c70828847 100644
+--- a/generator-build/index.js
++++ b/generator-build/index.js
+@@ -23390,13 +23390,18 @@ const hasDirname = typeof __dirname !== 'undefined' && __dirname !== '/'
+ // will work in most cases, ie. if the client has not been bundled
+ const regularDirname = hasDirname && fs.existsSync(path.join(__dirname, 'schema.prisma')) && __dirname
+ 
++const dirnameCandidates = [
++  ${defaultRelativeOutdir ? `${JSON.stringify(defaultRelativeOutdir)},` : ""}
++  ${serverlessRelativeOutdir ? `${JSON.stringify(serverlessRelativeOutdir)},` : ""}
++];
++
+ // if the client has been bundled, we need to look for the folders
+-const foundDirname = !regularDirname && findSync(process.cwd(), [
+-    ${defaultRelativeOutdir ? `${JSON.stringify(defaultRelativeOutdir)},` : ""}
+-    ${serverlessRelativeOutdir ? `${JSON.stringify(serverlessRelativeOutdir)},` : ""}
+-], ['d'], ['d'], 1)[0]
++const foundDirname = !regularDirname && findSync(process.cwd(), dirnameCandidates, ['d'], ['d'], 1)[0]
++
++// in monorepos, they could be at a higher level
++const monorepoFoundDirname = !regularDirname && !foundDirname && dirnameCandidates.map(x => path.join(process.cwd(), x)).find(x => fs.existsSync(path.join(x, 'schema.prisma')))
+ 
+-const dirname = regularDirname || foundDirname || __dirname`;
++const dirname = regularDirname || foundDirname || monorepoFoundDirname || __dirname`;
+ }
+ __name(buildDirnameFind, "buildDirnameFind");
+ function buildDirnameDefault() {

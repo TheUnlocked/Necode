@@ -1,7 +1,6 @@
-import { activityDescription } from "../ActivityDescription";
+import { activityDescription, isLanguage } from '@necode-org/activity-dev';
 import { HtmlTestActivityBaseConfig } from "../html-test-activity-base/createTestActivityPage";
 import dedent from "dedent-js";
-import isLanguage from "../../languages/features/isLanguage";
 import { glslDescription } from "../../languages/glsl";
 import createTestActivityPages from '../html-test-activity-base/createTestActivityPages';
 

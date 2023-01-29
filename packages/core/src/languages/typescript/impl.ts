@@ -1,8 +1,7 @@
-import RunnableLanguage from "../RunnableLanguage";
 import transformPreventInfiniteLoops from "../transformers/babel-plugin-transform-prevent-infinite-loops";
 // @ts-ignore
 import transformTypescript from "@babel/plugin-transform-typescript";
-import { FeatureOptionsOf } from "../LangaugeDescription";
+import { FeatureOptionsOf, RunnableLanguage } from "@necode-org/activity-dev";
 import { transformSync } from '@babel/core';
 import { typescriptDescription } from '.';
 

@@ -3,11 +3,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Code as CodeIcon, TextFields as TextFieldsIcon } from "@mui/icons-material";
 import Editor, { useMonaco } from "@monaco-editor/react";
 import { usePopupState, bindTrigger, bindPopper } from "material-ui-popup-state/hooks";
-import DragHandle, { dragHandleClass, dragHandleSelector } from "../../../../ui/src/components/widgets/DragHandle";
 import type { editor } from "monaco-editor";
-import { ActivityConfigWidgetProps } from "../ActivityDescription";
 import allLanguages from "../../languages/allLanguages";
-import useLocalCachedState from '../../../../ui/src/hooks/useLocalCachedState';
+import { useLocalCachedState, DragHandle, dragHandleClass, dragHandleSelector, ActivityConfigWidgetProps } from "@necode-org/activity-dev";
 
 export interface TextInputWidgetProps {
     value: string;

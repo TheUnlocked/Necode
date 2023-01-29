@@ -1,15 +1,11 @@
 import Editor from "@monaco-editor/react";
 import { Box, Card, styled, Typography } from "@mui/material";
-import { CodeAlert, Pane, Panes, PanesLayouts, PassthroughPane } from "@necode-org/activity-dev";
+import { CodeAlert, Pane, Panes, PanesLayouts, PassthroughPane, CodeRunner, Video, useImported, ActivityPageProps } from "@necode-org/activity-dev";
 import dedent from "dedent-js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { NetworkId } from '~api/RtcNetwork';
-import useImported from '~shared-ui/hooks/useImported';
 import { Configuration } from '.';
-import Video from '../../../../ui/src/components/Video';
-import { useMediaChannel } from '../../../../ui/src/hooks/RtcHooks';
-import { BrowserRunner } from "../../../../ui/src/runner/BrowserRunner";
-import { ActivityPageProps } from "../ActivityDescription";
+import { useMediaChannel } from '@necode-org/activity-dev';
 
 const DrawingCanvas = styled('canvas')({
     maxWidth: "100%",
@@ -106,17 +102,12 @@ export function CanvasActivity({ language, activityConfig }: ActivityPageProps<C
 
     const [code, setCode] = useState<string>();
 
-    const runner = useMemo(() => {
-        const runner = new BrowserRunner();
-        runner.start();
-        return runner;
-    }, []);
+    const runner = useMemo(() => new CodeRunner(), []);
 
     const [codeError, setCodeError] = useState<Error | undefined>();
     const codeGenerator = useImported(language.runnable);
     const codeToRun = code ?? defaultCode[language.name];
 
-    useEffect(() => () => runner.shutdown(), [runner]);
     useEffect(() => {
         try {
             if (codeGenerator) {

@@ -3,11 +3,11 @@ import { signIn, signOut } from "next-auth/react";
 import { UserEntity } from "~api/entities/UserEntity";
 import { useGetRequestImmutable } from "../hooks/useGetRequest";
 import { setImpersonation, useImpersonation } from '../hooks/useImpersonation';
-import useImperativeDialog from '../hooks/useImperativeDialog';
+import useImperativeDialog from '~shared-ui/hooks/useImperativeDialog';
 import SimulationDialog from './dialogs/SimulationDialog';
 import { SitewideRights } from '~database';
 import useBreadcrumbsData from '../hooks/useBreadcrumbsData';
-import { UnstyledLink } from './SubtleLink';
+import { UnstyledLink } from '~shared-ui/components/SubtleLink';
 
 function NecodeBreadcrumbs() {
     const info = useBreadcrumbsData();

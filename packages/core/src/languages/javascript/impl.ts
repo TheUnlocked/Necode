@@ -1,6 +1,5 @@
 import { transformSync } from '@babel/core';
-import { FeatureOptionsOf } from '../LangaugeDescription';
-import RunnableLanguage from '../RunnableLanguage';
+import { FeatureOptionsOf, RunnableLanguage } from '@necode-org/activity-dev';
 import babelPluginTransformPreventInfiniteLoops from '../transformers/babel-plugin-transform-prevent-infinite-loops';
 import { javascriptDescription } from '.';
 

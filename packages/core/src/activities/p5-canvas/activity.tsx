@@ -1,12 +1,9 @@
 import Editor from "@monaco-editor/react";
 import { Box, Card } from "@mui/material";
-import { CodeAlert, LazyImportable, Pane, Panes, PanesLayouts, PassthroughPane, useImported } from '@necode-org/activity-dev';
+import { ActivityPageProps, CodeAlert, LazyImportable, Pane, Panes, PanesLayouts, PassthroughPane, useImported, useMediaChannel, Video } from '@necode-org/activity-dev';
 import dedent from "dedent-js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NetworkId } from '~api/RtcNetwork';
-import Video from '../../../../ui/src/components/Video';
-import { useMediaChannel } from '../../../../ui/src/hooks/RtcHooks';
-import { ActivityPageProps } from "../ActivityDescription";
 import { Configuration } from '../canvas';
 import typeDeclarationFiles from '../p5js/typeDeclarationFiles';
 

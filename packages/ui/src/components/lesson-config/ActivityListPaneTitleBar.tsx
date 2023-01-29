@@ -3,10 +3,10 @@ import { useEffect, useMemo } from 'react';
 import { useDrag, createEmptyPreviewImage } from 'use-dnd';
 import { LessonEntity } from '~api/entities/LessonEntity';
 import { lessonDragDropType } from '../../dnd/types';
-import useLocalCachedState from '../../hooks/useLocalCachedState';
+import useLocalCachedState from '~shared-ui/hooks/useLocalCachedState';
 import isContentfulLesson from '../../lessons/isContentfulLesson';
 import { Iso8601Date, toLuxon } from '~utils/iso8601';
-import DragHandle, { dragHandleSelector } from '../widgets/DragHandle';
+import DragHandle, { dragHandleSelector } from '~shared-ui/components/DragHandle';
 
 export interface AcitivityListPaneTitleBarProps {
     date: Iso8601Date;

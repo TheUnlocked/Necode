@@ -1,5 +1,5 @@
-import { languageDescription } from '../LangaugeDescription';
-import PythonIcon from '../../../../ui/src/util/icons/PythonIcon';
+import { languageDescription } from '@necode-org/activity-dev';
+import PythonIcon from '../../icons/PythonIcon';
 import supportsGlobal from "../features/supportsGlobal";
 import supportsEntryPoint from "../features/supportsEntryPoint";
 import supportsIsolated from '../features/supportsIsolated';

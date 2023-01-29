@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import { ComponentType, useCallback, useEffect } from "react";
 import { useDrag, createEmptyPreviewImage } from "use-dnd";
 import { CreateLiveActivityInfo } from "~api/ws";
-import { ActivityConfigWidgetProps } from "../../../../core/src/activities/ActivityDescription";
+import { ActivityConfigWidgetProps } from "~shared-ui/types/ActivityDescription";
 import type { PartialAttributesOf } from '~backend/Endpoint';
 import { ActivityEntity } from '~api/entities/ActivityEntity';
 import { activityDragDropType } from '../../dnd/types';
@@ -12,7 +12,7 @@ import useActivityDescription from '../../hooks/useActivityDescription';
 import useImported from '~shared-ui/hooks/useImported';
 import useNecodeFetch from '../../hooks/useNecodeFetch';
 import BrokenWidget from './BrokenWidget';
-import DefaultActivityWidget from "./DefaultActivityWidget";
+import DefaultActivityWidget from "~shared-ui/components/DefaultActivityWidget";
 import SkeletonWidget from "./SkeletonWidget";
 
 export type DraggableComponent = ComponentType<ActivityConfigWidgetProps<any>>;

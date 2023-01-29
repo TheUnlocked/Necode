@@ -1,21 +1,19 @@
 import Editor, { Monaco, OnChange, OnMount } from "@monaco-editor/react";
 import { useCallback, useEffect, useState } from 'react';
-import LanguageDescription from "../../languages/LangaugeDescription";
-import * as Y from 'yjs';
-import { Awareness } from 'y-protocols/awareness';
 import { MonacoBinding, setMonaco } from 'y-monaco';
-import { editor } from 'monaco-editor';
+import { editor, Selection } from 'monaco-editor';
 import cyrb53 from '~utils/cyrb53';
+import { Y, YTextHandle, YAwareness, LanguageDescription } from '@necode-org/activity-dev';
 
 export interface PaneEditorProps {
     isConfig: boolean;
     
-    value: string | undefined;
+    value?: string;
     onChange: OnChange;
     language: LanguageDescription;
     applyChanges?: () => void;
-    yText?: Y.Text;
-    yAwareness?: Awareness;
+    yText?: YTextHandle;
+    yAwareness?: YAwareness;
 }
 
 const monacoOptions = {
@@ -23,6 +21,28 @@ const monacoOptions = {
     "semanticHighlighting.enabled": true,
     fixedOverflowWidgets: true,
 };
+
+function interceptMonacoEditStack(model: editor.ITextModel, beforePushOrPop: () => void): { destroy(): void } {
+    const pushStackElement = model.pushStackElement;
+    const popStackElement = model.popStackElement;
+    
+    model.pushStackElement = function pushStackElement_hijacked() {
+        beforePushOrPop();
+        pushStackElement.apply(this);
+    };
+
+    model.popStackElement = function popStackElement_hijacked() {
+        beforePushOrPop();
+        popStackElement.apply(this);
+    };
+    
+    return {
+        destroy() {
+            model.pushStackElement = pushStackElement;
+            model.popStackElement = popStackElement;
+        }
+    };
+}
 
 function safeCssString(str: string) {
     // See spec: https://w3c.github.io/csswg-drafts/css-syntax-3/#string-token-diagram
@@ -41,24 +61,53 @@ export default function PaneEditor({ isConfig, language, value, onChange, applyC
         setEditorData([editor, monaco]);
     }, [isConfig, applyChanges]);
 
+    const text = yText?._text;
+
     useEffect(() => {
-        if (yText && editorData) {
+        if (text && editorData) {
             const [editor, monaco] = editorData;
+            const model = editor.getModel()!;
+
             const binding = new MonacoBinding(
-                yText,
-                editor.getModel()!,
+                text,
+                model,
                 new Set([editor]),
                 yAwareness,
             );
 
-            const undoManager = new Y.UndoManager(yText, { trackedOrigins: new Set([binding, 'submission']) });
-            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyZ, () => undoManager.undo());
-            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ, () => undoManager.redo());
+            const undoManager = new Y.UndoManager(text, { captureTimeout: Infinity, trackedOrigins: new Set([binding, 'submission']) });
+            let selections:  Selection[] | null = null;
+            const monacoEditStackBinding = interceptMonacoEditStack(model, () => {
+                undoManager.captureTimeout = 0;
+                selections = editor.getSelections();
+            });
+
+            undoManager.on('stack-item-added', (event: any) => {
+                event.stackItem.meta.set('cursor', selections);
+                undoManager.captureTimeout = Infinity;
+            });
             
-            // MonacoBinding will clean itself up when the editor is destroyed.
-            // Trying to clean it up ourselves will just log an error message.
+            undoManager.on('stack-item-popped', (event: any) => {
+                editor.setSelections(event.stackItem.meta.get('cursor'));
+                undoManager.captureTimeout = Infinity;
+            });
+
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyZ, () => {
+                selections = editor.getSelections();
+                undoManager.undo();
+            });
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ, () => {
+                selections = editor.getSelections();
+                undoManager.redo();
+            });
+            
+            return () => {
+                binding.destroy();
+                undoManager.destroy();
+                monacoEditStackBinding.destroy();
+            };
         }
-    }, [yText, yAwareness, editorData, language.name]);
+    }, [text, yAwareness, editorData, language.name]);
 
     const [awarenessEntries, setAwarenessEntries] = useState<[
         id: number,

@@ -1,6 +1,6 @@
 import { ButtonBase } from '@mui/material';
 import { ReactElement } from 'react';
-import Lazy from '~shared-ui/src/components/Lazy';
+import Lazy from '~shared-ui/components/Lazy';
 import Pane, { BasePaneProps } from './Pane';
 import PaneTab, { PaneTabProps } from './PaneTab';
 import PaneTitle from './PaneTitle';
@@ -60,16 +60,16 @@ export default function TabbedPane({ icon, label, value, onChange, actUntabbedWi
     }
 
     if (filteredTabs.length === 1 && actUntabbedWithOneChild) {
-        const tabLabel = filteredTabs[0].props.label;
-        const label = typeof tabLabel === 'string'
-            ? <PaneTitle>{tabLabel}</PaneTitle>
-            : tabLabel;
+        const rawTabLabel = filteredTabs[0].props.label;
+        const tabLabel = typeof rawTabLabel === 'string'
+            ? <PaneTitle>{rawTabLabel}</PaneTitle>
+            : rawTabLabel;
         
         if (value !== filteredTabs[0].props.value) {
             console.warn('There is only one tab and actUntabbedWithOneChild is set, but that tab is not selected.');
-            return <Pane label={label} icon={icon} toolbar={label} bleedToolbar {...baseProps}></Pane>;
+            return <Pane label={label} icon={icon} toolbar={tabLabel} {...baseProps}></Pane>;
         }
-        return <Pane label={label} icon={icon} toolbar={label} bleedToolbar {...baseProps}>{filteredTabs[0]}</Pane>;
+        return <Pane label={label} icon={icon} toolbar={tabLabel} {...baseProps}>{filteredTabs[0]}</Pane>;
     }
 
     const tabElts = filteredTabs.map(child => 

@@ -3,14 +3,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { ClientToServerEventMap, ServerToClientEventMap, SignalLiveActivityInfo } from '~api/ws';
 import { useGetRequest } from './useGetRequest';
+import SocketInfo from '~shared-ui/types/SocketInfo';
 
-export interface SocketInfo {
-    readonly socket: Socket<ServerToClientEventMap, ClientToServerEventMap>;
-    readonly iceServers: RTCIceServer[];
-    readonly liveActivityInfo?: SignalLiveActivityInfo;
-}
-
-export function useSocket(classroomId: string) {
+export function useSocket(classroomId: string): SocketInfo | undefined {
     const [socket, setSocket] = useState<Socket<ServerToClientEventMap, ClientToServerEventMap> | undefined>();
     const [liveActivityInfo, setLiveActivityInfo] = useState<SignalLiveActivityInfo>();
 

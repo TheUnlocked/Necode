@@ -1,10 +1,10 @@
 import { Code } from "@mui/icons-material";
 import { Dialog, DialogTitle, List, ListItemButton, ListItemText, Stack, Tooltip, Box } from "@mui/material";
 import { curry } from "lodash";
-import ActivityDescription from "../../../../core/src/activities/ActivityDescription";
-import allActivities from "../../../../core/src/activities/allActivities";
-import supportsLanguage from "../../../../core/src/activities/supportsLanguage";
-import allLanguages from "../../languages/allLanguages";
+import ActivityDescription from "~shared-ui/types/ActivityDescription";
+import allActivities from "~core/activities/allActivities";
+import supportsLanguage from "~core/activities/supportsLanguage";
+import allLanguages from "~core/languages/allLanguages";
 
 interface SelectActivityDialogProps {
     open: boolean;

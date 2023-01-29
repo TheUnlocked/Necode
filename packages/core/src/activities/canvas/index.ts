@@ -1,5 +1,5 @@
 import supportsEntryPoint from "../../languages/features/supportsEntryPoint";
-import { activityDescription } from "../ActivityDescription";
+import { activityDescription } from '@necode-org/activity-dev';
 
 export type Configuration = undefined | {
     canvasWidth: number;

@@ -1,5 +1,5 @@
 import { Importable } from '~utils/types';
-import { ActivityConfigPageProps, ActivityPageProps } from '../ActivityDescription';
+import { ActivityConfigPageProps, ActivityPageProps } from '@necode-org/activity-dev';
 import type { HtmlTestActivityBaseConfig, HtmlTestActivityOptions } from './createTestActivityPage';
 import type createTestActivityPage from './createTestActivityPage';
 

@@ -1,10 +1,10 @@
 import { useCallback, useContext, useEffect } from "react";
 import useSWR, { Key, KeyedMutator, SWRConfiguration } from "swr";
 import useSWRImmutable from "swr/immutable";
-import useChanged from './useChanged';
+import useChanged from '~shared-ui/hooks/useChanged';
 import { useImpersonation } from './useImpersonation';
 import { Response } from "~api/Response";
-import LoadingContext from "./useLoadingContext";
+import LoadingContext from "~shared-ui/hooks/useLoadingContext";
 
 function isVolatileEndpoint(endpoint: Key) {
     const regex = /(?:\/|^)(?:me|live)(?:\/|\?|$)/;

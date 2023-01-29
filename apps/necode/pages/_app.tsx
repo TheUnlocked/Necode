@@ -10,7 +10,7 @@ import Head from 'next/head';
 import Header from '~ui/components/Header';
 import { SnackbarProvider } from 'notistack';
 import { LocalizationProvider } from '@mui/x-date-pickers';
-import LoadingContext, { LoadingContextInfo } from '~ui/hooks/useLoadingContext';
+import LoadingContext, { LoadingContextInfo } from '~shared-ui/hooks/useLoadingContext';
 import { callWith } from '~utils/fp';
 import LoadingSpinners from '~ui/components/LoadingSpinners';
 import CustomAdapterLuxon from '~ui/util/CustomLuxonAdapter';

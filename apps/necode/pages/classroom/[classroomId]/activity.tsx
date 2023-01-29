@@ -11,7 +11,7 @@ import { ActivityEntity } from "~api/entities/ActivityEntity";
 import allActivities from "~core/activities/allActivities";
 import allLanguages from "~core/languages/allLanguages";
 import { useSubmissions } from "~ui/hooks/useSubmissions";
-import useImperativeDialog from "~ui/hooks/useImperativeDialog";
+import useImperativeDialog from "~shared-ui/hooks/useImperativeDialog";
 import SubmissionsDialog from "~ui/components/dialogs/SubmissionsDialog";
 import { ClassroomRole } from "~database";
 import NotFoundPage from "../../404";
@@ -20,9 +20,9 @@ import { curry } from "lodash";
 import useNecodeFetch from '~ui/hooks/useNecodeFetch';
 import useImported from '~shared-ui/hooks/useImported';
 import { typeAssert } from '~utils/typeguards';
-import { RtcProvider } from '~ui/hooks/RtcHooks';
+import { RtcProvider } from '~shared-ui/hooks/RtcHooks';
 import { useSnackbar } from 'notistack';
-import { useLoadingContext } from '~ui/hooks/useLoadingContext';
+import { useLoadingContext } from '~shared-ui/hooks/useLoadingContext';
 
 interface StaticProps {
     classroomId: string;

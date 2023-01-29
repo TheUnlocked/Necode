@@ -1,5 +1,5 @@
-import { languageDescription } from "../LangaugeDescription";
-import JavascriptIcon from "../../../../ui/src/util/icons/JavascriptIcon";
+import { languageDescription } from "@necode-org/activity-dev";
+import JavascriptIcon from "../../icons/JavascriptIcon";
 import supportsGlobal from "../features/supportsGlobal";
 import supportsIsolated from "../features/supportsIsolated";
 import supportsEntryPoint from "../features/supportsEntryPoint";

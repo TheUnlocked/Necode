@@ -1,5 +1,5 @@
 import { Card, Skeleton, Stack, Typography } from "@mui/material";
-import DragHandle from "../widgets/DragHandle";
+import DragHandle from "~shared-ui/components/DragHandle";
 
 export default function SkeletonWidget() {
     return <Card sx={{ p: 1 }}>

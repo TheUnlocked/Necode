@@ -1,3 +1,12 @@
+const fs = require('fs');
+const path = require('path');
+const localPackages = fs.readdirSync(path.resolve(__dirname, '../../packages')).map(x =>
+    JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../packages', x, 'package.json'), { encoding: 'utf-8' })).name);
+console.log('Local packages:', localPackages.join(', '));
+
+/** @type {<T>(x: {}, original: T, updates: Partial<T>) => T} */
+const assign = Object.assign;
+
 /** @type {import('next').NextConfig} */
 module.exports = {
     reactStrictMode: true,
@@ -8,7 +17,7 @@ module.exports = {
         // `getStaticProps` is still fine to use, since it happens during build time.
         outputFileTracingIgnores: ['**esbuild-linux-64**', '**@mui**'],
     },
-    transpilePackages: ["~common", "~api", "~backend", "~database", "~utils", "~shared"],
+    transpilePackages: [...localPackages],
     modularizeImports: {
         lodash: {
             transform: 'lodash/{{member}}',
@@ -23,12 +32,18 @@ module.exports = {
             preventFullImport: true,
         },
     },
+    /**
+     * 
+     * @param {import('webpack').Configuration} config 
+     * @param {import('next/dist/server/config-shared').WebpackConfigContext} ctx 
+     * @returns {import('webpack').Configuration}
+     */
     webpack(config, ctx) {
-        return Object.assign({}, config, {
+        return assign({}, config, {
             // Support @babel/core
             // https://stackoverflow.com/a/34033159/4937286
-            resolve: Object.assign({}, config.resolve, {
-                fallback: Object.assign({}, config.resolve.fallback, {
+            resolve: assign({}, config.resolve, {
+                fallback: assign({}, config.resolve.fallback, {
                     fs: false,
                     module: false,
                     net: false,

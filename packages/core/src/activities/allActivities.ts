@@ -1,4 +1,4 @@
-import ActivityDescription from "./ActivityDescription";
+import { ActivityDescription } from '@necode-org/activity-dev';
 import canvasActivityDescription from "./canvas";
 import glslActivityDescription from "./glsl";
 import p5jsActivityDescription from "./p5js";

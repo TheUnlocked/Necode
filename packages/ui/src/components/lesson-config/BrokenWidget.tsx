@@ -1,7 +1,7 @@
 import { Error } from '@mui/icons-material';
 import { Tooltip } from '@mui/material';
-import { ActivityConfigWidgetProps } from "../../../../core/src/activities/ActivityDescription";
-import ActivityWidgetBase from './ActivityWidgetBase';
+import { ActivityConfigWidgetProps } from "~shared-ui/types/ActivityDescription";
+import ActivityWidgetBase from '~shared-ui/components/ActivityWidgetBase';
 
 export default function BrokenWidget(props: ActivityConfigWidgetProps) {
     return <ActivityWidgetBase {...props}>

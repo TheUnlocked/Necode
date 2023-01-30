@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Toolbar, Select, MenuItem, Stack, ToggleButton, Skeleton, Paper, Box, SxProps } from "@mui/material";
 import { ArrowBack, Code, Save } from "@mui/icons-material";
 import allLanguages from "~core/languages/allLanguages";
-import LanguageDescription from "~core/languages/LangaugeDescription";
+import LanguageDescription from "~shared-ui/types/LanguageDescription";
 import useImperativeDialog from "~shared-ui/hooks/useImperativeDialog";
 import sortByProperty from "~utils/sortByProperty";
 import { flip, make } from "~utils/fp";

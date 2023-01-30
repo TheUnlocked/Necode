@@ -1,6 +1,6 @@
 import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import { useEffect, useState } from "react";
-import LanguageDescription from "~shared-ui/types/LangaugeDescription";
+import LanguageDescription from "~shared-ui/types/LanguageDescription";
 
 interface ConfigureLanguageDialogProps {
     open: boolean;

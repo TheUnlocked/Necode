@@ -1,5 +1,5 @@
 
-import { Session, unstable_getServerSession as getServerSession } from 'next-auth';
+import { Session, getServerSession } from 'next-auth';
 import { prisma } from '~database';
 import { hasScope } from './scopes';
 import { IMPERSONATION_COOKIE } from '~api/constants';

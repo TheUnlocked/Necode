@@ -26,7 +26,7 @@ const apiLessonAll = endpoint(makeLessonEntity, ['classroomId', 'include[]'] as 
             return ok(lessons.map(x => makeLessonEntity(x, {
                 activities: includeActivities
                     ? (x.activities as Activity[]).map(singleArg(makeActivityEntity))
-                    : x.activities.map(x => x.id)
+                    : x.activities.map(x => x.id),
             })));
         }
     },

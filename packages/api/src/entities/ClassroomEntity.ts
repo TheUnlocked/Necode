@@ -5,16 +5,16 @@ import { ClassroomMemberEntity } from "./ClassroomMemberEntity";
 import { LessonEntity } from "./LessonEntity";
 
 
-type Refs = { members?: ReferenceDepth, lessons?: ReferenceDepth };
+export type ClassroomEntityRefs = { members?: ReferenceDepth, lessons?: ReferenceDepth };
 
-export type ClassroomEntity<References extends Refs = Refs>
+export type ClassroomEntity<References extends ClassroomEntityRefs = ClassroomEntityRefs>
     = Entity<EntityType.Classroom, {
         displayName: string;
         members: EntityReferenceArray<ClassroomMemberEntity, References['members']>;
         lessons: EntityReferenceArray<LessonEntity, References['lessons']>;
     }>;
 
-export function makeClassroomEntity<R extends Refs = any>(classroom: Classroom, relationships?: {
+export function makeClassroomEntity<R extends ClassroomEntityRefs = any>(classroom: Classroom, relationships?: {
     members?: (string | ClassroomMemberEntity)[];
     lessons?: (string | LessonEntity)[];
 }): ClassroomEntity<R> {

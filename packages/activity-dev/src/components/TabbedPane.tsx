@@ -62,7 +62,7 @@ export default function TabbedPane({ icon, label, value, onChange, actUntabbedWi
     if (filteredTabs.length === 1 && actUntabbedWithOneChild) {
         const rawTabLabel = filteredTabs[0].props.label;
         const tabLabel = typeof rawTabLabel === 'string'
-            ? <PaneTitle>{rawTabLabel}</PaneTitle>
+            ? <PaneTitle sx={{ mr: 1 }}>{rawTabLabel}</PaneTitle>
             : rawTabLabel;
         
         if (value !== filteredTabs[0].props.value) {

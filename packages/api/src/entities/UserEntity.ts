@@ -4,9 +4,9 @@ import { EntityReferenceArray, makeEntityReferenceArray, ReferenceDepth } from "
 import { ClassroomEntity } from "./ClassroomEntity";
 
 
-type Refs = { classes?: ReferenceDepth, simulatedUsers?: ReferenceDepth };
+export type UserEntityRefs = { classes?: ReferenceDepth, simulatedUsers?: ReferenceDepth };
 
-export type UserEntity<References extends Refs = Refs>
+export type UserEntity<References extends UserEntityRefs = UserEntityRefs>
     = Entity<EntityType.User, {
         username: string;
         displayName: string;
@@ -18,7 +18,7 @@ export type UserEntity<References extends Refs = Refs>
         simulatedUsers: EntityReferenceArray<UserEntity<any>, References['simulatedUsers']>;
     }>;
 
-export function makeUserEntity<R extends Refs>(user: User, relationships?: {
+export function makeUserEntity<R extends UserEntityRefs>(user: User, relationships?: {
     classes?: (string | ClassroomEntity<any>)[];
     simulatedUsers?: (string | UserEntity<any>)[];
 }): UserEntity<R> {

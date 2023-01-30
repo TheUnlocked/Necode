@@ -1,7 +1,7 @@
 import Editor, { OnChange, useMonaco } from "@monaco-editor/react";
 import { Refresh as RefreshIcon, Sync as SyncIcon } from "@mui/icons-material";
 import { Box, Button, CardContent, Checkbox, IconButton, Stack, Tooltip, Typography, useTheme } from "@mui/material";
-import { applyTransaction, useChanged, ActivityConfigPageProps, ActivityPageProps, applyUnifiedUpdates, CodeAlert, Key, LanguageDescription, Link, Pane, Panes, PanesLayouts, PaneTab, PaneTitle, PassthroughPane, TabbedPane, useFetch, useImperativeDialog, useImported, useIsSizeOrSmaller, useY, useYAwareness, useYText } from "@necode-org/activity-dev";
+import { applyTransaction, useYInit, ActivityConfigPageProps, ActivityPageProps, NetworkId, CodeAlert, Key, LanguageDescription, Link, Pane, Panes, PanesLayouts, PaneTab, PaneTitle, PassthroughPane, TabbedPane, useFetch, useImperativeDialog, useImported, useIsSizeOrSmaller, useY, useYAwareness, useYText } from "@necode-org/activity-dev";
 import { debounce } from "lodash";
 import { editor, languages } from 'monaco-editor';
 import testScaffoldingTypes from "raw-loader!./test-scaffolding.d.ts.raw";
@@ -9,7 +9,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from 'rehype-highlight';
 import remarkGfm from 'remark-gfm';
-import { NetworkId } from '~api/RtcNetwork';
 import { ImplicitNewType, NonStrictDisjunction } from "~utils/types";
 import TypescriptIcon from "../../icons/TypescriptIcon";
 import { cssDescription } from "../../languages/css";
@@ -127,6 +126,18 @@ export default function createTestActivityPage({
         const network = networked && !isEditor ? NetworkId.NET_0 : NetworkId.OFFLINE;
 
         const y = useY(network, 'shared-editors');
+
+        useYInit(y, doc => {
+            for (const type of ['html', 'css', 'code'] as const) {
+                const initialValue = type === 'code'
+                    ? activityConfig.languages[type]?.defaultValue[language.name]
+                    : activityConfig.languages[type]?.defaultValue;
+                if (initialValue) {
+                    doc.getText(type).insert(0, initialValue);
+                }
+                setCommittedState(st => ({ ...st, [type]: initialValue ?? '' }));
+            }
+        });
         
         const uncommittedHtml = useYText(y, 'html');        
         const uncommittedCode = useYText(y, 'code');        
@@ -136,24 +147,6 @@ export default function createTestActivityPage({
             code: uncommittedCode.value,
             css: uncommittedCss.value,
         }), [uncommittedHtml, uncommittedCode, uncommittedCss]);
-
-        const yChanged = useChanged(y, true);
-
-        useEffect(() => {
-            if (!isEditor) {
-                applyUnifiedUpdates(y, doc => {
-                    for (const type of ['html', 'css', 'code'] as const) {
-                        const initialValue = type === 'code'
-                            ? activityConfig.languages[type]?.defaultValue[language.name]
-                            : activityConfig.languages[type]?.defaultValue;
-                        if (initialValue) {
-                            doc.getText(type).insert(0, initialValue);
-                        }
-                        setCommittedState(st => ({ ...st, [type]: initialValue ?? '' }));
-                    }
-                });
-            }
-        }, [activityConfig.languages, language.name, y, yChanged]);
 
         const yAwareness = useYAwareness(network, 'shared-editors-awareness', y, {
             // TODO: Get names back for awareness
@@ -308,7 +301,7 @@ export default function createTestActivityPage({
 
                     return <>
                         <PaneTitle selectable={false} color={active ? undefined : 'disabled'} sx={{ mx: 1 }}>Starter</PaneTitle>
-                        <Checkbox sx={{ ml: "-9px", my: "-9px" }}
+                        <Checkbox sx={{ m: "-9px", mr: type === 'html' ? 0 : -1 }}
                             checked={langConfig.enabled}
                             disabled={!active}
                             onChange={ev => ev.target.checked === langConfig.enabled ? undefined : onActivityConfigChange!({
@@ -327,15 +320,13 @@ export default function createTestActivityPage({
                 if (type === 'html') {
                     return <TabbedPane label="HTML" value={selectedHtmlTab} onChange={setSelectedHtmlTab} actUntabbedWithOneChild hidden={hidden}>
                         <PaneTab value="hidden" label="Hidden">
-                            <PaneEditor
-                                isConfig={true}
+                            <PaneEditor isConfig
                                 language={htmlDescription}
                                 value={activityConfig.hiddenHtml}
                                 onChange={onHiddenHtmlChange} />
                         </PaneTab>
                         <PaneTab value="starter" label={tabLabelWithCheckbox(selectedHtmlTab === 'starter')} hidden={isHiddenHtmlOnly}>
-                            <PaneEditor
-                                isConfig={true}
+                            <PaneEditor isConfig
                                 language={language}
                                 value={editorValue}
                                 onChange={onChange} />
@@ -343,9 +334,8 @@ export default function createTestActivityPage({
                     </TabbedPane>;
                 }
                 else {
-                    return <Pane icon={Icon ? <Icon /> : undefined} label={language.displayName} hidden={hidden}>
-                        <PaneEditor
-                            isConfig={true}
+                    return <Pane icon={Icon ? <Icon /> : undefined} label={language.displayName} hidden={hidden} toolbar={tabLabelWithCheckbox(true)}>
+                        <PaneEditor isConfig
                             language={language}
                             value={editorValue}
                             applyChanges={() => applyChanges(type)}
@@ -372,7 +362,6 @@ export default function createTestActivityPage({
 
                 return <Pane icon={Icon ? <Icon /> : undefined} label={language.displayName} toolbar={toolbar} hidden={hidden}>
                     <PaneEditor
-                        isConfig={true}
                         language={language}
                         value={editorValue}
                         applyChanges={() => applyChanges(type)}

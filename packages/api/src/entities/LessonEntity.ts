@@ -7,9 +7,9 @@ import { Entity, EntityType } from "./Entity";
 import { EntityReference, EntityReferenceArray, makeEntityReference, makeEntityReferenceArray, ReferenceDepth } from "./EntityReference";
 
 
-type Refs = { activities?: ReferenceDepth, classroom?: ReferenceDepth };
+export type LessonEntityRefs = { activities?: ReferenceDepth, classroom?: ReferenceDepth };
 
-export type LessonEntity<References extends Refs = Refs>
+export type LessonEntity<References extends LessonEntityRefs = LessonEntityRefs>
     = Entity<EntityType.Lesson, {
         displayName: string;
         activities: EntityReferenceArray<ActivityEntity<any>, References['activities']>;
@@ -17,7 +17,7 @@ export type LessonEntity<References extends Refs = Refs>
         date: Iso8601Date;
     }>;
 
-export function makeLessonEntity<R extends Refs>(lesson: Lesson, relationships?: {
+export function makeLessonEntity<R extends LessonEntityRefs>(lesson: Lesson, relationships?: {
     activities?: (string | ActivityEntity<any>)[];
     classroom?: string | ClassroomEntity<any>;
 }): LessonEntity<R> {

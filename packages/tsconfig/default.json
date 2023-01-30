@@ -16,16 +16,15 @@
         // "declaration": true,
         // "declarationMap": true,
         "paths": {
-            "~core/*": ["node_modules/~core/src/*"],
-            "~ui/*": ["node_modules/~ui/src/*"],
-            "~shared-ui/*": ["node_modules/~shared-ui/src/*"],
-            "~backend/*": ["node_modules/~backend/src/*"],
-            "~api/*": ["node_modules/~api/src/*"],
-            "~shared/*": ["node_modules/~shared/src/*"],
-            "~utils/*": ["node_modules/~utils/src/*"],
-            
-            "@necode-org/*": ["node_modules/@necode-org/*/src"],
-            "~*": ["node_modules/~*/src"]
+            "~core/*":         ["./node_modules/~core/src/*",       "../../packages/core/src/*"     ],
+            "~ui/*":           ["./node_modules/~ui/src/*",         "../../packages/ui/src/*"       ],
+            "~shared-ui/*":    ["./node_modules/~shared-ui/src/*",  "../../packages/shared-ui/src/*"],
+            "~backend/*":      ["./node_modules/~backend/src/*",    "../../packages/backend/src/*"  ],
+            "~api/*":          ["./node_modules/~api/src/*",        "../../packages/api/src/*"      ],
+            "~shared/*":       ["./node_modules/~shared/src/*",     "../../packages/shared/src/*"   ],
+            "~utils/*":        ["./node_modules/~utils/src/*",      "../../packages/utils/src/*"    ],
+            "@necode-org/*":   ["./node_modules/@necode-org/*/src", "../../packages/*/src"          ],
+            "~*":              ["./node_modules/~*/src",            "../../packages/*/src"          ],
         },
     },
 }

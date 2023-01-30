@@ -87,7 +87,7 @@ importers:
       ~backend: workspace:*
       ~core: workspace:*
       ~database: workspace:*
-      ~shared: workspace:^
+      ~shared: workspace:*
       ~shared-ui: workspace:*
       ~tsconfig: workspace:*
       ~ui: workspace:*

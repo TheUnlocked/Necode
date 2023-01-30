@@ -1,12 +1,14 @@
 import * as Y from 'yjs';
-export { Awareness as YAwareness } from 'y-protocols/awareness';
 import { YHandle } from '../hooks';
+import { useYInit } from '../hooks/useY'; // eslint-disable-line @typescript-eslint/no-unused-vars
+
+export { Awareness as YAwareness } from 'y-protocols/awareness';
 export { Y };
 
 /**
  * Use this to apply updates to a yjs document that every member of the network can perform while avoiding duplication.
- * This is often used for initializing the document state
- * @param doc The document to update
+ * If you just want to initialize document state, prefer the {@link useYInit} hook when possible.
+ * @param y The document to update
  * @param update A callback. Changes to the document in this update will be reflected across the entire network one time
  */
 export function applyUnifiedUpdates(y: YHandle, update: (doc: Y.Doc) => void) {

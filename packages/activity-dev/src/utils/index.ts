@@ -11,3 +11,4 @@ export * from '~shared-ui/types/LanguageDescription';
 export type { default as LanguageDescription } from '~shared-ui/types/LanguageDescription';
 export * from '~shared-ui/types/RunnableLanguage';
 export type { default as RunnableLanguage } from '~shared-ui/types/RunnableLanguage';
+export * from '~api/RtcNetwork';

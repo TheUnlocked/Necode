@@ -1,12 +1,12 @@
 import Editor, { Monaco, OnChange, OnMount } from "@monaco-editor/react";
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { MonacoBinding, setMonaco } from 'y-monaco';
 import { editor, Selection } from 'monaco-editor';
 import cyrb53 from '~utils/cyrb53';
 import { Y, YTextHandle, YAwareness, LanguageDescription } from '@necode-org/activity-dev';
 
 export interface PaneEditorProps {
-    isConfig: boolean;
+    isConfig?: boolean;
     
     value?: string;
     onChange: OnChange;
@@ -52,14 +52,24 @@ function safeCssString(str: string) {
 export default function PaneEditor({ isConfig, language, value, onChange, applyChanges, yText, yAwareness }: PaneEditorProps) {
     const [editorData, setEditorData] = useState<[editor.IStandaloneCodeEditor, Monaco]>();
 
+    const applyChangesRef = useRef<() => void>();
+
     const onMount: OnMount = useCallback((editor, monaco) => {
         setMonaco(monaco);
         editor.getModel()?.setEOL(0);
-        if (!isConfig) {
-            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, applyChanges!);
-        }
         setEditorData([editor, monaco]);
-    }, [isConfig, applyChanges]);
+    }, []);
+
+    useEffect(() => {
+        applyChangesRef.current = applyChanges;
+    }, [applyChanges]);
+
+    useEffect(() => {
+        if (!isConfig && editorData) {
+            const [editor, monaco] = editorData;
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => applyChangesRef.current?.());
+        }
+    }, [isConfig, editorData]);
 
     const text = yText?._text;
 

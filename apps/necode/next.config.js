@@ -47,6 +47,9 @@ module.exports = {
                     fs: false,
                     module: false,
                     net: false,
+                    // socket.io-client causes some issues during SSR, so these are just here to satisfy it.
+                    bufferutil: false,
+                    "utf-8-validate": false,
                 }),
             }),
             plugins: [

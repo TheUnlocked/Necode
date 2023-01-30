@@ -26,3 +26,24 @@ index 888e53268d94ba836cad78fd2d24e59066449657..33b9f49bf94f67caf5425851d84a272c
  }
  __name(buildDirnameFind, "buildDirnameFind");
  function buildDirnameDefault() {
+diff --git a/runtime/index.js b/runtime/index.js
+index db697a88c418f974ffa9fb3100809b0cd9c0aea6..6dd3ba59c9e1c8797ad56e29063a58644ae08471 100644
+--- a/runtime/index.js
++++ b/runtime/index.js
+@@ -24549,6 +24549,16 @@ var exitHooks = new ExitHooks();
+ var LibraryEngine = class extends Engine {
+   constructor(config2, loader = new DefaultLibraryLoader(config2)) {
+     super();
++    if (!import_fs7.default.existsSync(config2.datamodelPath)) {
++      debug11(`Couldn't find datamodelPath '${config2.datamodelPath}', may be on Vercel.`);
++      if (import_fs7.default.existsSync('/var/task/node_modules/.pnpm')) {
++        const dotPnpmPackageName = import_fs7.readdirSync('/var/task/node_modules/.pnpm').find(x => x.startsWith('@prisma+client'));
++        config2.datamodelPath = `/var/task/node_modules/.pnpm/${dotPnpmPackageName}/node_modules/.prisma/client/schema.prisma`
++      }
++      else {
++        debug11(`Couldn't find '/var/task/node_modules/.pnpm', something is broken.`);
++      }
++    }
+     this.datamodel = import_fs7.default.readFileSync(config2.datamodelPath, "utf-8");
+     this.config = config2;
+     this.libraryStarted = false;

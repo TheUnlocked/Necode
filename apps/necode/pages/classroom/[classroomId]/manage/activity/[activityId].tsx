@@ -20,6 +20,7 @@ import supportsLanguage from "~core/activities/supportsLanguage";
 import { curry } from "lodash";
 import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
 import { useSnackbar } from 'notistack';
+import { MockSubmissionProvider } from '~shared-ui/src/hooks/useSubmissions';
 
 interface StaticProps {
     classroomId: string;
@@ -257,15 +258,18 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
             }
         } as SxProps}>
             <LazyImportable show={isPreview} keepInDom unloadRef={unloadPreviewRef} importable={activity.activityPage} render={
-                ActivityPage => <ActivityPage
-                    id={""}
-                    activityConfig={activityConfig}
-                    classroomId={classroomId}
-                    language={selectedLanguage}
-                    onSaveDataChange={() => {}}
-                    onSubmit={async () => {
+                ActivityPage => <MockSubmissionProvider value={{
+                    submit: async () => {
                         enqueueSnackbar('Submissions are disabled during configuration.', { variant: 'info' });
-                    }} />} />
+                    },
+                    addSubmissionLoadListener: () => () => {},
+                }}>
+                    <ActivityPage
+                        id={""}
+                        activityConfig={activityConfig}
+                        classroomId={classroomId}
+                        language={selectedLanguage} />
+                </MockSubmissionProvider>} />
             <LazyImportable show={!isPreview} importable={activity.configPage} render={
                 ActivityConfigPage => <ActivityConfigPage
                     id={""}

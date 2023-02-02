@@ -1,15 +1,19 @@
 import { EndpointHandle, HttpMethod } from '~api/handles';
 import { SWRConfiguration } from "swr";
 import { useGetRequest, UseGetRequestResult } from './useGetRequest';
-import useNecodeFetch, { NecodeFetchRequestOptions } from './useNecodeFetch';
+import useNecodeFetch, { NecodeFetch, NecodeFetchRequestOptions } from './useNecodeFetch';
 import { useCallback } from 'react';
+
+interface UseApiGetOptions extends SWRConfiguration {
+    disabled?: boolean;
+}
 
 export function useApiGet<T>(
     endpoint: EndpointHandle<{ GET: { body: undefined, response: T } }>,
-    options?: SWRConfiguration
+    options?: UseApiGetOptions,
 ): UseGetRequestResult<T> {
     return useGetRequest<T>(
-        endpoint._path,
+        endpoint._path.some(x => x === undefined) || options?.disabled ? null : endpoint._path.join(''),
         {
             ...endpoint._imm ? {
                 revalidateIfStale: false,
@@ -22,7 +26,7 @@ export function useApiGet<T>(
 }
 
 declare const ERROR: unique symbol;
-type TypeError<Message> = { _: Message, [ERROR]: true }
+type TypeError<Message> = { _: Message, [ERROR]: true };
 type ApiFetchFunction = <E extends EndpointHandle<any>, Method extends HttpMethod>(
     endpoint: E,
     options?: Omit<NecodeFetchRequestOptions, 'body'>
@@ -35,27 +39,28 @@ type ApiFetchFunction = <E extends EndpointHandle<any>, Method extends HttpMetho
     ? Promise<R>
     : TypeError<`${Method} is not supported on endpoint`>;
 
+function createApiFetch(fetch: NecodeFetch) {
+    return function (endpoint, options) {
+        if (endpoint._path.some(x => x === undefined)) {
+            console.error(`Attempting to fetch undefined resource`, endpoint._path);
+        }
+        return fetch(
+            endpoint._path.join(''),
+            {
+                ...options as Omit<typeof options, 'body'>,
+                ...options?.body ? { body: JSON.stringify(options.body) } : undefined,
+            }
+        );
+    } as ApiFetchFunction;
+}
+
 export function useApiFetch() {
     const { download, upload } = useNecodeFetch();
 
     return {
-        download: useCallback((endpoint, options) => {
-            return download(
-                endpoint._path,
-                {
-                    ...options as Omit<typeof options, 'body'>,
-                    ...options?.body ? { body: JSON.stringify(options.body) } : undefined,
-                }
-            );
-        }, [download]) as ApiFetchFunction,
-        upload: useCallback((endpoint, options) => {
-            return upload(
-                endpoint._path,
-                {
-                    ...options as Omit<typeof options, 'body'>,
-                    ...options?.body ? { body: JSON.stringify(options.body) } : undefined,
-                }
-            );
-        }, [upload]) as ApiFetchFunction,
-    }
+        // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps
+        download: useCallback(createApiFetch(download), [download]),
+        // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps
+        upload: useCallback(createApiFetch(upload), [upload]),
+    };
 }

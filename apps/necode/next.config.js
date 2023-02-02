@@ -23,6 +23,10 @@ module.exports = {
             transform: 'lodash/{{member}}',
             preventFullImport: true,
         },
+        'lodash/fp': {
+            transform: 'lodash/fp/{{member}}',
+            preventFullImport: true,
+        },
         '@material/icons-material': {
             transform: '@material/icons-material/{{member}}',
             preventFullImport: true,

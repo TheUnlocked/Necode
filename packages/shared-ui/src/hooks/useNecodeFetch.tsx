@@ -1,17 +1,19 @@
 import { useSnackbar } from 'notistack';
 import { useCallback, useMemo } from 'react';
-import useLoadingFetch from '~shared-ui/hooks/useLoadingFetch';
+import useLoadingFetch from './useLoadingFetch';
 import { Response } from '~api/Response';
 
 export interface NecodeFetchRequestOptions extends RequestInit {
     errorMessage?: string | ((err: Error) => string | null | undefined) | null;
 }
 
+export type NecodeFetch = <T>(req: RequestInfo, options?: NecodeFetchRequestOptions) => Promise<T>;
+
 export default function useNecodeFetch() {
     const { upload, download } = useLoadingFetch();
     const { enqueueSnackbar } = useSnackbar();
 
-    const necodeFetch = useCallback((fetcher: typeof fetch) => async <T,>(req: RequestInfo, options?: NecodeFetchRequestOptions) => {
+    const createNecodeFetch = useCallback((fetcher: typeof fetch): NecodeFetch => async <T,>(req: RequestInfo, options?: NecodeFetchRequestOptions) => {
         let err: Error;
         try {
             const response = await fetcher(req, options);
@@ -48,7 +50,7 @@ export default function useNecodeFetch() {
     }, [enqueueSnackbar]);
 
     return {
-        upload: useMemo(() => necodeFetch(upload), [necodeFetch, upload]),
-        download: useMemo(() => necodeFetch(download), [necodeFetch, download]),
+        upload: useMemo(() => createNecodeFetch(upload), [createNecodeFetch, upload]),
+        download: useMemo(() => createNecodeFetch(download), [createNecodeFetch, download]),
     };
 }

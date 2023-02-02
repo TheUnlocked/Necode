@@ -33,7 +33,7 @@ export interface ClientToServerEventMap {
      * @param data the data to send in the request
      */
     request(data: any, callback: (error?: string) => void): void;
-    submission(data: any, callback: (error?: string) => void): void;
+    submission(submission: { schemaVer: number, data: any }, callback: (error?: string) => void): void;
 
     provideWebRTCSignal(connId: string, signal: SignalData): void;
 }

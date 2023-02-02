@@ -13,3 +13,4 @@ export { default as useLocalCachedState } from '~shared-ui/hooks/useLocalCachedS
 export * from '~api/handles';
 export { default as api } from '~api/handles';
 export * from '~shared-ui/hooks/useApi';
+export { default as useSubmissions } from '~shared-ui/hooks/useSubmissions';

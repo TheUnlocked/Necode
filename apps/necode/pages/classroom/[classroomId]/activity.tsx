@@ -1,6 +1,6 @@
 import { NextPage } from "next";
 import { useRouter } from "next/router";
-import { useCallback, useState } from "react";
+import { useRef, useState } from "react";
 import { Button, Chip, Stack, Toolbar, Box } from "@mui/material";
 import { ArrowBack, AssignmentTurnedIn, Close } from "@mui/icons-material";
 import { ClassroomMemberEntity } from "~api/entities/ClassroomMemberEntity";
@@ -10,7 +10,6 @@ import StatusPage from "~ui/components/layouts/StatusPage";
 import { ActivityEntity } from "~api/entities/ActivityEntity";
 import allActivities from "~core/activities/allActivities";
 import allLanguages from "~core/languages/allLanguages";
-import { useSubmissions } from "~ui/hooks/useSubmissions";
 import useImperativeDialog from "~shared-ui/hooks/useImperativeDialog";
 import SubmissionsDialog from "~ui/components/dialogs/SubmissionsDialog";
 import { ClassroomRole } from "~database";
@@ -21,8 +20,8 @@ import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
 import useImported from '~shared-ui/hooks/useImported';
 import { typeAssert } from '~utils/typeguards';
 import { RtcProvider } from '~shared-ui/hooks/RtcHooks';
-import { useSnackbar } from 'notistack';
-import { useLoadingContext } from '~shared-ui/hooks/useLoadingContext';
+import { ActivitySubmissionEntity } from '~api/src/entities/ActivitySubmissionEntity';
+import { SubmissionProvider } from '~shared-ui/hooks/useSubmissions';
 
 interface StaticProps {
     classroomId: string;
@@ -55,31 +54,6 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
 
     const socketInfo = useSocket(classroomId);
 
-    const { enqueueSnackbar } = useSnackbar();
-    const { startUpload, finishUpload } = useLoadingContext();
-    const [saveData, setSaveData] = useState<{ data: any }>();
-
-    const handleSubmit = useCallback((data: any) => {
-        if (!socketInfo?.socket) {
-            enqueueSnackbar('A network error occurrred. Copy your work to a safe place and refresh the page.', { variant: 'error' });
-            return Promise.reject();
-        }
-        startUpload();
-        return new Promise<void>((resolve, reject) => {
-            socketInfo.socket.emit('submission', data, error => {
-                finishUpload();
-                if (error) {
-                    enqueueSnackbar(error, { variant: 'error' });
-                    reject(new Error(error));
-                }
-                else {
-                    enqueueSnackbar('Submission successful!', { variant: 'info' });
-                    resolve();
-                }
-            });
-        });
-    }, [socketInfo?.socket, enqueueSnackbar, startUpload, finishUpload]);
-
     const { data: activityEntity } = useGetRequest<ActivityEntity<{ lesson: 'deep' }>>(
         socketInfo?.liveActivityInfo
             ? `/api/classroom/${classroomId}/activity/${socketInfo?.liveActivityInfo.id}${isInstructor ? '?include=lesson' : ''}`
@@ -88,12 +62,13 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
 
     const activity = allActivities.find(x => x.id === activityEntity?.attributes.activityType);
 
-    const submissions = useSubmissions(isInstructor ? classroomId : undefined, activity, socketInfo, () => setHasNewSubmissions(true));
+    const loadSubmissionRef = useRef<(submission: ActivitySubmissionEntity<{ user: 'deep', activity: 'none' }>) => void>();
+    const [submissions, setSubmissions] = useState<readonly ActivitySubmissionEntity<{ user: 'deep', activity: 'none' }>[]>([]);
     const [hasNewSubmissions, setHasNewSubmissions] = useState(false);
 
     const [submissionsDialog, openSubmissionsDialog] = useImperativeDialog(SubmissionsDialog, {
         submissions,
-        onPickSubmission: s => setSaveData({ data: s.attributes.data })
+        onPickSubmission: s => loadSubmissionRef.current?.(s),
     });
 
     function viewSubmissions() {
@@ -189,15 +164,25 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
             }
         }}>
             <RtcProvider socketInfo={socketInfo}>
-                <ActivityPage
-                    key={activityEntity!.id}
-                    id={activityEntity!.id}
-                    activityConfig={activityEntity!.attributes.configuration}
+                <SubmissionProvider
                     classroomId={classroomId}
-                    language={enabledLanguages[0]}
-                    onSubmit={handleSubmit}
-                    saveData={saveData}
-                    onSaveDataChange={setSaveData} />
+                    socketInfo={socketInfo}
+                    activity={activity}
+                    onSubmission={() => setHasNewSubmissions(true)}
+                    ref={data => {
+                        if (data) {
+                            const { submissions, loadSubmission } = data;
+                            setSubmissions(submissions);
+                            loadSubmissionRef.current = loadSubmission;
+                        }
+                    }}>
+                    <ActivityPage
+                        key={activityEntity!.id}
+                        id={activityEntity!.id}
+                        activityConfig={activityEntity!.attributes.configuration}
+                        classroomId={classroomId}
+                        language={enabledLanguages[0]} />
+                </SubmissionProvider>
             </RtcProvider>
         </Box>
     </>;

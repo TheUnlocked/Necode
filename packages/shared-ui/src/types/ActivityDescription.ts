@@ -15,12 +15,6 @@ interface BaseActivityProps<ConfigData = undefined> {
 
 export interface ActivityPageProps<ConfigData = undefined> extends BaseActivityProps<ConfigData> {
     language: LanguageDescription;
-    
-    saveData?: { data: any };
-
-    onSaveDataChange: (newSaveData: { data: any } | undefined) => void;
-
-    onSubmit: (data: any) => Promise<void>;
 }
 
 export interface ActivityConfigPageProps<ConfigData = undefined> extends BaseActivityProps<ConfigData> {

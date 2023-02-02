@@ -182,6 +182,16 @@ io.on('connection', socket => {
             return callback('Something went wrong (missing submission:create scope)');
         }
 
+        if (!('schemaVer' in data)) {
+            return callback('Missing schemaVer field');
+        }
+        if (typeof data.schemaVer !== 'number') {
+            return callback('schemaVer must be a number');
+        }
+        if (!('data' in data)) {
+            return callback('Missing data field');
+        }
+
         try {
             // It might seem like there could be a concurrency bug here,
             // but it's actually okay in practice since the version has a unique

@@ -6,7 +6,7 @@ import userSearchProvider from '../../search/userSearchProvider';
 interface SubmissionsDialogProps {
     open: boolean;
     onClose(): void;
-    submissions: ActivitySubmissionEntity<{ user: 'deep', activity: 'none' }>[];
+    submissions: readonly ActivitySubmissionEntity<{ user: 'deep', activity: 'none' }>[];
     onPickSubmission: (submission: ActivitySubmissionEntity<{ user: 'deep', activity: 'none' }>) => void;
 }
 

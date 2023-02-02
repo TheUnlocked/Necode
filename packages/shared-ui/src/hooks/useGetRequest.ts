@@ -13,7 +13,7 @@ export interface UseGetRequestResult<T> {
 }
 
 function makeUseGetRequest(immutable: boolean) {
-    return function useGetRequest<T>(endpoint: Key, options?: SWRConfiguration) {
+    return function useGetRequest<T>(endpoint: Key, options?: SWRConfiguration): UseGetRequestResult<T> {
         const { startDownload, finishDownload } = useContext(LoadingContext);
 
         const { data, error, isValidating, mutate } = useSWR<Response<T>, Error>(endpoint, (url: string) => {

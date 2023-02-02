@@ -1,7 +1,8 @@
 import Editor, { OnChange, useMonaco } from "@monaco-editor/react";
+import { set as setIn } from "lodash/fp";
 import { Refresh as RefreshIcon, Sync as SyncIcon } from "@mui/icons-material";
 import { Box, Button, CardContent, Checkbox, IconButton, Stack, Tooltip, Typography, useTheme } from "@mui/material";
-import { applyTransaction, useYInit, ActivityConfigPageProps, ActivityPageProps, NetworkId, CodeAlert, Key, LanguageDescription, Link, Pane, Panes, PanesLayouts, PaneTab, PaneTitle, PassthroughPane, TabbedPane, useFetch, useImperativeDialog, useImported, useIsSizeOrSmaller, useY, useYAwareness, useYText, useApiGet, api, useApiFetch } from "@necode-org/activity-dev";
+import { applyTransaction, useSubmissions, useYInit, ActivityConfigPageProps, ActivityPageProps, NetworkId, CodeAlert, Key, LanguageDescription, Link, Pane, Panes, PanesLayouts, PaneTab, PaneTitle, PassthroughPane, TabbedPane, useFetch, useImperativeDialog, useImported, useIsSizeOrSmaller, useY, useYAwareness, useYText, useApiGet, api } from "@necode-org/activity-dev";
 import { debounce } from "lodash";
 import { editor, languages } from 'monaco-editor';
 import testScaffoldingTypes from "raw-loader!./test-scaffolding.d.ts.raw";
@@ -54,6 +55,30 @@ interface HtmlTestActivityMetaProps {
 
 type EditorType = 'html' | 'code' | 'css';
 
+/**
+ * This exists for backwards compatibility.
+ * New activities should not have an unversioned submission schema.
+ */
+interface SubmissionSchemaUnversioned {
+    schemaVer: -1;
+    data: never;
+    
+    html?: string;
+    code?: string;
+    css?: string;
+}
+
+interface SubmissionSchemaV1 {
+    schemaVer: 1;
+    data: {
+        html?: string;
+        code?: string;
+        css?: string;
+    };
+}
+
+type SubmissionSchema = SubmissionSchemaUnversioned | SubmissionSchemaV1;
+
 const markdownEditorOptions: editor.IStandaloneEditorConstructionOptions = {
     minimap: { enabled: false },
     "semanticHighlighting.enabled": true,
@@ -92,9 +117,6 @@ export default function createTestActivityPage({
             language,
             activityConfig,
             onActivityConfigChange,
-            onSubmit,
-            saveData,
-            onSaveDataChange,
         } = props as NonStrictDisjunction<ActivityConfigPageProps<Config>, ActivityPageProps<Config>>;
         
         const {
@@ -154,18 +176,31 @@ export default function createTestActivityPage({
             displayName: me?.attributes.displayName,
         });
 
-        useEffect(() => {
-            if (saveData && y) {
-                applyTransaction(y, doc => {
-                    for (const type of ['html', 'code', 'css'] as const) {
-                        const text = doc.getText(type);
-                        text.delete(0, text.length);
-                        text.insert(0, saveData.data?.[type]);
-                    }
-                }, 'submission');
-                onSaveDataChange?.(undefined);
+        const submit = useSubmissions<SubmissionSchema>(submission => {
+            let contents: typeof committedState;
+            switch (submission.schemaVer) {
+                case -1:
+                    // Old unversioned schema
+                    contents = submission as any;
+                    break;
+                case 1:
+                    contents = submission.data;
+                    break;
+                default:
+                    console.error(`Unrecognized submission format ${submission}`);
+                    return;
             }
-        }, [saveData, onSaveDataChange, y]);
+            applyTransaction(y, doc => {
+                for (const type of ['html', 'code', 'css'] as const) {
+                    const toInsert = contents[type];
+                    const text = doc.getText(type);
+                    text.delete(0, text.length);
+                    if (toInsert) {
+                        text.insert(0, toInsert);
+                    }
+                }
+            }, 'submission');
+        });
 
         const iframeActions = useRef<IframeActions>(noopIframeActions);
 
@@ -183,10 +218,8 @@ export default function createTestActivityPage({
         const failTests = useRef((_: string) => {});
 
         async function makeSubmission() {
-            if (onSubmit) {
-                await onSubmit(committedState);
-                closeTestsDialog();
-            }
+            await submit(1, committedState);
+            closeTestsDialog();
         }
 
         const [testsDialog, openTestsDialog, closeTestsDialog] = useImperativeDialog(TestsDialog, {
@@ -273,21 +306,11 @@ export default function createTestActivityPage({
             const onChange: OnChange = value => {
                 if (isEditor) {
                     if (editorValue !== value) {
-                        onActivityConfigChange!({
-                            ...activityConfig,
-                            languages: {
-                                ...activityConfig.languages,
-                                [type]: {
-                                    ...activityConfig.languages[type],
-                                    defaultValue: type === "code"
-                                        ? {
-                                            ...activityConfig.languages.code!.defaultValue ?? {},
-                                            [language.name]: value
-                                        }
-                                        : value
-                                }
-                            }
-                        });
+                        onActivityConfigChange!(setIn(
+                            `languages.${type}.defaultValue${type === "code" ? `.${language.name}` : ''}`,
+                            value,
+                            activityConfig,
+                        ));
                     }
                 }
             };
@@ -305,16 +328,11 @@ export default function createTestActivityPage({
                         <Checkbox sx={{ m: "-9px", mr: type === 'html' ? 0 : -1 }}
                             checked={langConfig.enabled}
                             disabled={!active}
-                            onChange={ev => ev.target.checked === langConfig.enabled ? undefined : onActivityConfigChange!({
-                                ...activityConfig,
-                                languages: {
-                                    ...activityConfig.languages,
-                                    [type]: {
-                                        ...langConfig,
-                                        enabled: ev.target.checked
-                                    }
+                            onChange={ev => {
+                                if (ev.target.checked !== langConfig.enabled) {
+                                    onActivityConfigChange!(setIn(`languages.${type}.enabled`, ev.target.checked, activityConfig));
                                 }
-                            })} />
+                            }} />
                     </>;
                 }
 
@@ -491,13 +509,11 @@ export default function createTestActivityPage({
                 toolbar={<>
                     <PaneTitle sx={{ mr: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Require checks to submit</PaneTitle>
                     <Checkbox sx={{ m: "-9px", mr: -1 }} checked={mustPassToSubmit}
-                        onChange={ev => ev.target.checked === mustPassToSubmit ? null : onActivityConfigChange!({
-                            ...activityConfig,
-                            tests: {
-                                source: testsSource,
-                                mustPassToSubmit: ev.target.checked
+                        onChange={ev => {
+                            if (ev.target.checked !== mustPassToSubmit) {
+                                onActivityConfigChange!(setIn('tests.mustPassToSubmit', ev.target.checked, activityConfig));
                             }
-                        })} />
+                        }} />
                 </>}
             >
                 <Box sx={{
@@ -509,13 +525,11 @@ export default function createTestActivityPage({
                         options={codeEditorOptions}
                         language="typescript"
                         value={testsSource}
-                        onChange={val => testsSource === val ? undefined : onActivityConfigChange!({
-                            ...activityConfig,
-                            tests: {
-                                source: val ?? "",
-                                mustPassToSubmit
+                        onChange={val => {
+                            if (testsSource !== val) {
+                                onActivityConfigChange!(setIn('tests.source', val ?? '', activityConfig));
                             }
-                        })} />
+                        }} />
                 </Box>
                 <CodeAlert error={testsCompileError} successMessage="Your tests compiled successfully!" />
             </Pane>
@@ -563,10 +577,11 @@ export default function createTestActivityPage({
                     options={markdownEditorOptions}
                     language="markdown"
                     value={description}
-                    onChange={val => description === val ? undefined : onActivityConfigChange!({
-                        ...activityConfig,
-                        description: val ?? ""
-                    })} /></Box>
+                    onChange={val => {
+                        if (description !== val) {
+                            onActivityConfigChange!(setIn('description', val, activityConfig));
+                        }
+                    }} /></Box>
                 : <CardContent sx={{ pt: 0, flexGrow: 1, overflow: "auto" }}>
                     <ReactMarkdown
                         rehypePlugins={[[rehypeHighlight, { ignoreMissing: true }]]}

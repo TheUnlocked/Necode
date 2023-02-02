@@ -6,10 +6,10 @@ import { useConfirm } from 'material-ui-confirm';
 import { NextPage } from "next";
 import { useSnackbar } from "notistack";
 import { useEffect, useState, useMemo } from "react";
-import { useGetRequest } from '~ui/hooks/useGetRequest';
+import { useGetRequest } from '~shared-ui/hooks/useGetRequest';
 import { ClassroomMemberEntity } from '~api/entities/ClassroomMemberEntity';
 import ManageClassroomPage, { ManageClassroomPageContentProps } from '~ui/components/layouts/ManageClassroomPage';
-import useNecodeFetch from '~ui/hooks/useNecodeFetch';
+import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
 
 const Page: NextPage = () => {
     return <ManageClassroomPage page="members" component={PageContent} />;

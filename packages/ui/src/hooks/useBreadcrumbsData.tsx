@@ -2,7 +2,7 @@ import { ErrorOutline } from '@mui/icons-material';
 import { CircularProgress } from '@mui/material';
 import { useRouter } from 'next/router';
 import { ReactNode } from 'react';
-import { useGetRequestImmutable } from './useGetRequest';
+import { useGetRequest, useGetRequestImmutable } from '~shared-ui/src/hooks/useGetRequest';
 import { ActivityEntity } from '~api/entities/ActivityEntity';
 import { ClassroomMemberEntity } from '~api/entities/ClassroomMemberEntity';
 
@@ -41,7 +41,7 @@ export default function useBreadcrumbsData(): BreadcrumbData[] {
         classroomId ? `/api/classroom/${classroomId}/me?include=classroom` : null
     );
 
-    const { data: activityData, error: activityError, isLoading: activityLoading } = useGetRequestImmutable<ActivityEntity<{ lesson: 'deep' }>>(
+    const { data: activityData, error: activityError, isLoading: activityLoading } = useGetRequest<ActivityEntity<{ lesson: 'deep' }>>(
         activityId && classroomMemberData ? `/api/classroom/${classroomId}/activity/${activityId}${classroomMemberData.attributes.role === 'Instructor' ? '?include=lesson' : ''}` : null
     );
 

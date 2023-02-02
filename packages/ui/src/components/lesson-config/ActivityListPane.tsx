@@ -3,13 +3,13 @@ import { Dispatch, useCallback, useEffect, useMemo, useRef, useState } from "rea
 import { useDrop } from "use-dnd";
 import composeRefs from '@seznam/compose-react-refs';
 import ActivityDescription from "~shared-ui/types/ActivityDescription";
-import { useGetRequest } from "../../hooks/useGetRequest";
+import { useGetRequest } from "../../../../shared-ui/src/hooks/useGetRequest";
 import { ActivityEntity } from "~api/entities/ActivityEntity";
 import { LessonEntity } from "~api/entities/LessonEntity";
 import { Iso8601Date } from "~utils/iso8601";
 import { ActivityDragDropBox } from "./ActivityDragDropBox";
 import SkeletonActivityListPane from "./SkeletonActivityListPane";
-import useNecodeFetch from '../../hooks/useNecodeFetch';
+import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
 import WidgetDragLayer from './WidgetDragLayer';
 import { binarySearchIndex } from '~utils/binarySearch';
 import ActivityListPaneActions from './ActivityListPaneActions';

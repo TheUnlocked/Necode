@@ -1,46 +1,35 @@
-import { useCallback, useContext, useEffect } from "react";
+import { useCallback, useContext } from "react";
 import useSWR, { Key, KeyedMutator, SWRConfiguration } from "swr";
-import useSWRImmutable from "swr/immutable";
-import useChanged from '~shared-ui/hooks/useChanged';
-import { useImpersonation } from './useImpersonation';
 import { Response } from "~api/Response";
-import LoadingContext from "~shared-ui/hooks/useLoadingContext";
+import LoadingContext from "./useLoadingContext";
 
-function isVolatileEndpoint(endpoint: Key) {
-    const regex = /(?:\/|^)(?:me|live)(?:\/|\?|$)/;
-    if (typeof endpoint === 'function') {
-        endpoint = endpoint();
-    }
-    if (!endpoint) {
-        return false;
-    }
-    if (typeof endpoint === 'string') {
-        return regex.test(endpoint);
-    }
-    return (endpoint as string[]).some(x => regex.test(x));
+export interface UseGetRequestResult<T> {
+    data: T | undefined;
+    error: string | undefined;
+    isValidating: boolean;
+    isLoading: boolean;
+    mutate: KeyedMutator<T>;
+    mutateDelete: (callback?: () => Promise<void>) => void;
 }
 
 function makeUseGetRequest(immutable: boolean) {
     return function useGetRequest<T>(endpoint: Key, options?: SWRConfiguration) {
         const { startDownload, finishDownload } = useContext(LoadingContext);
 
-        const { data, error, isValidating, mutate } = (immutable ? useSWRImmutable : useSWR)<Response<T>, Error>(endpoint, (url: string) => {
+        const { data, error, isValidating, mutate } = useSWR<Response<T>, Error>(endpoint, (url: string) => {
             startDownload();
             return fetch(url)
                 .then(res => res.json())
                 .finally(finishDownload);
         }, {
+            ...immutable ? {
+                revalidateIfStale: false,
+                revalidateOnFocus: false,
+                revalidateOnReconnect: false,
+            } : undefined,
             ...options,
             ...options?.fallbackData ? { fallbackData: { data: options.fallbackData } } : {},
         });
-        
-        const volatileEndpointAndImpersonatingChanged = useChanged(Boolean(useImpersonation()) && isVolatileEndpoint(endpoint));
-
-        useEffect(() => {
-            if (volatileEndpointAndImpersonatingChanged) {
-                mutate();
-            }
-        }, [volatileEndpointAndImpersonatingChanged, mutate]);
 
         const mutateData = useCallback<KeyedMutator<T>>((_obj, _options) => {
             const options: Parameters<typeof mutate>[1] = _options === undefined || typeof _options === 'boolean' ? _options : {
@@ -57,7 +46,7 @@ function makeUseGetRequest(immutable: boolean) {
                     : typeof _options.populateCache === 'boolean' ? _options.populateCache
                     : (result, currentData) => ({
                         response: 'ok',
-                        data: (_options.populateCache as (result: any, currentData: T) => T)(result, currentData.data!)
+                        data: (_options.populateCache as (result: any, currentData: T) => T)(result, currentData?.data!)
                     }),
             };
 

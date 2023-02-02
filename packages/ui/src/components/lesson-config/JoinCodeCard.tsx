@@ -3,7 +3,7 @@ import { IconButton, Skeleton, Stack, Tooltip, Typography } from '@mui/material'
 import { useConfirm } from 'material-ui-confirm';
 import { useSnackbar } from 'notistack';
 import { useCallback, useEffect, useState } from 'react';
-import useNecodeFetch from '../../hooks/useNecodeFetch';
+import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
 
 export interface JoinCodeCardProps {
     classroomId: string | undefined;

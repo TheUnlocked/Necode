@@ -1,8 +1,8 @@
 import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, List, ListItemButton, Box } from "@mui/material";
 import { useRouter } from 'next/router';
-import { useGetRequestImmutable } from '../../hooks/useGetRequest';
+import { useGetRequestImmutable } from '../../../../shared-ui/src/hooks/useGetRequest';
 import { UserEntity } from '~api/entities/UserEntity';
-import { setImpersonation, useImpersonation } from '../../hooks/useImpersonation';
+import { setImpersonation, useImpersonation } from '~shared-ui/hooks/useImpersonation';
 
 interface SubmissionsDialogProps {
     open: boolean;

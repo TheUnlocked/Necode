@@ -6,9 +6,9 @@ import FormPage from "~ui/components/layouts/FormPage";
 import { signIn } from "next-auth/react";
 import { ClassroomEntity } from "~api/entities/ClassroomEntity";
 import { useSnackbar } from "notistack";
-import { useGetRequestImmutable } from "~ui/hooks/useGetRequest";
+import { useGetRequestImmutable } from "~shared-ui/hooks/useGetRequest";
 import { UserEntity } from "~api/entities/UserEntity";
-import useNecodeFetch from '~ui/hooks/useNecodeFetch';
+import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
 
 
 const Join: NextPage = () => {

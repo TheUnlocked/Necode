@@ -4,10 +4,10 @@ import FormPage from "~ui/components/layouts/FormPage";
 import { FormEventHandler, useCallback, useState } from "react";
 import { ClassroomEntity } from "~api/entities/ClassroomEntity";
 import { useRouter } from "next/router";
-import { useGetRequestImmutable } from "~ui/hooks/useGetRequest";
+import { useGetRequestImmutable } from "~shared-ui/hooks/useGetRequest";
 import { UserEntity } from "~api/entities/UserEntity";
 import AdminPageAlert from "~ui/components/AdminPageAlert";
-import useNecodeFetch from '~ui/hooks/useNecodeFetch';
+import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
 
 const MIN_NAME_LENGTH = 6;
 const MAX_NAME_LENGTH = 100;

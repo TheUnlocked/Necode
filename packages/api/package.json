@@ -13,7 +13,8 @@
   "dependencies": {
     "@types/luxon": "^3.2.0",
     "luxon": "^2.5.2",
-    "~database": "workspace:*"
+    "~database": "workspace:*",
+    "~utils": "workspace:*"
   },
   "devDependencies": {
     "@types/simple-peer": "^9.11.5",

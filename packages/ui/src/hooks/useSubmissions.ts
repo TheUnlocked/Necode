@@ -3,7 +3,7 @@ import { ActivitySubmissionEntity } from "~api/entities/ActivitySubmissionEntity
 import tracked from "~shared/trackedEventEmitter";
 import SocketInfo from "~shared-ui/types/SocketInfo";
 import ActivityDescription from '~shared-ui/types/ActivityDescription';
-import { useGetRequest } from './useGetRequest';
+import { useGetRequest } from '~shared-ui/hooks/useGetRequest';
 
 export function useSubmissions(
     classroomId: string | undefined,

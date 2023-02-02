@@ -1,7 +1,7 @@
 import { Container, Stack, Typography, styled, ToggleButtonGroup, ToggleButton, Tooltip, Box } from '@mui/material';
 import type { NextPage } from 'next';
 import { PropsWithChildren, ReactNode, useMemo, useState } from 'react';
-import { useGetRequestImmutable } from '~ui/hooks/useGetRequest';
+import { useGetRequestImmutable } from '~shared-ui/hooks/useGetRequest';
 import { UserEntity } from '~api/entities/UserEntity';
 import Footer from '~ui/components/Footer';
 import NecodeLogo from '~ui/components/NecodeLogo';

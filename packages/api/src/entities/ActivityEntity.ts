@@ -4,9 +4,9 @@ import { EntityReference, makeEntityReference, ReferenceDepth } from "./EntityRe
 import { LessonEntity } from "./LessonEntity";
 
 
-type Refs = { lesson?: ReferenceDepth };
+export type ActivityEntityRefs = { lesson?: ReferenceDepth };
 
-export type ActivityEntity<References extends Refs = Refs>
+export type ActivityEntity<References extends ActivityEntityRefs = ActivityEntityRefs>
     = Entity<EntityType.Activity, {
         activityType: string;
         lesson: EntityReference<LessonEntity<any>, References['lesson']>;
@@ -15,7 +15,7 @@ export type ActivityEntity<References extends Refs = Refs>
         enabledLanguages: string[];
     }>;
 
-export function makeActivityEntity<R extends Refs = any>(activity: Activity, relationships?: {
+export function makeActivityEntity<R extends ActivityEntityRefs = any>(activity: Activity, relationships?: {
     lesson?: LessonEntity<any> | string;
 }): ActivityEntity<R> {
     return {

@@ -3,7 +3,7 @@ import { useCallback, useMemo } from 'react';
 import useLoadingFetch from '~shared-ui/hooks/useLoadingFetch';
 import { Response } from '~api/Response';
 
-export interface NecodeFetchRequestOptions {
+export interface NecodeFetchRequestOptions extends RequestInit {
     errorMessage?: string | ((err: Error) => string | null | undefined) | null;
 }
 
@@ -11,7 +11,7 @@ export default function useNecodeFetch() {
     const { upload, download } = useLoadingFetch();
     const { enqueueSnackbar } = useSnackbar();
 
-    const necodeFetch = useCallback((fetcher: typeof fetch) => async <T,>(req: RequestInfo, options?: RequestInit & NecodeFetchRequestOptions) => {
+    const necodeFetch = useCallback((fetcher: typeof fetch) => async <T,>(req: RequestInfo, options?: NecodeFetchRequestOptions) => {
         let err: Error;
         try {
             const response = await fetcher(req, options);

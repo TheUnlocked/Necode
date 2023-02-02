@@ -1,7 +1,7 @@
 import Editor, { OnChange, useMonaco } from "@monaco-editor/react";
 import { Refresh as RefreshIcon, Sync as SyncIcon } from "@mui/icons-material";
 import { Box, Button, CardContent, Checkbox, IconButton, Stack, Tooltip, Typography, useTheme } from "@mui/material";
-import { applyTransaction, useYInit, ActivityConfigPageProps, ActivityPageProps, NetworkId, CodeAlert, Key, LanguageDescription, Link, Pane, Panes, PanesLayouts, PaneTab, PaneTitle, PassthroughPane, TabbedPane, useFetch, useImperativeDialog, useImported, useIsSizeOrSmaller, useY, useYAwareness, useYText } from "@necode-org/activity-dev";
+import { applyTransaction, useYInit, ActivityConfigPageProps, ActivityPageProps, NetworkId, CodeAlert, Key, LanguageDescription, Link, Pane, Panes, PanesLayouts, PaneTab, PaneTitle, PassthroughPane, TabbedPane, useFetch, useImperativeDialog, useImported, useIsSizeOrSmaller, useY, useYAwareness, useYText, useApiGet, api, useApiFetch } from "@necode-org/activity-dev";
 import { debounce } from "lodash";
 import { editor, languages } from 'monaco-editor';
 import testScaffoldingTypes from "raw-loader!./test-scaffolding.d.ts.raw";
@@ -148,9 +148,10 @@ export default function createTestActivityPage({
             css: uncommittedCss.value,
         }), [uncommittedHtml, uncommittedCode, uncommittedCss]);
 
+        const { data: me } = useApiGet(api.me());
+
         const yAwareness = useYAwareness(network, 'shared-editors-awareness', y, {
-            // TODO: Get names back for awareness
-            // displayName: me?.attributes.displayName,
+            displayName: me?.attributes.displayName,
         });
 
         useEffect(() => {

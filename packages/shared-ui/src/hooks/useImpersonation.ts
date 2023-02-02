@@ -1,14 +1,19 @@
 import { IMPERSONATION_COOKIE } from '~api/constants';
 import createGlobalState from '../util/globalState';
 import Cookies from 'js-cookie';
+import { mutate } from 'swr';
 
 const impersonationState = createGlobalState<string | undefined>(Cookies.get(IMPERSONATION_COOKIE));
 
 export const [useImpersonation, getImpersonation] = impersonationState;
 
 export function setImpersonation(impersonate?: string) {
+    const prev = getImpersonation();
+    if (impersonate === prev) {
+        return;
+    }
+    
     if (impersonate) {
-        const prev = getImpersonation();
         Cookies.set(IMPERSONATION_COOKIE, impersonate);
         (async () => {
             try {
@@ -31,4 +36,11 @@ export function setImpersonation(impersonate?: string) {
         Cookies.remove(IMPERSONATION_COOKIE);
         impersonationState[2](undefined);
     }
+
+    // Clear cache
+    mutate(
+        () => true,
+        undefined,
+        { revalidate: true },
+    );
 }

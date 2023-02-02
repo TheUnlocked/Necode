@@ -1,6 +1,6 @@
 import { NextPage } from "next";
 import { useRouter } from 'next/router';
-import { useGetRequest } from '~ui/hooks/useGetRequest';
+import { useGetRequest } from '~shared-ui/hooks/useGetRequest';
 import { ClassroomMemberEntity } from '~api/entities/ClassroomMemberEntity';
 import NotFoundPage from '../../404';
 

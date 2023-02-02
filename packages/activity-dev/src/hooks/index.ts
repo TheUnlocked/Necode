@@ -10,3 +10,6 @@ export { default as useFetch } from '~shared-ui/hooks/useLoadingFetch';
 export { default as useImperativeDialog } from '~shared-ui/hooks/useImperativeDialog';
 export { default as useOnOpen } from '~shared-ui/hooks/useOnOpen';
 export { default as useLocalCachedState } from '~shared-ui/hooks/useLocalCachedState';
+export * from '~api/handles';
+export { default as api } from '~api/handles';
+export * from '~shared-ui/hooks/useApi';

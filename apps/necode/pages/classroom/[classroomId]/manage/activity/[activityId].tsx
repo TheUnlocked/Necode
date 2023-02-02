@@ -10,7 +10,7 @@ import sortByProperty from "~utils/sortByProperty";
 import { flip, make } from "~utils/fp";
 import { LazyImportable } from "~shared-ui/components/Lazy";
 import ConfigureLanguageDialog from "~ui/components/dialogs/ConfigureLanguageDialog";
-import { useGetRequest, useGetRequestImmutable } from "~ui/hooks/useGetRequest";
+import { useGetRequest, useGetRequestImmutable } from "~shared-ui/hooks/useGetRequest";
 import { ActivityEntity } from "~api/entities/ActivityEntity";
 import allActivities from "~core/activities/allActivities";
 import useDirty from "~shared-ui/hooks/useDirty";
@@ -18,7 +18,7 @@ import { ClassroomMemberEntity } from "~api/entities/ClassroomMemberEntity";
 import NotFoundPage from "../../../../404";
 import supportsLanguage from "~core/activities/supportsLanguage";
 import { curry } from "lodash";
-import useNecodeFetch from '~ui/hooks/useNecodeFetch';
+import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
 import { useSnackbar } from 'notistack';
 
 interface StaticProps {

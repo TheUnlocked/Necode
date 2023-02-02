@@ -10,7 +10,7 @@ import { ActivityEntity } from '~api/entities/ActivityEntity';
 import { activityDragDropType } from '../../dnd/types';
 import useActivityDescription from '../../hooks/useActivityDescription';
 import useImported from '~shared-ui/hooks/useImported';
-import useNecodeFetch from '../../hooks/useNecodeFetch';
+import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
 import BrokenWidget from './BrokenWidget';
 import DefaultActivityWidget from "~shared-ui/components/DefaultActivityWidget";
 import SkeletonWidget from "./SkeletonWidget";

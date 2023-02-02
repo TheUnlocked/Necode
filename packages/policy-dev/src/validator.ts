@@ -6,7 +6,7 @@ import { necodeLib, events as necodeEvents, internalUniqueBugType } from '~mike-
 import { Arbitrary, boolean, check, constant, float, integer as _integer, oneof, property, record, shuffledSubarray, stringify, tuple } from 'fast-check';
 import { SingleBar } from 'cli-progress';
 import { createJavascriptTarget } from '@necode-org/mike/codegen/js/JavascriptTarget';
-import { Mutable, NewType } from '~ui/src/util/types';
+import { Mutable, NewType } from '~utils/types';
 import { Values, SignalInfo, ValidatorConfig, Value, parseValidatorConfig, ParseValidationConfigError } from './ValidatorConfig';
 import { ASTNodeKind, Block, DebugStatement, FloatLiteral, getNodeSourceRange, Identifier, StatementOrBlock, stringifyPosition, Variable, visit } from '@necode-org/mike/ast';
 import { TypeKind } from '@necode-org/mike/types';

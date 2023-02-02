@@ -2,7 +2,7 @@ import { isEqual } from 'lodash';
 import { useEffect, useMemo, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { ClientToServerEventMap, ServerToClientEventMap, SignalLiveActivityInfo } from '~api/ws';
-import { useGetRequest } from './useGetRequest';
+import { useGetRequest } from '~shared-ui/hooks/useGetRequest';
 import SocketInfo from '~shared-ui/types/SocketInfo';
 
 export function useSocket(classroomId: string): SocketInfo | undefined {

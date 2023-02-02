@@ -1,8 +1,8 @@
 import { AppBar, Breadcrumbs, Button, Stack, Toolbar, Typography, useScrollTrigger } from "@mui/material";
 import { signIn, signOut } from "next-auth/react";
 import { UserEntity } from "~api/entities/UserEntity";
-import { useGetRequestImmutable } from "../hooks/useGetRequest";
-import { setImpersonation, useImpersonation } from '../hooks/useImpersonation';
+import { useGetRequestImmutable } from "~shared-ui/hooks/useGetRequest";
+import { setImpersonation, useImpersonation } from '~shared-ui/hooks/useImpersonation';
 import useImperativeDialog from '~shared-ui/hooks/useImperativeDialog';
 import SimulationDialog from './dialogs/SimulationDialog';
 import { SitewideRights } from '~database';

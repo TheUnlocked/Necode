@@ -8,12 +8,12 @@ import { nanoid } from 'nanoid';
 import { NextPage } from "next";
 import { useSnackbar } from "notistack";
 import { useMemo, useState } from "react";
-import { useGetRequestImmutable } from "~ui/hooks/useGetRequest";
+import { useGetRequestImmutable } from "~shared-ui/hooks/useGetRequest";
 import { UserEntity } from "~api/entities/UserEntity";
 import AdminPageAlert from "~ui/components/AdminPageAlert";
 import FullPageLoader from "~ui/components/FullPageLoader";
-import { useImpersonation } from '~ui/hooks/useImpersonation';
-import useNecodeFetch from '~ui/hooks/useNecodeFetch';
+import { useImpersonation } from '~shared-ui/hooks/useImpersonation';
+import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
 
 function SimulationToolbar(props: {
     onCreateSimulatedUser: () => void;

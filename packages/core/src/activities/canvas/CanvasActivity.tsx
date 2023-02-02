@@ -147,7 +147,7 @@ export function CanvasActivity({ language, activityConfig }: ActivityPageProps<C
     const layouts: PanesLayouts = {
         thin: { panesPerColumn: [2] },
         medium: { panesPerColumn: [1, 1], weights: [1, 1] },
-        wide: { panesPerColumn: [1, 1], weights: [2, 1] },
+        wide: { panesPerColumn: [1, 1], weights: [1, 1] },
     };
 
     return <Panes layouts={layouts}>

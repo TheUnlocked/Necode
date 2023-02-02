@@ -1,4 +1,4 @@
-import { createContext, forwardRef, PropsWithChildren, useContext, useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import { createContext, forwardRef, PropsWithChildren, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { ActivitySubmissionEntity } from "~api/entities/ActivitySubmissionEntity";
 import { DisposeFn } from "~utils/types";
 import tracked from "~shared/trackedEventEmitter";
@@ -28,6 +28,7 @@ const submissionContext = createContext<SubmissionContextValue<VersionedSubmissi
 });
 
 interface SubmissionProviderRef {
+    areSubmissionsUsed: boolean;
     submissions: readonly ActivitySubmissionEntity<{ user: 'deep', activity: 'none' }>[];
     loadSubmission(submission: ActivitySubmissionEntity<{ user: 'deep', activity: 'none' }>): void;
 }
@@ -59,8 +60,9 @@ export const SubmissionProvider = forwardRef<SubmissionProviderRef, SubmissionPr
     const { data: submissions, mutate } = useApiGet<ActivitySubmissionEntity<{ user: 'deep', activity: 'none' }>[]>(
         api.classroom(classroomId).live.submissions({ include: { user: true } }) as any,
         { fallbackData: EMPTY, disabled: !activity },
-);
+    );
 
+    const [areSubmissionsUsed, setAreSubmissionsUsed] = useState(false);
     const submissionLoadListeners = useRef(new Set<SubmissionLoadListener<any>>());
 
     useEffect(() => {
@@ -101,11 +103,12 @@ export const SubmissionProvider = forwardRef<SubmissionProviderRef, SubmissionPr
     }, [socketInfo, classroomId, mutate]);
 
     useImperativeHandle(ref, () => ({
+        areSubmissionsUsed,
         submissions: submissions!,
         loadSubmission: (submission) => {
             submissionLoadListeners.current.forEach(callWith(submission.attributes.data));
         }
-    }), [submissions]);
+    }), [areSubmissionsUsed, submissions]);
 
     const { startUpload, finishUpload } = useLoadingContext();
     const { enqueueSnackbar } = useSnackbar();
@@ -134,7 +137,13 @@ export const SubmissionProvider = forwardRef<SubmissionProviderRef, SubmissionPr
             },
             addSubmissionLoadListener: callback => {
                 submissionLoadListeners.current.add(callback);
-                return () => submissionLoadListeners.current.delete(callback);
+                setAreSubmissionsUsed(true);
+                return () => {
+                    submissionLoadListeners.current.delete(callback);
+                    if (submissionLoadListeners.current.size === 0) {
+                        setAreSubmissionsUsed(false);
+                    }
+                };
             }
         }), [socketInfo, startUpload, finishUpload, enqueueSnackbar])}>{children}</submissionContext.Provider>;
 });

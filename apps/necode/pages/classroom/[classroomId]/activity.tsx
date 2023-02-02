@@ -76,6 +76,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
         setHasNewSubmissions(false);
     }
 
+    const [usesSubmissions, setUsesSubmissions] = useState(false);
     let instructorToolbar: JSX.Element | undefined;
     
     if (isInstructor) {
@@ -89,14 +90,16 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
                         End Activity
                     </Button>
                 </Stack>
-                <Stack direction="row" alignItems="center" spacing={0.5}>
-                    {submissions.length > 0
-                        ? <Chip color={hasNewSubmissions ? "secondary" : "primary"} variant="filled" size="small" label={submissions.length} />
-                        : undefined}
-                    <Button size="small" startIcon={<AssignmentTurnedIn/>} onClick={viewSubmissions}>
-                        View Submissions
-                    </Button>
-                </Stack>
+                {usesSubmissions
+                    ? <Stack direction="row" alignItems="center" spacing={0.5}>
+                        {submissions.length > 0
+                            ? <Chip color={hasNewSubmissions ? "secondary" : "primary"} variant="filled" size="small" label={submissions.length} />
+                            : undefined}
+                        <Button size="small" startIcon={<AssignmentTurnedIn/>} onClick={viewSubmissions}>
+                            View Submissions
+                        </Button>
+                    </Stack>
+                    : undefined}
             </Toolbar>;
         }
         else {
@@ -153,7 +156,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
 
     return <>
         {instructorToolbar}
-        {isInstructor ? submissionsDialog : undefined}
+        {isInstructor && usesSubmissions ? submissionsDialog : undefined}
         <Box sx={{
             px: 2,
             pb: 2,
@@ -171,7 +174,8 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
                     onSubmission={() => setHasNewSubmissions(true)}
                     ref={data => {
                         if (data) {
-                            const { submissions, loadSubmission } = data;
+                            const { areSubmissionsUsed, submissions, loadSubmission } = data;
+                            setUsesSubmissions(areSubmissionsUsed);
                             setSubmissions(submissions);
                             loadSubmissionRef.current = loadSubmission;
                         }

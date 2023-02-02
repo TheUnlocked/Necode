@@ -3,7 +3,7 @@ import { Dispatch, useCallback, useEffect, useMemo, useRef, useState } from "rea
 import { useDrop } from "use-dnd";
 import composeRefs from '@seznam/compose-react-refs';
 import ActivityDescription from "~shared-ui/types/ActivityDescription";
-import { useGetRequest } from "../../../../shared-ui/src/hooks/useGetRequest";
+import { useGetRequest } from "~shared-ui/hooks/useGetRequest";
 import { ActivityEntity } from "~api/entities/ActivityEntity";
 import { LessonEntity } from "~api/entities/LessonEntity";
 import { Iso8601Date } from "~utils/iso8601";

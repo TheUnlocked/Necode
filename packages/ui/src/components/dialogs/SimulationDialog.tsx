@@ -1,6 +1,6 @@
 import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, List, ListItemButton, Box } from "@mui/material";
 import { useRouter } from 'next/router';
-import { useGetRequestImmutable } from '../../../../shared-ui/src/hooks/useGetRequest';
+import { useGetRequestImmutable } from '~shared-ui/hooks/useGetRequest';
 import { UserEntity } from '~api/entities/UserEntity';
 import { setImpersonation, useImpersonation } from '~shared-ui/hooks/useImpersonation';
 

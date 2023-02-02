@@ -65,7 +65,7 @@ Necode uses Vercel in production, and does not have pre-packaged instructions fo
 
 Sign in using the MSAL login that you configured in `.env`.
 If you are working in a development environment, you can also configure GitHub authentication,
-as well "email" signin (see Appendix 1).
+as well log in with any username using the password you defined with the `DEV_PASSWORD` environment variable.
 
 You will now need to make a manual database change. While you can do this through `psql` or pgAdmin,
 it may be easier to use Prisma Studio:
@@ -80,15 +80,6 @@ Now navigate to `/admin/createClassroom`. You should see a field asking for a di
 If you see an error instead, refresh. Enter a display name for the classroom you are about to create.
 For example, "Test Classroom".
 
-Once you've chosen a display name, press "Create" and wait a few moments. It may take some time to load the newly created classroom.
+Once you've chosen a display name, press "Create" and wait a few moments.
+It may take some time to load the newly created classroom, especially in a development environment.
 Eventually you should come to the manage classroom page. From here you can create activities and manage your classroom.
-
-### Appendix 1: Email Signin
-
-**Note:** This only works in dev mode.
-
-1. Navigate to `/api/auth/signin` and enter an email address. This can be anything, no actual email will be sent.
-2. In the console output of the Next.js server, a link will be emitted. Paste that link into your browser.
-
-You should now be signed in.
-

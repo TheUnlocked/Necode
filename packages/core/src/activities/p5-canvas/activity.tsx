@@ -136,11 +136,10 @@ export function Activity({ language, activityConfig }: ActivityPageProps<Configu
     };
 
     return <Panes layouts={layouts}>
-        <Pane label={language.displayName}>
+        <Pane icon={language.icon ? <language.icon /> : undefined} label={language.displayName}>
             <Card sx={{ height: "100%", flexGrow: 1, display: "flex", flexDirection: "column" }}>
                 <Box sx={{
                     flexGrow: 1,
-                    pt: 2,
                     overflow: "hidden" }}>
                     <LazyImportable show={true} importable={importExtraLibs} render={extraLibs =>
                         <Editor

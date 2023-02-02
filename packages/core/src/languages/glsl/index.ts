@@ -4,7 +4,8 @@ import injectionCode from "raw-loader!./inject.js.raw";
 export const glslDescription = languageDescription({
     name: 'glsl',
     monacoName: 'c',
-    displayName: 'GLSL'
+    displayName: 'GLSL',
+    runnable: async () => new GLSL() as any,
 });
 
 export class GLSL implements RunnableLanguage<typeof glslDescription.features> {

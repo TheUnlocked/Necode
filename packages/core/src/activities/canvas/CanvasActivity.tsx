@@ -1,5 +1,5 @@
 import Editor from "@monaco-editor/react";
-import { Box, Card, styled, Typography } from "@mui/material";
+import { Box, Card, styled } from "@mui/material";
 import { CodeAlert, Pane, Panes, PanesLayouts, PassthroughPane, CodeRunner, Video, useImported, ActivityPageProps } from "@necode-org/activity-dev";
 import dedent from "dedent-js";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -151,9 +151,8 @@ export function CanvasActivity({ language, activityConfig }: ActivityPageProps<C
     };
 
     return <Panes layouts={layouts}>
-        <Pane label={language.displayName}>
+        <Pane icon={language.icon ? <language.icon /> : undefined} label={language.displayName}>
             <Card sx={{ height: "100%", flexGrow: 1, display: "flex", flexDirection: "column" }}>
-                <Typography variant="body1" component="div" sx={{ pl: 2, pr: 1, py: 1 }}>Write code to modify the canvas!</Typography>
                 <Box sx={{
                     flexGrow: 1,
                     overflow: "hidden" }}>

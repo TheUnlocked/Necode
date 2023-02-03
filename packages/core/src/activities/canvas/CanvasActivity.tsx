@@ -1,11 +1,8 @@
-import Editor from "@monaco-editor/react";
 import { Box, Card, styled } from "@mui/material";
-import { CodeAlert, Pane, Panes, PanesLayouts, PassthroughPane, CodeRunner, Video, useImported, ActivityPageProps } from "@necode-org/activity-dev";
+import { ActivityPageProps, CodeAlert, CodeRunner, Editor, NetworkId, Pane, Panes, PanesLayouts, PassthroughPane, useImported, useMediaChannel, Video } from "@necode-org/activity-dev";
 import dedent from "dedent-js";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { NetworkId } from '~api/RtcNetwork';
 import { Configuration } from '.';
-import { useMediaChannel } from '@necode-org/activity-dev';
 
 const DrawingCanvas = styled('canvas')({
     maxWidth: "100%",
@@ -100,25 +97,24 @@ export function CanvasActivity({ language, activityConfig }: ActivityPageProps<C
                             }`
     } as { [language: string]: string }), [config]);
 
-    const [code, setCode] = useState<string>();
+    const [code, setCode] = useState<string>(defaultCode[language.name]);
 
     const runner = useMemo(() => new CodeRunner(), []);
 
     const [codeError, setCodeError] = useState<Error | undefined>();
     const codeGenerator = useImported(language.runnable);
-    const codeToRun = code ?? defaultCode[language.name];
 
     useEffect(() => {
         try {
             if (codeGenerator) {
-                runner.prepareCode(codeGenerator.toRunnerCode(codeToRun, { entryPoint: 'draw' }));
+                runner.prepareCode(codeGenerator.toRunnerCode(code, { entryPoint: 'draw' }));
             }
         }
         catch (e) {
             runner.prepareCode(undefined);
             setCodeError(e as Error);
         }
-    }, [codeToRun, runner, codeGenerator]);
+    }, [code, runner, codeGenerator]);
     
     const [inboundVideoElt, setInboundVideoElt] = useState<HTMLVideoElement | null>(null);
 
@@ -157,14 +153,7 @@ export function CanvasActivity({ language, activityConfig }: ActivityPageProps<C
                     flexGrow: 1,
                     overflow: "hidden" }}>
                     <Editor
-                        theme="vs-dark"
-                        options={{
-                            minimap: { enabled: false },
-                            "semanticHighlighting.enabled": true,
-                            automaticLayout: true
-                        }}
-                        defaultLanguage={language.monacoName}
-                        defaultValue={defaultCode[language.name]}
+                        language={language}
                         value={code}
                         onChange={v => setCode(v ?? "")} />
                 </Box>

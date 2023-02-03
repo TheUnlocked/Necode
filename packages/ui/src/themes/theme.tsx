@@ -29,8 +29,13 @@ export default createTheme({
                     z-index: 2000 !important;
                 }
 
-                .monaco-editor .suggest-widget {
+                .monaco-editor .suggest-widget,
+                .monaco-editor, .parameter-hints-widget {
                     z-index: 1900 !important;
+                }
+
+                .monaco-editor .suggest-details-container {
+                    z-index: 1800 !important;
                 }
 
                 .reflex-container {

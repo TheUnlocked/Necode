@@ -1,13 +1,11 @@
-import Editor from "@monaco-editor/react";
 import { Box, Card } from "@mui/material";
-import { ActivityPageProps, CodeAlert, LazyImportable, Pane, Panes, PanesLayouts, PassthroughPane, useImported, useMediaChannel, Video } from '@necode-org/activity-dev';
+import { Editor, ActivityPageProps, CodeAlert, NetworkId, Pane, Panes, PanesLayouts, PassthroughPane, useImported, useMediaChannel, Video, useMonaco } from '@necode-org/activity-dev';
 import dedent from "dedent-js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { NetworkId } from '~api/RtcNetwork';
 import { Configuration } from '../canvas';
 import typeDeclarationFiles from '../p5js/typeDeclarationFiles';
 
-const importExtraLibs = () => Promise.all(typeDeclarationFiles.map(async x => ({ filePath: x, content: await (await fetch(x)).text() })));
+const extraLibsImportable = () => Promise.all(typeDeclarationFiles.map(async x => ({ filePath: x, content: await (await fetch(x)).text() })));
 
 const FRAME_RATE = 10;
 
@@ -15,6 +13,40 @@ export function Activity({ language, activityConfig }: ActivityPageProps<Configu
     const [[inboundStream], setOutboundStream] = useMediaChannel(NetworkId.NET_0, 'canvas');
 
     const config = useMemo(() => activityConfig ?? { canvasWidth: 400, canvasHeight: 400 }, [activityConfig]);
+
+    const monaco = useMonaco();
+    const extraLibs = useImported(extraLibsImportable);
+
+    useEffect(() => {
+        if (monaco && extraLibs) {
+            const libs = [
+                ...extraLibs,
+                { content: 'declare const PREV_FRAME: import("https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/master/types/p5/index").Element;' },
+            ];
+            monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+                ...monaco.languages.typescript.javascriptDefaults.getCompilerOptions(),
+                moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs
+            });
+            monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+                ...monaco.languages.typescript.typescriptDefaults.getCompilerOptions(),
+                moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs
+            });
+    
+            const jsLibsOld = monaco.languages.typescript.javascriptDefaults.getExtraLibs();
+            const tsLibsOld = monaco.languages.typescript.javascriptDefaults.getExtraLibs();
+            monaco.languages.typescript.javascriptDefaults.setExtraLibs(libs);
+            monaco.languages.typescript.typescriptDefaults.setExtraLibs(libs);
+
+            return () => {
+                monaco.languages.typescript.javascriptDefaults.setExtraLibs(
+                    Object.entries(jsLibsOld).map(([content, fileName]) => ({ content, fileName }))
+                );
+                monaco.languages.typescript.typescriptDefaults.setExtraLibs(
+                    Object.entries(tsLibsOld).map(([content, fileName]) => ({ content, fileName }))
+                );
+            };
+        }
+    }, [monaco, extraLibs]);
 
     const defaultCode = useMemo(() => dedent
        `function setup() {
@@ -27,8 +59,7 @@ export function Activity({ language, activityConfig }: ActivityPageProps<Configu
         }`, [config]
     );
 
-    const [code, setCode] = useState<string>();
-    const codeToRun = code ?? defaultCode;
+    const [code, setCode] = useState<string>(defaultCode);
 
     const codeGenerator = useImported(language.runnable);
     const [codeError, setCodeError] = useState<Error | undefined>();
@@ -48,7 +79,7 @@ export function Activity({ language, activityConfig }: ActivityPageProps<Configu
                         });
                     </script>
                     <script src="https://cdn.jsdelivr.net/npm/p5@1.4.2/lib/p5.min.js"></script>
-                    <script>${codeGenerator.toRunnerCode(codeToRun, { global: true })}</script>
+                    <script>${codeGenerator.toRunnerCode(code, { global: true })}</script>
                 </head>
                 <body>
                     <main></main>
@@ -78,7 +109,7 @@ export function Activity({ language, activityConfig }: ActivityPageProps<Configu
             `;
         }
         return ``;
-    }, [config, codeToRun, codeGenerator]);
+    }, [config, code, codeGenerator]);
 
     const videoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -141,38 +172,10 @@ export function Activity({ language, activityConfig }: ActivityPageProps<Configu
                 <Box sx={{
                     flexGrow: 1,
                     overflow: "hidden" }}>
-                    <LazyImportable show={true} importable={importExtraLibs} render={extraLibs =>
-                        <Editor
-                            theme="vs-dark"
-                            options={{
-                                minimap: { enabled: false },
-                                "semanticHighlighting.enabled": true,
-                                automaticLayout: true,
-                                fixedOverflowWidgets: true,
-                            }}
-                            defaultLanguage={language.monacoName}
-                            defaultValue={defaultCode}
-                            value={code}
-                            onMount={(editor, monaco) => {
-                                const libs = [...extraLibs, { content: dedent`
-                                declare const PREV_FRAME: import("https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/master/types/p5/index").Element;
-                                ` }];
-                                if (libs) {
-                                    monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-                                        ...monaco.languages.typescript.javascriptDefaults.getCompilerOptions(),
-                                        moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs
-                                    });
-                                    monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-                                        ...monaco.languages.typescript.typescriptDefaults.getCompilerOptions(),
-                                        moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs
-                                    });
-                            
-                                    monaco.languages.typescript.javascriptDefaults.setExtraLibs(libs);
-                                    monaco.languages.typescript.typescriptDefaults.setExtraLibs(libs);
-                                }
-                            }}
-                            onChange={v => setCode(v ?? "")} />
-                    } />
+                    <Editor
+                        language={language}
+                        value={code}
+                        onChange={v => setCode(v ?? "")} />
                 </Box>
                 <CodeAlert error={codeError} />
             </Card>

@@ -19,11 +19,6 @@ import ErrorBoundaryPage from '~ui/components/layouts/ErrorBoundaryPage';
 import usePageTitle from '~ui/hooks/usePageTitle';
 import { ConfirmProvider } from 'material-ui-confirm';
 import { DragDropProvider } from 'use-dnd';
-import { loader } from '@monaco-editor/react';
-
-
-// Temporarily required due to https://github.com/microsoft/monaco-editor/issues/2947
-loader.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.31.1/min/vs' } });
 
 function MyApp({ Component, pageProps }: AppProps) {
     const loadingInfoRef = useRef({

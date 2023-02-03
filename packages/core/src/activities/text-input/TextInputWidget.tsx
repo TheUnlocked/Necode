@@ -1,11 +1,10 @@
-import { ClickAwayListener, Grow, IconButton, MenuItem, MenuList, Paper, Stack, TextField, Theme, SxProps, Popper } from "@mui/material";
-import { useCallback, useEffect, useRef, useState } from "react";
 import { Code as CodeIcon, TextFields as TextFieldsIcon } from "@mui/icons-material";
-import Editor, { useMonaco } from "@monaco-editor/react";
-import { usePopupState, bindTrigger, bindPopper } from "material-ui-popup-state/hooks";
+import { ClickAwayListener, Grow, IconButton, MenuItem, MenuList, Paper, Popper, Stack, SxProps, TextField, Theme } from "@mui/material";
+import { ActivityConfigWidgetProps, DragHandle, dragHandleClass, dragHandleSelector, Editor, useLocalCachedState, useMonaco } from "@necode-org/activity-dev";
+import { bindPopper, bindTrigger, usePopupState } from "material-ui-popup-state/hooks";
 import type { editor } from "monaco-editor";
+import { useCallback, useEffect, useRef, useState } from "react";
 import allLanguages from "../../languages/allLanguages";
-import { useLocalCachedState, DragHandle, dragHandleClass, dragHandleSelector, ActivityConfigWidgetProps } from "@necode-org/activity-dev";
 
 export interface TextInputWidgetProps {
     value: string;
@@ -115,6 +114,7 @@ export default function TextInputWidget({
         }}>
             <DragHandle innerRef={dragHandle} iconProps={{ sx: { mr: 0.5 } }} />
             <Editor
+                theme="vs-black"
                 height={editorHeight}
                 value={textContent} onChange={x => setTextContent(x ?? '')}
                 onMount={editor => {
@@ -122,8 +122,7 @@ export default function TextInputWidget({
                     editor.onDidContentSizeChange(updateHeight(editor));
                     editor.onDidBlurEditorText(() => commitTextContentRef.current());
                 }}
-                theme="vs-black"
-                language={languageDescription?.monacoName}
+                language={languageDescription}
                 options={monacoOptions} />
             <span><IconButton size="small" className={dragHandleClass} sx={{ ml: 0.5 }}
                 {...bindTrigger(languageSelectPopup)}>{languageDescription?.icon ? <languageDescription.icon /> : <CodeIcon/>}</IconButton></span>

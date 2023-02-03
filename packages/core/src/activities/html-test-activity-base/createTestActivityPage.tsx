@@ -1,9 +1,8 @@
-import Editor, { OnChange, useMonaco } from "@monaco-editor/react";
-import { set as setIn } from "lodash/fp";
 import { Refresh as RefreshIcon, Sync as SyncIcon } from "@mui/icons-material";
 import { Box, Button, CardContent, Checkbox, IconButton, Stack, Tooltip, Typography, useTheme } from "@mui/material";
-import { applyTransaction, useSubmissions, useYInit, ActivityConfigPageProps, ActivityPageProps, NetworkId, CodeAlert, Key, LanguageDescription, Link, Pane, Panes, PanesLayouts, PaneTab, PaneTitle, PassthroughPane, TabbedPane, useFetch, useImperativeDialog, useImported, useIsSizeOrSmaller, useY, useYAwareness, useYText, useApiGet, api } from "@necode-org/activity-dev";
+import { ActivityConfigPageProps, ActivityPageProps, api, applyTransaction, CodeAlert, Editor, Key, LanguageDescription, Link, NetworkId, OnEditorChange, Pane, Panes, PanesLayouts, PaneTab, PaneTitle, PassthroughPane, TabbedPane, useApiGet, useFetch, useImperativeDialog, useImported, useIsSizeOrSmaller, useMonaco, useSubmissions, useY, useYAwareness, useYInit, useYText } from "@necode-org/activity-dev";
 import { debounce } from "lodash";
+import { set as setIn } from "lodash/fp";
 import { editor, languages } from 'monaco-editor';
 import testScaffoldingTypes from "raw-loader!./test-scaffolding.d.ts.raw";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -17,7 +16,6 @@ import { htmlDescription } from "../../languages/html";
 import transformTestScaffolding from "../../languages/transformers/babel-plugin-transform-test-scaffolding";
 import { typescriptDescription } from '../../languages/typescript';
 import { ActivityIframe, IframeActions } from "./ActivityIframe";
-import PaneEditor from "./PaneEditor";
 import TestsDialog from "./TestsDialog";
 
 export interface HtmlTestActivityBaseConfig {
@@ -80,18 +78,9 @@ interface SubmissionSchemaV1 {
 type SubmissionSchema = SubmissionSchemaUnversioned | SubmissionSchemaV1;
 
 const markdownEditorOptions: editor.IStandaloneEditorConstructionOptions = {
-    minimap: { enabled: false },
-    "semanticHighlighting.enabled": true,
-    fixedOverflowWidgets: true,
     lineNumbers: "off",
     lineDecorationsWidth: 0,
     wordWrap: "on",
-};
-
-const codeEditorOptions: editor.IStandaloneEditorConstructionOptions = {
-    minimap: { enabled: false },
-    "semanticHighlighting.enabled": true,
-    fixedOverflowWidgets: true,
 };
 
 const noopIframeActions = {
@@ -211,6 +200,10 @@ export default function createTestActivityPage({
             }));
         }, [uncommittedValues]);
 
+        const applyChangesRef = useRef(applyChanges);
+
+        useEffect(() => { applyChangesRef.current = applyChanges }, [applyChanges]);
+
         const { download } = useFetch();
 
         const startTests = useRef(() => {});
@@ -294,7 +287,7 @@ export default function createTestActivityPage({
                         : activityConfig.languages[type]!.defaultValue
                 : uncommittedValue;
 
-            const onHiddenHtmlChange: OnChange = value => {
+            const onHiddenHtmlChange: OnEditorChange = value => {
                 if (activityConfig.hiddenHtml !== value) {
                     onActivityConfigChange!({
                         ...activityConfig,
@@ -303,7 +296,7 @@ export default function createTestActivityPage({
                 }
             };
 
-            const onChange: OnChange = value => {
+            const onChange: OnEditorChange = value => {
                 if (isEditor) {
                     if (editorValue !== value) {
                         onActivityConfigChange!(setIn(
@@ -337,30 +330,28 @@ export default function createTestActivityPage({
                 }
 
                 if (type === 'html') {
-                    return <TabbedPane label="HTML" value={selectedHtmlTab} onChange={setSelectedHtmlTab} actUntabbedWithOneChild hidden={hidden}>
+                    return <TabbedPane label="HTML" value={selectedHtmlTab} onChange={setSelectedHtmlTab} actUntabbedWithOneChild>
                         <PaneTab value="hidden" label="Hidden">
-                            <PaneEditor isConfig
+                            <Editor
                                 language={htmlDescription}
                                 value={activityConfig.hiddenHtml}
                                 onChange={onHiddenHtmlChange} />
                         </PaneTab>
                         <PaneTab value="starter" label={tabLabelWithCheckbox(selectedHtmlTab === 'starter')} hidden={isHiddenHtmlOnly}>
-                            <PaneEditor isConfig
+                            <Editor
                                 language={language}
-                                value={editorValue}
+                                value={text}
                                 onChange={onChange} />
                         </PaneTab>
                     </TabbedPane>;
                 }
                 else {
-                    return <Pane icon={Icon ? <Icon /> : undefined} label={language.displayName} hidden={hidden} toolbar={tabLabelWithCheckbox(true)}>
-                        <PaneEditor isConfig
+                    return <Pane icon={Icon ? <Icon /> : undefined} label={language.displayName} toolbar={tabLabelWithCheckbox(true)}>
+                        <Editor
                             language={language}
-                            value={editorValue}
-                            applyChanges={() => applyChanges(type)}
+                            value={text}
                             onChange={onChange}
-                            yText={text}
-                            yAwareness={yAwareness} />
+                            awareness={yAwareness} />
                     </Pane>;
                 }
             }
@@ -379,14 +370,15 @@ export default function createTestActivityPage({
                     </Button>
                 </>;
 
-                return <Pane icon={Icon ? <Icon /> : undefined} label={language.displayName} toolbar={toolbar} hidden={hidden}>
-                    <PaneEditor
+                return <Pane icon={Icon ? <Icon /> : undefined} label={language.displayName} toolbar={toolbar}>
+                    <Editor
                         language={language}
-                        value={editorValue}
-                        applyChanges={() => applyChanges(type)}
+                        value={text}
+                        onMount={(editor, monaco) => {
+                            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => applyChangesRef.current(type));
+                        }}
                         onChange={onChange}
-                        yText={text}
-                        yAwareness={yAwareness} />
+                        awareness={yAwareness} />
                 </Pane>;
             }
         }, [selectedHtmlTab, isThinish, committedState, applyChanges, activityConfig, onActivityConfigChange, uncommittedHtml, uncommittedCode, uncommittedCss, yAwareness]);
@@ -521,8 +513,6 @@ export default function createTestActivityPage({
                     height: "100%",
                 }}>
                     <Editor
-                        theme="vs-dark"
-                        options={codeEditorOptions}
                         language="typescript"
                         value={testsSource}
                         onChange={val => {
@@ -573,7 +563,6 @@ export default function createTestActivityPage({
         const descriptionPane = <Pane label="Instructions" hidden={description == null}>
             {isEditor
                 ? <Box sx={{ height: "100%" }}><Editor
-                    theme="vs-dark"
                     options={markdownEditorOptions}
                     language="markdown"
                     value={description}

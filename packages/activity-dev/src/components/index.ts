@@ -16,6 +16,8 @@ export * from './CodeAlert';
 export { default as CodeAlert } from './CodeAlert';
 export { default as Key } from './Key';
 export { default as Video } from './Video';
+export * from './Editor';
+export { default as Editor } from './Editor';
 
 // Re-exports from other libraries
 export * from '~shared-ui/components/Lazy';

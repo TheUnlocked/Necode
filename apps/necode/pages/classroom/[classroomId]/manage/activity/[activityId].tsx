@@ -1,26 +1,25 @@
+import { ArrowBack, Code, Save } from "@mui/icons-material";
+import { Box, Button, Paper, Skeleton, Stack, SxProps, ToggleButton, Toolbar } from "@mui/material";
+import { curry } from "lodash";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Button, Toolbar, Select, MenuItem, Stack, ToggleButton, Skeleton, Paper, Box, SxProps } from "@mui/material";
-import { ArrowBack, Code, Save } from "@mui/icons-material";
-import allLanguages from "~core/languages/allLanguages";
-import LanguageDescription from "~shared-ui/types/LanguageDescription";
-import useImperativeDialog from "~shared-ui/hooks/useImperativeDialog";
-import sortByProperty from "~utils/sortByProperty";
-import { flip, make } from "~utils/fp";
-import { LazyImportable } from "~shared-ui/components/Lazy";
-import ConfigureLanguageDialog from "~ui/components/dialogs/ConfigureLanguageDialog";
-import { useGetRequest, useGetRequestImmutable } from "~shared-ui/hooks/useGetRequest";
-import { ActivityEntity } from "~api/entities/ActivityEntity";
-import allActivities from "~core/activities/allActivities";
-import useDirty from "~shared-ui/hooks/useDirty";
-import { ClassroomMemberEntity } from "~api/entities/ClassroomMemberEntity";
-import NotFoundPage from "../../../../404";
-import supportsLanguage from "~core/activities/supportsLanguage";
-import { curry } from "lodash";
-import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
 import { useSnackbar } from 'notistack';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ActivityEntity } from "~api/entities/ActivityEntity";
+import { ClassroomMemberEntity } from "~api/entities/ClassroomMemberEntity";
+import allActivities from "~core/activities/allActivities";
+import supportsLanguage from "~core/activities/supportsLanguage";
+import allLanguages from "~core/languages/allLanguages";
+import { LazyImportable } from "~shared-ui/components/Lazy";
+import useDirty from "~shared-ui/hooks/useDirty";
+import { useGetRequest, useGetRequestImmutable } from "~shared-ui/hooks/useGetRequest";
+import useImperativeDialog from "~shared-ui/hooks/useImperativeDialog";
+import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
 import { MockSubmissionProvider } from '~shared-ui/src/hooks/useSubmissions';
+import LanguageDescription from "~shared-ui/types/LanguageDescription";
+import ConfigureLanguageDialog from "~ui/components/dialogs/ConfigureLanguageDialog";
+import { flip, make } from "~utils/fp";
+import NotFoundPage from "../../../../404";
 
 interface StaticProps {
     classroomId: string;
@@ -58,14 +57,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
         [activity]
     );
 
-    const [enabledLanguages, setEnabledLanguages] = useState(supportedLanguages);
-    const [selectedLanguage, setSelectedLanguage] = useState(enabledLanguages[0]);
-
-    useEffect(() => {
-        if (!enabledLanguages.includes(selectedLanguage)) {
-            setSelectedLanguage(enabledLanguages[0]);
-        }
-    }, [enabledLanguages, selectedLanguage]);
+    const [enabledLanguage, setEnabledLanguage] = useState<LanguageDescription>(allLanguages[0]);
 
     const [isDirty, markDirty, clearDirty] = useDirty();
     const [activityConfig, setActivityConfig] = useState(activityEntity?.attributes.configuration);
@@ -77,29 +69,24 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
             setIsLoading(notYetFinished => {
                 if (notYetFinished) {
                     setActivityConfig(activityEntity.attributes.configuration);
-
-                    const enabledLanguages = activityEntity.attributes.enabledLanguages.length === 0
-                        ? supportedLanguages
-                        : activityEntity.attributes.enabledLanguages
-                            .map(x => supportedLanguages.find(l => l.name === x))
-                            .filter(x => x !== undefined) as LanguageDescription[];
                             
-                    setEnabledLanguages(enabledLanguages);
-                    setSelectedLanguage(enabledLanguages[0]);
+                    setEnabledLanguage(
+                        supportedLanguages.find(l => activityEntity.attributes.enabledLanguages.includes(l.name))
+                            ?? supportedLanguages[0]
+                    );
                 }
                 return false;
             });
         }
     }, [activityEntity, supportedLanguages]);
 
-    const [configureLanguagesDialog, openConfigureLanguagesDialog] = useImperativeDialog(ConfigureLanguageDialog, {
+    const [configureLanguageDialog, openConfigureLanguageDialog] = useImperativeDialog(ConfigureLanguageDialog, {
         availableLanguages: supportedLanguages,
-        enabledLanguages,
-        saveEnabledLanguages: langs => {
+        enabledLanguage,
+        saveEnabledLanguage: lang => {
             markDirty();
-            setEnabledLanguages(sortByProperty(langs, "name"));
+            setEnabledLanguage(lang);
         },
-        unsupportedLanguages: useMemo(() => allLanguages.filter(x => !supportedLanguages.includes(x)), [supportedLanguages])
     });
 
     const { download, upload } = useNecodeFetch();
@@ -107,7 +94,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
     async function save() {
         const patch = {
             configuration: activityConfig,
-            enabledLanguages: enabledLanguages.map(x => x.name),
+            enabledLanguages: [enabledLanguage.name],
         };
 
         const updatedActivity = {
@@ -217,7 +204,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
     }
 
     return <>
-        {configureLanguagesDialog}
+        {configureLanguageDialog}
         <Toolbar variant="dense" sx={{
             minHeight: "36px",
             px: "16px !important",
@@ -233,16 +220,9 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
             </Button>
             <Button size="small" startIcon={<Save/>} onClick={save} disabled={!isDirty}>Save Changes</Button>
             <Stack direction="row" justifyContent="flex-end" flexGrow={1} spacing={1}>
-                <Button size="small" startIcon={<Code/>} onClick={() => openConfigureLanguagesDialog()}>Configure Languages</Button>
-                <Select size="small" sx={{ height: "32px" }}
-                    id="language-select-box"
-                    value={selectedLanguage}
-                    onChange={ev => setSelectedLanguage(ev.target.value as LanguageDescription)}
-                    readOnly={enabledLanguages.length === 1}
-                    renderValue={lang => lang.displayName}>{
-                    enabledLanguages.map(lang =>
-                        <MenuItem key={lang.name} value={lang as any}>{lang.displayName}</MenuItem>)
-                }</Select>
+                {supportedLanguages.length > 1
+                    ? <Button size="small" startIcon={<Code/>} onClick={() => openConfigureLanguageDialog()}>Configure Language</Button>
+                    : undefined}
                 <ToggleButton value="preview" color="primary" sx={{ height: "32px" }}
                     selected={isPreview}
                     onChange={make(setIsPreview, flip)}>Preview</ToggleButton>
@@ -268,7 +248,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
                         id={""}
                         activityConfig={activityConfig}
                         classroomId={classroomId}
-                        language={selectedLanguage} />
+                        language={enabledLanguage} />
                 </MockSubmissionProvider>} />
             <LazyImportable show={!isPreview} importable={activity.configPage} render={
                 ActivityConfigPage => <ActivityConfigPage
@@ -276,7 +256,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
                     activityConfig={activityConfig}
                     onActivityConfigChange={handleActivityConfigChange}
                     classroomId={classroomId}
-                    language={selectedLanguage} />} />
+                    language={enabledLanguage} />} />
         </Box>
     </>;
 };

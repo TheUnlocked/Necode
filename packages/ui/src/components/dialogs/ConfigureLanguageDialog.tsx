@@ -1,14 +1,14 @@
-import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
-import { useEffect, useState } from "react";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, List, ListItemButton, ListItemIcon, ListItemText, Radio } from "@mui/material";
+import { useState } from "react";
 import LanguageDescription from "~shared-ui/types/LanguageDescription";
+import useDirty from "~shared-ui/hooks/useDirty";
 
 interface ConfigureLanguageDialogProps {
     open: boolean;
     onClose(): void;
     availableLanguages: LanguageDescription[];
-    enabledLanguages: LanguageDescription[];
-    unsupportedLanguages: LanguageDescription[];
-    saveEnabledLanguages(languages: LanguageDescription[]): void;
+    enabledLanguage: LanguageDescription;
+    saveEnabledLanguage(languages: LanguageDescription): void;
 }
 
 export default function ConfigureLanguageDialog(props: ConfigureLanguageDialogProps) {
@@ -16,81 +16,41 @@ export default function ConfigureLanguageDialog(props: ConfigureLanguageDialogPr
         open,
         onClose,
         availableLanguages,
-        enabledLanguages,
-        saveEnabledLanguages
+        enabledLanguage,
+        saveEnabledLanguage
     } = props;
 
-    type TransientLanguageState = { enabled: boolean, language: LanguageDescription };
-
-    const [transientAvailableLanguages, setTransientAvailableLanguages] = useState([] as TransientLanguageState[]);
-
-    useEffect(() => {
-        if (!open) {
-            setTransientAvailableLanguages([
-                ...enabledLanguages
-                    .map(x => ({ enabled: true, language: x })),
-                ...availableLanguages
-                    .filter(x => !enabledLanguages.includes(x))
-                    .map(x => ({ enabled: false, language: x }))
-            ]);
-        }
-    }, [open, availableLanguages, enabledLanguages]);
+    const [selectedLanguage, setSelectedLanguage] = useState(enabledLanguage);
+    const [isDirty, markDirty, clearDirty] = useDirty();
 
     function close() {
         onClose();
-        setIsDirty(false);
+        clearDirty();
     }
 
     function saveAndClose() {
-        saveEnabledLanguages(transientAvailableLanguages.filter(x => x.enabled).map(x => x.language));
+        saveEnabledLanguage(selectedLanguage);
         close();
     }
 
-    const [isDirty, setIsDirty] = useState(false);
-
-    function toggleLanguageEnabled(language: LanguageDescription) {
-        setTransientAvailableLanguages(states => {
-            const currState = states.find(x => x.language === language)!;
-            if (currState) {
-                currState.enabled = !currState.enabled;
-                setIsDirty(true);
-                return [...states];
-            }
-            return states;
-        });
-    }
-
-    function getMenuItem({ language, enabled }: TransientLanguageState) {
-        if (enabled && transientAvailableLanguages.filter(x => x.enabled).length <= 1) {
-            // can't interact
-            return <ListItem key={language.name}>
-                <ListItemIcon>
-                    <Checkbox disabled checked />
-                </ListItemIcon>
-                <ListItemIcon>{language.icon ? <language.icon /> : undefined}</ListItemIcon>
-                <ListItemText primary={language.displayName} />
-            </ListItem>;
-        }
-        else {
-            // can interact
-            return <ListItemButton key={language.name}
-                onClick={() => toggleLanguageEnabled(language)}>
-                <ListItemIcon>
-                    <Checkbox checked={enabled} />
-                </ListItemIcon>
-                <ListItemIcon>{language.icon ? <language.icon /> : undefined}</ListItemIcon>
-                <ListItemText primary={language.displayName} />
-            </ListItemButton>;
-        }
-    }
-
     return <Dialog open={open} onClose={isDirty ? undefined : close}>
-        <DialogTitle>Configure Languages</DialogTitle>
+        <DialogTitle>Configure Language</DialogTitle>
         <DialogContent>
-            <DialogContentText>This activity will be available in all of the selected langauges.</DialogContentText>
+            <DialogContentText>This activity will be available in the selected langauge.</DialogContentText>
         </DialogContent>
         <List>
-            {transientAvailableLanguages.map(getMenuItem)}
+            {availableLanguages.map(language =>
+                <ListItemButton key={language.name}
+                    onClick={() => {
+                        setSelectedLanguage(language);
+                        markDirty();
+                    }}>
+                    <ListItemIcon>
+                        <Radio checked={language === selectedLanguage} />
+                    </ListItemIcon>
+                    <ListItemIcon>{language.icon ? <language.icon /> : undefined}</ListItemIcon>
+                    <ListItemText primary={language.displayName} />
+                </ListItemButton>)}
         </List>
         <DialogActions>
             <Button onClick={close}>Cancel</Button>

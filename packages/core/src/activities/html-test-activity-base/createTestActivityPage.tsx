@@ -3,7 +3,7 @@ import { Box, Button, CardContent, Checkbox, IconButton, Stack, Tooltip, Typogra
 import { ActivityConfigPageProps, ActivityPageProps, api, applyTransaction, CodeAlert, Editor, Key, LanguageDescription, Link, NetworkId, OnEditorChange, Pane, Panes, PanesLayouts, PaneTab, PaneTitle, PassthroughPane, TabbedPane, useApiGet, useFetch, useImperativeDialog, useImported, useIsSizeOrSmaller, useMonaco, useSubmissions, useY, useYAwareness, useYInit, useYText } from "@necode-org/activity-dev";
 import { debounce } from "lodash";
 import { set as setIn } from "lodash/fp";
-import { editor, languages } from 'monaco-editor';
+import { editor } from 'monaco-editor';
 import testScaffoldingTypes from "raw-loader!./test-scaffolding.d.ts.raw";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";

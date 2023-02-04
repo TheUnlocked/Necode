@@ -7,7 +7,7 @@ import brythonStdlibRaw from 'raw-loader!brython/brython_stdlib.js';
 declare global {
     var __BRYTHON__: {
         python_to_js(pythonCode: string, name?: string): string;
-        py2js(source: string, module: string, localsId: string): { to_js(): string };
+        py2js(source: { src: string, filename: string }, module: string, localsId: string): { to_js(): string };
         show_stack(stack: any): string | undefined;
     };
 }
@@ -34,7 +34,26 @@ export default class Python3Impl implements RunnableLanguage<typeof pythonDescri
 
         if (options.global) {
             try {
-                result = 'const $locals_ = globalThis;' + __BRYTHON__.py2js(code, '', '').to_js();
+                result = `;(() => $B.builtins = new Proxy(
+                    $B.builtins,
+                    {
+                        get: (...args) =>
+                            Reflect.get(globalThis,args[1],globalThis)
+                            ?? Reflect.get(...args),
+                        has: (...args) =>
+                            Reflect.has(globalThis,args[1])
+                            ?? Reflect.has(...args),
+                        set: (...args) =>
+                            Reflect.set(globalThis,args[1],args[2],globalThis)
+                            ?? Reflect.set(...args),
+                        getOwnPropertyDescriptor: (...args) =>
+                            Reflect.getOwnPropertyDescriptor(globalThis,args[1])
+                            ?? Reflect.getOwnPropertyDescriptor(...args),
+                    }))();$B.imported['']={};` + __BRYTHON__.py2js(
+                    { src: code, filename: '' },
+                    '',
+                    '',
+                ).to_js() + `;Object.assign(globalThis, $B.imported['']);`;
             }
             catch (e: any) {
                 const err = new SyntaxError(e.msg) as any;

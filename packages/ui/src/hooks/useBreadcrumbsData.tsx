@@ -79,7 +79,7 @@ export default function useBreadcrumbsData(): BreadcrumbData[] {
                                     if (pathFragments[4] === '[activityId]') {
                                         const lessonName = activityData?.attributes.lesson.attributes.displayName || activityData?.attributes.lesson.attributes.date;
                                         crumbs.push({
-                                            href: `/classroom/${classroomId}/manage#${activityData?.attributes.lesson.attributes.date}`,
+                                            href: `/classroom/${classroomId}/manage/lessons#${activityData?.attributes.lesson.attributes.date}`,
                                             label: <AsyncBreadcrumb label={lessonName} status={activityLoading ? 'loading' : activityError ? 'error' : 'done'} />,
                                             title: lessonName
                                         });

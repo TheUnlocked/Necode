@@ -30,7 +30,7 @@ export default createTheme({
                 }
 
                 .monaco-editor .suggest-widget,
-                .monaco-editor, .parameter-hints-widget {
+                .monaco-editor .parameter-hints-widget {
                     z-index: 1900 !important;
                 }
 

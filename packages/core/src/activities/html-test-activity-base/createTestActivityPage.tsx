@@ -414,15 +414,14 @@ export default function createTestActivityPage({
 
         useEffect(() => {
             if (monaco) {
-                const compilerOptions: languages.typescript.CompilerOptions = {
+                monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+                    ...monaco.languages.typescript.javascriptDefaults.getCompilerOptions(),
+                    moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs
+                });
+                monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
                     ...monaco.languages.typescript.typescriptDefaults.getCompilerOptions(),
-                    moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
-                    target: monaco.languages.typescript.ScriptTarget.ESNext,
-                    allowJs: true,
-                };
-
-                monaco.languages.typescript.javascriptDefaults.setCompilerOptions(compilerOptions);
-                monaco.languages.typescript.typescriptDefaults.setCompilerOptions(compilerOptions);
+                    moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs
+                });
 
                 const tsLibs = [] as { content: string, filePath?: string }[];
                 const jsLibs = [] as { content: string, filePath?: string }[];
@@ -439,8 +438,13 @@ export default function createTestActivityPage({
                     tsLibs.push(decl);
                 }
 
-                monaco.languages.typescript.javascriptDefaults.setExtraLibs(jsLibs);
-                monaco.languages.typescript.typescriptDefaults.setExtraLibs(tsLibs);
+                const jsLibDisposables = jsLibs.map(x => monaco.languages.typescript.javascriptDefaults.addExtraLib(x.content, x.filePath));
+                const tsLibDisposables = tsLibs.map(x => monaco.languages.typescript.typescriptDefaults.addExtraLib(x.content, x.filePath));
+
+                return () => {
+                    jsLibDisposables.forEach(x => x.dispose());
+                    tsLibDisposables.forEach(x => x.dispose());
+                };
             }
         }, [monaco, typeDeclarationFiles]);
 

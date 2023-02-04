@@ -21,7 +21,7 @@ export function Activity({ language, activityConfig }: ActivityPageProps<Configu
         if (monaco && extraLibs) {
             const libs = [
                 ...extraLibs,
-                { content: 'declare const PREV_FRAME: import("https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/master/types/p5/index").Element;' },
+                { content: 'declare const PREV_FRAME: import("https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/master/types/p5/index").Element;', filePath: undefined },
             ];
             monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
                 ...monaco.languages.typescript.javascriptDefaults.getCompilerOptions(),
@@ -32,18 +32,12 @@ export function Activity({ language, activityConfig }: ActivityPageProps<Configu
                 moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs
             });
     
-            const jsLibsOld = monaco.languages.typescript.javascriptDefaults.getExtraLibs();
-            const tsLibsOld = monaco.languages.typescript.javascriptDefaults.getExtraLibs();
-            monaco.languages.typescript.javascriptDefaults.setExtraLibs(libs);
-            monaco.languages.typescript.typescriptDefaults.setExtraLibs(libs);
+            const jsLibDisposables = libs.map(x => monaco.languages.typescript.javascriptDefaults.addExtraLib(x.content, x.filePath));
+            const tsLibDisposables = libs.map(x => monaco.languages.typescript.typescriptDefaults.addExtraLib(x.content, x.filePath));
 
             return () => {
-                monaco.languages.typescript.javascriptDefaults.setExtraLibs(
-                    Object.entries(jsLibsOld).map(([content, fileName]) => ({ content, fileName }))
-                );
-                monaco.languages.typescript.typescriptDefaults.setExtraLibs(
-                    Object.entries(tsLibsOld).map(([content, fileName]) => ({ content, fileName }))
-                );
+                jsLibDisposables.forEach(x => x.dispose());
+                tsLibDisposables.forEach(x => x.dispose());
             };
         }
     }, [monaco, extraLibs]);

@@ -103,7 +103,7 @@ Necode also has a required websocket server, which can be built with `wsserver:b
 
 Sign in using the MSAL login that you configured in `.env`.
 If you are working in a development environment, you can also configure GitHub authentication,
-as well log in with any username using the password you defined with the `DEV_PASSWORD` environment variable.
+as well as log in with any username using the password you defined with the `DEV_PASSWORD` environment variable.
 
 You will now need to make a manual database change. While you can do this through `psql` or pgAdmin,
 it may be easier to use Prisma Studio:

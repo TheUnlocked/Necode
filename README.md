@@ -6,7 +6,7 @@ Necode is a highly modular educational programming environment for collaborative
 It has several features which sets it apart from existing solutions:
 
 * **Peer-to-peer communication**: Most collaborative programming environments operate by having each user send data to a server, and then the server sends their data to each other user they are connected to. Necode bypasses this, only using a server for initial linking and signalling, and then having users talk directly through peer-to-peer connections. This makes Necode require significantly fewer server resources.
-* **Client-side compuatation**: All execution of user code is performed client-side rather than on a server in the cloud. This has some drawbacks such as making it significantly more challenging to implement support for many languagues. However, not only does this approach significantly reduce the necessary server resources to run Necode, but it also enables use of the built-in browser development tools, such as for debugging JavaScript.
+* **Client-side compuatation**: All execution of user code is performed client-side rather than on a server in the cloud. This has some drawbacks such as making it significantly more challenging to implement support for many languagues. However, not only does this approach significantly reduce the necessary server resources to run Necode, but it also enables use of the built-in browser development tools (such as for reading logs or debugging JavaScript) and allows code in some languages to directly interact with the DOM.
 * **Communication with non-code artifacts**: Usually when environments advertise collaborative programming, they are referring to shared editors, one kind of collaborative programming in which each user's edits to their code gets propagated to all of the other users. Necode abstracts this, allowing not just code artifacts, but any artifacts to be shared, and to be shared asymmetrically with only certain individuals rather than everyone.
 * **Plugin API** (in progress): New language support, activities (i.e. frontend experiences), and RTC-linking policies can be developed by third-party developers and dynamically plugged into existing Necode instances.
 
@@ -97,7 +97,7 @@ Necode uses Vercel in production, and does not have pre-packaged instructions fo
 
 #### Necode Websocket Server
 
-Necode also has a required websocket server, which can be built with `wsserver:build`. This cannot be hosted on Vercel, and should be run on a server somewhere. `pm2` is a decent option. It will also require a copy of the `.env` file in your working directory (`process.cwd()`), which may or may not be the same directory that the build is contained in.
+Necode also has a required websocket server, which can be built with `wsserver:build`. This cannot be hosted on Vercel, and should be run on a server somewhere. [`pm2`](https://pm2.keymetrics.io/) is a decent option for daemonizing it. It will also require a copy of the `.env` file in your working directory (`process.cwd()`), which may or may not be the same directory that the build is contained in.
 
 ## First-Time Setup
 

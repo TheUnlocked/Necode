@@ -1,4 +1,36 @@
-# Necode
+![Necode](https://user-images.githubusercontent.com/10186337/217269653-b2aa1541-1b42-451f-8e9d-62c1dbccc344.png)
+
+---
+
+Necode is a highly modular educational programming environment for collaborative _in-class_ activities.
+It has several features which sets it apart from existing solutions:
+
+* **Peer-to-peer communication**: Most collaborative programming environments operate by having each user send data to a server, and then the server sends their data to each other user they are connected to. Necode bypasses this, only using a server for initial linking and signalling, and then having users talk directly through peer-to-peer connections. This makes Necode require significantly fewer server resources.
+* **Client-side compuatation**: All execution of user code is performed client-side rather than on a server in the cloud. This has some drawbacks such as making it significantly more challenging to implement support for many languagues. However, not only does this approach significantly reduce the necessary server resources to run Necode, but it also enables use of the built-in browser development tools, such as for debugging JavaScript.
+* **Communication with non-code artifacts**: Usually when environments advertise collaborative programming, they are referring to shared editors, one kind of collaborative programming in which each user's edits to their code gets propagated to all of the other users. Necode abstracts this, allowing not just code artifacts, but any artifacts to be shared, and to be shared asymmetrically with only certain individuals rather than everyone.
+* **Plugin API** (in progress): New language support, activities (i.e. frontend experiences), and RTC-linking policies can be developed by third-party developers and dynamically plugged into existing Necode instances.
+
+## Screenshots
+
+![A screenshot of the classroom home view](https://user-images.githubusercontent.com/10186337/217266961-99180865-e851-4131-976e-c6c5a78a7038.png)
+
+![A screenshot of configuring an activity](https://user-images.githubusercontent.com/10186337/217267380-fe793dd6-a26c-4ac4-a970-b797643c47ca.png)
+
+![A screenshot of a teacher trying out an activity they've made with a simulated student](https://user-images.githubusercontent.com/10186337/217273771-d0fdab82-40dd-4217-9d5b-a434e24b04f3.png)
+
+## Papers
+
+* [MQP Report (2022)](https://www.necode.org/papers/mqp_report_2022.pdf) (no peer review)
+
+Necode is currently the subject of my master's thesis, and the report will be shared here once complete.
+
+## Offshoot projects
+
+Necode has spawned a number of projects which, though originally designed for use in Necode, exist independently from it. These include:
+
+* [`mike-language`](https://github.com/TheUnlocked/mike-language) (plus [`mike-vscode`](https://github.com/TheUnlocked/mike-vscode)): a programming language for defining simple event-based programs with serializable state.
+* [`use-dnd`](https://github.com/TheUnlocked/use-dnd): a minimal library for using HTML5 drag-and-drop in React, based on [`react-dnd`](https://github.com/react-dnd/react-dnd).
+* [`scheme-js`](https://github.com/TheUnlocked/scheme-js): a library for using a WASM build of Chez Scheme on the web.
 
 ## How to run
 
@@ -59,7 +91,13 @@ Then log in with the username `admin`.
 
 ### Production
 
+#### Necode Next.js
+
 Necode uses Vercel in production, and does not have pre-packaged instructions for running it on your own infrastructure. However, running `pnpm vercel-build` in the root directory will generate a `.next` folder in `apps/necode` that can be used even without Vercel. [This page](https://nextjs.org/docs/deployment#self-hosting) has some details on how to accomplish this.
+
+#### Necode Websocket Server
+
+Necode also has a required websocket server, which can be built with `wsserver:build`. This cannot be hosted on Vercel, and should be run on a server somewhere. `pm2` is a decent option. It will also require a copy of the `.env` file in your working directory (`process.cwd()`), which may or may not be the same directory that the build is contained in.
 
 ## First-Time Setup
 

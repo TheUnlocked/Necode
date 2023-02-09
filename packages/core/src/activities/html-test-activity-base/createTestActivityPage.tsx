@@ -1,7 +1,9 @@
 import { Refresh as RefreshIcon, Sync as SyncIcon } from "@mui/icons-material";
 import { Box, Button, CardContent, Checkbox, IconButton, Stack, Tooltip, Typography, useTheme } from "@mui/material";
-import { ActivityConfigPageProps, ActivityPageProps, api, applyTransaction, CodeAlert, Editor, Key, LanguageDescription, Link, NetworkId, OnEditorChange, Pane, Panes, PanesLayouts, PaneTab, PaneTitle, PassthroughPane, TabbedPane, useApiGet, useFetch, useImperativeDialog, useImported, useIsSizeOrSmaller, useMonaco, useSubmissions, useY, useYAwareness, useYInit, useYText } from "@necode-org/activity-dev";
-import { debounce } from "lodash";
+import { api, applyTransaction, CodeAlert, Editor, Feature, FeatureObject, Key, Link, NetworkId, OnEditorChange, Pane, Panes, PanesLayouts, PaneTab, PaneTitle, PassthroughPane, TabbedPane, useApiGet, useFetch, useImperativeDialog, useImported, useIsSizeOrSmaller, useLanguages, useMonaco, useSubmissions, useY, useYAwareness, useYInit, useYText } from "@necode-org/activity-dev";
+import { ActivityPageProps, LanguageDescription } from '@necode-org/plugin-dev';
+import { ActivityConfigPageProps } from '@necode-org/plugin-dev';
+import { debounce, identity } from "lodash";
 import { set as setIn } from "lodash/fp";
 import { editor } from 'monaco-editor';
 import testScaffoldingTypes from "raw-loader!./test-scaffolding.d.ts.raw";
@@ -9,12 +11,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from 'rehype-highlight';
 import remarkGfm from 'remark-gfm';
+import typescript from '../../languages/typescript';
 import { ImplicitNewType, NonStrictDisjunction } from "~utils/types";
 import TypescriptIcon from "../../icons/TypescriptIcon";
-import { cssDescription } from "../../languages/css";
-import { htmlDescription } from "../../languages/html";
 import transformTestScaffolding from "../../languages/transformers/babel-plugin-transform-test-scaffolding";
-import { typescriptDescription } from '../../languages/typescript';
 import { ActivityIframe, IframeActions } from "./ActivityIframe";
 import TestsDialog from "./TestsDialog";
 
@@ -34,7 +34,11 @@ export interface HtmlTestActivityBaseConfig {
 
 type URLString = ImplicitNewType<string, 'URLString'>;
 
-export interface HtmlTestActivityOptions {
+export type HTAFeatures = ['iframe/static'];
+
+type PartialIf<Condition extends boolean, O> = Condition extends true ? Partial<O> : O;
+
+export type HtmlTestActivityOptions<Features extends readonly Feature[] = HTAFeatures> = {
     hasTests?: boolean;
     hasHtml?: boolean;
     hasCss?: boolean;
@@ -44,11 +48,13 @@ export interface HtmlTestActivityOptions {
     networked?: boolean;
 
     typeDeclarations?: string | URLString[];
-}
+} & PartialIf<HTAFeatures[number] extends Features[number] ? true : false, {
+    mapFeatures(obj: FeatureObject<Features>): FeatureObject<HTAFeatures>;
+}>;
 
-interface HtmlTestActivityMetaProps {
+interface HtmlTestActivityMetaProps<Features extends readonly Feature[]> {
     isEditor: boolean;
-    options: HtmlTestActivityOptions;
+    options: HtmlTestActivityOptions<Features>;
 }
 
 type EditorType = 'html' | 'code' | 'css';
@@ -89,7 +95,7 @@ const noopIframeActions = {
     async waitForReload() {},
 };
 
-export default function createTestActivityPage({
+export default function createTestActivityPage<Features extends readonly Feature[]>({
     isEditor,
     options: {
         hasTests: activityTypeHasTests = true,
@@ -99,15 +105,19 @@ export default function createTestActivityPage({
         hiddenHtml: activityTypeHiddenHtml = { configurable: true },
         typeDeclarations: typeDeclarationsSource,
         networked = false,
+        mapFeatures = identity,
     }
-}: HtmlTestActivityMetaProps) {
-    return function TestActivityPage<Config extends HtmlTestActivityBaseConfig>(props: ActivityConfigPageProps<Config> | ActivityPageProps<Config>) {
+}: HtmlTestActivityMetaProps<Features>) {
+    return function TestActivityPage<Config extends HtmlTestActivityBaseConfig>(props: ActivityConfigPageProps<Features, Config> | ActivityPageProps<Features, Config>) {
         const {
             language,
+            features: _features,
             activityConfig,
             onActivityConfigChange,
-        } = props as NonStrictDisjunction<ActivityConfigPageProps<Config>, ActivityPageProps<Config>>;
+        } = props as NonStrictDisjunction<ActivityConfigPageProps<Features, Config>, ActivityPageProps<Features, Config>>;
         
+        const features = mapFeatures(_features);
+
         const {
             description,
             tests: {
@@ -249,24 +259,21 @@ export default function createTestActivityPage({
             });
         }, [uncommittedValues]);
 
-        const codeGenerator = useImported(language.runnable);
         const [compiledJs, setCompiledJs] = useState('');
         const codeSource = committedState.code;
 
         useEffect(() => {
-            if (codeSource !== undefined && codeGenerator !== undefined) {
-                try {
-                    setCompiledJs(codeGenerator.toRunnerCode(codeSource, {
-                        global: true,
-                        isolated: true
-                    }));
-                }
-                catch (e) {
-                    console.error(e);
-                    setCompiledJs('// compilation error');
-                }
+            if (codeSource !== undefined) {
+                features.iframe.static.compile(codeSource)
+                    .then(setCompiledJs)
+                    .catch(e => {
+                        console.error(e);
+                        setCompiledJs('// compilation error');
+                    });
             }
-        }, [codeSource, codeGenerator]);
+        }, [codeSource, features]);
+
+        const [htmlDescription, cssDescription] = useLanguages('html', 'css');
 
         const theme = useTheme();
         const isThinish = useIsSizeOrSmaller('md', theme);
@@ -391,7 +398,7 @@ export default function createTestActivityPage({
                         awareness={yAwareness} />
                 </Pane>;
             }
-        }, [selectedHtmlTab, isThinish, committedState, applyChanges, activityConfig, onActivityConfigChange, uncommittedHtml, uncommittedCode, uncommittedCss, yAwareness]);
+        }, [selectedHtmlTab, isThinish, committedState, applyChanges, activityConfig, onActivityConfigChange, uncommittedHtml, uncommittedCode, uncommittedCss, yAwareness, htmlDescription]);
 
         const monaco = useMonaco();
 
@@ -464,8 +471,7 @@ export default function createTestActivityPage({
         // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps
         const validateTests = useCallback(debounce(async (tests: string) => {
             try {
-                const runner = await typescriptDescription.runnable!();
-                runner.toRunnerCode(tests, {
+                await typescript['js/babel'].compileToJs(tests, {
                     global: true,
                     isolated: true,
                     throwAllCompilerErrors: true,
@@ -601,9 +607,9 @@ export default function createTestActivityPage({
 
         const panes = <Panes layouts={layouts}>
             {descriptionPane}
-            {editorPane('html', htmlDescription, !(isEditor && activityTypeHiddenHtml.configurable) && !isHtmlEnabled)}
+            {editorPane('html', htmlDescription!, !(isEditor && activityTypeHiddenHtml.configurable) && !isHtmlEnabled)}
             {editorPane('code', language, !isCodeEnabled)}
-            {editorPane('css', cssDescription, !isCssEnabled)}
+            {editorPane('css', cssDescription!, !isCssEnabled)}
             {iframeOrTestPane}
         </Panes>;
 

@@ -2,7 +2,6 @@ import { Card, Divider, Stack, Box, SxProps } from "@mui/material";
 import { Dispatch, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDrop } from "use-dnd";
 import composeRefs from '@seznam/compose-react-refs';
-import ActivityDescription from "~shared-ui/types/ActivityDescription";
 import { useGetRequest } from "~shared-ui/hooks/useGetRequest";
 import { ActivityEntity } from "~api/entities/ActivityEntity";
 import { LessonEntity } from "~api/entities/LessonEntity";
@@ -18,6 +17,7 @@ import type { PartialAttributesOf } from '~backend/Endpoint';
 import AcitivityListPaneTitleBar from './ActivityListPaneTitleBar';
 import { activityDragDropType } from '../../dnd/types';
 import { useConfirm } from 'material-ui-confirm';
+import { ActivityDescription } from '../../../../plugin-dev/src';
 
 interface ActivityListPaneProps {
     sx: SxProps;
@@ -252,7 +252,7 @@ export default function ActivityListPane({
         );
     }, [classroomId, date, lessonEntity, getOrCreateLesson, upload, onLessonChange, mutateLesson]);
 
-    const createActivityHandler = useCallback(async (activity: ActivityDescription<any>) => {
+    const createActivityHandler = useCallback(async (activity: ActivityDescription) => {
         const lesson = await getOrCreateLesson({ date, displayName });
 
         const activityEntity = await upload<ActivityEntity>(`/api/classroom/${classroomId}/lesson/${lesson.id}/activity`, {

@@ -1,23 +1,23 @@
-import { ArrowBack, Code, Save } from "@mui/icons-material";
-import { Box, Button, Paper, Skeleton, Stack, SxProps, ToggleButton, Toolbar } from "@mui/material";
-import { curry } from "lodash";
+import { Code } from "@mui/icons-material";
+import { Box, Button, Paper, Skeleton, SxProps, ToggleButton } from "@mui/material";
+import { LazyImportable } from '@necode-org/activity-dev';
+import { LanguageDescription } from '@necode-org/plugin-dev';
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useSnackbar } from 'notistack';
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityEntity } from "~api/entities/ActivityEntity";
 import { ClassroomMemberEntity } from "~api/entities/ClassroomMemberEntity";
-import allActivities from "~core/activities/allActivities";
-import supportsLanguage from "~core/activities/supportsLanguage";
-import allLanguages from "~core/languages/allLanguages";
-import { LazyImportable } from "~shared-ui/components/Lazy";
 import useDirty from "~shared-ui/hooks/useDirty";
 import { useGetRequest, useGetRequestImmutable } from "~shared-ui/hooks/useGetRequest";
 import useImperativeDialog from "~shared-ui/hooks/useImperativeDialog";
 import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
-import { MockSubmissionProvider } from '~shared-ui/src/hooks/useSubmissions';
-import LanguageDescription from "~shared-ui/types/LanguageDescription";
+import { usePlugins } from '~shared-ui/hooks/usePlugins';
+import { MockSubmissionProvider } from '~shared-ui/hooks/useSubmissions';
 import ConfigureLanguageDialog from "~ui/components/dialogs/ConfigureLanguageDialog";
+import InstructorToolbar from '~ui/components/InstructorToolbar';
+import StatusPage from '~ui/components/layouts/StatusPage';
+import useAsyncMemo from '~ui/hooks/useAsyncMemo';
 import { flip, make } from "~utils/fp";
 import NotFoundPage from "../../../../404";
 
@@ -50,14 +50,16 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
     const activityEndpoint = `/api/classroom/${classroomId}/activity/${activityId}?include=lesson`;
     const { data: activityEntity, mutate } = useGetRequest<ActivityEntity<{ lesson: 'deep' }>>(activityEndpoint);
 
-    const activity = useMemo(() => allActivities.find(x => x.id === activityEntity?.attributes.activityType), [activityEntity]);
+    const { languages, getActivity, getLanguagesWithFeatures, hasFeature, getFeatureImpl } = usePlugins();
+
+    const activity = getActivity(activityEntity?.attributes.activityType);
 
     const supportedLanguages = useMemo(
-        () => activity ? allLanguages.filter(curry(supportsLanguage)(activity)) : allLanguages,
-        [activity]
+        () => activity ? getLanguagesWithFeatures(activity.requiredFeatures) : [],
+        [activity, getLanguagesWithFeatures]
     );
 
-    const [enabledLanguage, setEnabledLanguage] = useState<LanguageDescription>(allLanguages[0]);
+    const [language, setEnabledLanguage] = useState<LanguageDescription | undefined>(languages[0]);
 
     const [isDirty, markDirty, clearDirty] = useDirty();
     const [activityConfig, setActivityConfig] = useState(activityEntity?.attributes.configuration);
@@ -82,7 +84,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
 
     const [configureLanguageDialog, openConfigureLanguageDialog] = useImperativeDialog(ConfigureLanguageDialog, {
         availableLanguages: supportedLanguages,
-        enabledLanguage,
+        enabledLanguage: language,
         saveEnabledLanguage: lang => {
             markDirty();
             setEnabledLanguage(lang);
@@ -92,9 +94,13 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
     const { download, upload } = useNecodeFetch();
 
     async function save() {
+        if (!language) {
+            enqueueSnackbar('Cannot save when no language is selected.', { variant: 'error' });
+            return;
+        }
         const patch = {
             configuration: activityConfig,
-            enabledLanguages: [enabledLanguage.name],
+            enabledLanguages: [language.name],
         };
 
         const updatedActivity = {
@@ -165,31 +171,40 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
 
     const { enqueueSnackbar } = useSnackbar();
     
+    const hasRequiresBrowser = hasFeature(language?.name, 'requires/browser');
+    const requiresBrowser = useAsyncMemo(
+        async () => getFeatureImpl(language?.name, ['requires/browser']),
+        [language, getFeatureImpl]
+    );
+
+    const completedSetup = useAsyncMemo(async () => {
+        const impl = await getFeatureImpl(language?.name, ['requires/setup']);
+        await impl?.requires.setup.setup();
+        return true;
+    }, [language, getFeatureImpl]);
+
+    const featureObj = useAsyncMemo(
+        async () => activity && language
+            ? getFeatureImpl(language.name, activity.requiredFeatures)
+            : undefined,
+        [activity, language, getFeatureImpl]
+    );
+
+    const emptyPage = <Paper elevation={1} sx={{
+        height: `calc(100vh - 124px)`,
+        display: "flex",
+        m: 2,
+        mt: 1
+    }} />;
+
     if (isLoading) {
         return <>
-            <Toolbar variant="dense" sx={{
-                minHeight: "36px",
-                px: "16px !important",
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "space-between"
-            }}>
-                <Button size="small" startIcon={<ArrowBack/>}
-                    onClick={returnToManage}>
-                    Return to Manage Classroom
-                </Button>
-                <Stack direction="row" spacing={1}>
-                    <Skeleton variant="rectangular" sx={{ borderRadius: "4px", width: "190px" }} />
-                    <Skeleton variant="rectangular" sx={{ borderRadius: "4px", width: "46px" }} />
-                    <Skeleton variant="rectangular" sx={{ borderRadius: "4px", width: "86px" }} />
-                </Stack>
-            </Toolbar>
-            <Paper elevation={1} sx={{
-                height: `calc(100vh - 124px)`,
-                display: "flex",
-                m: 2,
-                mt: 1
-            }} />
+            <InstructorToolbar onReturnToManage={returnToManage}>
+                <Skeleton variant="rectangular" sx={{ borderRadius: "4px", width: "190px" }} />
+                <Skeleton variant="rectangular" sx={{ borderRadius: "4px", width: "46px" }} />
+                <Skeleton variant="rectangular" sx={{ borderRadius: "4px", width: "86px" }} />
+            </InstructorToolbar>
+            {emptyPage}
         </>;
     }
 
@@ -203,31 +218,53 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
         return null;
     }
 
-    return <>
+    const instructorToolbar = <>
         {configureLanguageDialog}
-        <Toolbar variant="dense" sx={{
-            minHeight: "36px",
-            px: "16px !important",
-            display: "flex",
-            flexDirection: "row",
-            "& > * + *": {
-                ml: 1
-            }
-        }}>
-            <Button size="small" startIcon={<ArrowBack/>}
-                onClick={returnToManage}>
-                Return to Manage Classroom
-            </Button>
-            <Button size="small" startIcon={<Save/>} onClick={save} disabled={!isDirty}>Save Changes</Button>
-            <Stack direction="row" justifyContent="flex-end" flexGrow={1} spacing={1}>
-                {supportedLanguages.length > 1
-                    ? <Button size="small" startIcon={<Code/>} onClick={() => openConfigureLanguageDialog()}>Configure Language</Button>
-                    : undefined}
-                <ToggleButton value="preview" color="primary" sx={{ height: "32px" }}
-                    selected={isPreview}
-                    onChange={make(setIsPreview, flip)}>Preview</ToggleButton>
-            </Stack>
-        </Toolbar>
+        <InstructorToolbar onReturnToManage={returnToManage} onSave={save} canSave={isDirty}>
+            {supportedLanguages.length > 1
+                ? <Button size="small" startIcon={<Code/>} onClick={() => openConfigureLanguageDialog()}>Configure Language</Button>
+                : undefined}
+            <ToggleButton value="preview" color="primary" sx={{ height: "32px" }}
+                selected={isPreview}
+                onChange={make(setIsPreview, flip)}>Preview</ToggleButton>
+        </InstructorToolbar>
+    </>;
+
+    if (!language) {
+        return <>
+            {instructorToolbar}
+            <StatusPage
+                primary="No Language Available"
+                secondary="This activity does not support any languages. This may be some kind of bug." />
+        </>;
+    }
+
+    if (hasRequiresBrowser && requiresBrowser?.requires.browser.isCompatible() === false) {
+        const recommended = requiresBrowser?.requires.browser.getRecommendedBrowsers();
+        const recommendedPhrase
+            = (recommended.length > 0 ? '. Try switching to ' : '')
+            + recommended.slice(0, -1).join(', ')
+            + (recommended.length > 2 ? ',' : '')
+            + (recommended.length > 1 ? ' or ' + recommended.at(-1) : '')
+            + '.';
+        
+        return <>
+            {instructorToolbar}
+            <StatusPage
+                primary="Incompatible"
+                secondary={`The selected language is incompatible with your browser${recommendedPhrase}`} />
+        </>;
+    }
+
+    if (!featureObj || !completedSetup) {
+        return <>
+            {instructorToolbar}
+            {emptyPage}
+        </>;
+    }
+
+    return <>
+        {instructorToolbar}
         <Box sx={{
             px: 2,
             pb: 2,
@@ -248,7 +285,8 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
                         id={""}
                         activityConfig={activityConfig}
                         classroomId={classroomId}
-                        language={enabledLanguage} />
+                        language={language}
+                        features={featureObj} />
                 </MockSubmissionProvider>} />
             <LazyImportable show={!isPreview} importable={activity.configPage} render={
                 ActivityConfigPage => <ActivityConfigPage
@@ -256,7 +294,8 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
                     activityConfig={activityConfig}
                     onActivityConfigChange={handleActivityConfigChange}
                     classroomId={classroomId}
-                    language={enabledLanguage} />} />
+                    language={language}
+                    features={featureObj} />} />
         </Box>
     </>;
 };

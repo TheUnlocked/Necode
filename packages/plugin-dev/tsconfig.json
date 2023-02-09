@@ -1,0 +1,10 @@
+{
+    "extends": "~tsconfig/default.json",
+    "include": ["./src", "../shared-ui/src/types/Feature.ts"],
+    "exclude": ["node_modules"],
+    "compilerOptions": {
+        "baseUrl": ".",
+        "outDir": "./dist",
+        "lib": ["ESNext", "DOM"]
+    }
+}

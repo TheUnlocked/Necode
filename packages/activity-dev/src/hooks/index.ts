@@ -2,6 +2,8 @@
 export { default as useIsSizeOrSmaller } from './useIsSizeOrSmaller';
 export * from './useY';
 export { default as useY } from './useY';
+export * from './useLanguageList';
+export { default as useLanguageList } from './useLanguageList';
 
 // Re-exports from other libraries
 export { default as useImported } from '~shared-ui/hooks/useImported';

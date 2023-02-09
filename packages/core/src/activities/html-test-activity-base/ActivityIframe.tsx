@@ -1,12 +1,11 @@
-import { styled, SxProps } from "@mui/material";
+import { SxProps } from "@mui/material";
 import { nanoid } from "nanoid";
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, Ref } from "react";
 import iframeHtml from "raw-loader!./iframe.html";
 import testScaffoldingImpl from "raw-loader!./test-scaffolding-impl.js.raw";
 import transformTestScaffolding from "../../languages/transformers/babel-plugin-transform-test-scaffolding";
-import { typescriptDescription } from '../../languages/typescript';
-
-const Iframe = styled('iframe')``;
+import typescript from '../../languages/typescript';
+import { IFrame } from '@necode-org/activity-dev';
 
 export type RunTestsFunction = (
     tests: string,
@@ -138,12 +137,7 @@ export const ActivityIframe = forwardRef(function ActivityIframe({
         await reload();
         return new Promise<void>(async resolve => {
             try {
-                const runner = await typescriptDescription.runnable!();
-                const code = testScaffoldingImpl + runner.toRunnerCode(tests, {
-                    global: true,
-                    isolated: true,
-                    babelPlugins: [transformTestScaffolding],
-                });
+                const code = testScaffoldingImpl + await typescript['js/babel'].compileToJs(tests, [transformTestScaffolding]);
     
                 iframeElt.contentWindow!.postMessage({ type: 'tests', signature: signatureRef.current, code }, '*');
     
@@ -195,5 +189,5 @@ export const ActivityIframe = forwardRef(function ActivityIframe({
         }
     }, [reload]);
 
-    return <Iframe ref={onIframeLoad} sandbox="allow-scripts" sx={sx} />;
+    return <IFrame ref={onIframeLoad} sx={sx} />;
 });

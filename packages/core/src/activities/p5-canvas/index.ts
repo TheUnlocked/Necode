@@ -1,17 +1,12 @@
-import supportsBabelPlugins from '../../languages/features/supportsBabelPlugins';
-import supportsGlobal from '../../languages/features/supportsGlobal';
-import supportsIsolated from '../../languages/features/supportsIsolated';
-import { activityDescription } from '@necode-org/activity-dev';
+import { activityDescription } from '@necode-org/plugin-dev';
 import { Configuration } from '../canvas';
 
 const canvasActivityDescription = activityDescription({
     id: 'core/canvas-ring/p5',
     displayName: 'p5.js Ring',
     requiredFeatures: [
-        supportsGlobal,
-        supportsIsolated,
-        supportsBabelPlugins, // to get JS and TS only
-    ] as const,
+        'iframe/static'
+    ],
     configurePolicies: () => [{ name: 'ring' }],
     activityPage: async () => (await import('./activity')).Activity,
     configWidget: async () => (await import('../canvas/Widget')).CanvasWidget,

@@ -43,3 +43,11 @@ export type Importable<T> = () => Promise<T>;
 export type Mutable<T> = { -readonly [P in keyof T]: T[P] extends ReadonlyArray<infer U> ? U[] : T[P] };
 
 export type DisposeFn = () => void;
+
+/** Courtesy of https://stackoverflow.com/a/50375286/4937286 */
+export type UnionToIntersection<U> = 
+    (U extends any ? (k: U)=>void : never) extends ((k: infer I)=>void) ? I : never;
+
+/** https://stackoverflow.com/a/52490977/4937286 */
+export type Tuple<T, N extends number> = N extends N ? number extends N ? T[] : _TupleOf<T, N, []> : never;
+type _TupleOf<T, N extends number, R extends unknown[]> = R['length'] extends N ? R : _TupleOf<T, N, [T, ...R]>;

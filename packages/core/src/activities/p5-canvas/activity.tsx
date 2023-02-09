@@ -1,5 +1,6 @@
 import { Box, Card } from "@mui/material";
-import { Editor, ActivityPageProps, CodeAlert, NetworkId, Pane, Panes, PanesLayouts, PassthroughPane, useImported, useMediaChannel, Video, useMonaco } from '@necode-org/activity-dev';
+import { Editor, CodeAlert, NetworkId, Pane, Panes, PanesLayouts, PassthroughPane, useImported, useMediaChannel, Video, useMonaco } from '@necode-org/activity-dev';
+import { ActivityPageProps } from '@necode-org/plugin-dev';
 import dedent from "dedent-js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Configuration } from '../canvas';
@@ -9,7 +10,7 @@ const extraLibsImportable = () => Promise.all(typeDeclarationFiles.map(async x =
 
 const FRAME_RATE = 10;
 
-export function Activity({ language, activityConfig }: ActivityPageProps<Configuration>) {
+export function Activity({ language, activityConfig, features }: ActivityPageProps<['iframe/static'], Configuration>) {
     const [[inboundStream], setOutboundStream] = useMediaChannel(NetworkId.NET_0, 'canvas');
 
     const config = useMemo(() => activityConfig ?? { canvasWidth: 400, canvasHeight: 400 }, [activityConfig]);
@@ -55,55 +56,51 @@ export function Activity({ language, activityConfig }: ActivityPageProps<Configu
 
     const [code, setCode] = useState<string>(defaultCode);
 
-    const codeGenerator = useImported(language.runnable);
     const [codeError, setCodeError] = useState<Error | undefined>();
 
     const iframeSource = useMemo(() => {
-        if (codeGenerator) {
-            setCodeError(undefined);
-            return `<html>
-                <head>
-                    <style>
-                        body { margin: 0; background: black; }
-                        canvas { display: block; }
-                    </style>
-                    <script>
-                        window.addEventListener('error', ({ error }) => {
-                            window.frameElement.dispatchEvent(new CustomEvent('p5-error', { detail: error }));
-                        });
-                    </script>
-                    <script src="https://cdn.jsdelivr.net/npm/p5@1.4.2/lib/p5.min.js"></script>
-                    <script>${codeGenerator.toRunnerCode(code, { global: true })}</script>
-                </head>
-                <body>
-                    <main></main>
-                    <script>
-                    {
-                        p5.disableFriendlyErrors = true;
-                        const setup = window.setup;
-                        window.setup = () => {
-                            window.PREV_FRAME = createImage(1, 1);
-                            createCanvas(${config.canvasWidth}, ${config.canvasHeight});
-                            background('black');
-                            window.createCanvas = () => {
-                                throw new Error("We'll handle the canvas for you. :)");
-                            };
-                            window.resizeCanvas = () => {
-                                throw new Error("In order for behind-the-scenes stuff to work correctly, we need the canvas to be a certain size. Sorry!");
-                            };
-                            if (setup) {
-                                setup();
-                            }
-                            window.frameElement.dispatchEvent(new CustomEvent('p5-load', { detail: window }));
+        setCodeError(undefined);
+        return `<html>
+            <head>
+                <style>
+                    body { margin: 0; background: black; }
+                    canvas { display: block; }
+                </style>
+                <script>
+                    window.addEventListener('error', ({ error }) => {
+                        window.frameElement.dispatchEvent(new CustomEvent('p5-error', { detail: error }));
+                    });
+                </script>
+                <script src="https://cdn.jsdelivr.net/npm/p5@1.4.2/lib/p5.min.js"></script>
+                <script>${features.iframe.static.compile(code)}</script>
+            </head>
+            <body>
+                <main></main>
+                <script>
+                {
+                    p5.disableFriendlyErrors = true;
+                    const setup = window.setup;
+                    window.setup = () => {
+                        window.PREV_FRAME = createImage(1, 1);
+                        createCanvas(${config.canvasWidth}, ${config.canvasHeight});
+                        background('black');
+                        window.createCanvas = () => {
+                            throw new Error("We'll handle the canvas for you. :)");
                         };
-                    }
-                    </script>
-                </body>
-            </html>
-            `;
-        }
-        return ``;
-    }, [config, code, codeGenerator]);
+                        window.resizeCanvas = () => {
+                            throw new Error("In order for behind-the-scenes stuff to work correctly, we need the canvas to be a certain size. Sorry!");
+                        };
+                        if (setup) {
+                            setup();
+                        }
+                        window.frameElement.dispatchEvent(new CustomEvent('p5-load', { detail: window }));
+                    };
+                }
+                </script>
+            </body>
+        </html>
+        `;
+    }, [config, code, features]);
 
     const videoRef = useRef<HTMLVideoElement | null>(null);
 

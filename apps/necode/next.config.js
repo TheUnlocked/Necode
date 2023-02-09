@@ -61,6 +61,17 @@ module.exports = {
             ],
         });
     },
+    async headers() {
+        return [
+            {
+                source: '/:any*',
+                headers: [
+                    { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+                    { key: 'Cross-Origin-Embedder-Policy', value: 'credentialless' },
+                ]
+            }
+        ];
+    },
 };
 
 // module.exports = require('@next/bundle-analyzer')({ enabled: true })(module.exports);

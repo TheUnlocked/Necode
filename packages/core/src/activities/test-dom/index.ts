@@ -1,8 +1,6 @@
-import { activityDescription } from '@necode-org/activity-dev';
-import { HtmlTestActivityBaseConfig } from "../html-test-activity-base/createTestActivityPage";
-import supportsGlobal from "../../languages/features/supportsGlobal";
-import supportsIsolated from "../../languages/features/supportsIsolated";
+import { activityDescription } from '@necode-org/plugin-dev';
 import dedent from "dedent-js";
+import { HtmlTestActivityBaseConfig } from "../html-test-activity-base/createTestActivityPage";
 import createTestActivityPages from '../html-test-activity-base/createTestActivityPages';
 
 interface DomTestActivityConfig extends HtmlTestActivityBaseConfig {
@@ -24,9 +22,8 @@ function createTestDomActivityDescription(networked: boolean) {
         id: `core/test-dom${networked ? '/networked' : ''}`,
         displayName: `DOM Playground${networked ? ' (networked)' : ''}`,
         requiredFeatures: [
-            supportsGlobal,
-            supportsIsolated
-        ] as const,
+            'iframe/static'
+        ],
         activityPage,
         configPage,
         configurePolicies: () => networked ? [{ name: 'ring' }] : [],

@@ -6,8 +6,4 @@
         "baseUrl": ".",
         "outDir": "./dist",
     }
-    "compilerOptions": {
-        "baseUrl": ".",
-        "outDir": "dist"
-    }
 }

@@ -3,7 +3,7 @@ export default interface IMap<K, V> {
 
     delete(key: K): boolean;
 
-    forEach<ThisArg>(callbackfn: (this: ThisArg | undefined, value: V, key: K, map: this) => void, thisArg?: ThisArg): void;
+    forEach<ThisArg>(callbackfn: (this: ThisArg | undefined, value: V, key: K) => void, thisArg?: ThisArg): void;
     get(key: K): V | undefined;
     has(key: K): boolean;
 

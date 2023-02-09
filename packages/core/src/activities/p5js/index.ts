@@ -1,7 +1,5 @@
-import { activityDescription } from '@necode-org/activity-dev';
+import { activityDescription } from '@necode-org/plugin-dev';
 import { HtmlTestActivityBaseConfig } from "../html-test-activity-base/createTestActivityPage";
-import supportsGlobalContext from "../../languages/features/supportsGlobal";
-import supportsIsolated from "../../languages/features/supportsIsolated";
 import dedent from "dedent-js";
 import createTestActivityPages from '../html-test-activity-base/createTestActivityPages';
 import typeDeclarationFiles from './typeDeclarationFiles';
@@ -28,9 +26,8 @@ const p5jsActivityDescription = activityDescription({
     id: 'core/p5js',
     displayName: 'p5.js Playground',
     requiredFeatures: [
-        supportsGlobalContext,
-        supportsIsolated
-    ] as const,
+        'iframe/static'
+    ],
     activityPage,
     configPage,
     defaultConfig: {

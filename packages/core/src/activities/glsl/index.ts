@@ -1,7 +1,6 @@
-import { activityDescription, isLanguage } from '@necode-org/activity-dev';
+import { activityDescription } from '@necode-org/plugin-dev';
 import { HtmlTestActivityBaseConfig } from "../html-test-activity-base/createTestActivityPage";
 import dedent from "dedent-js";
-import { glslDescription } from "../../languages/glsl";
 import createTestActivityPages from '../html-test-activity-base/createTestActivityPages';
 
 interface GLSLActivityConfig extends HtmlTestActivityBaseConfig {
@@ -16,19 +15,27 @@ interface GLSLActivityConfig extends HtmlTestActivityBaseConfig {
     };
 }
 
-const [activityPage, configPage] = createTestActivityPages({
+const [activityPage, configPage] = createTestActivityPages<GLSLActivityConfig, ['is/glsl']>({
     hasCss: false,
     hasHtml: false,
     hasTests: true,
     hiddenHtml: {
         configurable: true
-    }
+    },
+    mapFeatures: obj => ({
+        iframe: { static: {
+            getDownloadableAssetURIs: () => [],
+            compile: code => obj.is.glsl.getJsCodeObjectSource(code),
+        } }
+    }),
 });
 
 const glslActivityDescription = activityDescription({
     id: 'core/glsl',
     displayName: 'GLSL Playground',
-    requiredFeatures: [isLanguage(glslDescription)] as const,
+    requiredFeatures: [
+        'is/glsl'
+    ],
     activityPage,
     configPage,
     defaultConfig: {

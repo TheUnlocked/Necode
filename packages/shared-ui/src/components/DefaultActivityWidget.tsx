@@ -1,7 +1,7 @@
 import { Info } from '@mui/icons-material';
 import { Box, Button, Tooltip } from "@mui/material";
 import { PropsWithChildren } from 'react';
-import { ActivityConfigWidgetProps } from "../types/ActivityDescription";
+import { ActivityConfigWidgetProps } from "../../../plugin-dev/src/activities/ActivityDescription";
 import ActivityWidgetBase from './ActivityWidgetBase';
 
 const infoIconClass = 'ActivityInfo-svg-icon';

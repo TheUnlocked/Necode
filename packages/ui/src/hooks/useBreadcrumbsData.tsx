@@ -2,7 +2,7 @@ import { ErrorOutline } from '@mui/icons-material';
 import { CircularProgress } from '@mui/material';
 import { useRouter } from 'next/router';
 import { ReactNode } from 'react';
-import { useGetRequest, useGetRequestImmutable } from '~shared-ui/src/hooks/useGetRequest';
+import { useGetRequest, useGetRequestImmutable } from '~shared-ui/hooks/useGetRequest';
 import { ActivityEntity } from '~api/entities/ActivityEntity';
 import { ClassroomMemberEntity } from '~api/entities/ClassroomMemberEntity';
 

@@ -1,10 +1,8 @@
 import { Code } from "@mui/icons-material";
-import { Dialog, DialogTitle, List, ListItemButton, ListItemText, Stack, Tooltip, Box } from "@mui/material";
-import { curry } from "lodash";
-import ActivityDescription from "~shared-ui/types/ActivityDescription";
-import allActivities from "~core/activities/allActivities";
-import supportsLanguage from "~core/activities/supportsLanguage";
-import allLanguages from "~core/languages/allLanguages";
+import { Box, Dialog, DialogTitle, List, ListItemButton, ListItemText, Stack, Tooltip } from "@mui/material";
+import { ActivityDescription } from '@necode-org/plugin-dev';
+import { useMemo } from 'react';
+import { usePlugins } from '~shared-ui/hooks/usePlugins';
 
 interface SelectActivityDialogProps {
     open: boolean;
@@ -12,22 +10,23 @@ interface SelectActivityDialogProps {
     onSelectActivity?: (activity: ActivityDescription<any>) => void;
 }
 
-const selectableActivities = allActivities
-    .filter(a => !a.id.startsWith('core/noop/'));
-
-const supportedLanguagesByActivity = Object.fromEntries(
-    selectableActivities
-        .map(a => [
-            a.id,
-            allLanguages.filter(curry(supportsLanguage)(a))
-        ])
-);
-
 export default function SelectActivityDialog({
     open,
     onClose,
     onSelectActivity
 }: SelectActivityDialogProps) {
+    const { activities, getLanguagesWithFeatures } = usePlugins();
+
+    const selectableActivities = useMemo(() => activities.filter(x => !x.id.startsWith('core/noop')), [activities]);
+
+    const supportedLanguagesByActivity = useMemo(() => Object.fromEntries(
+        selectableActivities
+            .map(a => [
+                a.id,
+                getLanguagesWithFeatures(a.requiredFeatures),
+            ])
+    ), [selectableActivities, getLanguagesWithFeatures]);
+
     return <Dialog open={open} onClose={onClose}>
         <DialogTitle>Pick an activity...</DialogTitle>
         <List sx={{ overflow: "auto" }}>

@@ -12,9 +12,10 @@
   "dependencies": {
     "@babel/core": "^7.20.12",
     "@babel/plugin-transform-typescript": "^7.20.13",
-    "@necode-org/activity-dev": "0.1.0",
-    "@necode-org/language-dev": "0.1.0",
-    "@necode-org/policy-dev": "0.1.0",
+    "@necode-org/activity-dev": "workspace:*",
+    "@necode-org/language-dev": "workspace:*",
+    "@necode-org/policy-dev": "workspace:*",
+    "@necode-org/plugin-dev": "workspace:*",
     "brython": "^3.11.0",
     "dedent-js": "^1.0.1",
     "lodash": "^4.17.21",

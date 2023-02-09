@@ -1,5 +1,6 @@
 import { Box, Card, styled } from "@mui/material";
-import { ActivityPageProps, CodeAlert, CodeRunner, Editor, NetworkId, Pane, Panes, PanesLayouts, PassthroughPane, useImported, useMediaChannel, Video } from "@necode-org/activity-dev";
+import { CodeAlert, Editor, NetworkId, Pane, Panes, PanesLayouts, PassthroughPane, useMediaChannel, Video } from "@necode-org/activity-dev";
+import { ActivityPageProps } from '@necode-org/plugin-dev';
 import dedent from "dedent-js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Configuration } from '.';
@@ -12,7 +13,7 @@ const DrawingCanvas = styled('canvas')({
 
 const FRAME_RATE = 10;
 
-export function CanvasActivity({ language, activityConfig }: ActivityPageProps<Configuration>) {
+export function CanvasActivity({ language, activityConfig, features }: ActivityPageProps<['entryPoint/any'], Configuration>) {
     const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
     const [context2d, setContext2d] = useState<CanvasRenderingContext2D | null>(null);
 
@@ -98,31 +99,27 @@ export function CanvasActivity({ language, activityConfig }: ActivityPageProps<C
     } as { [language: string]: string }), [config]);
 
     const [code, setCode] = useState<string>(defaultCode[language.name]);
-
-    const runner = useMemo(() => new CodeRunner(), []);
-
     const [codeError, setCodeError] = useState<Error | undefined>();
-    const codeGenerator = useImported(language.runnable);
+    const [entryPoint, setEntryPoint] = useState<(ctx: CanvasRenderingContext2D, video?: HTMLVideoElement) => Promise<void>>();
 
     useEffect(() => {
         try {
-            if (codeGenerator) {
-                runner.prepareCode(codeGenerator.toRunnerCode(code, { entryPoint: 'draw' }));
-            }
+            const newEntry = features.entryPoint.any.entryPoint<Parameters<NonNullable<typeof entryPoint>>, void>(code, 'draw');
+            setEntryPoint(() => newEntry);
         }
         catch (e) {
-            runner.prepareCode(undefined);
             setCodeError(e as Error);
+            setEntryPoint(undefined);
         }
-    }, [code, runner, codeGenerator]);
+    }, [code, features]);
     
-    const [inboundVideoElt, setInboundVideoElt] = useState<HTMLVideoElement | null>(null);
+    const [inboundVideoElt, setInboundVideoElt] = useState<HTMLVideoElement>();
 
     useEffect(() => {
         if (context2d) {
             function run() {
-                if (runner.isPrepared) {
-                    runner.run([context2d, inboundVideoElt])
+                if (entryPoint) {
+                    entryPoint(context2d!, inboundVideoElt)
                         .then(() => setCodeError(undefined))
                         .catch(e => {
                             if (e instanceof Error) {
@@ -138,7 +135,7 @@ export function CanvasActivity({ language, activityConfig }: ActivityPageProps<C
             run();
             return () => clearInterval(interval);
         }
-    }, [context2d, inboundVideoElt, runner]);
+    }, [context2d, inboundVideoElt, entryPoint]);
 
     const layouts: PanesLayouts = {
         thin: { panesPerColumn: [2] },

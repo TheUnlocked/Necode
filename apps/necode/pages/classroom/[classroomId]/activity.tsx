@@ -8,20 +8,18 @@ import { useGetRequest, useGetRequestImmutable } from "~shared-ui/hooks/useGetRe
 import { useSocket } from "~ui/hooks/useSocket";
 import StatusPage from "~ui/components/layouts/StatusPage";
 import { ActivityEntity } from "~api/entities/ActivityEntity";
-import allActivities from "~core/activities/allActivities";
-import allLanguages from "~core/languages/allLanguages";
 import useImperativeDialog from "~shared-ui/hooks/useImperativeDialog";
 import SubmissionsDialog from "~ui/components/dialogs/SubmissionsDialog";
 import { ClassroomRole } from "~database";
 import NotFoundPage from "../../404";
-import supportsLanguage from "~core/activities/supportsLanguage";
-import { curry } from "lodash";
 import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
 import useImported from '~shared-ui/hooks/useImported';
 import { typeAssert } from '~utils/typeguards';
 import { RtcProvider } from '~shared-ui/hooks/RtcHooks';
-import { ActivitySubmissionEntity } from '~api/src/entities/ActivitySubmissionEntity';
+import { ActivitySubmissionEntity } from '~api/entities/ActivitySubmissionEntity';
 import { SubmissionProvider } from '~shared-ui/hooks/useSubmissions';
+import { usePlugins } from '~shared-ui/hooks/usePlugins';
+import useAsyncMemo from '~ui/hooks/useAsyncMemo';
 
 interface StaticProps {
     classroomId: string;
@@ -60,7 +58,9 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
             : null
     );
 
-    const activity = allActivities.find(x => x.id === activityEntity?.attributes.activityType);
+    const { getActivity, getLanguagesWithFeatures, hasFeature, getFeatureImpl } = usePlugins();
+
+    const activity = getActivity(activityEntity?.attributes.activityType);
 
     const loadSubmissionRef = useRef<(submission: ActivitySubmissionEntity<{ user: 'deep', activity: 'none' }>) => void>();
     const [submissions, setSubmissions] = useState<readonly ActivitySubmissionEntity<{ user: 'deep', activity: 'none' }>[]>([]);
@@ -79,6 +79,23 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
     const [usesSubmissions, setUsesSubmissions] = useState(false);
     let instructorToolbar: JSX.Element | undefined;
     
+    function goToManage() {
+        if (activityEntity) {
+            router.push({
+                pathname: `/classroom/${classroomId}/manage/lessons`,
+                hash: activityEntity.attributes.lesson.attributes.date,
+            });
+        }
+        else {
+            router.push(`/classroom/${classroomId}/manage`);
+        }
+    }
+
+    async function endActivity() {
+        await upload(`/api/classroom/${classroomId}/activity/live`, { method: 'DELETE' });
+        goToManage();
+    }
+
     if (isInstructor) {
         if (activity) {
             instructorToolbar = <Toolbar variant="dense" sx={{ minHeight: "36px", px: "16px !important" }}>
@@ -113,10 +130,37 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
 
     const ActivityPage = useImported(activity?.activityPage);
 
+    const supportedLanguages = activity ? getLanguagesWithFeatures(activity.requiredFeatures) : [];
+
+    const language = !activityEntity
+        ? undefined
+        : activityEntity.attributes.enabledLanguages.length === 0
+        ? supportedLanguages[0]
+        : supportedLanguages.find(x => activityEntity.attributes.enabledLanguages.includes(x.name));
+
+    const hasRequiresBrowser = hasFeature(language?.name, 'requires/browser');
+    const requiresBrowser = useAsyncMemo(
+        async () => getFeatureImpl(language?.name, ['requires/browser']),
+        [language, getFeatureImpl]
+    );
+
+    const completedSetup = useAsyncMemo(async () => {
+        const impl = await getFeatureImpl(language?.name, ['requires/setup']);
+        await impl?.requires.setup.setup();
+        return true;
+    }, [language, getFeatureImpl]);
+
+    const featureObj = useAsyncMemo(
+        async () => activity && language ? getFeatureImpl(language.name, activity.requiredFeatures) : undefined,
+        [activity, language, getFeatureImpl]
+    );
+
     if (!socketInfo || (activity && !ActivityPage)) {
         return <>
             {instructorToolbar}
-            <StatusPage primary="Loading..." />
+            <StatusPage
+                primary="Loading..."
+                secondary="Loading Activity..." />
         </>;
     }
 
@@ -130,25 +174,39 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
         </>;
     }
 
-    const enabledLanguages = activityEntity!.attributes.enabledLanguages.length === 0
-        ? allLanguages.filter(curry(supportsLanguage)(activity))
-        : allLanguages.filter(x => activityEntity!.attributes.enabledLanguages.includes(x.name));
-
-    function goToManage() {
-        if (activityEntity) {
-            router.push({
-                pathname: `/classroom/${classroomId}/manage/lessons`,
-                hash: activityEntity.attributes.lesson.attributes.date,
-            });
-        }
-        else {
-            router.push(`/classroom/${classroomId}/manage`);
-        }
+    if (!language) {
+        return <>
+            {instructorToolbar}
+            <StatusPage
+                primary="No Language Available"
+                secondary="This is likely some kind of bug." />
+        </>;
     }
 
-    async function endActivity() {
-        await upload(`/api/classroom/${classroomId}/activity/live`, { method: 'DELETE' });
-        goToManage();
+    if (hasRequiresBrowser && requiresBrowser?.requires.browser.isCompatible() === false) {
+        const recommended = requiresBrowser?.requires.browser.getRecommendedBrowsers();
+        const recommendedPhrase
+            = (recommended.length > 0 ? '. Try switching to ' : '')
+            + recommended.slice(0, -1).join(', ')
+            + (recommended.length > 2 ? ',' : '')
+            + (recommended.length > 1 ? ' or ' + recommended.at(-1) : '')
+            + '.';
+        
+        return <>
+            {instructorToolbar}
+            <StatusPage
+                primary="Incompatible"
+                secondary={`Your browser is incompatible with this activity${recommendedPhrase}`} />
+        </>;
+    }
+
+    if (!featureObj || !completedSetup) {
+        return <>
+            {instructorToolbar}
+            <StatusPage
+                primary="Loading..."
+                secondary={`Loading ${language.displayName} support...`} />
+        </>;
     }
 
     // Typescript isn't smart enough to infer this on its own
@@ -185,7 +243,8 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
                         id={activityEntity!.id}
                         activityConfig={activityEntity!.attributes.configuration}
                         classroomId={classroomId}
-                        language={enabledLanguages[0]} />
+                        language={language}
+                        features={featureObj} />
                 </SubmissionProvider>
             </RtcProvider>
         </Box>

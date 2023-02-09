@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@mui/x-date-pickers": "^5.0.16",
+    "@necode-org/plugin-dev": "workspace:*",
     "@seznam/compose-react-refs": "^1.0.6",
     "color-alpha": "^1.1.3",
     "lodash": "^4.17.21",

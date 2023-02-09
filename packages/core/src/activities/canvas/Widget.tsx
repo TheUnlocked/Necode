@@ -1,7 +1,8 @@
 import { TextField, Tooltip } from '@mui/material';
 import { useState } from 'react';
 import type { Configuration } from '.';
-import { ActivityConfigWidgetProps, DefaultActivityWidget } from '@necode-org/activity-dev';
+import { DefaultActivityWidget } from '@necode-org/activity-dev';
+import { ActivityConfigWidgetProps } from '@necode-org/plugin-dev';
 
 function validate(str: string) {
     const value = +str;

@@ -3,10 +3,10 @@ import { ActivitySubmissionEntity } from "~api/entities/ActivitySubmissionEntity
 import { DisposeFn } from "~utils/types";
 import tracked from "~shared/trackedEventEmitter";
 import SocketInfo from "../types/SocketInfo";
-import ActivityDescription from '../types/ActivityDescription';
+import { ActivityDescription } from '@necode-org/plugin-dev';
 import { useApiGet } from './useApi';
-import api from '~api/src/handles';
-import { callWith } from '~utils/src/fp';
+import api from '~api/handles';
+import { callWith } from '~utils/fp';
 import { useSnackbar } from 'notistack';
 import { useLoadingContext } from './useLoadingContext';
 

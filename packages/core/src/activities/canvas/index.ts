@@ -1,5 +1,4 @@
-import supportsEntryPoint from "../../languages/features/supportsEntryPoint";
-import { activityDescription } from '@necode-org/activity-dev';
+import { activityDescription } from '@necode-org/plugin-dev';
 
 export type Configuration = undefined | {
     canvasWidth: number;
@@ -10,8 +9,8 @@ const canvasActivityDescription = activityDescription({
     id: 'core/canvas-ring',
     displayName: 'Canvas Ring',
     requiredFeatures: [
-        supportsEntryPoint
-    ] as const,
+        'entryPoint/any'
+    ],
     configurePolicies: () => [{ name: 'ring' }],
     activityPage: async () => (await import('./CanvasActivity')).CanvasActivity,
     configWidget: async () => (await import('./Widget')).CanvasWidget,

@@ -1,7 +1,7 @@
 import { Add, ContentCopy, Delete, TextFields } from '@mui/icons-material';
 import { Button, IconButton, Tooltip, Stack } from '@mui/material';
 import { useDrop } from 'use-dnd';
-import ActivityDescription from '~shared-ui/types/ActivityDescription';
+import { ActivityDescription } from '@necode-org/plugin-dev';
 import textInputActivityDescription from '~core/activities/text-input/textInputDescription';
 import { ActivityEntity } from '~api/entities/ActivityEntity';
 import { EntityType } from '~api/entities/Entity';
@@ -14,7 +14,7 @@ interface ActivityListPaneActionsProps {
     onDeleteActivity?(item: ActivityEntity): void;
     onDeleteLesson?(item: LessonEntity): void;
     onClone?(item: ActivityEntity): void;
-    onCreate?(item: ActivityDescription<any>): void;
+    onCreate?(item: ActivityDescription<any, any>): void;
 }
 
 export default function ActivityListPaneActions({ onCreate, onClone, onDeleteActivity, onDeleteLesson }: ActivityListPaneActionsProps) {

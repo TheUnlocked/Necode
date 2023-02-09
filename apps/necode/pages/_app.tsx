@@ -19,6 +19,10 @@ import ErrorBoundaryPage from '~ui/components/layouts/ErrorBoundaryPage';
 import usePageTitle from '~ui/hooks/usePageTitle';
 import { ConfirmProvider } from 'material-ui-confirm';
 import { DragDropProvider } from 'use-dnd';
+import { PluginsProvider } from '~shared-ui/hooks/usePlugins';
+import CorePlugin from '~core';
+
+const plugins = [CorePlugin];
 
 function MyApp({ Component, pageProps }: AppProps) {
     const loadingInfoRef = useRef({
@@ -54,6 +58,7 @@ function MyApp({ Component, pageProps }: AppProps) {
             <SnackbarProvider hideIconVariant>
             <DragDropProvider>
             <LoadingContext.Provider value={loadingContext}>
+            <PluginsProvider plugins={plugins}>
                 <Header />
                 <Box sx={{
                     "--header-height": "64px",
@@ -66,6 +71,7 @@ function MyApp({ Component, pageProps }: AppProps) {
                 </ErrorBoundary>
                 </Box>
                 <LoadingSpinners />
+            </PluginsProvider>
             </LoadingContext.Provider>
             </DragDropProvider>
             </SnackbarProvider>

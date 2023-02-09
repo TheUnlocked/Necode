@@ -1,13 +1,13 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, List, ListItemButton, ListItemIcon, ListItemText, Radio } from "@mui/material";
 import { useState } from "react";
-import LanguageDescription from "~shared-ui/types/LanguageDescription";
+import { LanguageDescription } from "@necode-org/plugin-dev";
 import useDirty from "~shared-ui/hooks/useDirty";
 
 interface ConfigureLanguageDialogProps {
     open: boolean;
     onClose(): void;
     availableLanguages: LanguageDescription[];
-    enabledLanguage: LanguageDescription;
+    enabledLanguage: LanguageDescription | undefined;
     saveEnabledLanguage(languages: LanguageDescription): void;
 }
 
@@ -29,7 +29,9 @@ export default function ConfigureLanguageDialog(props: ConfigureLanguageDialogPr
     }
 
     function saveAndClose() {
-        saveEnabledLanguage(selectedLanguage);
+        if (selectedLanguage) {
+            saveEnabledLanguage(selectedLanguage);
+        }
         close();
     }
 

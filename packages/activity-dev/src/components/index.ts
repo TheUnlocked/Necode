@@ -18,6 +18,10 @@ export { default as Key } from './Key';
 export { default as Video } from './Video';
 export * from './Editor';
 export { default as Editor } from './Editor';
+export * from './IFrame';
+export { default as IFrame } from './IFrame';
+export * from './PolicySelect';
+export { default as PolicySelect } from './PolicySelect';
 
 // Re-exports from other libraries
 export * from '~shared-ui/components/Lazy';

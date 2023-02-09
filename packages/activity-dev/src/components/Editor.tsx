@@ -3,9 +3,9 @@ import { editor, Selection } from 'monaco-editor';
 import { nanoid } from 'nanoid';
 import { useCallback, useEffect, useState } from 'react';
 import { MonacoBinding, setMonaco } from 'y-monaco';
-import LanguageDescription from '~shared-ui/src/types/LanguageDescription';
+import { LanguageDescription } from '@necode-org/plugin-dev';
 import cyrb53 from '~utils/cyrb53';
-import { DisposeFn } from '~utils/src/types';
+import { DisposeFn } from '~utils/types';
 import { YTextHandle } from '../hooks/useY';
 import { Y, YAwareness } from '../utils/y-utils';
 

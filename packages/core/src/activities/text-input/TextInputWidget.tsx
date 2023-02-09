@@ -1,10 +1,10 @@
 import { Code as CodeIcon, TextFields as TextFieldsIcon } from "@mui/icons-material";
 import { ClickAwayListener, Grow, IconButton, MenuItem, MenuList, Paper, Popper, Stack, SxProps, TextField, Theme } from "@mui/material";
-import { ActivityConfigWidgetProps, DragHandle, dragHandleClass, dragHandleSelector, Editor, useLocalCachedState, useMonaco } from "@necode-org/activity-dev";
+import { DragHandle, dragHandleClass, dragHandleSelector, Editor, useLocalCachedState, useMonaco, useLanguageList } from "@necode-org/activity-dev";
+import { ActivityConfigWidgetProps } from '@necode-org/plugin-dev';
 import { bindPopper, bindTrigger, usePopupState } from "material-ui-popup-state/hooks";
 import type { editor } from "monaco-editor";
 import { useCallback, useEffect, useRef, useState } from "react";
-import allLanguages from "../../languages/allLanguages";
 
 export interface TextInputWidgetProps {
     value: string;
@@ -33,6 +33,8 @@ export default function TextInputWidget({
     onActivityConfigChange,
     dragHandle
 }: ActivityConfigWidgetProps<TextInputWidgetProps>) {
+    const allLanguages = useLanguageList();
+
     const languageDescription = allLanguages.find(x => x.name === language);
 
     const languageSelectPopup = usePopupState({

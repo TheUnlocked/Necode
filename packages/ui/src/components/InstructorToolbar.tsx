@@ -15,9 +15,7 @@ export default function InstructorToolbar({ onReturnToManage, onEndActivity, onS
         px: "16px !important",
         display: "flex",
         flexDirection: "row",
-        "& > * + *": {
-            ml: 1
-        }
+        gap: 1,
     }}>
         {onReturnToManage
             ? <Button size="small" startIcon={<ArrowBack/>}

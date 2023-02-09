@@ -1,5 +1,5 @@
 import { Box, Card } from "@mui/material";
-import { Editor, CodeAlert, NetworkId, Pane, Panes, PanesLayouts, PassthroughPane, useImported, useMediaChannel, Video, useMonaco } from '@necode-org/activity-dev';
+import { Editor, CodeAlert, NetworkId, Pane, Panes, PanesLayouts, PassthroughPane, useImported, useMediaChannel, Video, useMonaco, useAsyncMemo } from '@necode-org/activity-dev';
 import { ActivityPageProps } from '@necode-org/plugin-dev';
 import dedent from "dedent-js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -55,7 +55,7 @@ export function Activity({ language, activityConfig, features }: ActivityPagePro
     );
 
     const [code, setCode] = useState<string>(defaultCode);
-
+    const compiled = useAsyncMemo(() => features.iframe.static.compile(code), [features, code]);
     const [codeError, setCodeError] = useState<Error | undefined>();
 
     const iframeSource = useMemo(() => {
@@ -72,7 +72,7 @@ export function Activity({ language, activityConfig, features }: ActivityPagePro
                     });
                 </script>
                 <script src="https://cdn.jsdelivr.net/npm/p5@1.4.2/lib/p5.min.js"></script>
-                <script>${features.iframe.static.compile(code)}</script>
+                <script>${compiled}</script>
             </head>
             <body>
                 <main></main>
@@ -100,7 +100,7 @@ export function Activity({ language, activityConfig, features }: ActivityPagePro
             </body>
         </html>
         `;
-    }, [config, code, features]);
+    }, [config, compiled]);
 
     const videoRef = useRef<HTMLVideoElement | null>(null);
 

@@ -25,7 +25,7 @@ const [activityPage, configPage] = createTestActivityPages<GLSLActivityConfig, [
     mapFeatures: obj => ({
         iframe: { static: {
             getDownloadableAssetURIs: () => [],
-            compile: code => obj.is.glsl.getJsCodeObjectSource(code),
+            compile: async code => obj.is.glsl.getJsCodeObjectSource(code),
         } }
     }),
 });

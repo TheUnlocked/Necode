@@ -58,7 +58,9 @@ const PageContent: NextPage<PageContentProps> = ({ classroomId, page, children }
         live: boolean,
         server: string,
         token: string,
-    }>(classroomId ? `/api/classroom/${classroomId}/activity/live` : null);
+    }>(classroomId ? `/api/classroom/${classroomId}/activity/live` : null, {
+        revalidateOnMount: true,
+    });
 
     const endActivity = useCallback(() => {
         upload(`/api/classroom/${classroomId}/activity/live`, { method: 'DELETE' })

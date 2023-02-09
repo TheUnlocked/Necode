@@ -1,6 +1,6 @@
 {
     "extends": "~tsconfig/default.json",
-    "include": ["./src", "../shared-ui/src/types/Feature.ts"],
+    "include": ["./src"],
     "exclude": ["node_modules"],
     "compilerOptions": {
         "baseUrl": ".",

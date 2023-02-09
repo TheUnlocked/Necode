@@ -19,7 +19,7 @@ import { RtcProvider } from '~shared-ui/hooks/RtcHooks';
 import { ActivitySubmissionEntity } from '~api/entities/ActivitySubmissionEntity';
 import { SubmissionProvider } from '~shared-ui/hooks/useSubmissions';
 import { usePlugins } from '~shared-ui/hooks/usePlugins';
-import useAsyncMemo from '~ui/hooks/useAsyncMemo';
+import useAsyncMemo from '~shared-ui/hooks/useAsyncMemo';
 
 interface StaticProps {
     classroomId: string;

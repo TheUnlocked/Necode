@@ -17,7 +17,7 @@ import { MockSubmissionProvider } from '~shared-ui/hooks/useSubmissions';
 import ConfigureLanguageDialog from "~ui/components/dialogs/ConfigureLanguageDialog";
 import InstructorToolbar from '~ui/components/InstructorToolbar';
 import StatusPage from '~ui/components/layouts/StatusPage';
-import useAsyncMemo from '~ui/hooks/useAsyncMemo';
+import useAsyncMemo from '~shared-ui/hooks/useAsyncMemo';
 import { flip, make } from "~utils/fp";
 import NotFoundPage from "../../../../404";
 

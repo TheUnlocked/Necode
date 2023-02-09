@@ -7,6 +7,7 @@ export { default as useLanguageList } from './useLanguageList';
 
 // Re-exports from other libraries
 export { default as useImported } from '~shared-ui/hooks/useImported';
+export { default as useAsyncMemo } from '~shared-ui/hooks/useAsyncMemo';
 export * from '~shared-ui/hooks/RtcHooks';
 export { default as useFetch } from '~shared-ui/hooks/useLoadingFetch';
 export { default as useImperativeDialog } from '~shared-ui/hooks/useImperativeDialog';

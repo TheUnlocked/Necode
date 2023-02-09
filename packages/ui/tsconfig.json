@@ -1,6 +1,6 @@
 {
     "extends": "~tsconfig/react.json",
-    "include": ["./src", "../shared-ui/src/hooks/useGetRequest.ts"],
+    "include": ["./src"],
     "exclude": ["node_modules"],
     "compilerOptions": {
         "baseUrl": ".",

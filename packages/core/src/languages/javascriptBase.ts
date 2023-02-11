@@ -135,8 +135,8 @@ export default function createJavascriptLikeFeatures(basePlugins: BabelPlugin[])
                             } })
                         ]));
                         return [
-                            ...currentStep.output,
-                            ...'result' in currentStep ? [`${currentStep.result}`] : []
+                            ...currentStep.output.map(x => ({ type: 'text' as const, contents: x })),
+                            ...'result' in currentStep ? [{ type: 'result' as const, contents: `${currentStep.result}` }] : []
                         ];
                     }
                 };

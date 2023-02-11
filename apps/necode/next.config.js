@@ -16,6 +16,7 @@ module.exports = {
         // Note that excluding @mui means `getServerSideProps`/`getInitialProps` WILL NOT WORK.
         // `getStaticProps` is still fine to use, since it happens during build time.
         outputFileTracingIgnores: ['**esbuild-linux-64**', '**@mui**'],
+        esmExternals: 'loose',
     },
     transpilePackages: [...localPackages],
     modularizeImports: {

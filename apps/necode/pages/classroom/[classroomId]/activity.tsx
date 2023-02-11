@@ -160,7 +160,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
             {instructorToolbar}
             <StatusPage
                 primary="Loading..."
-                secondary="Loading Activity..." />
+                body="Loading Activity..." />
         </>;
     }
 
@@ -179,7 +179,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
             {instructorToolbar}
             <StatusPage
                 primary="No Language Available"
-                secondary="This is likely some kind of bug." />
+                body="This is likely some kind of bug." />
         </>;
     }
 
@@ -196,7 +196,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
             {instructorToolbar}
             <StatusPage
                 primary="Incompatible"
-                secondary={`Your browser is incompatible with this activity${recommendedPhrase}`} />
+                body={`Your browser is incompatible with this activity${recommendedPhrase}`} />
         </>;
     }
 
@@ -205,7 +205,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
             {instructorToolbar}
             <StatusPage
                 primary="Loading..."
-                secondary={`Loading ${language.displayName} support...`} />
+                body={`Loading ${language.displayName} support...`} />
         </>;
     }
 

@@ -1,5 +1,10 @@
 import { UnionToIntersection } from '~utils/types';
 
+type ReplResult = {
+    type: 'text' | 'result',
+    contents: string,
+}[];
+
 export interface FeatureMap {
     'requires/browser': {
         isCompatible(): boolean;
@@ -37,29 +42,33 @@ export interface FeatureMap {
         entryPoint<Args extends any[], R>(code: string, name: string): (...args: Args) => R;
     };
     'repl/global': {
-        evaluate(code: string): Promise<string[]>;
+        evaluate(code: string): Promise<ReplResult>;
     };
     'repl/global/evalSync': {
-        evaluate(code: string): string[];
+        evaluate(code: string): ReplResult;
     };
     'repl/instanced': {
         createInstance(): Promise<{
-            evaluate(code: string): Promise<string[]>;
+            evaluate(code: string): Promise<ReplResult>;
+            destroy?(): void;
         }>;
     };
     'repl/instanced/startupSync': {
         createInstance(): {
-            evaluate(code: string): Promise<string[]>;
+            evaluate(code: string): Promise<ReplResult>;
+            destroy?(): void;
         };
     };
     'repl/instanced/evalSync': {
         createInstance(): Promise<{
-            evaluate(code: string): string[];
+            evaluate(code: string): ReplResult;
+            destroy?(): void;
         }>;
     };
     'repl/instanced/fullSync': {
         createInstance(): {
-            evaluate(code: string): string[];
+            evaluate(code: string): ReplResult;
+            destroy?(): void;
         };
     };
 }

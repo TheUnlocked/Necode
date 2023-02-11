@@ -314,6 +314,7 @@ importers:
       '@types/lodash': ^4.14.191
       '@types/react': ^18.0.27
       brython: ^3.11.0
+      chez-scheme-js: ^1.1.0
       dedent-js: ^1.0.1
       lodash: ^4.17.21
       material-ui-popup-state: ^5.0.4
@@ -334,6 +335,7 @@ importers:
       '@necode-org/plugin-dev': link:../plugin-dev
       '@necode-org/policy-dev': link:../policy-dev
       brython: 3.11.1
+      chez-scheme-js: 1.1.0
       dedent-js: 1.0.1
       lodash: 4.17.21
       material-ui-popup-state: 5.0.4_rqh7qj4464ntrqrt6banhaqg4q
@@ -3367,6 +3369,12 @@ packages:
     hasBin: true
     dev: false
 
+  /async-mutex/0.4.0:
+    resolution: {integrity: sha512-eJFZ1YhRR8UN8eBLoNzcDPcy/jqjsg6I1AP+KvWQX80BqOSW1oJPJXDylPUEeMr2ZQvHgnQ//Lp6f3RQ1zI7HA==}
+    dependencies:
+      tslib: 2.5.0
+    dev: false
+
   /autobind-decorator/2.4.0:
     resolution: {integrity: sha512-OGYhWUO72V6DafbF8PM8rm3EPbfuyMZcJhtm5/n26IDwO18pohE4eNazLoCGhPiXOCD0gEGmrbU3849QvM8bbw==}
     engines: {node: '>=8.10', npm: '>=6.4.1'}
@@ -3579,6 +3587,13 @@ packages:
 
   /character-reference-invalid/2.0.1:
     resolution: {integrity: sha512-iBZ4F4wRbyORVsu0jPV7gXkOsGYjGHPmAyv+HiHG8gi5PtC9KI2j1+v8/tlibRvjoWX027ypmG/n0HtO5t7unw==}
+    dev: false
+
+  /chez-scheme-js/1.1.0:
+    resolution: {integrity: sha512-gHuBDnqp2pau77plVMNS4o7mf1mU8lO9OnHrI2DBKvNDBGhcEDoFssIMtflUlHHySk+W9ynVwHF87ixCuGua1w==}
+    dependencies:
+      async-mutex: 0.4.0
+      uuid: 9.0.0
     dev: false
 
   /chokidar/3.5.3:
@@ -8149,6 +8164,11 @@ packages:
   /uuid/8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
     hasBin: true
+
+  /uuid/9.0.0:
+    resolution: {integrity: sha512-MXcSTerfPa4uqyzStbRoTgt5XIe3x5+42+q1sDuy3R5MDk66URdLMOZe5aPX/SQd+kuYAh0FdP/pO28IkQyTeg==}
+    hasBin: true
+    dev: false
 
   /uvu/0.5.6:
     resolution: {integrity: sha512-+g8ENReyr8YsOc6fv/NVJs2vFdHBnBNdfE49rshrTzDWOlUx4Gq7KOS2GD8eqhy2j+Ejq29+SbKH8yjkAqXqoA==}

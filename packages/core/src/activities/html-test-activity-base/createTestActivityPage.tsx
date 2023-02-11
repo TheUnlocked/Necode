@@ -1,5 +1,5 @@
 import { Refresh as RefreshIcon, Sync as SyncIcon } from "@mui/icons-material";
-import { Box, Button, CardContent, Checkbox, IconButton, Stack, Tooltip, Typography, useTheme } from "@mui/material";
+import { Box, Button, CardContent, Checkbox, IconButton, Stack, Tooltip, useTheme } from "@mui/material";
 import { api, applyTransaction, CodeAlert, Editor, Feature, FeatureObject, Key, Link, NetworkId, OnEditorChange, Pane, Panes, PanesLayouts, PaneTab, PaneTitle, PassthroughPane, TabbedPane, useApiGet, useFetch, useImperativeDialog, useImported, useIsSizeOrSmaller, useLanguages, useMonaco, useSubmissions, useY, useYAwareness, useYInit, useYText } from "@necode-org/activity-dev";
 import { ActivityPageProps, LanguageDescription } from '@necode-org/plugin-dev';
 import { ActivityConfigPageProps } from '@necode-org/plugin-dev';
@@ -377,10 +377,7 @@ export default function createTestActivityPage<Features extends readonly Feature
                 const showKeybindingHint = !isThinish && isDirty;
 
                 const toolbar = <>
-                    {showKeybindingHint
-                        ? <Typography variant="overline" sx={{ pl: 2, ml: "auto", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            Press <Key>Ctrl</Key>+<Key>S</Key> to apply changes
-                        </Typography> : undefined}
+                    {showKeybindingHint ? <PaneTitle>Press <Key>Ctrl</Key>+<Key>S</Key> to apply changes</PaneTitle> : undefined}
                     <Button size="small" onClick={() => applyChanges(type)} disabled={!isDirty}
                         sx={{ ml: showKeybindingHint ? 0.5 : "auto", flexShrink: 0 }}>
                         Apply changes

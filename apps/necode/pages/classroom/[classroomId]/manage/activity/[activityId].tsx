@@ -235,7 +235,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
             {instructorToolbar}
             <StatusPage
                 primary="No Language Available"
-                secondary="This activity does not support any languages. This may be some kind of bug." />
+                body="This activity does not support any languages. This may be some kind of bug." />
         </>;
     }
 
@@ -252,7 +252,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
             {instructorToolbar}
             <StatusPage
                 primary="Incompatible"
-                secondary={`The selected language is incompatible with your browser${recommendedPhrase}`} />
+                body={`The selected language is incompatible with your browser${recommendedPhrase}`} />
         </>;
     }
 

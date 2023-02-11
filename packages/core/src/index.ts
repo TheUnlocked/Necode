@@ -11,6 +11,7 @@ import MarkdownIcon from './icons/MarkdownIcon';
 import PythonIcon from './icons/PythonIcon';
 import TypescriptIcon from './icons/TypescriptIcon';
 import BabelPlugin from './languages/transformers/BabelPlugin';
+import replInputActivityDescription from './activities/repl';
 
 declare module '@necode-org/plugin-dev' {
     interface FeatureMap {
@@ -43,6 +44,7 @@ export default class CorePlugin extends Plugin {
         manager.registerActivity(p5jsRingActivityDescription);
         manager.registerActivity(glslActivityDescription);
         manager.registerActivity(textInputActivityDescription);
+        manager.registerActivity(replInputActivityDescription);
     }
 
     override registerLanguages(manager: LanguageManager): void {
@@ -95,6 +97,12 @@ export default class CorePlugin extends Plugin {
         });
 
         manager.registerLanguage({
+            name: 'chez-scheme',
+            monacoName: 'scheme',
+            displayName: 'Chez Scheme (R6RS)',
+        });
+
+        manager.registerLanguage({
             name: 'glsl',
             monacoName: 'c',
             displayName: 'GLSL',
@@ -126,29 +134,29 @@ export default class CorePlugin extends Plugin {
             evaluate: obj.evaluate.any.evaluate,
         }));
 
-        manager.implementFeatures(
-            null,
-            ['repl/instanced/startupSync', 'repl/instanced/evalSync'],
-            ['repl/instanced/fullSync'],
-            async obj => ({
-                "repl/instanced/startupSync": {
-                    createInstance: () => {
-                        const instance = obj.repl.instanced.fullSync.createInstance();
-                        return { evaluate: async code => instance.evaluate(code) };
-                    },
-                },
-                "repl/instanced/evalSync": {
-                    createInstance: async () => obj.repl.instanced.fullSync.createInstance(),
-                },
-            })
-        );
+        // manager.implementFeatures(
+        //     null,
+        //     ['repl/instanced/startupSync', 'repl/instanced/evalSync'],
+        //     ['repl/instanced/fullSync'],
+        //     async obj => ({
+        //         "repl/instanced/startupSync": {
+        //             createInstance: () => {
+        //                 const instance = obj.repl.instanced.fullSync.createInstance();
+        //                 return { evaluate: async code => instance.evaluate(code), destroy: instance.destroy };
+        //             },
+        //         },
+        //         "repl/instanced/evalSync": {
+        //             createInstance: async () => obj.repl.instanced.fullSync.createInstance(),
+        //         },
+        //     })
+        // );
         manager.implementFeature(null, 'repl/instanced', ['repl/instanced/startupSync'], async obj => ({
             createInstance: async () => obj.repl.instanced.startupSync.createInstance(),
         }));
         manager.implementFeature(null, 'repl/instanced', ['repl/instanced/evalSync'], async obj => ({
             createInstance: async () => {
                 const instance = await obj.repl.instanced.evalSync.createInstance();
-                return { evaluate: async code => instance.evaluate(code) };
+                return { evaluate: async code => instance.evaluate(code), destroy: instance.destroy };
             },
         }));
         manager.implementFeature(null, 'repl/global/evalSync', ['repl/instanced/evalSync'], obj => obj.repl.instanced.evalSync.createInstance());
@@ -199,6 +207,16 @@ export default class CorePlugin extends Plugin {
             ],
             [],
             () => defaultOf(import('./languages/python3'))
+        );
+
+        manager.implementFeatures(
+            'chez-scheme',
+            [
+                'repl/instanced',
+                'evaluate/string',
+            ],
+            [],
+            () => defaultOf(import('./languages/scheme'))
         );
 
         manager.implementFeatures(

@@ -55,11 +55,21 @@ export function Activity({ language, activityConfig, features }: ActivityPagePro
     );
 
     const [code, setCode] = useState<string>(defaultCode);
-    const compiled = useAsyncMemo(() => features.iframe.static.compile(code), [features, code]);
     const [codeError, setCodeError] = useState<Error | undefined>();
 
+    const compiled = useAsyncMemo(async () => {
+        try {
+            const result = await features.iframe.static.compile(code);
+            setCodeError(undefined);
+            return result;
+        }
+        catch (e) {
+            setCodeError(e instanceof Error ? e : new Error(`${e}`));
+            return '';
+        }
+    }, [features, code]);
+
     const iframeSource = useMemo(() => {
-        setCodeError(undefined);
         return `<html>
             <head>
                 <style>
@@ -72,13 +82,16 @@ export function Activity({ language, activityConfig, features }: ActivityPagePro
                     });
                 </script>
                 <script src="https://cdn.jsdelivr.net/npm/p5@1.4.2/lib/p5.min.js"></script>
-                <script>${compiled}</script>
+                <script>
+                    const elt = document.createElement('script');
+                    elt.innerHTML = decodeURIComponent(${JSON.stringify(encodeURIComponent(compiled ?? ''))});
+                    document.head.appendChild(elt);
+                </script>
             </head>
             <body>
                 <main></main>
                 <script>
                 {
-                    p5.disableFriendlyErrors = true;
                     const setup = window.setup;
                     window.setup = () => {
                         window.PREV_FRAME = createImage(1, 1);

@@ -94,7 +94,17 @@ type SubmissionsParams<T extends ('user' | 'activity')[] | false = false> = {
     ? { include?: Inclusions<'user' | 'activity'> }
     : { include: Inclusions<'user' | 'activity', T> });
 
-class ActivityApi<Refs extends ActivityEntityRefs> extends SimpleEndpointHandle<ActivityEntity<Refs>> {
+class ActivityApi<Refs extends ActivityEntityRefs> extends SimpleEndpointHandle<ActivityEntity<Refs>, {
+    GET: undefined,
+    PATCH: {
+        lesson?: string,
+        displayName?: string,
+        configuration?: any,
+        enabledLanguages?: string[],
+        order?: number,
+    },
+    DELETE: undefined,
+}> {
     constructor(private classroomBase: Path, private id: string | undefined, private includes?: Inclusions<'lesson'>) { super() }
 
     get _path() { return [...this.classroomBase, '/activity/', this.id, '?', inclusions(this.includes)] }
@@ -123,7 +133,7 @@ class LiveActivityApi extends AbstractEndpointHandle<{
     POST: {
         body: {
             id: string | undefined,
-            networks?: PolicyConfiguration[],
+            networks?: readonly PolicyConfiguration[],
         },
         response: undefined,
     },

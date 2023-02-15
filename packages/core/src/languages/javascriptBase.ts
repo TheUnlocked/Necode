@@ -1,5 +1,4 @@
 import { transformAsync, transformSync } from '@babel/core';
-import { Expression } from '@babel/types';
 import { FeatureImplRecord } from '@necode-org/plugin-dev';
 import babelPluginTransformPreventInfiniteLoops from './transformers/babel-plugin-transform-prevent-infinite-loops';
 import BabelPlugin from './transformers/BabelPlugin';
@@ -65,7 +64,22 @@ export default function createJavascriptLikeFeatures(basePlugins: BabelPlugin[])
                 // so let and const declarations won't be captured outside of it. To mitigate that,
                 // we eval a new function which is inside the eval scope.
                 function ___evalStep(code: string) {
-                    return eval(`const ___evalStep=${___evalStep.toString()};${code};___evalStep.output=___output;___output=[];___evalStep`);
+                    return eval(`
+                    try {
+                        const ___evalStep=${___evalStep.toString()};
+                        ${code};
+                        ___evalStep.output=___output;
+                        ___output=[];
+                        ___evalStep
+                    }
+                    catch (e) {
+                        console.error(e);
+                        delete ___evalStep.result;
+                        ___evalStep.output=___output;
+                        ___output=[];
+                        ___evalStep
+                    }
+                    `);
                 }
                 let currentStep: typeof ___evalStep & { result?: any, output: string[] } = eval(`
                     "use strict";
@@ -83,7 +97,7 @@ export default function createJavascriptLikeFeatures(basePlugins: BabelPlugin[])
                                 return \`\${x}\`;
                             }
                         }
-                        const log = (...args) => __output.push(args.map(safeStringify).join(' '));
+                        const log = (...args) => ___output.push(args.map(safeStringify).join(' '));
                         return {
                             ...window.console,
                             debug: log,
@@ -93,44 +107,30 @@ export default function createJavascriptLikeFeatures(basePlugins: BabelPlugin[])
                         }
                     })();
                     ${___evalStep.toString()}
+                    ___evalStep
                 `);
                 return {
                     evaluate(code) {
                         currentStep = currentStep(compile(code, code, [
                             ({ types: t }) => ({ visitor: {
                                 Program: path => {
-                                    let lastExpressionIndex = -1;
-                                    let lastExpression: Expression | undefined;
-                                    for (let i = path.node.body.length - 1; i >= 0; i--) {
-                                        const statement = path.node.body[i];
-                                        if (t.isExpressionStatement(statement)) {
-                                            lastExpression = statement.expression;
-                                            lastExpressionIndex = i;
-                                            break;
+                                    const body = path.get('body');
+                                    for (let i = body.length - 1; i >= 0; i--) {
+                                        const statement = body[i];
+                                        if (statement.isExpressionStatement()) {
+                                            const expr = statement.get('expression');
+                                            expr.replaceWith(
+                                                t.assignmentExpression(
+                                                    '=',
+                                                    t.memberExpression(
+                                                        t.identifier('___evalStep'),
+                                                        t.identifier('result'),
+                                                    ),
+                                                    expr.node,
+                                                )
+                                            );
                                         }
                                     }
-                                    if (!lastExpression) {
-                                        return;
-                                    }
-                                    path.replaceWith(
-                                        t.program(
-                                            path.node.body.map((node, i) => {
-                                                if (i === lastExpressionIndex) {
-                                                    return t.expressionStatement(
-                                                        t.assignmentExpression(
-                                                            '=',
-                                                            t.memberExpression(
-                                                                t.identifier('___evalStep'),
-                                                                t.privateName(t.identifier('result')),
-                                                            ),
-                                                            lastExpression!,
-                                                        )
-                                                    );
-                                                }
-                                                return node;
-                                            })
-                                        )
-                                    );
                                 }
                             } })
                         ]));

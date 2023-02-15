@@ -1,4 +1,4 @@
-import { Box, Button, useTheme } from '@mui/material';
+import { Box, Button, CircularProgress, useTheme } from '@mui/material';
 import { Panes, Pane, Editor, Key, PaneTitle, useIsSizeOrSmaller, useMonaco } from '@necode-org/activity-dev';
 import { ActivityPageProps } from '@necode-org/plugin-dev';
 import { editor } from 'monaco-editor';
@@ -24,7 +24,6 @@ function Line({ data: { leadingChar, text } }: { data: TextLine }) {
 }
 
 export function Activity({ language, features }: ActivityPageProps<['repl/instanced'], Config>) {
-
     const monacoNameRef = useRef(language.monacoName);
 
     useEffect(() => {
@@ -33,14 +32,8 @@ export function Activity({ language, features }: ActivityPageProps<['repl/instan
 
     const [computing, setComputing] = useState(true);
 
-    const [uncommittedStartupCode, setUncommittedStartupCode] = useState<string>();
-    const uncommittedStartupCodeRef = useRef<string>();
-    const [startupCode, setStartupCode] = useState<string>();
-
-    useEffect(() => {
-        uncommittedStartupCodeRef.current = uncommittedStartupCode;
-    }, [uncommittedStartupCode]);
-
+    const startupCodeRef = useRef<string>();
+    
     const [replCode, setReplCode] = useState<string>();
     const replCodeRef = useRef<string>();
 
@@ -71,15 +64,23 @@ export function Activity({ language, features }: ActivityPageProps<['repl/instan
                     }))
                 ]));
             }
+
+            let colorizedResult: (ReactNode | string)[];
+            try {
+                colorizedResult = await Promise.all(
+                    (await result).map(async (x, i) => x.type === 'result'
+                        ? <Box key={i} display="contents" dangerouslySetInnerHTML={{
+                            __html: await colorize(x.contents, monacoNameRef.current, {})
+                        }} />
+                        : x.contents)
+                );
+            }
+            catch (e) {
+                colorizedResult = [`${e}`];
+            }
+
             setComputing(false);
 
-            const colorizedResult = await Promise.all(
-                (await result).map(async (x, i) => x.type === 'result'
-                    ? <Box key={i} display="contents" dangerouslySetInnerHTML={{
-                        __html: await colorize(x.contents, monacoNameRef.current, {})
-                    }} />
-                    : x.contents)
-            );
             setOutput(output => [
                 ...output,
                 ...colorizedResult.map(x => ({
@@ -92,6 +93,8 @@ export function Activity({ language, features }: ActivityPageProps<['repl/instan
 
     const monaco = useMonaco();
 
+    const [reloadCounter, setReloadCounter] = useState(0);
+
     useEffect(() => {
         if (!monaco) {
             return;
@@ -102,13 +105,14 @@ export function Activity({ language, features }: ActivityPageProps<['repl/instan
 
         setOutput([]);
         setComputing(true);
+        setIsDirty(false);
         features.repl.instanced.createInstance().then(async inst => {
             if (destroyed) {
                 inst.destroy?.();
             }
             else {
                 instanceRef.current = inst;
-                await runCode(startupCode, monaco.editor.colorize, false);
+                await runCode(startupCodeRef.current, monaco.editor.colorize, false);
                 setComputing(false);
                 destroy = inst.destroy;
             }
@@ -118,7 +122,7 @@ export function Activity({ language, features }: ActivityPageProps<['repl/instan
             destroyed = true;
             destroy?.();
         };
-    }, [features, startupCode, runCode, monaco]);
+    }, [reloadCounter, features, runCode, monaco]);
 
     const [editorHeight, setEditorHeight] = useState(20);
     const updateHeight = (editor: editor.IStandaloneCodeEditor) => () => {
@@ -129,38 +133,40 @@ export function Activity({ language, features }: ActivityPageProps<['repl/instan
 
     const theme = useTheme();
     const isThin = useIsSizeOrSmaller('sm', theme);
-    const isDirty = uncommittedStartupCode !== startupCode;
+    const [isDirty, setIsDirty] = useState(false);
     const showKeybindingHint = !isThin && isDirty;
 
     return <Panes layouts={{ panesPerColumn: [1, 1] }}>
         <Pane icon={language.icon ? <language.icon /> : undefined} label={language.displayName}
             toolbar={<>
-                {showKeybindingHint ? <PaneTitle>Press <Key>Ctrl</Key>+<Key>S</Key> to apply changes</PaneTitle> : undefined}
-                <Button size="small" onClick={() => setStartupCode(uncommittedStartupCode)} disabled={!isDirty}
+                {showKeybindingHint ? <PaneTitle>Press <Key>Ctrl</Key>+<Key>S</Key> to restart the REPL with new code</PaneTitle> : undefined}
+                <Button size="small" onClick={() => setReloadCounter(x => x + 1)}
                     sx={{ ml: showKeybindingHint ? 0.5 : "auto", flexShrink: 0 }}>
-                    Apply changes
+                    Restart
                 </Button>
             </>}    
         >
-            <Editor language={language} value={uncommittedStartupCode}
-                onChange={setUncommittedStartupCode}
+            <Editor language={language}
+                onChange={v => {
+                    startupCodeRef.current = v;
+                    setIsDirty(true);
+                }}
                 onMount={(editor, monaco) => {
                     updateHeight(editor)();
                     editor.onDidContentSizeChange(updateHeight(editor));
                     
-                    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-                        setStartupCode(uncommittedStartupCodeRef.current);
-                    });
+                    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => setReloadCounter(x => x + 1));
                 }} />
         </Pane>
-        <Pane label="REPL">
+        <Pane label="REPL" toolbar={computing ? <CircularProgress variant="indeterminate" size={24} /> : undefined}>
             <Box px={2} maxHeight="100%" fontSize="14px" sx={{ overflowY: "auto", overflowX: "hidden" }}
                 // Keep scrolled to bottom
                 display="flex" flexDirection="column-reverse"
             >
                 <PaneTitle>{replCode ? <>Press <Key>Ctrl</Key>+<Key>Enter</Key> to run your input.</> : <>&nbsp;</>}</PaneTitle>
                 <Box position="relative" mb="-2.4em" top="-2.4em" left="0.5em" height={editorHeight}>
-                    <Editor language={language} value={replCode} onChange={setReplCode}
+                    <Editor language={language} value={replCode}
+                        onChange={setReplCode}
                         onMount={(editor, monaco) => {
                             updateHeight(editor)();
                             editor.onDidContentSizeChange(updateHeight(editor));
@@ -170,7 +176,6 @@ export function Activity({ language, features }: ActivityPageProps<['repl/instan
                             });
                         }}
                         options={{
-                            // readOnly: computing,
                             lineNumbers: 'off',
                             folding: false,
                             scrollBeyondLastLine: false,

@@ -9,7 +9,7 @@ export default function ActivityWidgetBase({
     displayName: _displayName,
     onDisplayNameChange,
     children,
-}: PropsWithChildren<ActivityConfigWidgetProps<any>>) {
+}: PropsWithChildren<Omit<ActivityConfigWidgetProps<any>, 'activityType'>>) {
     const [displayName, setDisplayName, commitDisplayName] = useLocalCachedState(_displayName, onDisplayNameChange);
 
     return <Card sx={{ p: 1, [`&:hover ${dragHandleSelector}`]: {

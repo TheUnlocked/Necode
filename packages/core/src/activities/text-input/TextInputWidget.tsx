@@ -5,11 +5,7 @@ import { ActivityConfigWidgetProps } from '@necode-org/plugin-dev';
 import { bindPopper, bindTrigger, usePopupState } from "material-ui-popup-state/hooks";
 import type { editor } from "monaco-editor";
 import { useCallback, useEffect, useRef, useState } from "react";
-
-export interface TextInputWidgetProps {
-    value: string;
-    language: string | null;
-}
+import { Config } from '.';
 
 const monacoOptions = {
     minimap: { enabled: false },
@@ -31,8 +27,8 @@ export default function TextInputWidget({
     id,
     activityConfig: { value: _textContent, language },
     onActivityConfigChange,
-    dragHandle
-}: ActivityConfigWidgetProps<TextInputWidgetProps>) {
+    dragHandle,
+}: ActivityConfigWidgetProps<Config>) {
     const allLanguages = useLanguageList();
 
     const languageDescription = allLanguages.find(x => x.name === language);

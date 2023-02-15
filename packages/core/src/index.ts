@@ -5,7 +5,7 @@ import glslActivityDescription from './activities/glsl';
 import p5jsActivityDescription from './activities/p5js';
 import p5jsRingActivityDescription from './activities/p5-canvas';
 import { testDomActivityDescription, testDomActivityNetworkedDescription } from './activities/test-dom';
-import textInputActivityDescription from './activities/text-input/textInputDescription';
+import textInputActivityDescription from './activities/text-input';
 import JavascriptIcon from './icons/JavascriptIcon';
 import MarkdownIcon from './icons/MarkdownIcon';
 import PythonIcon from './icons/PythonIcon';
@@ -134,22 +134,22 @@ export default class CorePlugin extends Plugin {
             evaluate: obj.evaluate.any.evaluate,
         }));
 
-        // manager.implementFeatures(
-        //     null,
-        //     ['repl/instanced/startupSync', 'repl/instanced/evalSync'],
-        //     ['repl/instanced/fullSync'],
-        //     async obj => ({
-        //         "repl/instanced/startupSync": {
-        //             createInstance: () => {
-        //                 const instance = obj.repl.instanced.fullSync.createInstance();
-        //                 return { evaluate: async code => instance.evaluate(code), destroy: instance.destroy };
-        //             },
-        //         },
-        //         "repl/instanced/evalSync": {
-        //             createInstance: async () => obj.repl.instanced.fullSync.createInstance(),
-        //         },
-        //     })
-        // );
+        manager.implementFeatures(
+            null,
+            ['repl/instanced/startupSync', 'repl/instanced/evalSync'],
+            ['repl/instanced/fullSync'],
+            async obj => ({
+                "repl/instanced/startupSync": {
+                    createInstance: () => {
+                        const instance = obj.repl.instanced.fullSync.createInstance();
+                        return { evaluate: async code => instance.evaluate(code), destroy: instance.destroy };
+                    },
+                },
+                "repl/instanced/evalSync": {
+                    createInstance: async () => obj.repl.instanced.fullSync.createInstance(),
+                },
+            })
+        );
         manager.implementFeature(null, 'repl/instanced', ['repl/instanced/startupSync'], async obj => ({
             createInstance: async () => obj.repl.instanced.startupSync.createInstance(),
         }));
@@ -199,8 +199,8 @@ export default class CorePlugin extends Plugin {
             'python3',
             [
                 'requires/setup',
-                'entryPoint/any',
-                'evaluate/any',
+                'entryPoint/any/sync',
+                'evaluate/any/sync',
                 'iframe/static',
                 'worker/static',
                 'repl/instanced/fullSync',
@@ -212,6 +212,7 @@ export default class CorePlugin extends Plugin {
         manager.implementFeatures(
             'chez-scheme',
             [
+                'requires/browser',
                 'repl/instanced',
                 'evaluate/string',
             ],

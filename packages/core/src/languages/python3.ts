@@ -8,7 +8,8 @@ declare global {
         python_to_js(pythonCode: string, name?: string): string;
         py2js(source: { src: string, filename: string }, module: string, localsId: string): { to_js(): string };
         show_stack(stack: any): string | undefined;
-        dict_to_list<T extends {}>(dict: unknown): Iterable<[key: keyof T, value: T[keyof T]]>;
+        pyobj2jsobj<T>(pyobj: any): T;
+        jsobj2pyobj(jsobj: any): any;
     };
 }
 
@@ -16,9 +17,10 @@ const setupBuiltinsCode = `
 ;(() => $B.builtins = new Proxy(
 $B.builtins,
 {
-    get: (...args) =>
+    get: (...args) => $B.jsobj2pyobj(
         Reflect.get(globalThis,args[1],globalThis)
-        ?? Reflect.get(...args),
+        ?? Reflect.get(...args)
+    ),
     has: (...args) =>
         Reflect.has(globalThis,args[1])
         ?? Reflect.has(...args),
@@ -76,9 +78,9 @@ export default {
         },
     },
 
-    "evaluate/any": {
+    "evaluate/any/sync": {
         evaluate(code) {
-            const rawJSified = __BRYTHON__.python_to_js(dedent`
+            const js = __BRYTHON__.python_to_js(dedent`
             def entry():
                 try:
                     return { 'type': 'ok', 'result': eval(${JSON.stringify(code)}) }
@@ -86,13 +88,9 @@ export default {
                     return { 'type': 'error', 'error': exc }
             entry
             `, '__main__');
-            const resultIndex = rawJSified.lastIndexOf('$locals___main__["entry"];');
-            const jsified = `let runner;${rawJSified.slice(0, resultIndex)}runner = ${rawJSified.slice(resultIndex)};return runner;`;
 
-            const resultRaw = Function(jsified)()();
-            const result = Object.fromEntries(
-                __BRYTHON__.dict_to_list<{ type: 'ok' | 'error', result?: any, error?: any }>(resultRaw)
-            );
+            const resultRaw = Function(`return ${js}`)().entry();
+            const result = __BRYTHON__.pyobj2jsobj<{ type: 'ok' | 'error', result?: any, error?: any }>(resultRaw);
             if (result.type === 'ok') {
                 return result.result;
             }
@@ -102,9 +100,9 @@ export default {
         },
     },
 
-    "entryPoint/any": {
+    "entryPoint/any/sync": {
         entryPoint(code, name) {
-            const rawJSified = __BRYTHON__.python_to_js(dedent`
+            const js = __BRYTHON__.python_to_js(dedent`
             def entry(*args):
                 try:
                     globals = { '__name__': '__main__' }
@@ -115,15 +113,11 @@ export default {
                     return { 'type': 'error', 'error': exc }
             entry
             `, '__main__');
-            const entryFnValueIndex = rawJSified.lastIndexOf('$locals___main__["entry"];');
-            const js = `let runner;${rawJSified.slice(0, entryFnValueIndex)}runner = ${rawJSified.slice(entryFnValueIndex)};return runner;`;
-            const entry = Function(js)();
+            const entry = Function(`return ${js}`)().entry;
 
             return ((...args: any[]) => {
-                const resultRaw = entry(...args);
-                const result = Object.fromEntries(
-                    __BRYTHON__.dict_to_list<{ type: 'ok' | 'error', result?: any, error?: any }>(resultRaw)
-                );
+                const resultRaw = entry(...args.map(__BRYTHON__.jsobj2pyobj));
+                const result = __BRYTHON__.pyobj2jsobj<{ type: 'ok' | 'error', result?: any, error?: any }>(resultRaw);
                 if (result.type === 'ok') {
                     return result.result;
                 }
@@ -151,39 +145,40 @@ export default {
 
     "repl/instanced/fullSync": {
         createInstance() {
-            const rawJSified = __BRYTHON__.python_to_js(dedent`
+            const js = __BRYTHON__.python_to_js(dedent`
             import traceback
 
             globals = {}
             locals = globals
             def run(code):
                 try:
-                    code = compile(currentLine, '<stdin>', 'eval')
+                    to_run = compile(code, '<stdin>', 'eval')
+                    val = eval(to_run, globals, locals)
                 except SyntaxError:
                     msg = traceback.format_exc()
                     try:
-                        code = compile(currentLine, '<stdin>', 'exec')
-                        exec(code, globals, locals)
+                        to_run = compile(code, '<stdin>', 'exec')
+                        exec(to_run, globals, locals)
                         return []
                     except Exception:
-                        return [msg]
+                        return [{ 'type': 'text', 'contents': msg }]
                 except Exception:
-                    return [traceback.format_exc()]
+                    return [{ 'type': 'text', 'contents': traceback.format_exc() }]
                 else:
-                    return [val]
-            run
+                    return [{ 'type': 'result', 'contents': str(val) }]
             `, '__main__');
-            const runFnValueIndex = rawJSified.lastIndexOf('$locals___main__["run"];');
-            const js = `let runner;${rawJSified.slice(0, runFnValueIndex)}runner = ${rawJSified.slice(runFnValueIndex)};return runner;`;
 
-            return { evaluate: Function(js)() };
+            const instance = Function(`return ${js}`)();
+            console.log(instance);
+
+            return { evaluate: code => __BRYTHON__.pyobj2jsobj(instance.run(code)) };
         },
     }
 
 } satisfies FeatureImplRecord<[
     'requires/setup',
-    'entryPoint/any',
-    'evaluate/any',
+    'entryPoint/any/sync',
+    'evaluate/any/sync',
     'iframe/static',
     'worker/static',
     'repl/instanced/fullSync',

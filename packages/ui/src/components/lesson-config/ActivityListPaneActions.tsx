@@ -2,7 +2,7 @@ import { Add, ContentCopy, Delete, TextFields } from '@mui/icons-material';
 import { Button, IconButton, Tooltip, Stack } from '@mui/material';
 import { useDrop } from 'use-dnd';
 import { ActivityDescription } from '@necode-org/plugin-dev';
-import textInputActivityDescription from '~core/activities/text-input/textInputDescription';
+import textInputActivityDescription from '~core/activities/text-input';
 import { ActivityEntity } from '~api/entities/ActivityEntity';
 import { EntityType } from '~api/entities/Entity';
 import { LessonEntity } from '~api/entities/LessonEntity';

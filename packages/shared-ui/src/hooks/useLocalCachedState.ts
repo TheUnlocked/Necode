@@ -7,6 +7,7 @@ type HookResult<T> = [
     setState: Dispatch<SetStateAction<T>>,
     commit: () => void,
     revert: () => void,
+    isDirty: boolean,
 ];
 
 export default function useLocalCachedState<T>(externalState: T, setExternalState: (value: T) => void): HookResult<T> {
@@ -44,5 +45,6 @@ export default function useLocalCachedState<T>(externalState: T, setExternalStat
         setState,
         commit,
         revert,
+        isDirty,
     ];
 }

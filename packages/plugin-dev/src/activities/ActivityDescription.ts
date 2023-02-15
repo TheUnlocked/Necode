@@ -28,10 +28,12 @@ export interface ActivityConfigPageProps<
     onActivityConfigChange: (newConfig: ConfigData) => void;
 }
 
-export interface ActivityConfigWidgetProps<ConfigData = undefined> extends BaseActivityProps<ConfigData> {
-    activityTypeId: string;
-
+export interface ActivityConfigWidgetProps<
+    ConfigData = undefined
+> extends BaseActivityProps<ConfigData> {
     onActivityConfigChange: (newConfig: ConfigData) => void;
+
+    activityType: ActivityDescription;
     
     goToConfigPage: (() => void) | undefined;
     

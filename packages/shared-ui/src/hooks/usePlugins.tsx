@@ -8,9 +8,9 @@ export interface PluginContextValue {
     getLanguage(name: string | undefined): LanguageDescription | undefined;
     activities: ActivityDescription[];
     getActivity(name: string | undefined): ActivityDescription | undefined;
-    getLanguagesWithFeatures(features: Feature[]): LanguageDescription[];
+    getLanguagesWithFeatures(features: readonly Feature[]): LanguageDescription[];
     hasFeature(language: string | undefined, feature: Feature): boolean;
-    getFeatureImpl<Fs extends Feature[]>(language: string | undefined, features: Fs): Promise<FeatureObject<Fs>> | undefined;
+    getFeatureImpl<Fs extends readonly Feature[]>(language: string | undefined, features: Fs): Promise<FeatureObject<Fs>> | undefined;
 }
 
 const pluginsContext = createContext<PluginContextValue>({

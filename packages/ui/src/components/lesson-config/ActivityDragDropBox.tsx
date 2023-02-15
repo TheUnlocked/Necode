@@ -1,19 +1,20 @@
 import { Box } from "@mui/material";
+import { useApiFetch, useCompatibleLanguages, useImperativeDialog } from '@necode-org/activity-dev';
+import { ActivityConfigWidgetProps } from '@necode-org/plugin-dev';
 import { isEqual } from 'lodash';
 import { useRouter } from "next/router";
-import { ComponentType, useCallback, useEffect } from "react";
-import { useDrag, createEmptyPreviewImage } from "use-dnd";
-import { CreateLiveActivityInfo } from "~api/ws";
-import type { PartialAttributesOf } from '~backend/Endpoint';
+import { ComponentType, useCallback, useEffect, useState } from "react";
+import { createEmptyPreviewImage, useDrag } from "use-dnd";
 import { ActivityEntity } from '~api/entities/ActivityEntity';
-import { activityDragDropType } from '../../dnd/types';
-import useImported from '~shared-ui/hooks/useImported';
-import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
-import BrokenWidget from './BrokenWidget';
+import type { PartialAttributesOf } from '~backend/Endpoint';
 import DefaultActivityWidget from "~shared-ui/components/DefaultActivityWidget";
-import SkeletonWidget from "./SkeletonWidget";
+import useImported from '~shared-ui/hooks/useImported';
 import { usePlugins } from '~shared-ui/hooks/usePlugins';
-import { ActivityConfigWidgetProps } from '@necode-org/plugin-dev';
+import { activityDragDropType } from '../../dnd/types';
+import ConfigureLanguageDialog from '../dialogs/ConfigureLanguageDialog';
+import BrokenWidget from './BrokenWidget';
+import SkeletonWidget from "./SkeletonWidget";
+import api from '~api/handles';
 
 export type DraggableComponent = ComponentType<ActivityConfigWidgetProps<any>>;
 
@@ -46,7 +47,7 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
 
     const router = useRouter();
 
-    const { upload } = useNecodeFetch();
+    const { upload } = useApiFetch();
 
     const [{ isDragging }, drag, dragPreview] = useDrag(() => ({
         type: activityDragDropType,
@@ -73,6 +74,29 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
     const displayNameChangeHandler = useCallback((displayName: string) => {
         onActivityChange?.({ displayName });
     }, [onActivityChange]);
+
+    const { getLanguage } = usePlugins();
+    const firstEnabledLanguageName = props.activity?.attributes.enabledLanguages[0];
+    const [language, setLanguage] = useState(getLanguage(firstEnabledLanguageName));
+    const supportedLanguages = useCompatibleLanguages(activityType?.requiredFeatures ?? []);
+
+    useEffect(() => {
+        setLanguage(getLanguage(firstEnabledLanguageName));
+    }, [firstEnabledLanguageName, getLanguage]);
+
+    const [configureLanguageDialog, openConfigureLanguageDialog] = useImperativeDialog(ConfigureLanguageDialog, {
+        availableLanguages: supportedLanguages,
+        enabledLanguage: language,
+        saveEnabledLanguage: lang => {
+            setLanguage(lang);
+            upload(api.classroom(classroomId).activity(id), {
+                method: 'PATCH',
+                body: {
+                    enabledLanguages: [lang.name],
+                },
+            });
+        },
+    });
 
     const ConfigWidget = useImported(activityType?.configWidget);
     const shouldShowSkeleton = isSkeleton(props) || (activityType?.configWidget && !ConfigWidget);
@@ -105,12 +129,12 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
 
     async function startActivity() {
         if (activityType) {
-            await upload(`/api/classroom/${classroomId}/activity/live`, {
+            await upload(api.classroom(classroomId).live, {
                 method: 'POST',
-                body: JSON.stringify({
+                body: {
                     id,
                     networks: activityType.configurePolicies?.(props.activity!.attributes.configuration),
-                } as CreateLiveActivityInfo)
+                },
             });
     
             router.push(`/classroom/${classroomId}/activity`);
@@ -118,16 +142,17 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
     }
 
     return <Box sx={{ opacity: isDragging ? 0 : 1 }}>
+        {configureLanguageDialog}
         <Widget
             id={id}
             classroomId={classroomId}
-            activityTypeId={props.activity.attributes.activityType}
+            activityType={activityType}
             activityConfig={props.activity.attributes.configuration}
             onActivityConfigChange={configChangeHandler}
             displayName={props.activity.attributes.displayName}
             onDisplayNameChange={displayNameChangeHandler}
             startActivity={startActivity}
-            goToConfigPage={activityType.configPage ? goToConfigPage : undefined}
+            goToConfigPage={activityType.configPage ? goToConfigPage : openConfigureLanguageDialog}
             dragHandle={drag} />
     </Box>;
 }

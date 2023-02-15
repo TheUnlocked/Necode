@@ -1,5 +1,10 @@
 import { activityDescription } from '@necode-org/plugin-dev';
 
+export interface Config {
+    value: string;
+    language: string | null;
+}
+
 /** The "activity" representing a text input. It exists for its utility as a widget. */
 const textInputActivityDescription = activityDescription({
     id: 'core/noop/text-field',

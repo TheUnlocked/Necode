@@ -71,6 +71,10 @@ export class FeatureManager {
             console.error('Cannot implement a feature which depends on itself. Skipping.');
             return;
         }
+        if (dependencies.some(x => /^requires(?:\/|$)/.test(x))) {
+            console.error('"requires/" features are used to provide information to Necode itself and cannot be used to implement other features. Skipping.');
+            return;
+        }
 
         const featureDef: FeatureDefinition = {
             name: feature,
@@ -107,12 +111,11 @@ export class FeatureManager {
         dependencies: Deps,
         impl: (features: FeatureObject<Deps>) => Promise<FeatureImplRecord<Fs>>,
     ) {
-        let implPromise: ReturnType<typeof impl>;
-
         for (const feature of features) {
             this.implementFeature(language, feature, dependencies, async obj => {
-                implPromise ??= impl(obj);
-                return (await implPromise)[feature as Fs[number]];
+                // Caching impl(obj) here isn't safe because the implementation could change
+                // depending on dependencies (especailly with free features).
+                return (await impl(obj))[feature as Fs[number]];
             });
         }
     }
@@ -171,8 +174,6 @@ export class FeatureManager {
         if (!languageEntry.currentFeatures.has(feature.name)) {
             // No need to check for candidate features if this feature was already supported.
             // In fact, doing so could run into infinite recursion issues if there were cycles.
-            // We still want to use this implementation since language-specific implementations
-            // should override free features.
             languageEntry.currentFeatures.add(feature.name);
             this.checkFeatureCandidates(languageEntry, feature.name);
         }

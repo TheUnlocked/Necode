@@ -3,6 +3,15 @@ import Scheme from 'chez-scheme-js';
 
 export default {
 
+    "requires/browser": {
+        isCompatible() {
+            return typeof SharedArrayBuffer !== 'undefined';
+        },
+        getRecommendedBrowsers() {
+            return ['Chrome 96+', 'Edge 96+'];
+        },
+    },
+
     "repl/instanced": {
         async createInstance() {
             let errors = [] as string[];
@@ -39,6 +48,7 @@ export default {
     },
 
 } satisfies FeatureImplRecord<[
+    'requires/browser',
     'repl/instanced',
     'evaluate/string'
 ]>;

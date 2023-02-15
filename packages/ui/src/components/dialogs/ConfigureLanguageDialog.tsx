@@ -1,7 +1,6 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, List, ListItemButton, ListItemIcon, ListItemText, Radio } from "@mui/material";
-import { useState } from "react";
 import { LanguageDescription } from "@necode-org/plugin-dev";
-import useDirty from "~shared-ui/hooks/useDirty";
+import { useLocalCachedState } from '@necode-org/activity-dev';
 
 interface ConfigureLanguageDialogProps {
     open: boolean;
@@ -20,18 +19,15 @@ export default function ConfigureLanguageDialog(props: ConfigureLanguageDialogPr
         saveEnabledLanguage
     } = props;
 
-    const [selectedLanguage, setSelectedLanguage] = useState(enabledLanguage);
-    const [isDirty, markDirty, clearDirty] = useDirty();
+    const [selectedLanguage, setSelectedLanguage, commit, revert, isDirty] = useLocalCachedState(enabledLanguage, l => l ? saveEnabledLanguage(l) : null);
 
     function close() {
         onClose();
-        clearDirty();
+        revert();
     }
 
     function saveAndClose() {
-        if (selectedLanguage) {
-            saveEnabledLanguage(selectedLanguage);
-        }
+        commit();
         close();
     }
 
@@ -43,10 +39,7 @@ export default function ConfigureLanguageDialog(props: ConfigureLanguageDialogPr
         <List>
             {availableLanguages.map(language =>
                 <ListItemButton key={language.name}
-                    onClick={() => {
-                        setSelectedLanguage(language);
-                        markDirty();
-                    }}>
+                    onClick={() => setSelectedLanguage(language)}>
                     <ListItemIcon>
                         <Radio checked={language === selectedLanguage} />
                     </ListItemIcon>

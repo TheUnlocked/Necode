@@ -101,3 +101,5 @@ on leave(user: User) {
         debug BUG, user, "left even though the ring was supposedly empty";
     }
 }
+
+//% {}

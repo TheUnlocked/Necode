@@ -4,7 +4,8 @@ import canvasActivityDescription from './activities/canvas';
 import glslActivityDescription from './activities/glsl';
 import p5jsActivityDescription from './activities/p5js';
 import p5jsRingActivityDescription from './activities/p5-canvas';
-import { testDomActivityDescription, testDomActivityNetworkedDescription } from './activities/test-dom';
+import testDomActivityDescription from './activities/test-dom';
+import testDomBreakoutActivityDescription from './activities/test-dom-breakout';
 import textInputActivityDescription from './activities/text-input';
 import JavascriptIcon from './icons/JavascriptIcon';
 import MarkdownIcon from './icons/MarkdownIcon';
@@ -39,7 +40,7 @@ export default class CorePlugin extends Plugin {
     override registerActivities(manager: ActivityManager): void {
         manager.registerActivity(canvasActivityDescription);
         manager.registerActivity(testDomActivityDescription);
-        manager.registerActivity(testDomActivityNetworkedDescription);
+        manager.registerActivity(testDomBreakoutActivityDescription);
         manager.registerActivity(p5jsActivityDescription);
         manager.registerActivity(p5jsRingActivityDescription);
         manager.registerActivity(glslActivityDescription);

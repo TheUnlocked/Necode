@@ -22,6 +22,8 @@
     "lodash": "^4.17.21",
     "material-ui-popup-state": "^5.0.4",
     "nanoid": "^4.0.0",
+    "notistack": "^2.0.8",
+    "react-horizontal-scrolling-menu": "^3.2.3",
     "react-markdown": "^8.0.5",
     "rehype-highlight": "^5.0.2",
     "remark-gfm": "^3.0.1",

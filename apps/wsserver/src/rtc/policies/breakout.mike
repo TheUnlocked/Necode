@@ -5,9 +5,9 @@ param numGroups: int;
 param roomPolicy: Policy;
 
 on signal(user: User, kind: string, data: SignalData) {
-    if data.getInt("room") |room| {
-        if kind == "joinRoom" {
-            // joinRoom Event
+    if kind == "joinRoom" {
+        // joinRoom Event
+        if data.getInt("room") |room| {
             if room > 0 && room <= numGroups {
                 // Leave current group, if applicable
                 if groupMembership.get(user) |group| {
@@ -30,35 +30,24 @@ on signal(user: User, kind: string, data: SignalData) {
             else {
                 debug "Client error:", user, "tried to join room", room, "but that room doesn't exist";
             }
-
-        }
-        else if kind == "leaveRoom" {
-            // leaveRoom event
-            if room > 0 && room <= numGroups {
-                if groups.get(room) |group| {
-                    if group.has(user) {
-                        group.leave(user);
-                        groupMembership.remove(user);
-                    }
-                    else {
-                        debug "Client error:", user, "tried to leave room", room, "but they weren't in it";
-                    }
-                }
-                else {
-                    debug "Client error:", user, "tried to leave room", room, "but that room hasn't been created yet";
-                }
-            }
-            else {
-                debug "Client error:", user, "tried to leave room", room, "but that room doesn't exist";
-            }
-
         }
         else {
-            debug BUG, "Unrecognized signal kind", kind;
+            debug BUG, "Signal data missing room field";
+        }
+
+    }
+    else if kind == "leaveRoom" {
+        // leaveRoom event
+        if groupMembership.get(user) |group| {
+            group.leave(user);
+            groupMembership.remove(user);
+        }
+        else {
+            debug "Client error:", user, "tried to leave a room but they weren't in one";
         }
     }
     else {
-        debug BUG, "Signal data missing room field";
+        debug BUG, "Unrecognized signal kind", kind;
     }
 }
 
@@ -78,17 +67,20 @@ on leave(user: User) {
 //%             "le": 50
 //%         }
 //%     },
-//%     "signal": {
-//%         "type": [
-//%             "joinRoom",
-//%             "leaveRoom"
-//%         ],
-//%         "data": {
-//%             "room": {
-//%                 "type": "int",
-//%                 "ge": 2,
-//%                 "le": 50
+//%     "signal": [
+//%         {
+//%             "type": "joinRoom",
+//%             "data": {
+//%                 "room": {
+//%                     "type": "int",
+//%                     "ge": 1,
+//%                     "le": 50
+//%                 }
 //%             }
+//%         },
+//%         {
+//%             "type": "leaveRoom",
+//%             "data": {}
 //%         }
-//%     }
+//%     ]
 //% }

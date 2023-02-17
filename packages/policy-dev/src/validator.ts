@@ -1,15 +1,18 @@
 import loadModule from '@brillout/load-module';
 import { MiKe } from '@necode-org/mike';
-import { JsLibraryImplementation, MiKeProgram as _MiKeProgram, MiKeProgramWithoutExternals as _MiKeProgramWithoutExternals, ParameterType } from '@necode-org/mike/codegen/js';
-import { createMiKeDiagnosticsManager, Severity } from '@necode-org/mike/diagnostics';
-import { necodeLib, events as necodeEvents, internalUniqueBugType } from '~mike-config';
-import { Arbitrary, boolean, check, constant, float, integer as _integer, oneof, property, record, shuffledSubarray, stringify, tuple } from 'fast-check';
-import { SingleBar } from 'cli-progress';
-import { createJavascriptTarget } from '@necode-org/mike/codegen/js/JavascriptTarget';
-import { Mutable, NewType } from '~utils/types';
-import { Values, SignalInfo, ValidatorConfig, Value, parseValidatorConfig, ParseValidationConfigError } from './ValidatorConfig';
 import { ASTNodeKind, Block, DebugStatement, FloatLiteral, getNodeSourceRange, Identifier, StatementOrBlock, stringifyPosition, Variable, visit } from '@necode-org/mike/ast';
+import { JsLibraryImplementation, MiKeProgram as _MiKeProgram, MiKeProgramWithoutExternals as _MiKeProgramWithoutExternals, ParameterType } from '@necode-org/mike/codegen/js';
+import { createJavascriptTarget } from '@necode-org/mike/codegen/js/JavascriptTarget';
+import { createMiKeDiagnosticsManager, Severity } from '@necode-org/mike/diagnostics';
 import { TypeKind } from '@necode-org/mike/types';
+import { SingleBar } from 'cli-progress';
+import { Arbitrary, boolean, check, constant, float, integer as _integer, oneof, property, record, shuffledSubarray, stringify, tuple } from 'fast-check';
+import { PolicyValidatorConfig, SignalInfo, Value, Values } from '~api/PolicyValidatorConfig';
+import { events as necodeEvents, internalUniqueBugType, necodeLib } from '~mike-config';
+import asArray from '~utils/asArray';
+import { Mutable, NewType } from '~utils/types';
+import parseValidatorConfig, { ParseValidationConfigError } from './parsePolicyValidatorConfig';
+import { cloneDeep } from 'lodash';
 
 interface MiKeExposed {
     some(v: any): unknown;
@@ -210,13 +213,6 @@ type PreparedEvent
     | { event: 'signal', args: [User, string, { [name: string]: unknown }] }
     ;
 
-function asArray<T>(x: T | T[]) {
-    if (x instanceof Array) {
-        return x;
-    }
-    return [x];
-}
-
 function assert(condition: boolean): asserts condition {
     if (!condition) {
         throw new Error(`Assertion Failed!`);
@@ -278,7 +274,7 @@ const unfilteredEvents = (config: SignalInfo[]) => {
                     oneof(...config.map(cfg => signalEvent(user, cfg))),
                 ];
             }
-            return joinLeave.flatMap(x => [x, x]);
+            return joinLeave.flatMap(x => [x, cloneDeep(x)]);
         })))
         .chain(evts => shuffledSubarray(evts, { minLength: evts.length }));
 };
@@ -403,7 +399,7 @@ const params = (program: MiKeProgram, values: Values) => record(Object.fromEntri
         }),
     );
 
-const testConfig = (program: MiKeProgram, validatorConfig: ValidatorConfig) =>
+const testConfig = (program: MiKeProgram, validatorConfig: PolicyValidatorConfig) =>
     oneof(...asArray(validatorConfig)
         .flatMap(config => asArray<Values | undefined>(config.params)
             .flatMap(paramsConfig => tuple(
@@ -426,7 +422,7 @@ interface ValidateConfigMatchesProgramResult {
     errors: string[];
 }
 
-function validateConfigMatchesProgram(configs: ValidatorConfig, program: MiKeProgram): ValidateConfigMatchesProgramResult {
+function validateConfigMatchesProgram(configs: PolicyValidatorConfig, program: MiKeProgram): ValidateConfigMatchesProgramResult {
     const warnings = [] as string[];
     const errors = [] as string[];
 
@@ -495,9 +491,37 @@ function validateConfigMatchesProgram(configs: ValidatorConfig, program: MiKePro
 
 const jsonReplacer = (_k: string, v: unknown) => typeof v === 'bigint' ? Number(v) : v;
 
+export interface ValidateResult {
+    ok: boolean;
+    messages: {
+        severity: 'info' | 'warn' | 'error';
+        message: string;
+        details?: string[];
+        err?: unknown;
+    }[];
+}
+
 export async function validate(source: string, options = {
     numRuns: 10_000,
-}) {
+}): Promise<ValidateResult> {
+    const messages = [] as ValidateResult['messages'];
+
+    function result(ok = false): ValidateResult {
+        return { ok, messages };
+    }
+
+    function error(message: string, details?: string[], err?: unknown) {
+        messages.push({ severity: 'error', message, details, err });
+    }
+
+    function warn(message: string) {
+        messages.push({ severity: 'warn', message });
+    }
+
+    function info(message: string) {
+        messages.push({ severity: 'info', message });
+    }
+
     const progressBar = new SingleBar({
         format: 'Validation Progress |{bar}| {value}/{total} Passed ({percentage}%)',
         barCompleteChar: '\u2588',
@@ -516,47 +540,43 @@ export async function validate(source: string, options = {
         .join('\n');
 
     if (validatorConfigString === '') {
-        console.error('🛑 Parameter configuration not found.');
-        console.error('Every policy must include a parameter configuration in //% comments.');
-        return false;
+        error('Parameter configuration not found.');
+        error('Every policy must include a parameter configuration in //% comments.');
+        return result();
     }
 
-    let validatorConfig: ValidatorConfig;
+    let validatorConfig: PolicyValidatorConfig;
     try {
         validatorConfig = parseValidatorConfig(validatorConfigString);
     }
     catch (e) {
         if (e instanceof SyntaxError) {
-            console.error('🛑 Parameter configuration is not valid JSON.');
-            return false;
+            error('Parameter configuration is not valid JSON.');
+            return result();
         }
         if (e instanceof ParseValidationConfigError) {
-            console.error('🛑 Parameter configuration failed to load. See stack trace below for more info.');
-            console.error(e.stack);
-            return false;
+            error('Parameter configuration failed to load. See stack trace for more info.', [], e);
+            return result();
         }
 
-        console.error('🛑 Parameter configuration failed to load due to unknown error.');
-        throw e;
+        error('Parameter configuration failed to load due to unknown error.', [], e);
+        return result();
     }
 
     const configValidationResult = validateConfigMatchesProgram(validatorConfig, program);
 
     if (configValidationResult.warnings.length > 0) {
         for (const warning of configValidationResult.warnings) {
-            console.warn(`⚠️ ${warning}`);
+            warn(warning);
         }
     }
 
     if (configValidationResult.errors.length > 0) {
-        console.error(`🛑 Parameter configuration didn't match the program:`);
-        for (const error of configValidationResult.errors) {
-            console.error(`\t${error}`);
-        }
+        error(`Parameter configuration didn't match the program:`, configValidationResult.errors);
     }
 
     if (!configValidationResult.ok) {
-        return false;
+        return result();
     }
 
     const allBranchesVisited = new Set<number>();
@@ -564,7 +584,7 @@ export async function validate(source: string, options = {
     const inputs = new Set<string>();
     progressBar.start(options.numRuns, 0);
 
-    const result = check(
+    const runDetails = check(
         property(testConfig(program, validatorConfig), data => {
             const dataString = stringify(data);
             if (inputs.has(dataString)) {
@@ -646,40 +666,38 @@ export async function validate(source: string, options = {
 
     progressBar.stop();
 
-    if (result.error && result.errorInstance instanceof ValidationError) {
-        console.error('🛑 Validation Failed!');
-        console.error(`\t${result.errorInstance.message}`);
-        if (result.counterexample) {
-            let [[events, params]] = result.counterexample;
-            events = events.slice(0, events.indexOf(result.errorInstance.event) + 1);
-            console.error('Caused by the following event sequence:');
-
-            console.error(`\t${events.map(e => {
-                const args = e.args.map(arg => typeof arg === 'object' ? JSON.stringify(arg, jsonReplacer) : arg);
-                return `${e.event}(${args.join(', ')})`;
-            }).join(' ')}`);
+    if (runDetails.error && runDetails.errorInstance instanceof ValidationError) {
+        error('Validation Failed!', [runDetails.errorInstance.message]);
+        if (runDetails.counterexample) {
+            let [[events, params]] = runDetails.counterexample;
+            events = events.slice(0, events.indexOf(runDetails.errorInstance.event) + 1);
+            error('Caused by the following event sequence:', [
+                events.map(e => {
+                    const args = e.args.map(arg => typeof arg === 'object' ? JSON.stringify(arg, jsonReplacer) : arg);
+                    return `${e.event}(${args.join(', ')})`;
+                }).join(' ')
+            ]);
 
             if (Object.keys(params).length > 0) {
-                console.error('With the following parameters:');
-                console.error(
+                error(
+                    'With the following parameters:',
                     Object.entries(params)
-                        .map(([name, value]) => `\t${name}: ${JSON.stringify(value, jsonReplacer)}`)
-                        .join('\n')
+                        .map(([name, value]) => `${name}: ${JSON.stringify(value, jsonReplacer)}`)
                 );
             }
         }
-        return false;
+        return result();
     }
 
     const missedBranches = [...branches.keys()].filter(x => !allBranchesVisited.has(x));
     if (missedBranches.length > 0) {
-        console.error('🛑 Validation Failed!');
-        for (const branch of missedBranches) {
-            console.error(`\tNever visited block at ${stringifyPosition(getNodeSourceRange(branches.get(branch)!).start)}`);
-        }
-        console.error('ℹ If a block is impossible to reach, include a `debug BUG, "message...";` statement in it.');
-        return false;
+        error(
+            'Validation Failed!',
+            missedBranches.map(branch => `Never visited block at ${stringifyPosition(getNodeSourceRange(branches.get(branch)!).start)}`),
+        );
+        info('If a block is impossible to reach, include a `debug BUG, "message...";` statement in it.');
+        return result();
     }
 
-    return true;
+    return result(true);
 }

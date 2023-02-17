@@ -1,11 +1,12 @@
 import { omit } from 'lodash';
-import { createContext, PropsWithChildren, useCallback, useEffect, useRef, useState, useContext } from 'react';
+import { createContext, PropsWithChildren, useCallback, useEffect, useRef, useState, useContext, useMemo } from 'react';
 import SimplePeer from 'simple-peer';
 import { NetworkId } from '~api/RtcNetwork';
 import cyrb53 from '~utils/cyrb53';
 import { callWith } from '~utils/fp';
 import tracked from '~shared/trackedEventEmitter';
 import SocketInfo from '../types/SocketInfo';
+import { SignalData } from '~api/ws';
 
 /**
  * Information about a remote user.
@@ -23,10 +24,13 @@ interface Peer extends SimplePeer.Instance, RemoteUserInfo {
 
 export type UsePeerCallback = (peer: Peer) => void | (() => void);
 
-type RtcContextValue = (network: NetworkId) => {
-    callbacks: Set<UsePeerCallback>,
-    peers: Set<Peer>,
-};
+interface PeerInfo {
+    callbacks: Set<UsePeerCallback>;
+    peers: Set<Peer>;
+    signal(event: string, data: SignalData): Promise<void>;
+}
+
+type RtcContextValue = (network: NetworkId) => PeerInfo;
 
 const RtcContext = createContext<RtcContextValue | undefined>(undefined);
 
@@ -34,9 +38,16 @@ export function RtcProvider({ socketInfo, children }: PropsWithChildren<{ socket
     const onPeerCallbacksRef = useRef(new Map<NetworkId, Set<UsePeerCallback>>());
     const peersRef = useRef(new Set<Peer>());
 
-    const getNetworkCallbacksRef = useRef((network: NetworkId) => {
+    const signalRef = useRef<(network: NetworkId, event: string, data: SignalData) => Promise<void>>(
+        () => Promise.reject(new Error('Connection not initialized'))
+    );
+    const getNetworkCallbacksRef = useRef<RtcContextValue>((network: NetworkId) => {
         if (network === NetworkId.OFFLINE) {
-            return { callbacks: new Set<UsePeerCallback>(), peers: new Set<Peer>() };
+            return {
+                callbacks: new Set<UsePeerCallback>(),
+                peers: new Set<Peer>(),
+                signal: () => Promise.resolve(),
+            };
         }
         let networkCallbacks = onPeerCallbacksRef.current.get(network);
         if (!networkCallbacks) {
@@ -46,8 +57,20 @@ export function RtcProvider({ socketInfo, children }: PropsWithChildren<{ socket
         return {
             callbacks: networkCallbacks,
             peers: peersRef.current,
+            signal: (event, data) => signalRef.current(network, event, data),
         };
     });
+
+    signalRef.current = useCallback((networkId: NetworkId, event: string, data: SignalData) => {
+        return new Promise((resolve, reject) => {
+            socketInfo.socket.emit('signal', networkId, event, data, err => {
+                if (err === undefined) {
+                    return resolve();
+                }
+                return reject(new Error(err));
+            });
+        });
+    }, [socketInfo.socket]);
 
     useEffect(() => {
         if (!socketInfo) {
@@ -141,6 +164,12 @@ export function RtcProvider({ socketInfo, children }: PropsWithChildren<{ socket
     }, []);
 
     return <RtcContext.Provider value={getNetworkCallbacksRef.current}>{children}</RtcContext.Provider>;
+}
+
+export function useSignal(network: NetworkId) {
+    const rtcData = useContext(RtcContext)?.(network);
+
+    return useMemo(() => rtcData?.signal ?? (() => Promise.reject(new Error('Connection not initialized'))), [rtcData?.signal]);
 }
 
 function usePeer(network: NetworkId, callback: UsePeerCallback) {

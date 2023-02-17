@@ -1,13 +1,36 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, createContext, useContext, PropsWithChildren } from 'react';
 import { applyUnifiedUpdates } from '../utils/y-utils';
 import { Awareness, applyAwarenessUpdate, encodeAwarenessUpdate } from 'y-protocols/awareness';
 import * as Y from 'yjs';
 import { NetworkId } from '~api/RtcNetwork';
 import { useDataChannel, useDataChannelLifecycle } from '~shared-ui/hooks/RtcHooks';
 
-
 export interface YHandle {
     readonly _doc: Y.Doc;
+}
+
+export function createYHandle(): YHandle {
+    return { _doc: new Y.Doc() };
+}
+
+const yContext = createContext<{
+    useYHandle(): YHandle;
+}>({
+    useYHandle() {
+        return useMemo<YHandle>(createYHandle, []);
+    },
+});
+
+export interface YProviderProps extends PropsWithChildren {
+    y: YHandle;
+}
+
+export function YProvider({ y, children }: YProviderProps) {
+    return <yContext.Provider value={{
+        useYHandle: () => y,
+    }}>
+        {children}
+    </yContext.Provider>;
 }
 
 /**
@@ -15,7 +38,7 @@ export interface YHandle {
  * The handle is stable for the lifetime of the hook. 
  */
 export default function useY(network: NetworkId, channel: string): YHandle {
-    const y = useMemo<YHandle>(() => ({ _doc: new Y.Doc() }), []);
+    const y = useContext(yContext).useYHandle();
 
     const emit = useDataChannelLifecycle(
         network,

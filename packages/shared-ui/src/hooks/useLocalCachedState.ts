@@ -24,8 +24,13 @@ export default function useLocalCachedState<T>(externalState: T, setExternalStat
     }, [isDirty, externalStateChanged, externalState]);
 
     const setState: typeof _setState = useCallback(st => {
-        markDirty();
-        _setState(st);
+        _setState(oldVal => {
+            const newVal = st instanceof Function ? st(oldVal) : st;
+            if (newVal !== oldVal) {
+                markDirty();
+            }
+            return newVal;
+        });
     }, []);
 
     const commit = useCallback(() => {

@@ -140,31 +140,25 @@ io.on('connection', socket => {
         callback(members.map(x => users.get(x)?.userId).filter(isNotNull));
     });
 
-    socket.on('command', async (to, data, callback) => {
-        await classroomSetGate;
-        
-        if (await hasScope(userId, 'activity:run', { classroomId })) {
-            if (to === undefined) {
-                to = [...classroom.membersCache];
-            }
-            if (to.length > 0) {
-                io.to(to.filter(x => x !== socketId))
-                    .emit('command', data);
-            }
-            return callback();
-        }
-        return callback('An unexpected error occurred');
-    });
-
-    socket.on('request', async (data, callback) => {
+    socket.on('signal', async (network, event, data, callback) => {
         await classroomSetGate;
 
-        if (await hasScope(userId, 'activity:view', { classroomId })) {
-            io.to([...classroom.instructorsCache])
-                .emit('request', data);
-            return callback();
+        if (!classroom.activity) {
+            return callback('No activity');
         }
-        return callback('An unexpected error occurred');
+
+        try {
+            classroom.activity.networks[network]?.signal(socketId, event, data);
+            callback();
+        }
+        catch (e) {
+            if (e instanceof Error) {
+                callback(e.message);
+            }
+            else {
+                callback(`${e}`);
+            }
+        }
     });
 
     socket.on('submission', async (data, callback) => {

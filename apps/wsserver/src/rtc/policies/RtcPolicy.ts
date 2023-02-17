@@ -1,4 +1,5 @@
-import { NetworkId } from '~api/RtcNetwork';
+import { NetworkId, PolicyParams } from '~api/RtcNetwork';
+import { SignalData } from '~api/ws';
 import RtcManager from "../RtcManager";
 
 export interface ConnectionInfo {
@@ -9,12 +10,13 @@ export interface ConnectionInfo {
 
 export interface RtcPolicySettings {
     rtc: RtcManager;
-    params: { [key: string]: any };
+    params: PolicyParams;
 }
 
 export interface RtcPolicy {
     new(network: NetworkId, users: Iterable<string>, settings: RtcPolicySettings): RtcCoordinator;
     readonly policyId: string;
+    validate(params?: PolicyParams): boolean;
 }
 
 export interface RtcCoordinator {
@@ -24,7 +26,10 @@ export interface RtcCoordinator {
      * @param user 
      */
     onUserLeave(user: string): void;
-}
+    signal(user: string, event: string, info: SignalData): void;
 
-/** Static typing decorator since TS doesn't have a syntax for implementing a static member interface  */
-export function rtcPolicy<U extends RtcPolicy>(_: U) {}
+    hasUser(user: string): boolean;
+    
+    getState(): string;
+    loadState(state: string): void;
+}

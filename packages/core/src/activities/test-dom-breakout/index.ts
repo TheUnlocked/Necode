@@ -1,9 +1,8 @@
 import { activityDescription } from '@necode-org/plugin-dev';
 import dedent from "dedent-js";
 import { HtmlTestActivityBaseConfig } from "../html-test-activity-base/createTestActivityPage";
-import createTestActivityPages from '../html-test-activity-base/createTestActivityPages';
 
-interface DomTestActivityConfig extends HtmlTestActivityBaseConfig {
+export interface Config extends HtmlTestActivityBaseConfig {
     description: string;
     hiddenHtml: string;
     tests: {
@@ -13,18 +12,32 @@ interface DomTestActivityConfig extends HtmlTestActivityBaseConfig {
     languages: {
         code: { enabled: boolean, defaultValue: { [languageName: string]: string } };
     };
+    rooms: string[];
 }
 
-const [activityPage, configPage] = createTestActivityPages({});
-
 export default activityDescription({
-    id: 'core/test-dom',
-    displayName: 'DOM Playground',
+    id: `core/test-dom/breakout`,
+    displayName: `DOM Playground w/ Breakout Rooms`,
     requiredFeatures: [
         'iframe/static'
     ],
-    activityPage,
-    configPage,
+    activityPage: async () => (await import('./activity')).Activity,
+    configPage: async () => (await import('./activity')).ActivityConfig,
+    configWidget: async () => (await import('./activity')).Widget,
+    configurePolicies: config => [{
+        name: 'breakout',
+        params: {
+            numGroups: {
+                type: 'int',
+                value: config.rooms.length,
+            },
+            roomPolicy: {
+                type: 'Policy',
+                name: 'ring',
+                params: {},
+            }
+        }
+    }],
     defaultConfig: {
         description: dedent`
         # Problem Name
@@ -85,6 +98,7 @@ export default activityDescription({
             check(false, "Tests haven't been configured yet.");
 
             `
-        }
-    } as DomTestActivityConfig,
+        },
+        rooms: [...new Array(20)].map((_, i) => `Room ${i + 1}`),
+    } as Config,
 });

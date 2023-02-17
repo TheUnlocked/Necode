@@ -2,19 +2,21 @@
   "name": "@necode-org/policy-dev",
   "version": "0.1.0",
   "license": "MIT",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
-  "bin": "./dist/index.mjs",
+  "main": "./dist/main.js",
+  "module": "./dist/main.mjs",
+  "types": "./dist/main.d.ts",
+  "bin": "./dist/main.mjs",
   "dependencies": {
     "@brillout/load-module": "^0.1.1",
     "@necode-org/mike": "^0.3.3",
     "cli-progress": "^3.11.2",
     "fast-check": "^3.6.2",
+    "lodash": "^4.17.21",
     "~mike-config": "workspace:*"
   },
   "devDependencies": {
     "@types/cli-progress": "^3.11.0",
+    "@types/lodash": "^4.14.191",
     "@types/node": "^18.11.18",
     "~tsconfig": "workspace:*"
   }

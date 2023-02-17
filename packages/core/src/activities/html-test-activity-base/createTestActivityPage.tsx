@@ -468,18 +468,13 @@ export default function createTestActivityPage<Features extends readonly Feature
         // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps
         const validateTests = useCallback(debounce(async (tests: string) => {
             try {
-                await typescript['js/babel'].compileToJs(tests, {
-                    global: true,
-                    isolated: true,
-                    throwAllCompilerErrors: true,
-                    babelPlugins: [transformTestScaffolding]
-                } as any);
+                await typescript['js/babel'].compileToJs(tests, [transformTestScaffolding]);
                 setTestsCompileError(undefined);
             }
             catch (e) {
                 if (e instanceof Error) {
-                    if (e.message.startsWith('unknown: ')) {
-                        const newError = new Error(e.message.slice(9));
+                    if (e.message.startsWith('unknown file: ')) {
+                        const newError = new Error(e.message.slice(14));
                         newError.name = e.name;
                         e = newError;
                     }
@@ -525,20 +520,19 @@ export default function createTestActivityPage<Features extends readonly Feature
                         }} />
                 </>}
             >
-                <Box sx={{
-                    overflow: "hidden",
-                    height: "100%",
-                }}>
-                    <Editor
-                        language="typescript"
-                        value={testsSource}
-                        onChange={val => {
-                            if (testsSource !== val) {
-                                onActivityConfigChange!(setIn('tests.source', val ?? '', activityConfig));
-                            }
-                        }} />
-                </Box>
-                <CodeAlert error={testsCompileError} successMessage="Your tests compiled successfully!" />
+                <Stack height="100%" direction="column">
+                    <Box overflow="hidden" flexGrow={1}>
+                        <Editor
+                            language="typescript"
+                            value={testsSource}
+                            onChange={val => {
+                                if (testsSource !== val) {
+                                    onActivityConfigChange!(setIn('tests.source', val ?? '', activityConfig));
+                                }
+                            }} />
+                    </Box>
+                    <CodeAlert error={testsCompileError} successMessage="Your tests compiled successfully!" />
+                </Stack>
             </Pane>
             : <PassthroughPane>
                 <Stack height="100%" direction="column">

@@ -1,6 +1,6 @@
 import { Refresh as RefreshIcon, Sync as SyncIcon } from "@mui/icons-material";
 import { Box, Button, CardContent, Checkbox, IconButton, Stack, Tooltip, useTheme } from "@mui/material";
-import { api, applyTransaction, CodeAlert, Editor, Feature, FeatureObject, Key, Link, NetworkId, OnEditorChange, Pane, Panes, PanesLayouts, PaneTab, PaneTitle, PassthroughPane, TabbedPane, useApiGet, useFetch, useImperativeDialog, useImported, useIsSizeOrSmaller, useLanguages, useMonaco, useSubmissions, useY, useYAwareness, useYInit, useYText } from "@necode-org/activity-dev";
+import { api, applyTransaction, CodeAlert, Editor, Feature, FeatureObject, Key, Link, NetworkId, OnEditorChange, Pane, Panes, PanesLayouts, PaneTab, PaneTitle, PassthroughPane, TabbedPane, useApiGet, useFetch, useImperativeDialog, useImported, useIsSizeOrSmaller, useLanguageFeatures, useLanguages, useMonaco, useSubmissions, useY, useYAwareness, useYInit, useYText } from "@necode-org/activity-dev";
 import { ActivityPageProps, LanguageDescription } from '@necode-org/plugin-dev';
 import { ActivityConfigPageProps } from '@necode-org/plugin-dev';
 import { debounce, identity } from "lodash";
@@ -11,7 +11,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from 'rehype-highlight';
 import remarkGfm from 'remark-gfm';
-import typescript from '../../languages/typescript';
 import { ImplicitNewType, NonStrictDisjunction } from "~utils/types";
 import TypescriptIcon from "../../icons/TypescriptIcon";
 import transformTestScaffolding from "../../languages/transformers/babel-plugin-transform-test-scaffolding";
@@ -464,11 +463,13 @@ export default function createTestActivityPage<Features extends readonly Feature
 
         const [testsCompileError, setTestsCompileError] = useState<Error | undefined>();
 
+        const typescriptFeatures = useLanguageFeatures('typescript', ['js/babel']);
+
         // Be very careful when editing this function, since exaustive-deps is disabled.
         // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps
         const validateTests = useCallback(debounce(async (tests: string) => {
             try {
-                await typescript['js/babel'].compileToJs(tests, [transformTestScaffolding]);
+                await typescriptFeatures?.js.babel.compileToJs(tests, [transformTestScaffolding]);
                 setTestsCompileError(undefined);
             }
             catch (e) {
@@ -484,7 +485,7 @@ export default function createTestActivityPage<Features extends readonly Feature
                     setTestsCompileError(new Error(`${e}`));
                 }
             }
-        }, 300), []);
+        }, 300), [typescriptFeatures]);
 
         useEffect(() => {
             if (isEditor && testsSource !== undefined) {

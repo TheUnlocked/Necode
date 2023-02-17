@@ -104,7 +104,7 @@ export const SubmissionProvider = forwardRef<SubmissionProviderRef, SubmissionPr
 
     useImperativeHandle(ref, () => ({
         areSubmissionsUsed,
-        submissions: submissions!,
+        submissions: submissions ?? [],
         loadSubmission: (submission) => {
             submissionLoadListeners.current.forEach(callWith(submission.attributes.data));
         }

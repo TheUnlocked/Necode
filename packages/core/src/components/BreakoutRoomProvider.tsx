@@ -47,10 +47,13 @@ export default function BreakoutRoomProvider({ network, numRooms, roomNames, chi
 
     const joinRoom = useCallback(async (room: number) => {
         try {
-            setY(createYHandle());
             if (currentRoom !== undefined) {
                 await signal('leaveRoom', {});
                 setCurrentRoom(undefined);
+                setY(createYHandle());
+            }
+            else {
+                setY(createYHandle());
             }
             await signal('joinRoom', { room });
             setCurrentRoom(room);

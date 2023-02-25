@@ -155,3 +155,32 @@ enum ClassroomRole {
   Student
   Instructor
 }
+
+model Plugin {
+  id            String @id @default(cuid())
+  name          String @unique
+  displayName   String
+  version       String
+  entryFilename String?
+  files         PluginFile[]
+  policies      RtcPolicy[]
+}
+
+model PluginFile {
+  id          String @id @default(cuid())
+  pluginId    String
+  plugin      Plugin @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  filename    String
+  contents    Bytes
+  @@unique([filename, pluginId])
+}
+
+model RtcPolicy {
+  id                String @id
+  pluginId          String
+  displayName       String
+  source            Bytes
+  compiled          Bytes
+  validationConfig  Json
+  plugin            Plugin @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+}

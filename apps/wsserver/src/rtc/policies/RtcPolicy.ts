@@ -13,10 +13,10 @@ export interface RtcPolicySettings {
     params: PolicyParams;
 }
 
-export interface RtcPolicy {
+export interface RtcCoordinatorFactory {
     new(network: NetworkId, users: Iterable<string>, settings: RtcPolicySettings): RtcCoordinator;
     readonly policyId: string;
-    validate(params?: PolicyParams): boolean;
+    validate(params?: PolicyParams): Promise<boolean>;
 }
 
 export interface RtcCoordinator {

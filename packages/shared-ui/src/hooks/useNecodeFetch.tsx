@@ -7,6 +7,13 @@ export interface NecodeFetchRequestOptions extends RequestInit {
     errorMessage?: string | ((err: Error) => string | null | undefined) | null;
 }
 
+export class NecodeFetchError extends Error {
+    name = 'NecodeFetchError';
+    constructor(public res: globalThis.Response, message: string) {
+        super(message);
+    }
+}
+
 export type NecodeFetch = <T>(req: RequestInfo, options?: NecodeFetchRequestOptions) => Promise<T>;
 
 export default function useNecodeFetch() {
@@ -18,7 +25,7 @@ export default function useNecodeFetch() {
         try {
             const response = await fetcher(req, options);
             if (response.status === 500) {
-                err = new Error('Internal Server Error');
+                err = new NecodeFetchError(response, 'Internal Server Error');
             }
             else {
                 const res: Response<T> = await response.json();
@@ -26,7 +33,7 @@ export default function useNecodeFetch() {
                 if (res.response === 'ok') {
                     return res.data;
                 }
-                err = new Error(res.message);
+                err = new NecodeFetchError(response, res.message);
             }
         }
         catch (e) {

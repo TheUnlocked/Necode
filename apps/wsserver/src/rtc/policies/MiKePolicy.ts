@@ -1,41 +1,13 @@
-import loadModule from '@brillout/load-module';
-import { MiKe } from '@necode-org/mike';
-import { getNodeSourceRange } from '@necode-org/mike/ast';
-import { CreateParamsFunctions, JsLibraryImplementation, MiKeProgram, MiKeProgramWithoutExternals, ParamRecord, StateRecord } from '@necode-org/mike/codegen/js';
-import { createJavascriptTarget } from '@necode-org/mike/codegen/js/JavascriptTarget';
-import { createMiKeDiagnosticsManager } from '@necode-org/mike/diagnostics';
-import { parsePolicyValidatorConfig, validate } from '@necode-org/policy-dev';
-import { readFile } from 'fs/promises';
-import * as path from 'path';
-import { Values } from '~api/PolicyValidatorConfig';
+import { import_ } from '@brillout/import';
+import { CreateParamsFunctions, MiKeProgram, MiKeProgramWithoutExternals, ParamRecord, StateRecord } from '@necode-org/mike/codegen/js';
+import { PolicyValidatorConfig, Values } from '~api/PolicyValidatorConfig';
 import { NetworkId, PolicyParams, PolicyParamValue } from '~api/RtcNetwork';
 import { SignalData } from '~api/ws';
-import { events, necodeLib } from '~mike-config';
 import asArray from '~utils/asArray';
 import { ArrayKeyMap } from '~utils/maps/ArrayKeyMap';
 import { typeAssert } from '~utils/typeguards';
-import allPolicies from './allPolicies';
-import { ConnectionInfo, RtcCoordinator, RtcPolicy, RtcPolicySettings } from './RtcPolicy';
-
-const EXTERNALS = 'externals';
-const necodeLibImpl: JsLibraryImplementation<typeof necodeLib> = {
-    types: {
-        User: () => ({ serialize: 'x=>x', deserialize: 'x=>x', }),
-        Policy: () => ({ serialize: 'x=>x', deserialize: 'x=>x', }),
-        Group: () => ({ serialize: `x=>x.serialize()`, deserialize: `${EXTERNALS}.deserializeGroup` }),
-        SignalData: () => ({ serialize: 'x=>{throw new Error("SignalData is not serializable")}', deserialize: 'x=>x' }),
-        // Internal types (unspeakable)
-        $Bug: () => ({ serialize: '', deserialize: '' }),
-        $Branch: () => ({ serialize: '', deserialize: '' }),
-    },
-    values: {
-        link: () => ({ emit: `${EXTERNALS}.link` }),
-        unlink: () => ({ emit: `${EXTERNALS}.unlink` }),
-        Group: () => ({ emit: `${EXTERNALS}.makeGroup` }),
-        BUG: () => ({ emit: `${EXTERNALS}.BUG` }),
-        _$BRANCH: () => ({ emit: '' }), // Should never appear
-    },
-};
+import getCoordinatorFactory from './getPolicy';
+import { ConnectionInfo, RtcCoordinator, RtcCoordinatorFactory, RtcPolicySettings } from './RtcPolicy';
 
 interface PolicyReference {
     name: string;
@@ -47,58 +19,17 @@ interface MiKeExposed {
     none: unknown;
 }
 
-export default async function createMiKePolicy(filename: string): Promise<RtcPolicy | undefined> {
-    const mikeSource = await readFile(path.join(__dirname, filename), { encoding: 'utf-8' });
-    const policyName = path.basename(filename, '.mike');
+export default async function createMiKePolicy(id: string, compiledCode: Buffer, validatorConfig: PolicyValidatorConfig): Promise<RtcCoordinatorFactory> {
 
-    const validationResult = await validate(mikeSource);
-
-    if (!validationResult.ok) {
-        console.error(`Failed to validate ${filename}.`);
-        for (const { severity, message, details } of validationResult.messages) {
-            console[severity](`\t[${severity}]`, message);
-            for (const detail of details ?? []) {
-                console[severity](`\t\t`, detail);
-            }
-        }
-        return;
-    }
-
-    const mike = new MiKe();
-    mike.setEvents(events);
-
-    mike.addLibrary(necodeLib);
-    mike.setTarget(createJavascriptTarget(['some', 'none']));
-    mike.addLibraryImplementation(necodeLibImpl);
-
-    const diagnostics = createMiKeDiagnosticsManager();
-    mike.setDiagnosticsManager(diagnostics);
-
-    mike.init();
-
-
-    mike.loadScript(mikeSource);
-    const jsCodeBuffer = mike.tryValidateAndEmit();
-    if (!jsCodeBuffer) {
-        diagnostics.getDiagnostics().forEach(d => console.error(d.toString()));
-        throw new Error(`MiKe Compilation Failed.\n\t${diagnostics.getDiagnostics().join('\n\t')}`);
-    }
-
-    const validatorConfigString = mike.getComments()!
-        .filter(x => x.content.startsWith('//%'))
-        .sort((a, b) => getNodeSourceRange(a).start.line - getNodeSourceRange(b).start.line)
-        .map(x => x.content.slice(3))
-        .join('\n');
-
-    const validatorConfig = parsePolicyValidatorConfig(validatorConfigString);
-
-    const jsModuleCode = `data:text/javascript;base64,${Buffer.from(jsCodeBuffer).toString('base64')}`;
-    const createMiKeProgram: MiKeProgramWithoutExternals<MiKeExposed> = (await loadModule(jsModuleCode)).default;
+    const jsModuleCode = `data:text/javascript;base64,${Buffer.from(compiledCode).toString('base64')}`;
+    const createMiKeProgram: MiKeProgramWithoutExternals<MiKeExposed> = (await import_(jsModuleCode)).default;
+    
+    const policyCache = new Map<string, RtcCoordinatorFactory>();
 
     // TODO: Watch https://github.com/microsoft/TypeScript/issues/33892
     // @rtcPolicy
     class Policy implements RtcCoordinator {
-        static readonly policyId = policyName;
+        static readonly policyId = id;
 
         private currentUsers = new Set<string>();        
         private connectionMap = new ArrayKeyMap<[string, string], ConnectionInfo>();
@@ -141,7 +72,7 @@ export default async function createMiKePolicy(filename: string): Promise<RtcPol
 
                 makeGroup: (policySourceName: string) => {
                     const { name, params } = this.policyMap.get(policySourceName)!;
-                    const policy = allPolicies.find(x => x.policyId === name)!;
+                    const policy = policyCache.get(name)!;
                     const group = new policy(network, [], {
                         params,
                         rtc: settings.rtc,
@@ -168,7 +99,7 @@ export default async function createMiKePolicy(filename: string): Promise<RtcPol
 
                 deserializeGroup: (data: { policySourceName: string, state: string }) => {
                     const { name, params } = this.policyMap.get(data.policySourceName)!;
-                    const policy = allPolicies.find(x => x.policyId === name)!;
+                    const policy = policyCache.get(name)!;
                     const group = new policy(network, [], {
                         params,
                         rtc: settings.rtc,
@@ -190,7 +121,25 @@ export default async function createMiKePolicy(filename: string): Promise<RtcPol
             }
         }
 
-        static validate(params: PolicyParams) {
+        static async validate(params: PolicyParams) {
+            for (const name in params) {
+                let value = params[name];
+                while (value.type === 'option') {
+                    if (value.value === undefined) {
+                        break;
+                    }
+                    value = value.value;
+                }
+                if (value.type === 'Policy') {
+                    const policyName = value.name;
+                    const policy = await getCoordinatorFactory(policyName);
+                    if (!policy || !policy.validate(value.params)) {
+                        return false;
+                    }
+                    policyCache.set(policyName, policy);
+                }
+            }
+
             for (const config of asArray(validatorConfig)) {
                 if (config.params) {
                     const possibleParamValues = asArray<Values>(config.params);
@@ -247,23 +196,6 @@ export default async function createMiKePolicy(filename: string): Promise<RtcPol
                         if (result) {
                             return true;
                         }
-                    }
-                }
-            }
-
-            for (const name in params) {
-                let value = params[name];
-                while (value.type === 'option') {
-                    if (value.value === undefined) {
-                        break;
-                    }
-                    value = value.value;
-                }
-                if (value.type === 'Policy') {
-                    const policyName = value.name;
-                    const policy = allPolicies.find(x => x.policyId === policyName);
-                    if (!policy || !policy.validate(value.params)) {
-                        return false;
                     }
                 }
             }

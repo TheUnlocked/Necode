@@ -6,6 +6,7 @@ const pages = [
     '/admin/createClassroom',
     '/admin/users',
     '/admin/simulation',
+    '/admin/plugins',
 ].sort();
 
 export default function AdminPage() {

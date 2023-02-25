@@ -19,8 +19,12 @@ export default function FormPage(props: PropsWithChildren<{
     if (props.formProps?.onSubmit) {
         trueFormProps.onSubmit = async function(...args) {
             setSubmitLoading(true);
-            await (props.formProps?.onSubmit?.apply(this, args) as undefined | Promise<undefined>);
-            setSubmitLoading(false);
+            try {
+                await (props.formProps?.onSubmit?.apply(this, args) as undefined | Promise<undefined>);
+            }
+            finally {
+                setSubmitLoading(false);
+            }
         };
     }
 

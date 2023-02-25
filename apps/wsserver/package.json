@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@brillout/load-module": "^0.1.1",
+    "@brillout/import": "^0.2.2",
     "@necode-org/mike": "^0.3.3",
     "@necode-org/policy-dev": "workspace:*",
     "dotenv": "^16.0.3",

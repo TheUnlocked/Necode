@@ -30,11 +30,11 @@ class Classroom {
         return this._activity;
     }
 
-    startActivity(activityId: string, networkConfig: readonly PolicyConfiguration[], activityInfo: any) {
+    async startActivity(activityId: string, networkConfig: readonly PolicyConfiguration[], activityInfo: any) {
         this._activity = {
             id: activityId,
             info: activityInfo,
-            networks: networkConfig.map((config, i) => new RtcNetwork(toNetworkId(i), this.rtc, config)),
+            networks: await Promise.all(networkConfig.map((config, i) => RtcNetwork.create(toNetworkId(i), this.rtc, config))),
         };
         this.io.to(this.id).emit('startActivity', { id: activityId, info: activityInfo });
     }

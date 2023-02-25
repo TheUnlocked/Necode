@@ -6,6 +6,8 @@ export enum EntityType {
     Lesson = 'lesson',
     Activity = 'activity',
     ActivitySubmission = 'submission',
+    Plugin = 'plugin',
+    RtcPolicy = 'rtc-policy',
 }
 
 export type EntityId = string;

@@ -5,6 +5,7 @@ import { ActivitySubmissionEntity } from './entities/ActivitySubmissionEntity';
 import { ClassroomEntity, ClassroomEntityRefs } from './entities/ClassroomEntity';
 import { ClassroomMemberEntity } from './entities/ClassroomMemberEntity';
 import { LessonEntity, LessonEntityRefs } from './entities/LessonEntity';
+import { PluginEntity } from './entities/PluginEntity';
 import { UserEntity } from './entities/UserEntity';
 import { PolicyConfiguration } from './RtcNetwork';
 import { PaginationParams } from './standardParams';
@@ -280,6 +281,15 @@ const api = new class Api {
             },
         }>,
     };
+
+    plugins = {
+        all: { _path: ['/api/plugin'], _imm: true } as SimpleEndpointHandle<PluginEntity[]>,
+        create: { _path: ['/api/plugin'] } as SimpleEndpointHandle<PluginEntity, { POST: Blob }>,
+    };
+
+    plugin(id: string): SimpleEndpointHandle<PluginEntity, { GET: undefined, DELETE: undefined }> {
+        return { _path: ['/api/plugin/', id] };
+    }
 };
 
 export default api;

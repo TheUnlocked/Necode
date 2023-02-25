@@ -1,9 +1,8 @@
-import { Box, Card, CardActionArea, CardContent, IconButton, Stack, Typography } from '@mui/material';
-import { createYHandle, NetworkId, useSignal, YProvider } from '@necode-org/activity-dev';
-import { PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react';
-import { useSnackbar } from 'notistack';
-import { ScrollMenu, VisibilityContext } from 'react-horizontal-scrolling-menu';
 import { ArrowLeft, ArrowRight } from '@mui/icons-material';
+import { Box, Card, CardActionArea, CardContent, IconButton, Stack, Typography } from '@mui/material';
+import { createYHandle, NetworkId, useSignal, useSnackbar, YProvider } from '@necode-org/activity-dev';
+import { PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react';
+import { ScrollMenu, VisibilityContext } from 'react-horizontal-scrolling-menu';
 
 export interface BreakoutRoomSelectorProps extends PropsWithChildren {
     network: NetworkId;

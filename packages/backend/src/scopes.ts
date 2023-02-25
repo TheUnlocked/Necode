@@ -58,6 +58,8 @@ async function hasControlOver(controllerId: string, otherId: string) {
 }
 
 export interface Scopes {
+    'plugin:install': undefined;
+    'plugin:uninstall': { pluginId: string };
     'user:all:view': undefined;
     'user:view': { userId: string };
     'user:detailed:view': { userId: string }; // Currently unused, see #30
@@ -88,6 +90,9 @@ export async function hasScope(userId: string, scope: keyof { [K in keyof Scopes
 export async function hasScope<Scope extends keyof Scopes>(userId: string, scope: Scope, params: Scopes[Scope]): Promise<boolean>;
 export async function hasScope(userId: string, ...[scope, data]: ScopeArgumentTuples): Promise<boolean> {
     switch (scope) {
+        case 'plugin:install':
+        case 'plugin:uninstall':
+            return isAdmin(userId);
         case 'user:all:view':
             return isAdmin(userId);
         case 'classroom:create':

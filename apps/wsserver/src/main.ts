@@ -260,9 +260,14 @@ internalApi.post('/:classroomId/activity', async (req, res) => {
     const classroom = classrooms.getOrCreate(req.params.classroomId);
     const body: CreateLiveActivityInfo = req.body;
     
-    classroom.startActivity(body.id, body.networks, body.info);
+    try {
+        await classroom.startActivity(body.id, body.networks, body.info);
+        return res.status(200).send();
+    }
+    catch (e) {
+        return res.status(400).send(e instanceof Error ? e.message : `${e}`);
+    }
 
-    res.status(200).send();
 });
 
 internalApi.delete('/:classroomId/activity', (req, res) => {

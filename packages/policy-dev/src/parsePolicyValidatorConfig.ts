@@ -159,6 +159,13 @@ function parseSingleValidatorConfig(obj: unknown) {
     };
 }
 
+export function assertIsValidatorConfig(obj: any): asserts obj is PolicyValidatorConfig {
+    if (typeof obj !== 'object') {
+        throw new ParseValidationConfigError('Not an object');
+    }
+    parseAtLeastOneOf(obj, parseSingleValidatorConfig);
+}
+
 /**
  * @throws {SyntaxError} when the JSON string input fails to parse
  * @throws {ParseValidationConfigError}

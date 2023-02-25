@@ -62,19 +62,6 @@ const apiActivityLive = endpoint(null, ['classroomId'], {
             if (!doesActivityExist) {
                 return fail(Status.NOT_FOUND);
             }
-
-            await prisma.liveActivity.upsert({
-                where: { classroomId },
-                create: {
-                    classroomId,
-                    activityId: body.id,
-                    data: body.data ?? undefined
-                },
-                update: {
-                    activityId: body.id,
-                    data: body.data ?? undefined
-                }
-            });
             
             const response = await fetch(`${process.env.WEBSOCKET_SERVER?.replace(/\/$/, '')}/internal/${classroomId}/activity`, {
                 method: 'POST',
@@ -90,11 +77,22 @@ const apiActivityLive = endpoint(null, ['classroomId'], {
                 } as CreateLiveActivityInfo)
             });
 
-            // TODO: If fails to send, should also fail to start activity
-
             if (!response.ok) {
                 return fail(response.status, await response.text());
             }
+
+            await prisma.liveActivity.upsert({
+                where: { classroomId },
+                create: {
+                    classroomId,
+                    activityId: body.id,
+                    data: body.data ?? undefined
+                },
+                update: {
+                    activityId: body.id,
+                    data: body.data ?? undefined
+                }
+            });
             
             return ok(undefined);
         }

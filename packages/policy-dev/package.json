@@ -7,7 +7,7 @@
   "types": "./dist/main.d.ts",
   "bin": "./dist/main.mjs",
   "dependencies": {
-    "@brillout/load-module": "^0.1.1",
+    "@brillout/import": "^0.2.2",
     "@necode-org/mike": "^0.3.3",
     "cli-progress": "^3.11.2",
     "fast-check": "^3.6.2",

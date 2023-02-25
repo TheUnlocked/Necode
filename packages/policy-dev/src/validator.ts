@@ -1,4 +1,4 @@
-import loadModule from '@brillout/load-module';
+import { import_ } from '@brillout/import';
 import { MiKe } from '@necode-org/mike';
 import { ASTNodeKind, Block, DebugStatement, FloatLiteral, getNodeSourceRange, Identifier, StatementOrBlock, stringifyPosition, Variable, visit } from '@necode-org/mike/ast';
 import { JsLibraryImplementation, MiKeProgram as _MiKeProgram, MiKeProgramWithoutExternals as _MiKeProgramWithoutExternals, ParameterType } from '@necode-org/mike/codegen/js';
@@ -11,7 +11,6 @@ import { PolicyValidatorConfig, SignalInfo, Value, Values } from '~api/PolicyVal
 import { events as necodeEvents, internalUniqueBugType, necodeLib } from '~mike-config';
 import asArray from '~utils/asArray';
 import { Mutable, NewType } from '~utils/types';
-import parseValidatorConfig, { ParseValidationConfigError } from './parsePolicyValidatorConfig';
 import { cloneDeep } from 'lodash';
 
 interface MiKeExposed {
@@ -108,7 +107,7 @@ async function compileMiKe(script: string): Promise<CompileMiKeResult> {
     // console.log(Buffer.from(buffer).toString('utf-8'));
 
     return {
-        createProgram: (await loadModule(`data:text/javascript;base64,${Buffer.from(buffer).toString('base64')}`)).default,
+        createProgram: (await import_(`data:text/javascript;base64,${Buffer.from(buffer).toString('base64')}`)).default,
         mike,
         branches,
     };
@@ -501,7 +500,7 @@ export interface ValidateResult {
     }[];
 }
 
-export async function validate(source: string, options = {
+export async function validate(source: string, validatorConfig: PolicyValidatorConfig, options = {
     numRuns: 10_000,
 }): Promise<ValidateResult> {
     const messages = [] as ValidateResult['messages'];
@@ -542,24 +541,6 @@ export async function validate(source: string, options = {
     if (validatorConfigString === '') {
         error('Parameter configuration not found.');
         error('Every policy must include a parameter configuration in //% comments.');
-        return result();
-    }
-
-    let validatorConfig: PolicyValidatorConfig;
-    try {
-        validatorConfig = parseValidatorConfig(validatorConfigString);
-    }
-    catch (e) {
-        if (e instanceof SyntaxError) {
-            error('Parameter configuration is not valid JSON.');
-            return result();
-        }
-        if (e instanceof ParseValidationConfigError) {
-            error('Parameter configuration failed to load. See stack trace for more info.', [], e);
-            return result();
-        }
-
-        error('Parameter configuration failed to load due to unknown error.', [], e);
         return result();
     }
 

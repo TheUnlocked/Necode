@@ -1,12 +1,12 @@
 import { Schema } from "joi";
-import { GetServerSidePropsContext, NextApiHandler, NextApiRequest, NextApiResponse } from "next";
+import { NextApiHandler, NextApiRequest, NextApiResponse } from "next";
 import { Entity } from "~api/entities/Entity";
 import { Response, ResponsePaginationPart } from "~api/Response";
 import { Session } from "next-auth";
-import { IfAny, UndefinedIsOptional } from "~utils/types";
+import { IfAny } from "~utils/types";
 import { EntityReference, EntityReferenceArray, ReferenceDepth } from "~api/entities/EntityReference";
 import getIdentity from './identity';
-import { parse as parseCookie } from 'cookie';
+import { Readable } from 'stream';
 
 export enum Status {
     OK = 200,
@@ -61,6 +61,13 @@ type QueryParamsObject<T extends string> = {
         : string
 };
 
+export interface EndpointHandlerObject<Req, QueryParams extends string> {
+    query: QueryParamsObject<QueryParams>,
+    body: Req,
+    bodyStream: Readable,
+    session?: Session | undefined
+}
+
 export interface Endpoint<Req, Res, QueryParams extends string> {
     /**
      * @default true
@@ -69,11 +76,7 @@ export interface Endpoint<Req, Res, QueryParams extends string> {
 
     schema?: Schema<Req>;
 
-    handler: EndpointCallback<{
-        query: QueryParamsObject<QueryParams>,
-        body: Req,
-        session?: Session | undefined
-    }, Res>;
+    handler: EndpointCallback<EndpointHandlerObject<Req, QueryParams>, Res>;
 }
 
 export type EndpointCallback<Req, Res> = (
@@ -364,7 +367,7 @@ export function endpoint<P extends string, Endpoints extends EndpointMap<P>>(_: 
             }
 
             try {
-                return endpoint.handler({ query: cleanedParams, body, session }, ok, fail);
+                return endpoint.handler({ query: cleanedParams, body, bodyStream: req, session }, ok, fail);
             }
             catch (e) {
                 return fail(Status.INTERNAL_SERVER_ERROR);
@@ -375,18 +378,22 @@ export function endpoint<P extends string, Endpoints extends EndpointMap<P>>(_: 
         }
     }
 
-    return Object.assign(handler, Object.fromEntries(Object.entries(endpoints).map(([name, obj]) => [name, { ...obj, execute }])));
+    return Object.assign(handler, Object.fromEntries(
+        Object.entries(endpoints)
+            .map(([name, obj]) => [name, {
+                ...obj,
+                execute: execute satisfies ExecuteMethod<P, Endpoint<any, any, P>>
+            }])
+    ));
 }
 
 type ExecuteMethod<P extends string, E extends Endpoint<any, any, P>> = (
     this: E,
-    req: GetServerSidePropsContext['req'],
-    res: GetServerSidePropsContext['res'],
-    content: UndefinedIsOptional<Omit<Parameters<E['handler']>[0], 'session'>>
+    obj: Parameters<E['handler']>[0],
 ) => Promise<Response<Parameters<Parameters<E['handler']>[1]>[0]>>;
 
-function execute<E extends Endpoint<any, any, any>>(this: E, req: GetServerSidePropsContext['req'], res: GetServerSidePropsContext['res'], content: Omit<Parameters<E['handler']>[0], 'session'>) {
-    return new Promise(async resolve => {
+function execute<E extends Endpoint<any, any, any>>(this: E, obj: EndpointHandlerObject<unknown, string>) {
+    return new Promise<Response<Parameters<Parameters<E['handler']>[1]>[0]>>(async resolve => {
         function ok(result: any) {
             resolve({
                 response: 'ok',
@@ -401,21 +408,7 @@ function execute<E extends Endpoint<any, any, any>>(this: E, req: GetServerSideP
             });
         }
 
-        let session: Session | undefined;
-    
-        if (this.loginValidation !== false) {
-            (req as any).cookies = parseCookie(req.headers.cookie ?? '');
-            const identityResult = await getIdentity(req as any, res);
-            switch (identityResult) {
-                case 'not-logged-in':
-                    return fail(Status.UNAUTHORIZED, 'Not logged in');
-                case 'cannot-impersonate':
-                    return fail(Status.FORBIDDEN, 'Either you do not have the rights to impersonate that user, or the Impersonate header is invalid');
-            }
-            session = identityResult;
-        }
-
-        return this.handler({ ...content, session }, ok, fail);
+        return this.handler(obj, ok, fail);
     });
 
 }

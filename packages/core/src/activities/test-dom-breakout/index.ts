@@ -25,7 +25,7 @@ export default activityDescription({
     configPage: async () => (await import('./activity')).ActivityConfig,
     configWidget: async () => (await import('./activity')).Widget,
     configurePolicies: config => [{
-        name: 'breakout',
+        name: 'core/breakout',
         params: {
             numGroups: {
                 type: 'int',
@@ -33,7 +33,7 @@ export default activityDescription({
             },
             roomPolicy: {
                 type: 'Policy',
-                name: 'ring',
+                name: 'core/ring',
                 params: {},
             }
         }

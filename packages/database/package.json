@@ -8,12 +8,16 @@
     ".": "./dist/index.js",
     "./*": "./dist/*"
   },
+  "prisma": {
+    "seed": "pnpm run db:seed"
+  },
   "scripts": {
     "_dev": "tsc --watch",
     "_build": "npm run generate && tsc",
     "clean": "rimraf .turbo node_modules dist",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
+    "db:migrate:reset": "prisma migrate reset",
     "db:push": "prisma db push",
     "db:seed": "ts-node --compilerOptions=\"{\\\"module\\\":\\\"commonjs\\\"}\" --transpile-only src/seed.ts",
     "format": "prisma format",
@@ -30,6 +34,7 @@
     "prisma": "^4.9.0",
     "rimraf": "^3.0.2",
     "ts-node": "^10.9.1",
+    "tsconfig-paths": "^4.1.2",
     "typescript": "^4.9.4",
     "~tsconfig": "workspace:*"
   }

@@ -170,8 +170,8 @@ export default class CorePlugin extends Plugin {
             'javascript',
             [
                 'entryPoint/any/sync',
-                'evaluate/any/sync',
                 'evaluate/any',
+                'evaluate/any/sync',
                 'iframe/static',
                 'worker/static',
                 'repl/instanced/fullSync',
@@ -185,8 +185,8 @@ export default class CorePlugin extends Plugin {
             'typescript',
             [
                 'entryPoint/any/sync',
-                'evaluate/any/sync',
                 'evaluate/any',
+                'evaluate/any/sync',
                 'iframe/static',
                 'worker/static',
                 'repl/instanced/fullSync',

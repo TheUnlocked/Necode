@@ -57,30 +57,3 @@ on leave(user: User) {
         groupMembership.remove(user);
     }
 }
-
-// -- PARAMETER CONFIGURATION --
-//% {
-//%     "params": {
-//%         "numGroups": {
-//%             "type": "int",
-//%             "ge": 2,
-//%             "le": 50
-//%         }
-//%     },
-//%     "signal": [
-//%         {
-//%             "type": "joinRoom",
-//%             "data": {
-//%                 "room": {
-//%                     "type": "int",
-//%                     "ge": 1,
-//%                     "le": 50
-//%                 }
-//%             }
-//%         },
-//%         {
-//%             "type": "leaveRoom",
-//%             "data": {}
-//%         }
-//%     ]
-//% }

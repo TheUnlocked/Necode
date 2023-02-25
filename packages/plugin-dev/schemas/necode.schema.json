@@ -1,0 +1,264 @@
+{
+    "title": "Necode Plugin",
+    "description": "The configuration for a Necode plugin in its package.json file",
+    "type": "object",
+    "properties": {
+        "frontendRoot": {
+            "type": "string",
+            "pattern": "^(?:[^./]+/)*[^./]+/?$",
+            "description": "The path to a directory that should be treated as the base path for the frontend files, relative to the package root"
+        },
+        "entry": {
+            "type": "string",
+            "pattern": "^(?:[^./]+/)*[^./]+\\.js$",
+            "description": "The path to a file whose default export is the plugin class, relative to frontendRoot"
+        },
+        "policyRoot": {
+            "type": "string",
+            "pattern": "^(?:[^./]+/)*[^./]+/?$",
+            "description": "The path to a directory that should be treated as the base path for policies, relative to the package root"
+        },
+        "policies": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "path": {
+                        "type": "string",
+                        "pattern": "^(?:[^./]+/)*[^./]+\\.mike$",
+                        "description": "A path to the MiKe file for this policy, relative to policyRoot"
+                    },
+                    "id": {
+                        "type": "string",
+                        "description": "The ID of this policy. It is recommended to namespace this, e.g. \"core/ring\""
+                    },
+                    "displayName": {
+                        "type": "string",
+                        "description": "The display name for this policy"
+                    },
+                    "config": {
+                        "$ref": "#/$defs/PolicyValidatorConfig",
+                        "description": "The validator configuration for this policy. If the policy does not use params or signal, this may be omitted"
+                    }
+                },
+                "required": [
+                    "path",
+                    "id",
+                    "displayName"
+                ]
+            }
+        },
+        "packageOverrides": {
+            "$ref": "https://json.schemastore.org/package.json",
+            "description": "This overrides fields in package.json when imported as a plugin to Necode"
+        }
+    },
+    "$defs": {
+        "AtLeastOneOf_SignalInfo": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/SignalInfo"
+                },
+                {
+                    "items": {
+                        "$ref": "#/$defs/SignalInfo"
+                    },
+                    "minItems": 1,
+                    "type": "array"
+                }
+            ]
+        },
+        "AtLeastOneOf_Value": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/Value"
+                },
+                {
+                    "items": {
+                        "$ref": "#/$defs/Value"
+                    },
+                    "minItems": 1,
+                    "type": "array"
+                }
+            ]
+        },
+        "AtLeastOneOf_Values": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/Values"
+                },
+                {
+                    "items": {
+                        "$ref": "#/$defs/Values"
+                    },
+                    "minItems": 1,
+                    "type": "array"
+                }
+            ]
+        },
+        "AtLeastOneOf_SingleValidatorConfig": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/SingleValidatorConfig"
+                },
+                {
+                    "items": {
+                        "$ref": "#/$defs/SingleValidatorConfig"
+                    },
+                    "minItems": 1,
+                    "type": "array"
+                }
+            ]
+        },
+        "SingleValidatorConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "params": {
+                    "$ref": "#/$defs/AtLeastOneOf_Values",
+                    "description": "Contraints on the policy params."
+                },
+                "signal": {
+                    "$ref": "#/$defs/AtLeastOneOf_SignalInfo",
+                    "description": "Contraints on the signal events and payloads."
+                }
+            },
+            "type": "object"
+        },
+        "AtLeastOneOf_number": {
+            "anyOf": [
+                {
+                    "type": "number"
+                },
+                {
+                    "items": {
+                        "type": "number"
+                    },
+                    "minItems": 1,
+                    "type": "array"
+                }
+            ]
+        },
+        "AtLeastOneOf_string": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "items": {
+                        "type": "string"
+                    },
+                    "minItems": 1,
+                    "type": "array"
+                }
+            ]
+        },
+        "PolicyValidatorConfig": {
+            "$ref": "#/$defs/AtLeastOneOf_SingleValidatorConfig"
+        },
+        "SignalInfo": {
+            "additionalProperties": false,
+            "properties": {
+                "data": {
+                    "$ref": "#/$defs/AtLeastOneOf_Values",
+                    "description": "Constraints on the signal payload"
+                },
+                "type": {
+                    "$ref": "#/$defs/AtLeastOneOf_string",
+                    "description": "The signal event"
+                }
+            },
+            "required": [
+                "type",
+                "data"
+            ],
+            "type": "object"
+        },
+        "Value": {
+            "anyOf": [
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "type": {
+                            "enum": [
+                                "int",
+                                "float"
+                            ],
+                            "type": "string"
+                        },
+                        "value": {
+                            "$ref": "#/$defs/AtLeastOneOf_number"
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "value"
+                    ],
+                    "type": "object"
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "ge": {
+                            "type": "number"
+                        },
+                        "le": {
+                            "type": "number"
+                        },
+                        "type": {
+                            "enum": [
+                                "int",
+                                "float"
+                            ],
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "ge",
+                        "le"
+                    ],
+                    "type": "object"
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "type": {
+                            "const": "string",
+                            "type": "string"
+                        },
+                        "value": {
+                            "$ref": "#/$defs/AtLeastOneOf_string"
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "value"
+                    ],
+                    "type": "object"
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "type": {
+                            "const": "boolean",
+                            "type": "string"
+                        },
+                        "value": {
+                            "type": "boolean"
+                        }
+                    },
+                    "required": [
+                        "type"
+                    ],
+                    "type": "object"
+                }
+            ]
+        },
+        "Values": {
+            "additionalProperties": {
+                "$ref": "#/$defs/AtLeastOneOf_Value"
+            },
+            "type": "object"
+        }
+    }
+}

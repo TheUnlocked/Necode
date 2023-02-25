@@ -11,7 +11,7 @@ const canvasActivityDescription = activityDescription({
     requiredFeatures: [
         'entryPoint/any'
     ],
-    configurePolicies: () => [{ name: 'ring' }],
+    configurePolicies: () => [{ name: 'core/ring' }],
     activityPage: async () => (await import('./CanvasActivity')).CanvasActivity,
     configWidget: async () => (await import('./Widget')).CanvasWidget,
     defaultConfig: { canvasWidth: 400, canvasHeight: 400 } as Configuration,

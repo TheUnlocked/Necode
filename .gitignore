@@ -11,3 +11,6 @@ tsconfig.tsbuildinfo
 .next
 .turbo
 dist
+
+# Keep out package builds
+*.tgz

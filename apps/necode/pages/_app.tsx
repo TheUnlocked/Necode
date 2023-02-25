@@ -22,7 +22,7 @@ import { DragDropProvider } from 'use-dnd';
 import { PluginsProvider } from '~shared-ui/hooks/usePlugins';
 import CorePlugin from '~core';
 
-const plugins = [CorePlugin];
+const builtinPlugins = [CorePlugin];
 
 function MyApp({ Component, pageProps }: AppProps) {
     const loadingInfoRef = useRef({
@@ -58,7 +58,7 @@ function MyApp({ Component, pageProps }: AppProps) {
             <SnackbarProvider hideIconVariant>
             <DragDropProvider>
             <LoadingContext.Provider value={loadingContext}>
-            <PluginsProvider plugins={plugins}>
+            <PluginsProvider builtinPlugins={builtinPlugins}>
                 <Header />
                 <Box sx={{
                     "--header-height": "64px",

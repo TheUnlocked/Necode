@@ -6,6 +6,7 @@ export * from './useLanguageList';
 export { default as useLanguageList } from './useLanguageList';
 
 // Re-exports from other libraries
+export { useSnackbar } from 'notistack';
 export { default as useImported } from '~shared-ui/hooks/useImported';
 export { default as useAsyncMemo } from '~shared-ui/hooks/useAsyncMemo';
 export * from '~shared-ui/hooks/RtcHooks';

@@ -33,11 +33,20 @@ type ApiFetchFunction = <E extends EndpointHandle<any>, Method extends HttpMetho
         & ((HttpMethod extends Method ? 'GET' : Method) extends 'GET'
             ? { body?: undefined }
             : E extends EndpointHandle<{ [_ in Method]: { body: infer B, response: any } }>
-                ? { method: Method, body: B }
+                ? { method: Method } & (B extends undefined ? { body?: undefined } : { body: B })
                 : TypeError<`${Method} is not supported on endpoint`>),
 ) => E extends EndpointHandle<{ [_ in (HttpMethod extends Method ? 'GET' : Method)]: { body: any, response: infer R } }>
     ? Promise<R>
     : TypeError<`${Method} is not supported on endpoint`>;
+
+function isRawType(x: any): x is Exclude<BodyInit, string> {
+    return x instanceof Blob
+        || x instanceof ReadableStream
+        || x instanceof ArrayBuffer
+        || x instanceof FormData
+        || x instanceof URLSearchParams
+        ;
+}
 
 function createApiFetch(fetch: NecodeFetch) {
     return function (endpoint, options) {
@@ -48,7 +57,7 @@ function createApiFetch(fetch: NecodeFetch) {
             endpoint._path.join(''),
             {
                 ...options as Omit<typeof options, 'body'>,
-                ...options?.body ? { body: JSON.stringify(options.body) } : undefined,
+                ...options?.body ? { body: isRawType(options.body) ? options.body : JSON.stringify(options.body) } : undefined,
             }
         );
     } as ApiFetchFunction;

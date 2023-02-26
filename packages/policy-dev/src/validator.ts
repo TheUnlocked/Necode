@@ -500,9 +500,11 @@ export interface ValidateResult {
     }[];
 }
 
-export async function validate(source: string, validatorConfig: PolicyValidatorConfig, options = {
-    numRuns: 10_000,
-}): Promise<ValidateResult> {
+export async function validate(source: string, validatorConfig: PolicyValidatorConfig, {
+    numRuns = 10_000,
+    policyName = '',
+    showProgress = false,
+} = {}): Promise<ValidateResult> {
     const messages = [] as ValidateResult['messages'];
 
     function result(ok = false): ValidateResult {
@@ -522,27 +524,15 @@ export async function validate(source: string, validatorConfig: PolicyValidatorC
     }
 
     const progressBar = new SingleBar({
-        format: 'Validation Progress |{bar}| {value}/{total} Passed ({percentage}%)',
+        format: `Validating ${policyName} |{bar}| {value}/{total} Passed ({percentage}%)`,
         barCompleteChar: '\u2588',
         barIncompleteChar: '\u2591',
         hideCursor: true,
     });
 
-    const { createProgram, mike, branches } = await compileMiKe(source);
+    const { createProgram, branches } = await compileMiKe(source);
     const externals = new Externals();
     const program = createProgram(externals);
-
-    const validatorConfigString = mike.getComments()!
-        .filter(x => x.content.startsWith('//%'))
-        .sort((a, b) => getNodeSourceRange(a).start.line - getNodeSourceRange(b).start.line)
-        .map(x => x.content.slice(3))
-        .join('\n');
-
-    if (validatorConfigString === '') {
-        error('Parameter configuration not found.');
-        error('Every policy must include a parameter configuration in //% comments.');
-        return result();
-    }
 
     const configValidationResult = validateConfigMatchesProgram(validatorConfig, program);
 
@@ -563,7 +553,9 @@ export async function validate(source: string, validatorConfig: PolicyValidatorC
     const allBranchesVisited = new Set<number>();
 
     const inputs = new Set<string>();
-    progressBar.start(options.numRuns, 0);
+    if (showProgress) {
+        progressBar.start(numRuns, 0);
+    }
 
     const runDetails = check(
         property(testConfig(program, validatorConfig), data => {
@@ -642,10 +634,12 @@ export async function validate(source: string, validatorConfig: PolicyValidatorC
             progressBar.increment();
         })
         .beforeEach(() => externals.reset()),
-        { numRuns: options.numRuns, skipEqualValues: true },
+        { numRuns, skipEqualValues: true },
     );
 
-    progressBar.stop();
+    if (showProgress) {
+        progressBar.stop();
+    }
 
     if (runDetails.error && runDetails.errorInstance instanceof ValidationError) {
         error('Validation Failed!', [runDetails.errorInstance.message]);

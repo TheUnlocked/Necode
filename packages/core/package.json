@@ -3,12 +3,14 @@
     "displayName": "Core",
     "version": "0.1.0",
     "license": "MIT",
+    "private": true,
     "files": [
         "necode.json",
         "policies"
     ],
     "scripts": {
-        "_build": "webpack --mode=production"
+        "_build": "webpack --mode=production",
+        "validate-plugins": "validate-plugins"
     },
     "dependencies": {
         "@babel/core": "^7.20.12",

@@ -5,7 +5,6 @@ import { JsLibraryImplementation, MiKeProgram as _MiKeProgram, MiKeProgramWithou
 import { createJavascriptTarget } from '@necode-org/mike/codegen/js/JavascriptTarget';
 import { createMiKeDiagnosticsManager, Severity } from '@necode-org/mike/diagnostics';
 import { TypeKind } from '@necode-org/mike/types';
-import { SingleBar } from 'cli-progress';
 import { Arbitrary, boolean, check, constant, float, integer as _integer, oneof, property, record, shuffledSubarray, stringify, tuple } from 'fast-check';
 import { PolicyValidatorConfig, SignalInfo, Value, Values } from '~api/PolicyValidatorConfig';
 import { events as necodeEvents, internalUniqueBugType, necodeLib } from '~mike-config';
@@ -263,9 +262,11 @@ const unfilteredEvents = (config: SignalInfo[]) => {
                 constant<PreparedEvent>({ event: 'leave', args: [user] }),
             ];
 
+            const joinLeaveEvts = joinLeave.flatMap(x => [x, cloneDeep(x)]);
+
             if (config.length > 0) {
                 return [
-                    ...joinLeave,
+                    ...joinLeaveEvts,
                     // Four per user should be decent. Surprisingly, this is easier to read than not duplicating code.
                     oneof(...config.map(cfg => signalEvent(user, cfg))),
                     oneof(...config.map(cfg => signalEvent(user, cfg))),
@@ -273,7 +274,7 @@ const unfilteredEvents = (config: SignalInfo[]) => {
                     oneof(...config.map(cfg => signalEvent(user, cfg))),
                 ];
             }
-            return joinLeave.flatMap(x => [x, cloneDeep(x)]);
+            return joinLeaveEvts;
         })))
         .chain(evts => shuffledSubarray(evts, { minLength: evts.length }));
 };
@@ -370,33 +371,7 @@ const params = (program: MiKeProgram, values: Values) => record(Object.fromEntri
             p.name,
             oneof(...asArray(values[p.name]).map(v => param(p.type, v))),
         ])
-    ))
-    .map(values => program.createParams({
-            getIntParam: name => values[name] as BigInt,
-            getFloatParam: name => values[name] as number,
-            getBooleanParam: name => values[name] as boolean,
-            getStringParam: name => values[name] as string,
-            getOptionParam: name => {
-                let value = values[name] as { p: boolean, v: unknown };
-                if (value.p) {
-                    const fns = {
-                        getIntParam: () => value.v as BigInt,
-                        getFloatParam: () => value.v as number,
-                        getBooleanParam: () => value.v as boolean,
-                        getStringParam: () => value.v as string,
-                        getOptionParam: () => {
-                            value = value.v as typeof value;
-                            return fns;
-                        },
-                        getCustomParam: () => value,
-                    };
-                    return fns;
-                }
-                return undefined;
-            },
-            getCustomParam: name => values[name],
-        }),
-    );
+    ));
 
 const testConfig = (program: MiKeProgram, validatorConfig: PolicyValidatorConfig) =>
     oneof(...asArray(validatorConfig)
@@ -502,8 +477,7 @@ export interface ValidateResult {
 
 export async function validate(source: string, validatorConfig: PolicyValidatorConfig, {
     numRuns = 10_000,
-    policyName = '',
-    showProgress = false,
+    onProgress = undefined as (() => void) | undefined,
 } = {}): Promise<ValidateResult> {
     const messages = [] as ValidateResult['messages'];
 
@@ -522,13 +496,6 @@ export async function validate(source: string, validatorConfig: PolicyValidatorC
     function info(message: string) {
         messages.push({ severity: 'info', message });
     }
-
-    const progressBar = new SingleBar({
-        format: `Validating ${policyName} |{bar}| {value}/{total} Passed ({percentage}%)`,
-        barCompleteChar: '\u2588',
-        barIncompleteChar: '\u2591',
-        hideCursor: true,
-    });
 
     const { createProgram, branches } = await compileMiKe(source);
     const externals = new Externals();
@@ -553,9 +520,6 @@ export async function validate(source: string, validatorConfig: PolicyValidatorC
     const allBranchesVisited = new Set<number>();
 
     const inputs = new Set<string>();
-    if (showProgress) {
-        progressBar.start(numRuns, 0);
-    }
 
     const runDetails = check(
         property(testConfig(program, validatorConfig), data => {
@@ -564,7 +528,33 @@ export async function validate(source: string, validatorConfig: PolicyValidatorC
                 return;
             }
 
-            const [events, params] = data;
+            const [events, _params] = data;
+
+            const params = program.createParams({
+                getIntParam: name => _params[name] as BigInt,
+                getFloatParam: name => _params[name] as number,
+                getBooleanParam: name => _params[name] as boolean,
+                getStringParam: name => _params[name] as string,
+                getOptionParam: name => {
+                    let value = _params[name] as { p: boolean, v: unknown };
+                    if (value.p) {
+                        const fns = {
+                            getIntParam: () => value.v as BigInt,
+                            getFloatParam: () => value.v as number,
+                            getBooleanParam: () => value.v as boolean,
+                            getStringParam: () => value.v as string,
+                            getOptionParam: () => {
+                                value = value.v as typeof value;
+                                return fns;
+                            },
+                            getCustomParam: () => value,
+                        };
+                        return fns;
+                    }
+                    return undefined;
+                },
+                getCustomParam: name => _params[name],
+            });
 
             const joined = new Set<User>();
             let state = program.createInitialState();
@@ -631,15 +621,11 @@ export async function validate(source: string, validatorConfig: PolicyValidatorC
             }
 
             inputs.add(dataString);
-            progressBar.increment();
+            onProgress?.();
         })
         .beforeEach(() => externals.reset()),
         { numRuns, skipEqualValues: true },
     );
-
-    if (showProgress) {
-        progressBar.stop();
-    }
 
     if (runDetails.error && runDetails.errorInstance instanceof ValidationError) {
         error('Validation Failed!', [runDetails.errorInstance.message]);

@@ -458,8 +458,10 @@ importers:
       fast-check: ^3.6.2
       lodash: ^4.17.21
       tsup: ^6.6.3
+      ~api: workspace:*
       ~mike-config: workspace:*
       ~tsconfig: workspace:*
+      ~utils: workspace:*
     dependencies:
       '@brillout/import': 0.2.2
       '@necode-org/mike': 0.3.3
@@ -467,11 +469,13 @@ importers:
       fast-check: 3.6.2
       lodash: 4.17.21
       ~mike-config: link:../mike-config
+      ~utils: link:../utils
     devDependencies:
       '@types/cli-progress': 3.11.0
       '@types/lodash': 4.14.191
       '@types/node': 18.11.18
       tsup: 6.6.3
+      ~api: link:../api
       ~tsconfig: link:../tsconfig
 
   packages/shared:

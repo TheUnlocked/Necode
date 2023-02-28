@@ -1,7 +1,7 @@
 import Joi, { Schema } from 'joi';
 import { posix as path } from 'path';
 import { makePluginEntity } from '~api/entities/PluginEntity';
-import { PolicyValidatorConfig } from '~api/PolicyValidatorConfig';
+import { NecodeJson, PackageJson } from '~api/NecodeJson';
 import { assertIsValidatorConfig, ParseValidationConfigError, validate } from '@necode-org/policy-dev';
 import { endpoint, Status } from "~backend/Endpoint";
 import { extractTgz } from '~backend/extract';
@@ -16,25 +16,6 @@ export const config = {
         bodyParser: false,
     },
 };
-
-interface PackageJson {
-    name: string;
-    displayName: string;
-    version: string;
-}
-
-interface NecodeJson {
-    frontendRoot?: string;
-    entry?: string;
-    policyRoot?: string;
-    policies?: {
-        path: string;
-        id: string;
-        displayName: string;
-        config?: PolicyValidatorConfig;
-    }[];
-    packageOverrides?: Partial<PackageJson>;
-}
 
 const apiPlugin = endpoint(makePluginEntity, [], {
     type: 'entityType',

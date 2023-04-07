@@ -208,7 +208,15 @@ const apiPlugin = endpoint(makePluginEntity, [], {
 
                     const mikeSource = files[absPath].toString('utf-8');
     
-                    const validationResult = await validate(mikeSource, policy.config ?? {});
+                    let runsComplete = 0;
+                    const validationResult = await validate(mikeSource, policy.config ?? {}, {
+                        numRuns: 1000,
+                        onProgress: () => {
+                            if (++runsComplete % 100 === 0) {
+                                console.log(`checking policy ${policy.id} - validator ${runsComplete}/1000`);
+                            }
+                        }
+                    });
 
                     console.log(`checking policy ${policy.id} - completed validation`);
 

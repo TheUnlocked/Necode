@@ -198,6 +198,9 @@ export default async function createMiKePolicy(id: string, compiledCode: Buffer,
                         }
                     }
                 }
+                else {
+                    return true;
+                }
             }
 
             return false;

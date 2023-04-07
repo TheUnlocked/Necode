@@ -121,7 +121,7 @@ export default async function createMiKePolicy(id: string, compiledCode: Buffer,
             }
         }
 
-        static async validate(params: PolicyParams) {
+        static async validate(params: PolicyParams = {}) {
             for (const name in params) {
                 let value = params[name];
                 while (value.type === 'option') {

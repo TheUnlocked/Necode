@@ -200,6 +200,10 @@ const apiPlugin = endpoint(makePluginEntity, [], {
                         }
                     }
                 }));
+
+                if (issues.length > 0) {
+                    return fail(Status.BAD_REQUEST, `Policies had errors:\n${issues.join('\n')}`);
+                }
             }
 
             try {
@@ -231,10 +235,6 @@ const apiPlugin = endpoint(makePluginEntity, [], {
                         }
                     });
                 });
-
-                if (!plugin) {
-                    return;
-                }
 
                 return ok(makePluginEntity(plugin));
             }

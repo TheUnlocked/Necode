@@ -33,6 +33,8 @@ const apiPlugin = endpoint(makePluginEntity, [], {
                 return fail(Status.FORBIDDEN);
             }
 
+            console.log('Passed authorization');
+
             const files = await extractTgz(bodyStream)
                 .catch(() => {
                     fail(Status.BAD_REQUEST, 'Failed to parse plugin as tgz.');
@@ -48,6 +50,8 @@ const apiPlugin = endpoint(makePluginEntity, [], {
                     })
                 )));
             
+            console.log('extraction successful');
+
             async function parseJsonFile<T>(filename: string, schema: Schema<T>): Promise<T> {
                 if (!(filename in files)) {
                     fail(Status.BAD_REQUEST, `Plugin does not include ${filename}.`);
@@ -77,6 +81,7 @@ const apiPlugin = endpoint(makePluginEntity, [], {
             const packageJsonSchema = Joi.object<PackageJson, true>(packageJsonSchemaObj);
 
             const packageJson = await parseJsonFile('package.json', packageJsonSchema);
+            console.log('package.json parsed successfully');
 
             let {
                 frontendRoot = '.',
@@ -98,6 +103,7 @@ const apiPlugin = endpoint(makePluginEntity, [], {
                     .fork(Object.keys(packageJsonSchemaObj), x => x.optional())
                     .optional(),
             }));
+            console.log('necode.json parsed successfully');
 
             const {
                 name,
@@ -111,12 +117,15 @@ const apiPlugin = endpoint(makePluginEntity, [], {
                 return fail(Status.BAD_REQUEST, `${version} is not a valid semantic version. See https://semver.org/ for details.`);
             }
 
+            console.log('semver checked');
+
             const { id: existingPluginId, version: existingPluginVersion } = await prisma.plugin.findUnique({
                 where: { name },
                 select: { id: true, version: true },
             }) ?? {};
 
             const isUpgrade = typeof existingPluginVersion === 'string';
+            console.log(`isUpgrade: ${isUpgrade}`);
 
             if (existingPluginVersion) {
                 if (!await hasScope(session!.user.id, 'plugin:uninstall', { pluginId: existingPluginId! })) {
@@ -151,9 +160,11 @@ const apiPlugin = endpoint(makePluginEntity, [], {
                 ...Object.fromEntries(policies?.map((x, i) => [`policies[${i}].path`, x.path]) ?? []),
             })) {
                 if (goesUp(path)) {
-                    issues.push(`${name} (${path}) is valid, paths cannot go upwards`);
+                    issues.push(`${name} (${path}) is invalid, paths cannot go upwards`);
                 }
             }
+
+            console.log('checked paths');
 
             let frontendFiles = [] as [string, Buffer][];
             
@@ -168,8 +179,12 @@ const apiPlugin = endpoint(makePluginEntity, [], {
                     .map(x => [path.relative(frontendRoot, x), files[x]]);
             }
 
+            console.log('checked frontend files');
+
             if (policies) {
                 await Promise.all(policies.map(async policy => {
+                    console.log(`checking policy ${policy.id}`);
+
                     const absPath = path.join(policyRoot, policy.path);
                     if (!(absPath in files)) {
                         issues.push(`Couldn't find policy ${policy.id} at ${absPath}`);
@@ -185,11 +200,17 @@ const apiPlugin = endpoint(makePluginEntity, [], {
                                 return;
                             }
                         }
+                        finally {
+                            console.log(`checking policy ${policy.id} - checked config`);
+                        }
                     }
+
 
                     const mikeSource = files[absPath].toString('utf-8');
     
                     const validationResult = await validate(mikeSource, policy.config ?? {});
+
+                    console.log(`checking policy ${policy.id} - completed validation`);
 
                     if (!validationResult.ok) {
                         issues.push(`Policy ${policy.id} failed to validate:`);
@@ -199,17 +220,21 @@ const apiPlugin = endpoint(makePluginEntity, [], {
                             details?.forEach(x => issues.push(`\t\t${x}`));
                         }
                     }
+
+                    console.log(`checking policy ${policy.id} done`);
                 }));
 
-                if (issues.length > 0) {
-                    return fail(Status.BAD_REQUEST, `Policies had errors:\n${issues.join('\n')}`);
-                }
+            }
+
+            if (issues.length > 0) {
+                return fail(Status.BAD_REQUEST, issues.join('\n'));
             }
 
             try {
                 const plugin = await prisma.$transaction(async (): Promise<Plugin> => {
                     if (isUpgrade) {
                         await prisma.plugin.delete({ where: { name } });
+                        console.log('former plugin deleted');
                     }
 
                     return prisma.plugin.create({
@@ -235,6 +260,8 @@ const apiPlugin = endpoint(makePluginEntity, [], {
                         }
                     });
                 });
+
+                console.log('plugin upload complete');
 
                 return ok(makePluginEntity(plugin));
             }

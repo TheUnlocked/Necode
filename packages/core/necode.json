@@ -1,0 +1,41 @@
+{
+    "$schema": "../plugin-dev/schemas/necode.schema.json",
+    "packageOverrides": {
+        "name": "core"
+    },
+    "policyRoot": "policies",
+    "policies": [
+        {
+            "path": "noop.mike",
+            "id": "core/noop",
+            "displayName": "None"
+        },
+        {
+            "path": "ring.mike",
+            "id": "core/ring",
+            "displayName": "Ring"
+        },
+        {
+            "path": "breakout.mike",
+            "id": "core/breakout",
+            "displayName": "Breakout Rooms",
+            "config": {
+                "params": {
+                    "numGroups": { "type": "int", "ge": 2, "le": 50 }
+                },
+                "signal": [
+                    {
+                        "type": "joinRoom",
+                        "data": {
+                            "room": { "type": "int", "ge": 1, "le": 50 }
+                        }
+                    },
+                    {
+                        "type": "leaveRoom",
+                        "data": {}
+                    }
+                ]
+            }
+        }
+    ]
+}

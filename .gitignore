@@ -1,7 +1,16 @@
-node_modules
-.next
 # Keep environment variables out of version control
 .env
+# This is a sym link to the main .env, we want to keep it
+!packages/database/.env
+
+# Keep out certs
 .dev-ssl-certs
 
+node_modules
 tsconfig.tsbuildinfo
+.next
+.turbo
+dist
+
+# Keep out package builds
+*.tgz

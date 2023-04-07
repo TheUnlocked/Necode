@@ -1,0 +1,25 @@
+{
+  "name": "~api",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "_exports": {
+    "./*": "./dist/*"
+  },
+  "scripts": {
+    "_dev": "tsc --watch",
+    "_build": "tsc"
+  },
+  "dependencies": {
+    "@types/luxon": "^3.2.0",
+    "luxon": "^2.5.2",
+    "~database": "workspace:*",
+    "~utils": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/simple-peer": "^9.11.5",
+    "socket.io": "^4.5.4",
+    "typescript": "^4.9.4",
+    "~tsconfig": "workspace:*"
+  }
+}

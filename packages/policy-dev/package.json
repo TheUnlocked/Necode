@@ -1,0 +1,33 @@
+{
+  "name": "@necode-org/policy-dev",
+  "version": "0.1.0",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "bin": {
+    "validate-plugins": "./dist/validate-plugins.js"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts src/validate-plugins.ts"
+  },
+  "dependencies": {
+    "@brillout/import": "^0.2.2",
+    "@necode-org/mike": "^0.3.3",
+    "cli-progress": "^3.11.2",
+    "fast-check": "^3.6.2",
+    "lodash": "^4.17.21",
+    "~mike-config": "workspace:*",
+    "~utils": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/cli-progress": "^3.11.0",
+    "@types/lodash": "^4.14.191",
+    "@types/node": "^18.11.18",
+    "tsup": "^6.6.3",
+    "~api": "workspace:*",
+    "~tsconfig": "workspace:*"
+  }
+}

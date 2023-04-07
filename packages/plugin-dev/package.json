@@ -1,0 +1,19 @@
+{
+  "name": "@necode-org/plugin-dev",
+  "version": "0.1.0",
+  "license": "MIT",
+  "dependencies": {
+    "@babel/core": "^7.20.12",
+    "@mui/material": "^5.11.6",
+    "@types/react": "^18.0.27",
+    "lodash": "^4.17.21",
+    "react": "^18.2.0",
+    "use-dnd": "^1.2.3",
+    "~shared-ui": "workspace:*",
+    "~utils": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.191",
+    "~tsconfig": "workspace:*"
+  }
+}

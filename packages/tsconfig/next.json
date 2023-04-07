@@ -1,0 +1,19 @@
+{
+    "display": "NextJS",
+    "extends": "./react.json",
+    "compilerOptions": {
+        "baseUrl": ".",
+        "allowJs": true,
+        "noEmit": true,
+        "esModuleInterop": true,
+        "resolveJsonModule": true,
+        "experimentalDecorators": true,
+        "removeComments": true,
+        "incremental": true,
+    },
+    "include": [
+        "next-env.d.ts",
+        "src"
+    ],
+    "exclude": ["node_modules"]
+}

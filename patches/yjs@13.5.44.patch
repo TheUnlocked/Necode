@@ -1,0 +1,26 @@
+diff --git a/dist/yjs.cjs b/dist/yjs.cjs
+index 1cd42706208a945cfbe054c221949047457c4187..682bce3cab75c7a0020ca26182bfb0721a2b0701 100644
+--- a/dist/yjs.cjs
++++ b/dist/yjs.cjs
+@@ -1903,7 +1903,7 @@ const removeEventHandlerListener = (eventHandler, f) => {
+   const len = l.length;
+   eventHandler.l = l.filter(g => f !== g);
+   if (len === eventHandler.l.length) {
+-    console.error('[yjs] Tried to remove event handler that doesn\'t exist.');
++    // console.error('[yjs] Tried to remove event handler that doesn\'t exist.');
+   }
+ };
+ 
+diff --git a/dist/yjs.mjs b/dist/yjs.mjs
+index d35214a1f65d5475df2503d91c1371eedc74e166..28727f7f3bf12a7b2d569f0de82beba4c3b9717b 100644
+--- a/dist/yjs.mjs
++++ b/dist/yjs.mjs
+@@ -1865,7 +1865,7 @@ const removeEventHandlerListener = (eventHandler, f) => {
+   const len = l.length;
+   eventHandler.l = l.filter(g => f !== g);
+   if (len === eventHandler.l.length) {
+-    console.error('[yjs] Tried to remove event handler that doesn\'t exist.');
++    // console.error('[yjs] Tried to remove event handler that doesn\'t exist.');
+   }
+ };
+ 

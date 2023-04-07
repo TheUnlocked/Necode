@@ -1,0 +1,10 @@
+{
+    "extends": "~tsconfig/default.json",
+    "include": ["./src"],
+    "exclude": ["node_modules"],
+    "compilerOptions": {
+        "lib": ["ESNext", "DOM"],
+        "baseUrl": ".",
+        "outDir": "./dist",
+    }
+}

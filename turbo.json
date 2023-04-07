@@ -1,0 +1,45 @@
+{
+    "$schema": "https://turbo.build/schema.json",
+    "globalDependencies": [
+        "**/.env.*local"
+    ],
+    "globalEnv": [
+        "NODE_ENV"
+    ],
+    "pipeline": {
+        "vercel-build": {
+            "dependsOn": ["^db:migrate:deploy", "necode:build"]
+        },
+        "necode:build": {
+            "dependsOn": ["~database#generate"],
+            "outputs": [".next/**"]
+        },
+        "db:migrate:deploy": {
+            "dependsOn": ["generate"],
+            "cache": false
+        },
+        "db:push": {
+            "cache": false
+        },
+        "db:seed": {},
+        "dev": {
+            "cache": false,
+            "persistent": true
+        },
+        "build": {
+            "dependsOn": ["^build"],
+            "outputs": ["dist/**"]
+        },
+        "generate": {
+            "dependsOn": ["^generate"],
+            "cache": false
+        },
+        "validate": {
+            "dependsOn": ["lint", "typecheck"]
+        },
+        "wsserver:build": {},
+        "typecheck": {},
+        "lint": {},
+        "lint:fix": {}
+    }
+}

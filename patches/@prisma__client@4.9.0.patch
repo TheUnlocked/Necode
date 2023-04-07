@@ -1,0 +1,49 @@
+diff --git a/generator-build/index.js b/generator-build/index.js
+index 888e53268d94ba836cad78fd2d24e59066449657..33b9f49bf94f67caf5425851d84a272c70828847 100644
+--- a/generator-build/index.js
++++ b/generator-build/index.js
+@@ -23390,13 +23390,18 @@ const hasDirname = typeof __dirname !== 'undefined' && __dirname !== '/'
+ // will work in most cases, ie. if the client has not been bundled
+ const regularDirname = hasDirname && fs.existsSync(path.join(__dirname, 'schema.prisma')) && __dirname
+ 
++const dirnameCandidates = [
++  ${defaultRelativeOutdir ? `${JSON.stringify(defaultRelativeOutdir)},` : ""}
++  ${serverlessRelativeOutdir ? `${JSON.stringify(serverlessRelativeOutdir)},` : ""}
++];
++
+ // if the client has been bundled, we need to look for the folders
+-const foundDirname = !regularDirname && findSync(process.cwd(), [
+-    ${defaultRelativeOutdir ? `${JSON.stringify(defaultRelativeOutdir)},` : ""}
+-    ${serverlessRelativeOutdir ? `${JSON.stringify(serverlessRelativeOutdir)},` : ""}
+-], ['d'], ['d'], 1)[0]
++const foundDirname = !regularDirname && findSync(process.cwd(), dirnameCandidates, ['d'], ['d'], 1)[0]
++
++// in monorepos, they could be at a higher level
++const monorepoFoundDirname = !regularDirname && !foundDirname && dirnameCandidates.map(x => path.join(process.cwd(), x)).find(x => fs.existsSync(path.join(x, 'schema.prisma')))
+ 
+-const dirname = regularDirname || foundDirname || __dirname`;
++const dirname = regularDirname || foundDirname || monorepoFoundDirname || __dirname`;
+ }
+ __name(buildDirnameFind, "buildDirnameFind");
+ function buildDirnameDefault() {
+diff --git a/runtime/index.js b/runtime/index.js
+index db697a88c418f974ffa9fb3100809b0cd9c0aea6..6dd3ba59c9e1c8797ad56e29063a58644ae08471 100644
+--- a/runtime/index.js
++++ b/runtime/index.js
+@@ -24549,6 +24549,16 @@ var exitHooks = new ExitHooks();
+ var LibraryEngine = class extends Engine {
+   constructor(config2, loader = new DefaultLibraryLoader(config2)) {
+     super();
++    if (!import_fs7.default.existsSync(config2.datamodelPath)) {
++      debug11(`Couldn't find datamodelPath '${config2.datamodelPath}', may be on Vercel.`);
++      if (import_fs7.default.existsSync('/var/task/node_modules/.pnpm')) {
++        const dotPnpmPackageName = import_fs7.readdirSync('/var/task/node_modules/.pnpm').find(x => x.startsWith('@prisma+client'));
++        config2.datamodelPath = `/var/task/node_modules/.pnpm/${dotPnpmPackageName}/node_modules/.prisma/client/schema.prisma`
++      }
++      else {
++        debug11(`Couldn't find '/var/task/node_modules/.pnpm', something is broken.`);
++      }
++    }
+     this.datamodel = import_fs7.default.readFileSync(config2.datamodelPath, "utf-8");
+     this.config = config2;
+     this.libraryStarted = false;

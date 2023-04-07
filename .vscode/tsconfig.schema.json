@@ -1,0 +1,4 @@
+{
+    "allOf": [{ "$ref": "https://json.schemastore.org/tsconfig" }],
+	"allowTrailingCommas": true
+}

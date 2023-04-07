@@ -1,0 +1,56 @@
+{
+    "name": "~core",
+    "displayName": "Core",
+    "version": "0.1.0",
+    "license": "MIT",
+    "private": true,
+    "files": [
+        "necode.json",
+        "policies"
+    ],
+    "scripts": {
+        "_build": "webpack --mode=production",
+        "validate-plugins": "validate-plugins"
+    },
+    "dependencies": {
+        "@babel/core": "^7.20.12",
+        "@babel/plugin-transform-typescript": "^7.20.13",
+        "@emotion/react": "^11.10.5",
+        "@emotion/styled": "^11.10.5",
+        "@mui/icons-material": "^5.11.0",
+        "@mui/material": "^5.11.6",
+        "@necode-org/activity-dev": "workspace:*",
+        "@necode-org/plugin-dev": "workspace:*",
+        "@necode-org/policy-dev": "workspace:*",
+        "brython": "^3.11.0",
+        "buffer": "^6.0.3",
+        "chez-scheme-js": "^1.1.0",
+        "dedent-js": "^1.0.1",
+        "lodash": "^4.17.21",
+        "material-ui-popup-state": "^5.0.4",
+        "nanoid": "^4.0.0",
+        "process": "^0.11.10",
+        "react": "^18.2.0",
+        "react-horizontal-scrolling-menu": "^3.2.3",
+        "react-markdown": "^8.0.5",
+        "rehype-highlight": "^5.0.2",
+        "remark-gfm": "^3.0.1",
+        "~utils": "workspace:*"
+    },
+    "devDependencies": {
+        "@babel/types": "^7.20.7",
+        "@types/babel__core": "^7.20.0",
+        "@types/babel__traverse": "^7.18.3",
+        "@types/lodash": "^4.14.191",
+        "@types/react": "^18.0.27",
+        "assert": "^2.0.0",
+        "monaco-editor": "^0.34.1",
+        "path-browserify": "^1.0.1",
+        "raw-loader": "^4.0.2",
+        "ts-loader": "^9.4.2",
+        "typescript": "^4.9.4",
+        "webpack": "^5.75.0",
+        "webpack-cli": "^5.0.1",
+        "~tsconfig": "workspace:*"
+    }
+}

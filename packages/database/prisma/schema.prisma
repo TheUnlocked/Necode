@@ -1,0 +1,186 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                       String  @id @default(cuid())
+  userId                   String
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String?
+  access_token             String?
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String?
+  session_state            String?
+  oauth_token_secret       String?
+  oauth_token              String?
+  ext_expires_in           Int?
+  refresh_token_expires_in Int?
+  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model User {
+  id            String                @id @default(cuid())
+  displayName   String
+  email         String                @unique
+  firstName     String
+  lastName      String
+  rights        SitewideRights        @default(None)
+  emailVerified DateTime?
+  username      String                @unique
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  simulatedById String?
+  simulatedBy   User?                 @relation("simulation", fields: [simulatedById], references: [id], onDelete: Cascade)
+  accounts      Account[]
+  submissions   ActivitySubmission[]
+  classes       ClassroomMembership[]
+  sessions      Session[]
+  ownsSimulated User[]                @relation("simulation")
+}
+
+model Classroom {
+  id           String                @id @default(cuid())
+  displayName  String
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  members      ClassroomMembership[]
+  joinCode     JoinCode?
+  lessons      Lesson[]
+  liveActivity LiveActivity?
+}
+
+model JoinCode {
+  code        String    @unique @db.VarChar(6)
+  classroomId String    @id
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+}
+
+model ClassroomMembership {
+  userId      String
+  classroomId String
+  role        ClassroomRole @default(Student)
+  classroom   Classroom     @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, classroomId])
+}
+
+model Activity {
+  id               String               @id @default(cuid())
+  activityType     String
+  lessonId         String
+  displayName      String
+  order            Int
+  configuration    Json?
+  createdAt        DateTime             @default(now())
+  enabledLanguages String[]
+  lesson           Lesson               @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  submissions      ActivitySubmission[]
+  liveInstances    LiveActivity[]
+
+  // @@unique([order, lessonId]) Waiting on https://github.com/prisma/prisma/issues/8807
+}
+
+model Lesson {
+  id          String     @id @default(cuid())
+  displayName String
+  classroomId String
+  date        DateTime   @db.Date
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  classroom   Classroom  @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  activities  Activity[]
+
+  @@unique([classroomId, date])
+}
+
+model LiveActivity {
+  classroomId String    @unique
+  activityId  String
+  data        Json?
+  activity    Activity  @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+
+  @@id([classroomId, activityId])
+}
+
+model ActivitySubmission {
+  id         String   @id @default(cuid())
+  activityId String
+  userId     String
+  version    Int
+  data       Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, userId, version])
+}
+
+enum SitewideRights {
+  None
+  Admin
+  Faculty
+}
+
+enum ClassroomRole {
+  Student
+  Instructor
+}
+
+model Plugin {
+  id            String @id @default(cuid())
+  name          String @unique
+  displayName   String
+  version       String
+  entryFilename String?
+  files         PluginFile[]
+  policies      RtcPolicy[]
+}
+
+model PluginFile {
+  id          String @id @default(cuid())
+  pluginId    String
+  plugin      Plugin @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  filename    String
+  contents    Bytes
+  @@unique([filename, pluginId])
+}
+
+model RtcPolicy {
+  id                String @id
+  pluginId          String
+  displayName       String
+  source            Bytes
+  compiled          Bytes
+  validationConfig  Json
+  plugin            Plugin @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+}

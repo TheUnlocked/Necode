@@ -1,13 +1,14 @@
 import { ArrowLeft, ArrowRight } from '@mui/icons-material';
 import { Box, Card, CardActionArea, CardContent, IconButton, Stack, Typography } from '@mui/material';
-import { createYHandle, NetworkId, useSignal, useSnackbar, YProvider } from '@necode-org/activity-dev';
-import { PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react';
+import { NetworkId, useSignal, useSnackbar } from '@necode-org/activity-dev';
+import { useCallback, useContext, useMemo, useState } from 'react';
 import { ScrollMenu, VisibilityContext } from 'react-horizontal-scrolling-menu';
 
-export interface BreakoutRoomSelectorProps extends PropsWithChildren {
+export interface BreakoutRoomSelectorProps {
     network: NetworkId;
     numRooms: number;
     roomNames?: string[];
+    children: (roomId?: number) => JSX.Element;
 }
 
 function LeftArrow() {
@@ -34,7 +35,6 @@ const menuHeight = '68px';
 
 export default function BreakoutRoomProvider({ network, numRooms, roomNames, children }: BreakoutRoomSelectorProps) {
     const signal = useSignal(network);
-    const [y, setY] = useState(() => createYHandle());
 
     const [currentRoom, setCurrentRoom] = useState<number>();
     const rooms = useMemo(() => [...new Array(numRooms)].map((_, i) => ({
@@ -49,10 +49,6 @@ export default function BreakoutRoomProvider({ network, numRooms, roomNames, chi
             if (currentRoom !== undefined) {
                 await signal('leaveRoom', {});
                 setCurrentRoom(undefined);
-                setY(createYHandle());
-            }
-            else {
-                setY(createYHandle());
             }
             await signal('joinRoom', { room });
             setCurrentRoom(room);
@@ -98,7 +94,7 @@ export default function BreakoutRoomProvider({ network, numRooms, roomNames, chi
             </ScrollMenu>
         </Box>
         <Box height={`calc(100% - ${menuHeight} - 8px)`}>
-            <YProvider y={y}>{children}</YProvider>
+            {children(currentRoom)}
         </Box>
     </Stack>;
 }

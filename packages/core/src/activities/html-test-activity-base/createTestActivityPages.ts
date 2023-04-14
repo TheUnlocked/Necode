@@ -9,7 +9,7 @@ export default function createTestActivityPages<
     Config extends HtmlTestActivityBaseConfig,
     ActivityFeatures extends readonly Feature[] = HTAFeatures,
 >(options: HtmlTestActivityOptions<ActivityFeatures>): [
-    activityPage: Importable<(props: ActivityPageProps<ActivityFeatures, Config>) => JSX.Element>,
+    activityPage: Importable<(props: ActivityPageProps<ActivityFeatures, Config> & { roomId?: number }) => JSX.Element>,
     configPage: Importable<(props: ActivityConfigPageProps<ActivityFeatures, Config>) => JSX.Element>,
 ] {
     createTestActivityPagePromise ??= import('./createTestActivityPage').then(x => x.default);

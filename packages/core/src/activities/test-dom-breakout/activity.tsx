@@ -11,7 +11,7 @@ const pages = createTestActivityPages({ networked: true });
 export const Activity = pages[0]().then(InternalActivity => function Activity(props: ActivityPageProps<HTAFeatures, Config>) {
     const { rooms } = props.activityConfig;
     return <BreakoutRoomProvider network={NetworkId.NET_0} numRooms={rooms.length} roomNames={rooms}>
-        <InternalActivity {...props} />
+        {roomId => <InternalActivity roomId={roomId} {...props} />}
     </BreakoutRoomProvider>;
 });
 

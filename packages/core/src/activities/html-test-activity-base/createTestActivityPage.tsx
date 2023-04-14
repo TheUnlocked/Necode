@@ -107,13 +107,16 @@ export default function createTestActivityPage<Features extends readonly Feature
         mapFeatures = identity,
     }
 }: HtmlTestActivityMetaProps<Features>) {
-    return function TestActivityPage<Config extends HtmlTestActivityBaseConfig>(props: ActivityConfigPageProps<Features, Config> | ActivityPageProps<Features, Config>) {
+    return function TestActivityPage<Config extends HtmlTestActivityBaseConfig>(
+        props: (ActivityConfigPageProps<Features, Config> & { roomId?: number }) | ActivityPageProps<Features, Config>
+    ) {
         const {
             language,
             features: _features,
             activityConfig,
             onActivityConfigChange,
-        } = props as NonStrictDisjunction<ActivityConfigPageProps<Features, Config>, ActivityPageProps<Features, Config>>;
+            roomId = '',
+        } = props as NonStrictDisjunction<ActivityConfigPageProps<Features, Config> & { roomId?: number }, ActivityPageProps<Features, Config>>;
         
         const features = mapFeatures(_features);
 
@@ -145,7 +148,7 @@ export default function createTestActivityPage<Features extends readonly Feature
 
         const network = networked && !isEditor ? NetworkId.NET_0 : NetworkId.OFFLINE;
 
-        const y = useY(network, 'shared-editors');
+        const y = useY(network, `shared-editors-${roomId}`);
 
         useYInit(y, doc => {
             for (const type of ['html', 'css', 'code'] as const) {

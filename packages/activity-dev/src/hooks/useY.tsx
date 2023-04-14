@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, createContext, useContext, PropsWithChildren } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { applyUnifiedUpdates } from '../utils/y-utils';
 import { Awareness, applyAwarenessUpdate, encodeAwarenessUpdate } from 'y-protocols/awareness';
 import * as Y from 'yjs';
@@ -9,36 +9,24 @@ export interface YHandle {
     readonly _doc: Y.Doc;
 }
 
-export function createYHandle(): YHandle {
-    return { _doc: new Y.Doc() };
-}
-
-const yContext = createContext<{
-    useYHandle(): YHandle;
-}>({
-    useYHandle() {
-        return useMemo<YHandle>(createYHandle, []);
-    },
-});
-
-export interface YProviderProps extends PropsWithChildren {
-    y: YHandle;
-}
-
-export function YProvider({ y, children }: YProviderProps) {
-    return <yContext.Provider value={{
-        useYHandle: () => y,
-    }}>
-        {children}
-    </yContext.Provider>;
+export interface UseYOptions {
+    /**
+     * A Yjs document to use in the Y handle.
+     * If ommitted, a new document will be created any time the network or channel changes.
+     */
+    doc?: Y.Doc;
 }
 
 /**
  * Gets a Yjs handle which is linked on the specified network and channel.
- * The handle is stable for the lifetime of the hook. 
+ * The handle is stable for the lifetime of the network and channel. 
  */
-export default function useY(network: NetworkId, channel: string): YHandle {
-    const y = useContext(yContext).useYHandle();
+export default function useY(network: NetworkId, channel: string, { doc: customDoc }: UseYOptions = {}): YHandle {
+    const y = useMemo(() => ({
+        _doc: customDoc ?? new Y.Doc(),
+        _network: network,
+        _channel: channel,
+    }), [network, channel, customDoc]);
 
     const emit = useDataChannelLifecycle(
         network,

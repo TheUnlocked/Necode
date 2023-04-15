@@ -107,13 +107,16 @@ export default function createTestActivityPage<Features extends readonly Feature
         mapFeatures = identity,
     }
 }: HtmlTestActivityMetaProps<Features>) {
-    return function TestActivityPage<Config extends HtmlTestActivityBaseConfig>(props: ActivityConfigPageProps<Features, Config> | ActivityPageProps<Features, Config>) {
+    return function TestActivityPage<Config extends HtmlTestActivityBaseConfig>(
+        props: (ActivityConfigPageProps<Features, Config> & { roomId?: number }) | ActivityPageProps<Features, Config>
+    ) {
         const {
             language,
             features: _features,
             activityConfig,
             onActivityConfigChange,
-        } = props as NonStrictDisjunction<ActivityConfigPageProps<Features, Config>, ActivityPageProps<Features, Config>>;
+            roomId = '',
+        } = props as NonStrictDisjunction<ActivityConfigPageProps<Features, Config> & { roomId?: number }, ActivityPageProps<Features, Config>>;
         
         const features = mapFeatures(_features);
 
@@ -145,7 +148,7 @@ export default function createTestActivityPage<Features extends readonly Feature
 
         const network = networked && !isEditor ? NetworkId.NET_0 : NetworkId.OFFLINE;
 
-        const y = useY(network, 'shared-editors');
+        const y = useY(network, `shared-editors-${roomId}`);
 
         useYInit(y, doc => {
             for (const type of ['html', 'css', 'code'] as const) {
@@ -162,11 +165,13 @@ export default function createTestActivityPage<Features extends readonly Feature
         const activityConfigRef = useRef(activityConfig);
         activityConfigRef.current = activityConfig;
         useEffect(() => {
-            applyTransaction(y, doc => {
-                const text = doc.getText('code');
-                text.delete(0, text.length);
-                text.insert(0, activityConfigRef.current.languages.code?.defaultValue[language.name] ?? '');
-            });
+            if (isEditor) {
+                applyTransaction(y, doc => {
+                    const text = doc.getText('code');
+                    text.delete(0, text.length);
+                    text.insert(0, activityConfigRef.current.languages.code?.defaultValue[language.name] ?? '');
+                });
+            }
         }, [y, language]);
         
         const uncommittedHtml = useYText(y, 'html');        

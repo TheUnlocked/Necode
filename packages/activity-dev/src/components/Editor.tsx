@@ -144,8 +144,10 @@ export default function Editor({
 
     const mountHandler: OnMount = useCallback((editor, monaco) => {
         setMonaco(monaco);
-        editor.getModel()?.setEOL(0);
         setEditorData([editor, monaco]);
+
+        const model = editor.getModel()!;
+        model.setEOL(monaco.editor.EndOfLineSequence.LF);
 
         // Based on workaround in https://github.com/grafana/grafana/pull/60172
         const editorFocusedContextKeyName = `__isEditorFocused-${nanoid()}`;
@@ -175,6 +177,8 @@ export default function Editor({
             const [editor, monaco] = editorData;
             const model = editor.getModel()!;
 
+            model.setValue(yText.toString());
+            model.setEOL(monaco.editor.EndOfLineSequence.LF);
             const binding = new MonacoBinding(
                 yText,
                 model,

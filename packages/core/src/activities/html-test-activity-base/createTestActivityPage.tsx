@@ -165,11 +165,13 @@ export default function createTestActivityPage<Features extends readonly Feature
         const activityConfigRef = useRef(activityConfig);
         activityConfigRef.current = activityConfig;
         useEffect(() => {
-            applyTransaction(y, doc => {
-                const text = doc.getText('code');
-                text.delete(0, text.length);
-                text.insert(0, activityConfigRef.current.languages.code?.defaultValue[language.name] ?? '');
-            });
+            if (isEditor) {
+                applyTransaction(y, doc => {
+                    const text = doc.getText('code');
+                    text.delete(0, text.length);
+                    text.insert(0, activityConfigRef.current.languages.code?.defaultValue[language.name] ?? '');
+                });
+            }
         }, [y, language]);
         
         const uncommittedHtml = useYText(y, 'html');        

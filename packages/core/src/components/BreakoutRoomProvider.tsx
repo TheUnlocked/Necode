@@ -73,9 +73,9 @@ export default function BreakoutRoomProvider({ network, numRooms, roomNames, chi
                 },
                 "&": {
                     // Old Edge
-                    "-ms-overflow-style": "none",
+                    "msOverflowStyle": "none",
                     // Firefox
-                    "scrollbar-width": "none",
+                    "scrollbarWidth": "none",
                 }
             },
         }}>

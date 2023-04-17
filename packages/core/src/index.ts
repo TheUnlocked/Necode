@@ -132,7 +132,7 @@ export default class CorePlugin extends Plugin {
         }));
 
         manager.implementFeature(null, 'evaluate/string', ['evaluate/any'], async obj => ({
-            evaluate: obj.evaluate.any.evaluate,
+            evaluate: async code => String(await obj.evaluate.any.evaluate(code)),
         }));
 
         manager.implementFeatures(

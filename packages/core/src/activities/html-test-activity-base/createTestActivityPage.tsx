@@ -185,7 +185,7 @@ export default function createTestActivityPage<Features extends readonly Feature
 
         const { data: me } = useApiGet(api.me());
 
-        const yAwareness = useYAwareness(network, 'shared-editors-awareness', y, {
+        const yAwareness = useYAwareness(y, 'shared-editors-awareness', {
             displayName: me?.attributes.displayName,
         });
 

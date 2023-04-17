@@ -7,6 +7,8 @@ import { useDataChannel, useDataChannelLifecycle } from '~shared-ui/hooks/RtcHoo
 
 export interface YHandle {
     readonly _doc: Y.Doc;
+    readonly _network: NetworkId;
+    readonly _channel: string;
 }
 
 export interface UseYOptions {
@@ -92,11 +94,11 @@ export function useYText(y: YHandle, name: string): YTextHandle {
  * Unlike {@link useY} and {@link useYText}, this function does _not_ return a reactive handle.
  * Be careful when accessing its members directly.
  */
-export function useYAwareness(network: NetworkId, channel: string, y: YHandle, extraFields: Record<string, any> = {}) {
+export function useYAwareness(y: YHandle, channel: string, extraFields: Record<string, any> = {}) {
     const awareness = useMemo(() => new Awareness(y._doc), [y]);
     
     const emit = useDataChannel(
-        network,
+        y._network,
         channel,
         useCallback((update) => {
             applyAwarenessUpdate(awareness, update, null);

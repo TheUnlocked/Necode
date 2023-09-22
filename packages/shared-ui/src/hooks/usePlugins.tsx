@@ -54,7 +54,7 @@ export function PluginsProvider({ children, builtinPlugins }: PluginProviderProp
 
     const dynamicPlugins = useAsyncMemo(async () => {
         try {
-            const plugins = await download(api.plugins.all);
+            const plugins = await download(api.plugins.all, { errorMessage: null });
             return Promise.all(
                 plugins.map(async plugin => {
                     if (plugin.attributes.entry === undefined) {

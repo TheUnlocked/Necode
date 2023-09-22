@@ -86,10 +86,22 @@ const generalInfo = <>
             <li>Intermittent server issues will not severely impact interactivity</li>
         </ul>
     </InfoSection>
-    <InfoSection title="Is there a paper I can read?">
-        <SubtleLink target="_blank" rel="noopener" href="https://digital.wpi.edu/show/6h440w69h">Yes!</SubtleLink>{' '}
-        It doesn&apos;t contain a comprehensive list of features, but it is fairly thorough and gives a good idea of what
-        Necode is capable of, at least as of March 2022.
+    <InfoSection omitParagraph title="Is there a paper I can read?">
+        <p>There are two, both an MQP report and a master&apos;s thesis:</p>
+        <ul>
+            <li>
+                <SubtleLink target="_blank" rel="noopener" href="/papers/mqp_report_2022.pdf">MQP Report (2022)</SubtleLink>&sp;
+                (<SubtleLink target="_blank" rel="noopener" href="https://digital.wpi.edu/show/6h440w69h">WPI Mirror</SubtleLink>)
+            </li>
+            <li>
+                <SubtleLink target="_blank" rel="noopener" href="/papers/masters_thesis_2023.pdf">Master&apos;s thesis (2023)</SubtleLink>&sp;
+                (<SubtleLink target="_blank" rel="noopener" href="https://digital.wpi.edu/concern/etds/8623j227w">WPI Mirror</SubtleLink>)
+            </li>
+        </ul>
+        <p>
+            The MQP report covers a larger breadth of Necode&apos;s functionality, but many details are also outdated.
+            The master&apos;s thesis is much more recent and focuses much more deeply on Necode&apos;s plugin API.
+        </p>
     </InfoSection>
     <InfoSection title="I'd like to evaluate Necode for use in my class. How should I get in touch?">
         Thank you very much for your interest! Feel free to shoot an email to Trevor at{' '}
@@ -100,9 +112,6 @@ const generalInfo = <>
     <InfoSection title="I don't teach a class, but I'm still interested in Necode. Can I try it out?">
         Currently no, unfortunately. However, if you&apos;re willing to put in a bit of effort to get it running
         on your local machine, the source code for Necode is available on <SubtleLink target="_blank" rel="noopener" href="https://github.com/TheUnlocked/Necode">GitHub</SubtleLink>.
-    </InfoSection>
-    <InfoSection title="I'm a developer and I want to build my own components for Necode. Are the APIs stable?">
-        Not currently, but API stability and third-party developer documentation is a goal for the upcoming year.
     </InfoSection>
 </>;
 

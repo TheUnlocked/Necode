@@ -21,8 +21,7 @@ It has several features which sets it apart from existing solutions:
 ## Papers
 
 * [MQP Report (2022)](https://www.necode.org/papers/mqp_report_2022.pdf) (no peer review)
-
-Necode is currently the subject of my master's thesis, and the report will be shared here once complete.
+* [Master's Thesis (2023)](https://www.necode.org/papers/masters_thesis_2023.pdf) (no peer review)
 
 ## Offshoot projects
 

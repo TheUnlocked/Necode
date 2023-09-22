@@ -111,6 +111,7 @@ function SharedEditorUserStyle({ id, displayName }: { id: number, displayName?: 
                 font-family: "Roboto","Helvetica","Arial",sans-serif;
                 top: 0;
                 transition: opacity 0.2s ease-in-out;
+                opacity: 0;
             ` : `
                 border: ${cursorColor} 2.5px solid;
                 border-radius: 4px;
@@ -123,7 +124,10 @@ function SharedEditorUserStyle({ id, displayName }: { id: number, displayName?: 
             .view-line:hover .yRemoteSelectionHead-${id}::after,
             .view-line:hover + .view-line .yRemoteSelectionHead-${id}::after,
             .view-line:has(+ .view-line:hover) .yRemoteSelectionHead-${id}::after {
-                opacity: 0.1;
+                opacity: 1;
+            }
+            .view-line .yRemoteSelectionHead-${id}:has(~ span:hover)::after {
+                opacity: 0.2;
             }
         ` : ''}
     `}</style>;

@@ -184,3 +184,10 @@ model RtcPolicy {
   validationConfig  Json
   plugin            Plugin @relation(fields: [pluginId], references: [id], onDelete: Cascade)
 }
+
+model SystemConfiguration {
+  key       String @id
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

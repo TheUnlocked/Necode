@@ -3,7 +3,7 @@ import { Session, getServerSession } from 'next-auth';
 import { prisma } from '~database';
 import { hasScope } from './scopes';
 import { IMPERSONATION_COOKIE } from '~api/constants';
-import { nextAuthOptions } from './nextAuth';
+import { getNextAuthOptions } from './nextAuth';
 import { GetServerSidePropsContext } from 'next';
 
 export type IdentityError
@@ -12,7 +12,7 @@ export type IdentityError
     ;
 
 export default async function getIdentity(req: GetServerSidePropsContext['req'], res: GetServerSidePropsContext['res']): Promise<IdentityError | Session> {
-    const nextAuthSession = await getServerSession(req, res, nextAuthOptions);
+    const nextAuthSession = await getServerSession(req, res, await getNextAuthOptions());
 
     if (!nextAuthSession) {
         return 'not-logged-in';

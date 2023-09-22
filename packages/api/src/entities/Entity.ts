@@ -8,6 +8,7 @@ export enum EntityType {
     ActivitySubmission = 'submission',
     Plugin = 'plugin',
     RtcPolicy = 'rtc-policy',
+    Configuration = 'configuration',
 }
 
 export type EntityId = string;

@@ -60,6 +60,8 @@ async function hasControlOver(controllerId: string, otherId: string) {
 export interface Scopes {
     'plugin:install': undefined;
     'plugin:uninstall': { pluginId: string };
+    'configuration:read': { key: string };
+    'configuration:write': { key: string };
     'user:all:view': undefined;
     'user:view': { userId: string };
     'user:detailed:view': { userId: string }; // Currently unused, see #30
@@ -92,6 +94,8 @@ export async function hasScope(userId: string, ...[scope, data]: ScopeArgumentTu
     switch (scope) {
         case 'plugin:install':
         case 'plugin:uninstall':
+        case 'configuration:read':
+        case 'configuration:write':
             return isAdmin(userId);
         case 'user:all:view':
             return isAdmin(userId);

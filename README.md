@@ -100,9 +100,8 @@ Necode also has a required websocket server, which can be built with `wsserver:b
 
 ## First-Time Setup
 
-Sign in using the MSAL login that you configured in `.env`.
-If you are working in a development environment, you can also configure GitHub authentication,
-as well as log in with any username using the password you defined with the `DEV_PASSWORD` environment variable.
+If you are in production and using Azure Active Directory, see "Using Azure Active Directory" below.
+If you are working in a development environment, you can log in with any username using the password you defined with the `DEV_PASSWORD` environment variable.
 
 You will now need to make a manual database change. While you can do this through `psql` or pgAdmin,
 it may be easier to use Prisma Studio:
@@ -120,6 +119,36 @@ For example, "Test Classroom".
 Once you've chosen a display name, press "Create" and wait a few moments.
 It may take some time to load the newly created classroom, especially in a development environment.
 Eventually you should come to the manage classroom page. From here you can create activities and manage your classroom.
+
+### Using Azure Active Directory
+
+To set up azure active directory, you will first need to create an application.
+This page has some instructions on getting this set up: https://learn.microsoft.com/en-us/azure/active-directory/develop/quickstart-web-app-nodejs-msal-sign-in
+The redirect URIs are:
+```
+{protocol}://{origin}/api/auth/signin/wpi
+{protocol}://{origin}/api/auth/callback/wpi
+```
+
+To link this new application Necode, you will need to make some direct database changes.
+The easiest way to do this is through Prisma Studio.
+
+1. Navigate to the `packages/database` directory and run `pnpm studio`. Open the link it puts in the console.
+2. Click "SystemConfiguration".
+3. Add the following four records with the appropriate values:
+
+```
+| key                       | value                                 |
+|-------------------------------------------------------------------|
+| auth.azure.loginName      | Your organization's name (e.g. WPI)   |
+| auth.azure.clientId       | <your app's client/application ID>    |
+| auth.azure.clientSecret   | <your app's client secret>            |
+| auth.azure.tenantId       | <your organization's tenant ID>       |
+```
+
+4. Then make sure to save your changes.
+
+You should now be able to log in using your Microsoft account.
 
 ## Contributing
 

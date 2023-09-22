@@ -1,7 +1,7 @@
 {
     "$schema": "https://turbo.build/schema.json",
-    "globalDependencies": [
-        "**/.env.*local"
+    "globalDotEnv": [
+        ".env"
     ],
     "globalEnv": [
         "NODE_ENV"
@@ -21,10 +21,12 @@
         "db:push": {
             "cache": false
         },
+        "db:migrate:dev": {
+            "cache": false
+        },
         "db:seed": {},
         "dev": {
-            "cache": false,
-            "persistent": true
+            "cache": false
         },
         "build": {
             "dependsOn": ["^build"],

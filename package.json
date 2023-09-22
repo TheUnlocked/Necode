@@ -6,10 +6,13 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "turbo run dev",
+    "dev": "dotenv -- turbo run dev",
     "necode:build": "turbo run necode:build",
     "wsserver:build": "turbo run wsserver:build",
     "ssl-proxy": "npx local-ssl-proxy --source 3010 --target 3000 --key .dev-ssl-certs/localhost-key.pem --cert .dev-ssl-certs/localhost.pem",
+    "db:migrate:dev": "dotenv -- turbo run db:migrate:dev",
+    "db:seed": "dotenv -- turbo run db:seed",
+    "db:push": "dotenv -- turbo run db:push",
     "validate": "turbo run validate",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
@@ -26,6 +29,7 @@
   "devDependencies": {
     "@grncdr/eslint-plugin-react-hooks": "5.0.0-p30d423311.0",
     "@typescript-eslint/eslint-plugin": "^5.49.0",
+    "dotenv-cli": "^7.3.0",
     "eslint": "^8.32.0",
     "eslint-config-next": "^13.1.5",
     "next": "^13.1.2",
@@ -33,7 +37,7 @@
     "raw-loader": "^4.0.2",
     "syncpack": "^8.4.11",
     "ts-node": "^10.9.1",
-    "turbo": "^1.7.0"
+    "turbo": "^1.10.14"
   },
   "pnpm": {
     "patchedDependencies": {

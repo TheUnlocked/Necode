@@ -58,7 +58,7 @@ Then you will need to configure `.env`. Copy `template.env` to `.env`, and fill 
 
 After doing so, to populate your database with the necessary tables, run:
 ```
-pnpm db:push
+pnpm db:migrate:dev
 ```
 
 ### Development
@@ -127,4 +127,4 @@ Eventually you should come to the manage classroom page. From here you can creat
 
 To make a change to the database, modify `packages/database/schema.prisma`. Run `pnpm i` or `pnpx turbo run generate` to update the generated code and then run `pnpm db:push` in `packages/database` to apply the changes to your local database.
 
-Once you're done and would like to make a PR, run `pnpm db:migrate:dev` in `packages/database` to generate the migration file. This may require resetting your local database, though it should get re-populated with some minimal seed data. You can reset your development database to the initial seeded state with `pnpm db:migrate:reset`.
+Once you're done and would like to make a PR, run `pnpm db:migrate:dev` to generate the migration file. This may require resetting your local database, though it should get re-populated with some minimal seed data. You can reset your development database to the initial seeded state with `pnpm db:migrate:reset`.

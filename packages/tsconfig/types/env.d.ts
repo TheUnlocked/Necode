@@ -43,7 +43,7 @@ declare namespace NodeJS {
          * Whether to serve the websocket with SSL (i.e. https:// and wss://)
          * @availablein WebSocket Server
          */
-        readonly USE_SSL_WEBSOCKET: boolean;
+        readonly USE_SSL_WEBSOCKET: 'true' | 'false';
 
         /**
          * Relative paths the SSL key in PEM format. `SSL_CERT` must also be set.

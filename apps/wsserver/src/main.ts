@@ -22,7 +22,8 @@ let server;
 console.debug = () => {};
 
 const restApp = express();
-if (process.env.USE_SSL_WEBSOCKET) {
+
+if (process.env.USE_SSL_WEBSOCKET === 'true') {
     server = (await import('https')).createServer({
         key: fs.readFileSync(process.env.SSL_KEY as string),
         cert: fs.readFileSync(process.env.SSL_CERT as string)

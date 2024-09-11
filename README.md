@@ -8,7 +8,7 @@ It has several features which sets it apart from existing solutions:
 * **Peer-to-peer communication**: Most collaborative programming environments operate by having each user send data to a server, and then the server sends their data to each other user they are connected to. Necode bypasses this, only using a server for initial linking and signalling, and then having users talk directly through peer-to-peer connections. This makes Necode require significantly fewer server resources.
 * **Client-side compuatation**: All execution of user code is performed client-side rather than on a server in the cloud. This has some drawbacks such as making it significantly more challenging to implement support for many languagues. However, not only does this approach significantly reduce the necessary server resources to run Necode, but it also enables use of the built-in browser development tools (such as for reading logs or debugging JavaScript) and allows code in some languages to directly interact with the DOM.
 * **Communication with non-code artifacts**: Usually when environments advertise collaborative programming, they are referring to shared editors, one kind of collaborative programming in which each user's edits to their code gets propagated to all of the other users. Necode abstracts this, allowing not just code artifacts, but any artifacts to be shared, and to be shared asymmetrically with only certain individuals rather than everyone.
-* **Plugin API** (in progress): New language support, activities (i.e. frontend experiences), and RTC-linking policies can be developed by third-party developers and dynamically plugged into existing Necode instances.
+* **Plugin API**: New language support, activities (i.e. frontend experiences), and RTC-linking policies can be developed by third-party developers and dynamically plugged into existing Necode instances.
 
 ## Screenshots
 
@@ -20,8 +20,8 @@ It has several features which sets it apart from existing solutions:
 
 ## Papers
 
-* [MQP Report (2022)](https://www.necode.org/papers/mqp_report_2022.pdf) (no peer review)
-* [Master's Thesis (2023)](https://www.necode.org/papers/masters_thesis_2023.pdf) (no peer review)
+* [MQP Report (2022)](apps/necode/public/papers/mqp_report_2022.pdf) (no peer review)
+* [Master's Thesis (2023)](apps/necode/public/papers/masters_thesis_2023.pdf) (no peer review)
 
 ## Offshoot projects
 

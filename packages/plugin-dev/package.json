@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "license": "MIT",
   "dependencies": {
-    "@babel/core": "^7.20.12",
-    "@mui/material": "^5.11.6",
-    "@types/react": "^18.0.27",
-    "lodash": "^4.17.21",
-    "react": "^18.2.0",
+    "@babel/core": "^7.29.7",
+    "@mui/material": "^6.5.0",
+    "@types/react": "^18.3.31",
+    "lodash": "^4.18.1",
+    "react": "^19.2.8",
     "use-dnd": "^1.2.3",
     "~shared-ui": "workspace:*",
     "~utils": "workspace:*"

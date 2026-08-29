@@ -23,7 +23,10 @@ module.exports = {
     },
     resolve: {
         extensions: ['.ts', '.tsx', '.js'],
-        plugins: [new TsconfigPathsPlugin({ configFile: path.join(__dirname, 'tsconfig.json') })],
+        plugins: [new TsconfigPathsPlugin({
+            configFile: path.join(__dirname, 'tsconfig.json'),
+            baseUrl: '.',
+        })],
     },
     module: {
         rules: [
@@ -31,7 +34,7 @@ module.exports = {
                 loader: 'ts-loader',
                 test: /\.tsx?$/,
                 // Intentionally not excluding node_modules since our code is there.
-                // exclude: /node_modules/,
+                exclude: /node_modules/,
                 options: {
                     allowTsInNodeModules: true,
                 }
@@ -67,7 +70,7 @@ module.exports = {
         "util/types": "commonjs2 util/types"
     },
     node: {
-        __dirname: true,
+        __dirname: false,
     },
     experiments: {
         topLevelAwait: true

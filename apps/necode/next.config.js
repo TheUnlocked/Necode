@@ -10,13 +10,17 @@ const assign = Object.assign;
 /** @type {import('next').NextConfig} */
 module.exports = {
     reactStrictMode: true,
-    swcMinify: true,
-    experimental: {
-        // Omits certain modules to significantly speed up lambda cold start.
-        // Note that excluding @mui means `getServerSideProps`/`getInitialProps` WILL NOT WORK.
-        // `getStaticProps` is still fine to use, since it happens during build time.
-        outputFileTracingIgnores: ['**esbuild-linux-64**', '**@mui**'],
-        esmExternals: 'loose',
+    // experimental: {
+    //     esmExternals: 'loose',
+    // },
+    // Omits certain modules to significantly speed up lambda cold start.
+    // Note that excluding @mui means `getServerSideProps`/`getInitialProps` WILL NOT WORK.
+    // `getStaticProps` is still fine to use, since it happens during build time.
+    outputFileTracingExcludes: {
+        "*": [
+            '**esbuild-linux-64**',
+            '**@mui**',
+        ]
     },
     transpilePackages: [...localPackages],
     modularizeImports: {
@@ -62,6 +66,15 @@ module.exports = {
             ],
         });
     },
+    // turbopack: {
+    //     resolveAlias: {
+    //         fs: {},
+    //         module: {},
+    //         net: {},
+    //         bufferutil: {},
+    //         'utf-8-validate': {},
+    //     },
+    // },
     async headers() {
         return [
             {

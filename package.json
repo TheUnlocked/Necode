@@ -28,22 +28,15 @@
   },
   "devDependencies": {
     "@grncdr/eslint-plugin-react-hooks": "5.0.0-p30d423311.0",
-    "@typescript-eslint/eslint-plugin": "^5.49.0",
+    "@typescript-eslint/eslint-plugin": "^8.68.0",
     "dotenv-cli": "^7.3.0",
-    "eslint": "^8.32.0",
-    "eslint-config-next": "^13.1.5",
-    "next": "^13.1.2",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.3",
+    "next": "^16.3.3",
     "npm-run-all": "^4.1.5",
     "raw-loader": "^4.0.2",
     "syncpack": "^8.4.11",
     "ts-node": "^10.9.1",
-    "turbo": "^1.10.14"
-  },
-  "pnpm": {
-    "patchedDependencies": {
-      "y-monaco@0.1.4": "patches/y-monaco@0.1.4.patch",
-      "yjs@13.5.44": "patches/yjs@13.5.44.patch",
-      "@prisma/client@4.9.0": "patches/@prisma__client@4.9.0.patch"
-    }
+    "turbo": "^1.13.4"
   }
 }

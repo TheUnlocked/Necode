@@ -2,7 +2,6 @@
     "display": "NextJS",
     "extends": "./react.json",
     "compilerOptions": {
-        "baseUrl": ".",
         "allowJs": true,
         "noEmit": true,
         "esModuleInterop": true,

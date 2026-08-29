@@ -2,7 +2,6 @@
     "display": "NextJS",
     "extends": "./app.json",
     "compilerOptions": {
-        "baseUrl": ".",
         "lib": [
             "DOM",
             "DOM.Iterable",

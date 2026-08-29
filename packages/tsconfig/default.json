@@ -1,10 +1,9 @@
 {
     "display": "Default",
     "compilerOptions": {
-        "baseUrl": ".",
         "lib": ["ESNext"],
         "module": "ESNext",
-        "moduleResolution": "Node",
+        "moduleResolution": "bundler",
         "target": "ESNext",
         "strict": true,
         "esModuleInterop": true,
@@ -27,5 +26,6 @@
             "@necode-org/*":   ["../../packages/*/src"          ],
             "~*":              ["../../packages/*/src"          ],
         },
+        "rootDir": "../../",
     },
 }

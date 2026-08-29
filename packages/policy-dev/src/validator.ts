@@ -378,7 +378,7 @@ const testConfig = (program: MiKeProgram, validatorConfig: PolicyValidatorConfig
         .flatMap(config => asArray<Values | undefined>(config.params)
             .flatMap(paramsConfig => tuple(
                 events(config.signal ? asArray(config.signal) : []),
-                paramsConfig ? params(program, paramsConfig) : constant({}),
+                paramsConfig ? params(program, paramsConfig) : constant({} as Record<string, unknown>),
             ))
         )
     );

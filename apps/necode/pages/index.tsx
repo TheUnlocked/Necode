@@ -90,11 +90,11 @@ const generalInfo = <>
         <p>There are two, both an MQP report and a master&apos;s thesis:</p>
         <ul>
             <li>
-                <SubtleLink target="_blank" rel="noopener" href="/papers/mqp_report_2022.pdf">MQP Report (2022)</SubtleLink>&sp;
+                <SubtleLink target="_blank" rel="noopener" href="/papers/mqp_report_2022.pdf">MQP Report (2022)</SubtleLink>{' '}
                 (<SubtleLink target="_blank" rel="noopener" href="https://digital.wpi.edu/show/6h440w69h">WPI Mirror</SubtleLink>)
             </li>
             <li>
-                <SubtleLink target="_blank" rel="noopener" href="/papers/masters_thesis_2023.pdf">Master&apos;s thesis (2023)</SubtleLink>&sp;
+                <SubtleLink target="_blank" rel="noopener" href="/papers/masters_thesis_2023.pdf">Master&apos;s thesis (2023)</SubtleLink>{' '}
                 (<SubtleLink target="_blank" rel="noopener" href="https://digital.wpi.edu/concern/etds/8623j227w">WPI Mirror</SubtleLink>)
             </li>
         </ul>
@@ -102,16 +102,6 @@ const generalInfo = <>
             The MQP report covers a larger breadth of Necode&apos;s functionality, but many details are also outdated.
             The master&apos;s thesis is much more recent and focuses much more deeply on Necode&apos;s plugin API.
         </p>
-    </InfoSection>
-    <InfoSection title="I'd like to evaluate Necode for use in my class. How should I get in touch?">
-        Thank you very much for your interest! Feel free to shoot an email to Trevor at{' '}
-        <SubtleLink href="mailto:tmpaley@wpi.edu">tmpaley@wpi.edu</SubtleLink>, and cc Charlie at{' '}
-        <SubtleLink href="mailto:cdroberts@wpi.edu">cdroberts@wpi.edu</SubtleLink>. We&apos;ll give you a tour
-        and help you get acquianted with the software in case you choose to use it.
-    </InfoSection>
-    <InfoSection title="I don't teach a class, but I'm still interested in Necode. Can I try it out?">
-        Currently no, unfortunately. However, if you&apos;re willing to put in a bit of effort to get it running
-        on your local machine, the source code for Necode is available on <SubtleLink target="_blank" rel="noopener" href="https://github.com/TheUnlocked/Necode">GitHub</SubtleLink>.
     </InfoSection>
 </>;
 
@@ -122,10 +112,6 @@ const canIUsePhoneText = <>
 </>;
 
 const instructorInfo = (me: UserEntity<{ classes: 'deep' }> | undefined) => <>
-    <InfoSection title="How can I use Necode in my classroom?">
-        Please email Trevor at <SubtleLink href="mailto:tmpaley@wpi.edu">tmpaley@wpi.edu</SubtleLink>{' '}
-        and cc Charlie at <SubtleLink href="mailto:cdroberts@wpi.edu">cdroberts@wpi.edu</SubtleLink>.
-    </InfoSection>
     <InfoSection title="Can I use Necode for graded assignments?">
         We would <em>strongly</em> recommend against doing so. Necode intentionally sacrifices test secrecy and solution verifiability
         in exchange for students to be able to run their code on their own devices. In other words, any tests cases

@@ -17,7 +17,7 @@ export function makePluginEntity(plugin: Plugin): PluginEntity {
             name: plugin.name,
             displayName: plugin.displayName,
             version: plugin.version,
-            entry: plugin.entryFilename === undefined ? undefined : `/api/plugin/${plugin.id}/files/${plugin.version}/${plugin.entryFilename}`,
+            entry: plugin.entryFilename == null ? undefined : `/api/plugin/${plugin.id}/files/${plugin.version}/${plugin.entryFilename}`,
         }
     };
 }

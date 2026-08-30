@@ -6,7 +6,6 @@ settings:
 
 patchedDependencies:
   '@prisma/client@4.9.0': e2d48d9c097359c9529da6ce43f1685c2e457af51ddbdba1d619fb2a6a2aaeb5
-  color-alpha: 67b11dfc2c3cd507606e9d934548db01a55fbc38436eaf24b5f0484d6c08365f
   y-monaco@0.1.4: 8a502006d4bf04ebfc1baa4976d61afc72d08e27b49dec44697ca4ca0f066431
   yjs@13.5.44: 3de6a4f53f86267c0c59a2080bff3cf0ec54bb2d5adbed92bf03ba44872f2f3c
 
@@ -806,7 +805,7 @@ importers:
         version: link:../plugin-dev
       color-alpha:
         specifier: ^1.1.3
-        version: 1.1.3(patch_hash=67b11dfc2c3cd507606e9d934548db01a55fbc38436eaf24b5f0484d6c08365f)
+        version: 1.1.3
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
@@ -8567,7 +8566,7 @@ snapshots:
 
   collapse-white-space@2.1.0: {}
 
-  color-alpha@1.1.3(patch_hash=67b11dfc2c3cd507606e9d934548db01a55fbc38436eaf24b5f0484d6c08365f):
+  color-alpha@1.1.3:
     dependencies:
       color-parse: 1.4.2
 

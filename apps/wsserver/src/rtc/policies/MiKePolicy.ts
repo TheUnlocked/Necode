@@ -21,7 +21,7 @@ interface MiKeExposed {
 
 export default async function createMiKePolicy(id: string, compiledCode: Buffer, validatorConfig: PolicyValidatorConfig): Promise<RtcCoordinatorFactory> {
 
-    const jsModuleCode = `data:text/javascript;base64,${compiledCode.toString('base64')}`;
+    const jsModuleCode = `data:text/javascript;base64,${Buffer.from(compiledCode).toString('base64')}`;
     const createMiKeProgram: MiKeProgramWithoutExternals<MiKeExposed> = (await import_(jsModuleCode)).default;
     
     const policyCache = new Map<string, RtcCoordinatorFactory>();

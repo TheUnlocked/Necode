@@ -392,7 +392,7 @@ type ExecuteMethod<P extends string, E extends Endpoint<any, any, P>> = (
     obj: Parameters<E['handler']>[0],
 ) => Promise<Response<Parameters<Parameters<E['handler']>[1]>[0]>>;
 
-function execute<E extends Endpoint<any, any, any>>(this: E, obj: EndpointHandlerObject<unknown, string>) {
+function execute<E extends Endpoint<any, any, any>, P extends string>(this: E, obj: EndpointHandlerObject<unknown, P>) {
     return new Promise<Response<Parameters<Parameters<E['handler']>[1]>[0]>>(async resolve => {
         function ok(result: any) {
             resolve({

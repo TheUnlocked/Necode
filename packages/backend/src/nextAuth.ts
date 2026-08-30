@@ -86,9 +86,9 @@ export async function getNextAuthOptions(): Promise<NextAuthOptions> {
         adapter: (() => {
             const adapter = PrismaAdapter(prisma);
             const createUser = adapter.createUser;
-            adapter.createUser = function(user) {
+            adapter.createUser = function(user: User) {
                 if (process.env.NEXT_PUBLIC_APP_ENV === 'development') {
-                    user.username ??= 'dev_credentials_' + (user as any).id;
+                    user.username ??= 'dev_credentials_' + user.id;
                     user.displayName ??= user.username;
                     user.firstName ??= 'dev';
                     user.lastName ??= user.username;

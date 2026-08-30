@@ -12,7 +12,7 @@ interface P5ActivityConfig extends HtmlTestActivityBaseConfig {
     }
 }
 
-const [activityPage, configPage] = createTestActivityPages({
+const [activityPage, configPage] = createTestActivityPages<P5ActivityConfig>({
     hasCss: false,
     hasHtml: false,
     hasTests: true,

@@ -1,5 +1,5 @@
 import { useCallback, useContext } from "react";
-import useSWR, { Key, KeyedMutator, SWRConfiguration } from "swr";
+import useSWR, { Key, KeyedMutator, MutatorCallback, MutatorOptions, SWRConfiguration } from "swr";
 import { Response } from "~api/Response";
 import LoadingContext from "./useLoadingContext";
 
@@ -31,23 +31,27 @@ function makeUseGetRequest(immutable: boolean) {
             ...options?.fallbackData ? { fallbackData: { data: options.fallbackData } } : {},
         });
 
-        const mutateData = useCallback<KeyedMutator<T>>((_obj, _options) => {
+        const mutateData = useCallback<KeyedMutator<T>>(async <MutData = T>(_obj?: T | Promise<T | undefined> | MutatorCallback<T>, _options?: boolean | MutatorOptions<T, MutData>): Promise<T | MutData | undefined> => {
             const options: Parameters<typeof mutate>[1] = _options === undefined || typeof _options === 'boolean' ? _options : {
                 ..._options,
-                optimisticData
-                    : _options.optimisticData === undefined ? undefined
-                    : _options.optimisticData instanceof Function ? currentData => ({
+                optimisticData:
+                    _options.optimisticData === undefined ? undefined
+                    : _options.optimisticData instanceof Function ? (f => (currentData, displayedData) => ({
                         response: 'ok',
-                        data: (_options.optimisticData as (currentData?: T | undefined) => T)(currentData?.data),
-                    })
+                        data: f(currentData?.data, displayedData?.data),
+                    }))(_options.optimisticData)
                     : { response: 'ok', data: _options.optimisticData },
-                populateCache
-                    : _options.populateCache === undefined ? undefined
+                populateCache:
+                    _options.populateCache === undefined ? undefined
                     : typeof _options.populateCache === 'boolean' ? _options.populateCache
-                    : (result, currentData) => ({
+                    : (f => (result, currentData) => ({
                         response: 'ok',
-                        data: (_options.populateCache as (result: any, currentData: T) => T)(result, currentData?.data!)
-                    }),
+                        data: f(result as MutData, currentData?.data!)
+                    }))(_options.populateCache),
+                revalidate:
+                    _options.revalidate === undefined ? undefined
+                    : typeof _options.revalidate === 'boolean' ? _options.revalidate
+                    : (f => (data, key) => f(data.data!, key))(_options.revalidate)
             };
 
             const obj: Parameters<typeof mutate>[0]
@@ -69,14 +73,14 @@ function makeUseGetRequest(immutable: boolean) {
                 }
                 : _obj instanceof Promise ? _obj.then(data => ({
                     response: 'ok',
-                    data,
+                    data: data!,
                 }))
                 : {
                     response: 'ok',
                     data: _obj,
                 };
 
-            return mutate(obj, options).then(x => x?.data);
+            return (await mutate<MutData>(obj, options) as Response<T> | undefined)?.data;
         }, [mutate]);
 
         const mutateDelete = useCallback((callback?: () => Promise<void>) => {

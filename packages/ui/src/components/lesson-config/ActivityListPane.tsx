@@ -1,7 +1,6 @@
 import { Card, Divider, Stack, Box, SxProps } from "@mui/material";
 import { Dispatch, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDrop } from "use-dnd";
-import composeRefs from '@seznam/compose-react-refs';
 import { useGetRequest } from "~shared-ui/hooks/useGetRequest";
 import { ActivityEntity } from "~api/entities/ActivityEntity";
 import { LessonEntity } from "~api/entities/LessonEntity";
@@ -9,6 +8,7 @@ import { Iso8601Date } from "~utils/iso8601";
 import { ActivityDragDropBox } from "./ActivityDragDropBox";
 import SkeletonActivityListPane from "./SkeletonActivityListPane";
 import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
+import composeRefs from '~shared-ui/util/composeRefs';
 import WidgetDragLayer from './WidgetDragLayer';
 import { binarySearchIndex } from '~utils/binarySearch';
 import ActivityListPaneActions from './ActivityListPaneActions';
@@ -17,7 +17,7 @@ import type { PartialAttributesOf } from '~backend/Endpoint';
 import AcitivityListPaneTitleBar from './ActivityListPaneTitleBar';
 import { activityDragDropType } from '../../dnd/types';
 import { useConfirm } from 'material-ui-confirm';
-import { ActivityDescription } from '../../../../plugin-dev/src';
+import { ActivityDescription } from '@necode-org/plugin-dev';
 
 interface ActivityListPaneProps {
     sx: SxProps;

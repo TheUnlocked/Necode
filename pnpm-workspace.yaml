@@ -7,7 +7,10 @@ allowBuilds:
   esbuild: true
   prisma: true
   sharp: true
+minimumReleaseAgeExclude:
+  - use-dnd@1.3.0
 patchedDependencies:
   y-monaco@0.1.4: "patches/y-monaco@0.1.4.patch"
   yjs@13.5.44: "patches/yjs@13.5.44.patch"
   '@prisma/client@4.9.0': "patches/@prisma__client@4.9.0.patch"
+  color-alpha: patches/color-alpha.patch

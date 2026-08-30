@@ -10,7 +10,7 @@ import isContentfulLesson from '../../lessons/isContentfulLesson';
 import { Iso8601Date } from '~utils/iso8601';
 import { useState } from 'react';
 
-interface LessonDatePickerDayProps {
+export interface LessonDatePickerDayProps {
     pickerProps: PickersDayProps<DateTime>;
     lesson?: LessonEntity<{ activities: 'shallow' }>,
     isoDate: Iso8601Date,

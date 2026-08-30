@@ -25,8 +25,8 @@ export default function LessonDatePicker({
 }: LessonDatePickerProps) {
     const router = useRouter();
 
-    const renderDay = useCallback((day: DateTime, _: unknown, DayComponentProps: PickersDayProps<DateTime>) => {
-        const date = fromLuxon(day);
+    const renderDay = useCallback((DayComponentProps: PickersDayProps<DateTime>) => {
+        const date = fromLuxon(DayComponentProps.day);
         const lesson = lessonsByDate[date];
         return <LessonDatePickerDay key={date} pickerProps={DayComponentProps}
             isoDate={date} lesson={lesson}
@@ -40,8 +40,9 @@ export default function LessonDatePicker({
                 router.push({ hash: fromLuxon(newDate) });
             }
         }, [router])}
-        renderInput={props => <TextField {...props} />}
         displayStaticWrapperAs="desktop"
         views={views}
-        renderDay={renderDay}/>;
+        slots={{
+            day: renderDay
+        }}/>;
 }

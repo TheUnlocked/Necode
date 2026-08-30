@@ -1,6 +1,6 @@
 import { Card, Stack, TextField } from "@mui/material";
 import { PropsWithChildren } from 'react';
-import { ActivityConfigWidgetProps } from "../../../plugin-dev/src/activities/ActivityDescription";
+import { ActivityConfigWidgetProps } from "@necode-org/plugin-dev";
 import useLocalCachedState from '../hooks/useLocalCachedState';
 import DragHandle, { dragHandleSelector } from "./DragHandle";
 

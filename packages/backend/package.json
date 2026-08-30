@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@necode-org/mike": "^0.3.3",
-    "@next-auth/prisma-adapter": "^1.0.5",
+    "@next-auth/prisma-adapter": "^1.0.7",
     "cookie": "^0.5.0",
     "joi": "^17.13.6",
     "next-auth": "^4.24.15",
@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@types/cookie": "^0.5.1",
-    "@types/tar": "^6.1.4",
+    "@types/tar": "^7.0.87",
     "next": "^16.3.3",
     "typescript": "^6.0.3",
     "~tsconfig": "workspace:*"

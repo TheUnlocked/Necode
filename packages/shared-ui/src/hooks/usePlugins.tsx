@@ -2,7 +2,7 @@ import { set as setMutate } from 'lodash';
 import { useSnackbar } from 'notistack';
 import { createContext, PropsWithChildren, useContext, useMemo } from 'react';
 import { isNotNull } from '~utils/typeguards';
-import { ActivityDescription, ActivityManager, Feature, FeatureManager, FeatureObject, LanguageDescription, LanguageManager, Plugin } from '../../../plugin-dev/src';
+import { ActivityDescription, ActivityManager, Feature, FeatureManager, FeatureObject, LanguageDescription, LanguageManager, Plugin } from '@necode-org/plugin-dev';
 import useAsyncMemo from './useAsyncMemo';
 import { import_ } from '@brillout/import';
 import { useApiFetch } from './useApi';

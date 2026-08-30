@@ -3,6 +3,7 @@
     "include": ["**/*.ts"],
     "exclude": ["node_modules"],
     "compilerOptions": {
+        "typeRoots": ["node"],
         "declaration": false,
         "declarationMap": false,
         "inlineSourceMap": true,

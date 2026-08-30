@@ -1,11 +1,15 @@
-import { Container, Stack, Typography, styled, ToggleButtonGroup, ToggleButton, Tooltip, Box } from '@mui/material';
+import { Box, Button, Container, Stack, styled, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
+import { DataGrid } from '@mui/x-data-grid';
+import { SitewideRights } from '@necode-org/database';
 import type { NextPage } from 'next';
 import { PropsWithChildren, ReactNode, useMemo, useState } from 'react';
-import { useGetRequestImmutable } from '~shared-ui/hooks/useGetRequest';
+import { ClassroomEntity } from '~api/entities/ClassroomEntity';
 import { UserEntity } from '~api/entities/UserEntity';
+import SubtleLink from '~shared-ui/components/SubtleLink';
+import { useGetRequestImmutable } from '~shared-ui/hooks/useGetRequest';
 import Footer from '~ui/components/Footer';
 import NecodeLogo from '~ui/components/NecodeLogo';
-import SubtleLink from '~shared-ui/components/SubtleLink';
+import { entityAttributeColumn } from '~ui/util/dataGridUtils';
 
 const InfoBox = styled('section')`
     padding-bottom: 32px;
@@ -19,7 +23,7 @@ function InfoSection({ title, omitParagraph = false, children }: PropsWithChildr
 }
 
 const Home: NextPage = () => {
-    const { data: meInfo } = useGetRequestImmutable<UserEntity<{ classes: 'deep' }>>('/api/me?include=classes');
+    const { data: meInfo, isLoading } = useGetRequestImmutable<UserEntity<{ classes: 'deep' }>>('/api/me?include=classes');
 
     const [infoCategory, setInfoCategory] = useState('general');
 
@@ -31,6 +35,29 @@ const Home: NextPage = () => {
         }
     }, [infoCategory, meInfo]);
 
+    const classroomTable = <DataGrid
+        loading={isLoading}
+        sx={{ width: '100%' }}
+        rows={meInfo?.attributes.classes}
+        columns={[
+            entityAttributeColumn<ClassroomEntity>('displayName', { headerName: 'My Classrooms', flex: 1 }),
+            {
+                field: '_actions',
+                headerName: '',
+                type: 'custom',
+                renderCell: entity => <Button fullWidth variant="contained" href={`/classroom/${entity.row.id}`}>Go</Button>,
+            }
+        ]}
+        disableColumnFilter
+        disableColumnResize
+        disableColumnSorting
+        disableColumnSelector
+        disableColumnMenu
+        disableMultipleRowSelection
+        disableRowSelectionOnClick
+        hideFooter
+    />;
+
     return <>
         <Stack direction="column" alignItems="center" p={4}>
             <Box sx={{
@@ -41,7 +68,20 @@ const Home: NextPage = () => {
                 <NecodeLogo color="white" />
             </Box>
             {meInfo
-                ? <ToggleButtonGroup value={infoCategory} exclusive onChange={(_, v) => v ? setInfoCategory(v) : null} sx={{ mb: 8 }}>
+                ? <Container maxWidth="sm" sx={{ mb: 4 }}>
+                    <InfoBox>
+                        {classroomTable}
+                        <Stack direction="row" justifyContent="space-between" sx={{ mt: 1 }}>
+                            {([SitewideRights.Faculty, SitewideRights.Admin] as (string | undefined)[]).includes(meInfo?.attributes.rights)
+                                ? <Button href="/admin/createClassroom" variant="contained" color="warning">Create Classroom</Button>
+                                : <div></div>}
+                            <Button href="/classroom/join" variant="contained">Join Classroom</Button>
+                        </Stack>
+                    </InfoBox>
+                </Container>
+                : null}
+            {meInfo
+                ? <ToggleButtonGroup value={infoCategory} exclusive onChange={(_, v) => v ? setInfoCategory(v) : null} sx={{ mb: 4 }}>
                     <ToggleButton value="general">General</ToggleButton>
                     <ToggleButton value="instructor">Instructor</ToggleButton>
                     <ToggleButton value="student">Student</ToggleButton>

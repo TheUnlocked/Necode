@@ -1,27 +1,31 @@
 import { Container } from "@mui/material";
-import { DataGrid, GridColDef, GridEventListener, GridEvents } from "@mui/x-data-grid";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { constant } from "lodash";
 import { NextPage } from "next";
 import { useSnackbar } from "notistack";
 import { useCallback, useEffect, useState } from "react";
-import { useGetRequestImmutable } from "~shared-ui/hooks/useGetRequest";
-import useLoadingFetch from "~shared-ui/hooks/useLoadingFetch";
 import { UserEntity } from "~api/entities/UserEntity";
 import { Response } from "~api/Response";
+import { useGetRequestImmutable } from "~shared-ui/hooks/useGetRequest";
+import useLoadingFetch from "~shared-ui/hooks/useLoadingFetch";
+import useNecodeFetch from "~shared-ui/hooks/useNecodeFetch";
+import getChangedEntityAttributes from "~shared-ui/util/getChangedEntityAttributes";
 import AdminPageAlert from "~ui/components/AdminPageAlert";
 import FullPageLoader from "~ui/components/FullPageLoader";
+import { entityAttributeColumn } from "~ui/util/dataGridUtils";
 
 const Page: NextPage = () => {
     const { data: me, isLoading } = useGetRequestImmutable<UserEntity>('/api/me');
 
-    const [rowsPerPage, setRowsPerPage] = useState(25);
+    const [pageSize, setRowsPerPage] = useState(25);
 
     const [rows, setRows] = useState([] as any[]);
     const [rowCount, setRowCount] = useState(0);
 
     const [page, setPage] = useState(0);
 
-    const { download, upload } = useLoadingFetch();
+    const { download } = useLoadingFetch();
+    const { upload } = useNecodeFetch();
     const { enqueueSnackbar } = useSnackbar();
 
     const [nextLink, setNextLink] = useState<string>();
@@ -35,11 +39,11 @@ const Page: NextPage = () => {
         const data: Response<UserEntity[], { pagination: true }> = await download(
             newPage === page + 1 && nextLink !== undefined
                 ? nextLink
-                : `/api/users?page:index=${newPage}&page:count=${rowsPerPage}`
+                : `/api/users?page:index=${newPage}&page:count=${pageSize}`
         ).then(x => x.json());
         
         if (data.response === 'ok') {
-            setRows(data.data.map(x => ({ id: x.id, ...x.attributes })));
+            setRows(data.data);
             setRowCount(data.pagination.total);
             setNextLink(data.pagination.next);
             setLoading(false);
@@ -47,12 +51,12 @@ const Page: NextPage = () => {
         else {
             return enqueueSnackbar('Failed to load users', { variant: 'error' });
         }
-    }, [page, rowsPerPage, nextLink, download, enqueueSnackbar]);
+    }, [page, pageSize, nextLink, download, enqueueSnackbar]);
 
     async function handleRowsPerPageChange(newSize: number) {
         setRowsPerPage(newSize);
         
-        const newPage = Math.floor(page * rowsPerPage / newSize);
+        const newPage = Math.floor(page * pageSize / newSize);
         
         setNextLink(undefined);
         setPage(newPage);
@@ -68,17 +72,12 @@ const Page: NextPage = () => {
         }
     }, [reloadNow, page, handlePageChange]);
 
-    const handleCellEdited: GridEventListener<GridEvents.cellEditCommit> = async info => {
-        const res: Response<UserEntity> = await upload(`/api/users/${info.id}`, {
+    async function processRowUpdate(updatedRow: UserEntity, originalRow: UserEntity): Promise<UserEntity> {
+        return await upload(`/api/users/${originalRow.id}`, {
             method: 'PATCH',
-            body: JSON.stringify({
-                [info.field]: info.value
-            })
-        }).then(x => x.json());
-
-        if (res.response === 'error') {
-            enqueueSnackbar(`Failed to update user (${res.message})`, { variant: 'error' });
-        }
+            body: JSON.stringify(getChangedEntityAttributes(originalRow, updatedRow)),
+            errorMessage: err => `Failed to update user (${err.message})`,
+        });
     };
 
     const [hiddenCols, setHiddenCols] = useState({
@@ -96,30 +95,31 @@ const Page: NextPage = () => {
         <DataGrid
             sx={{ flexGrow: 1 }}
             loading={loading}
-            rowsPerPageOptions={[10, 25, 50]}
+            pageSizeOptions={[10, 25, 50]}
             isRowSelectable={constant(false)}
-            pageSize={rowsPerPage}
-            onPageSizeChange={handleRowsPerPageChange}
+            paginationModel={{ page, pageSize }}
+            onPaginationModelChange={model => {
+                handlePageChange(model.page);
+                handleRowsPerPageChange(model.pageSize);
+            }}
             pagination
             paginationMode="server"
             rows={rows}
             rowCount={rowCount}
-            page={page}
-            onPageChange={handlePageChange}
-            onCellEditCommit={handleCellEdited}
-            onColumnVisibilityChange={info => setHiddenCols(x => ({ ...x, [info.field]: !info.isVisible }))}
+            processRowUpdate={processRowUpdate}
+            onColumnVisibilityModelChange={setHiddenCols}
             columns={([
                 { field: 'id', headerName: 'ID' },
-                { field: 'username', headerName: 'Username' },
-                { field: 'lastName', headerName: 'Last Name', editable: true },
-                { field: 'firstName', headerName: 'First Name', editable: true },
-                { field: 'displayName', headerName: 'Display Name', editable: true },
-                { field: 'email', headerName: 'Email' },
-                { field: 'rights', headerName: 'Rights', editable: true, type: 'singleSelect', valueOptions: [
+                entityAttributeColumn<UserEntity>('username', { headerName: 'Username' }),
+                entityAttributeColumn<UserEntity>('lastName', { headerName: 'Last Name', editable: true }),
+                entityAttributeColumn<UserEntity>('firstName', { headerName: 'First Name', editable: true }),
+                entityAttributeColumn<UserEntity>('displayName', { headerName: 'Display Name', editable: true }),
+                entityAttributeColumn<UserEntity>('email', { headerName: 'Email' }),
+                entityAttributeColumn<UserEntity>('rights', { headerName: 'Rights', editable: true, type: 'singleSelect', valueOptions: [
                     { label: 'Admin', value: 'Admin' },
                     { label: 'Faculty', value: 'Faculty' },
                     { label: 'None', value: 'None' },
-                ] },
+                ] }),
             ] as GridColDef[]).map(x => ({ ...x, flex: 1, filterable: false, sortable: false, hide: hiddenCols[x.field] }))} />
     </Container>;
 };

@@ -15,7 +15,7 @@ interface DomTestActivityConfig extends HtmlTestActivityBaseConfig {
     };
 }
 
-const [activityPage, configPage] = createTestActivityPages({});
+const [activityPage, configPage] = createTestActivityPages<DomTestActivityConfig>({});
 
 export default activityDescription({
     id: 'core/test-dom',

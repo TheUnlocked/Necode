@@ -1,4 +1,4 @@
-import { Box, Button, CircularProgress, useTheme } from '@mui/material';
+import { alpha, Box, Button, CircularProgress, useTheme } from '@mui/material';
 import { Panes, Pane, Editor, Key, PaneTitle, useIsSizeOrSmaller, useMonaco } from '@necode-org/activity-dev';
 import { ActivityPageProps } from '@necode-org/plugin-dev';
 import { editor } from 'monaco-editor';
@@ -7,17 +7,24 @@ import { Config } from '.';
 
 
 interface TextLine {
+    type: 'input' | 'output';
     leadingChar: ReactNode;
     text: ReactNode;
 }
 
-function Line({ data: { leadingChar, text } }: { data: TextLine }) {
+function Line({ data: { leadingChar, text, type } }: { data: TextLine }) {
+    const theme = useTheme();
+    const backgroundColor = theme.palette.background.default;
+    const [leadingBackground, textBackground] = type === 'output'
+        ? [backgroundColor, `linear-gradient(90deg, ${backgroundColor} 0%, ${alpha(backgroundColor, 0)} 70%)`]
+        : [null, null];
     return <>
-        <Box component="span" sx={{ userSelect: "none" }}>{leadingChar} </Box>
+        <Box component="span" display="inline-block" sx={{ userSelect: "none", background: leadingBackground }}>{leadingChar} </Box>
         <Box display="inline-block" pr="1em" sx={{
             width: "stretch",
             whiteSpace: "pre-wrap",
             wordWrap: "break-word",
+            background: textBackground,
         }}>{text}</Box>
         {'\n'}
     </>;
@@ -37,9 +44,32 @@ export function Activity({ language, features }: ActivityPageProps<['repl/instan
     const [replCode, setReplCode] = useState<string>();
     const replCodeRef = useRef<string>();
 
+    const [commandHistory, setCommandHistory] = useState([] as string[]);
+
+    const transientCommandHistory = useRef<(string | undefined)[]>(['']);
+    const [focusedHistoryId, setFocusedHistoryId] = useState(0);
+
+    function shiftCommandHistoryUp() {
+        setFocusedHistoryId(curr => {
+            transientCommandHistory.current[curr] = replCodeRef.current;
+            return Math.min(transientCommandHistory.current.length - 1, curr + 1);
+        });
+    }
+
+    function shiftCommandHistoryDown() {
+        setFocusedHistoryId(curr => {
+            transientCommandHistory.current[curr] = replCodeRef.current;
+            return Math.max(0, curr - 1);
+        });
+    }
+
     useEffect(() => {
         replCodeRef.current = replCode;
     }, [replCode]);
+
+    useEffect(() => {
+        setReplCode(transientCommandHistory.current[focusedHistoryId]);
+    }, [focusedHistoryId]);
 
     const instanceRef = useRef<{
         evaluate(code: string): Promise<{ type: 'result' | 'text', contents: string }[]>
@@ -53,15 +83,30 @@ export function Activity({ language, features }: ActivityPageProps<['repl/instan
             setComputing(true);
             setReplCode('');
 
+            if (showInput) {
+                setCommandHistory(history => {
+                    if (code !== history[0]) {
+                        const newHistory = [code, ...history];
+                        transientCommandHistory.current = ['', ...newHistory];
+                        setFocusedHistoryId(0);
+                        return newHistory;
+                    }
+                    setFocusedHistoryId(0);
+                    transientCommandHistory.current = ['', ...history];
+                    return history;
+                });
+            }
+
             const result = instance.evaluate(code);
             const colorizedInput = await colorize(code, monacoNameRef.current, {});
 
             if (showInput) {
                 setOutput(output => output.concat([
                     ...colorizedInput.split('<br/>').slice(0, -1).map((x, i) => ({
+                        type: 'input',
                         leadingChar: i === 0 ? '>' : '.',
                         text: <Box display="contents" dangerouslySetInnerHTML={{ __html: x }} />,
-                    }))
+                    } as const))
                 ]));
             }
 
@@ -84,9 +129,10 @@ export function Activity({ language, features }: ActivityPageProps<['repl/instan
             setOutput(output => [
                 ...output,
                 ...colorizedResult.map(x => ({
+                    type: 'output',
                     leadingChar: ' ',
                     text: x
-                })),
+                } as const)),
             ]);
         }
     }, []);
@@ -173,6 +219,17 @@ export function Activity({ language, features }: ActivityPageProps<['repl/instan
                             
                             editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
                                 runCode(replCodeRef.current, monaco.editor.colorize, true);
+                            });
+
+                            editor.onKeyDown(e => {
+                                if (e.keyCode === monaco.KeyCode.UpArrow && editor.getPosition()?.lineNumber === 1) {
+                                    shiftCommandHistoryUp();
+                                    e.preventDefault();
+                                }
+                                if (e.keyCode === monaco.KeyCode.DownArrow && editor.getPosition()?.lineNumber === editor.getModel()?.getLineCount()) {
+                                    shiftCommandHistoryDown();
+                                    e.preventDefault();
+                                }
                             });
                         }}
                         options={{

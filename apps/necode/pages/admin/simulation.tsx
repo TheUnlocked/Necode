@@ -44,9 +44,13 @@ const Page: NextPage = () => {
     async function processRowUpdate(updatedRow: UserEntity, originalRow: UserEntity): Promise<UserEntity> {
         setPerformingAction(true);
 
+        const delta = getChangedEntityAttributes(originalRow, updatedRow);
+        if (Object.keys(delta).length === 0) {
+            return originalRow;
+        }
         return await upload<UserEntity>(`/api/users/${originalRow.id}`, {
             method: 'PATCH',
-            body: JSON.stringify(getChangedEntityAttributes(originalRow, updatedRow)),
+            body: JSON.stringify(delta),
             errorMessage: err => `Failed to update user (${err.message})`,
         }).finally(() => setPerformingAction(false));
     }

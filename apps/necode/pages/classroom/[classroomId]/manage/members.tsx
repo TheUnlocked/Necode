@@ -102,9 +102,14 @@ const PageContent: NextPage<ManageClassroomPageContentProps> = ({ classroomId, m
             return originalRow;
         }
 
+        const delta = getChangedEntityAttributes(originalRow, updatedRow);
+        if (Object.keys(delta).length === 0) {
+            return originalRow;
+        }
+
         return await upload<ClassroomMemberEntity>(`/api/classroom/${classroomId}/members/${originalRow.id}`, {
             method: 'PATCH',
-            body: JSON.stringify(JSON.stringify(getChangedEntityAttributes(originalRow, updatedRow))),
+            body: JSON.stringify(JSON.stringify(delta)),
             errorMessage(err) {
                 return `Failed to update user (${err.message})`;
             }

@@ -1,12 +1,12 @@
 {
-    "$schema": "https://turbo.build/schema.json",
-    "globalDotEnv": [
+    "$schema": "https://turborepo.dev/schema.json",
+    "globalDependencies": [
         ".env"
     ],
     "globalEnv": [
         "NODE_ENV"
     ],
-    "pipeline": {
+    "tasks": {
         "vercel-build": {
             "dependsOn": ["^db:migrate:deploy", "necode:build"]
         },

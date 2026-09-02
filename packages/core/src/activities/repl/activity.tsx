@@ -222,13 +222,15 @@ export function Activity({ language, features }: ActivityPageProps<['repl/instan
                             });
 
                             editor.onKeyDown(e => {
-                                if (e.keyCode === monaco.KeyCode.UpArrow && editor.getPosition()?.lineNumber === 1) {
-                                    shiftCommandHistoryUp();
-                                    e.preventDefault();
-                                }
-                                if (e.keyCode === monaco.KeyCode.DownArrow && editor.getPosition()?.lineNumber === editor.getModel()?.getLineCount()) {
-                                    shiftCommandHistoryDown();
-                                    e.preventDefault();
+                                if (!e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                                    if (e.keyCode === monaco.KeyCode.UpArrow && editor.getPosition()?.lineNumber === 1) {
+                                        shiftCommandHistoryUp();
+                                        e.preventDefault();
+                                    }
+                                    if (e.keyCode === monaco.KeyCode.DownArrow && editor.getPosition()?.lineNumber === editor.getModel()?.getLineCount()) {
+                                        shiftCommandHistoryDown();
+                                        e.preventDefault();
+                                    }
                                 }
                             });
                         }}

@@ -65,7 +65,7 @@ const Page: NextPage = () => {
 
     const [reloadNow, setReloadNow] = useState(true);
 
-    if (reloadNow) {
+    if (reloadNow && typeof window !== 'undefined') {
         setReloadNow(false);
         handlePageChange(page);
     }

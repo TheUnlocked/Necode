@@ -21,6 +21,7 @@
         "WEBRTC_TURN_SECRET",
         "WEBSOCKET_CORS_REGEX",
         "NEXT_PUBLIC_APP_ENV",
+        "ENABLE_EXPERIMENTAL_COREPACK",
     ],
     "tasks": {
         "vercel-build": {

@@ -19,7 +19,7 @@
     "lint:fix": "eslint --fix",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "vercel-build": "turbo run vercel-build",
+    "vercel-build": "touch .env && turbo run vercel-build",
     "postinstall": "syncpack list-mismatches",
     "sync-packages": "syncpack fix-mismatches"
   },

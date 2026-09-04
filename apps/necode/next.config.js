@@ -10,12 +10,11 @@ const assign = Object.assign;
 /** @type {import('next').NextConfig} */
 module.exports = {
     reactStrictMode: true,
-    // experimental: {
-    //     esmExternals: 'loose',
-    // },
+    output: 'standalone',
     // Omits certain modules to significantly speed up lambda cold start.
     // Note that excluding @mui means `getServerSideProps`/`getInitialProps` WILL NOT WORK.
     // `getStaticProps` is still fine to use, since it happens during build time.
+    outputFileTracingRoot: path.join(__dirname, '../../'),
     outputFileTracingExcludes: {
         "*": [
             '**esbuild-linux-64**',

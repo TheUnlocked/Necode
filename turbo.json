@@ -1,8 +1,5 @@
 {
     "$schema": "https://turborepo.dev/schema.json",
-    "globalDependencies": [
-        ".env"
-    ],
     "globalEnv": [
         "NODE_ENV",
         "PORT",
@@ -25,11 +22,11 @@
     ],
     "tasks": {
         "vercel-build": {
-            "dependsOn": ["^db:migrate:deploy", "necode:build"]
+            "dependsOn": ["^db:migrate:deploy", "necode:build"],
         },
         "necode:build": {
             "dependsOn": ["~database#generate"],
-            "outputs": [".next/**"]
+            "outputs": [".next/**", "!.next/cache/**"]
         },
         "db:migrate:deploy": {
             "dependsOn": ["generate"],

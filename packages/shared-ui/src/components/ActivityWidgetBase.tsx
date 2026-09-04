@@ -19,34 +19,36 @@ export default function ActivityWidgetBase({
             <DragHandle innerRef={dragHandle}/>
             <TextField size="small" variant="filled" hiddenLabel
                 value={displayName} onChange={e => setDisplayName(e.target.value)}
-                onBlur={commitDisplayName}
+                onBlur={() => commitDisplayName()}
                 sx={{ flexGrow: 1 }}
-                InputProps={{
-                    disableUnderline: true,
-                    sx: ({ typography, transitions, spacing }) => ({
-                        backgroundColor: "transparent !important",
-                        ...typography.h6,
-                        "& > input": {
-                            padding: 0,
-                        },
-                        "&:hover:after": {
-                            backgroundColor: ({ palette }) => palette.action.hover,
-                            borderRadius: 1
-                        },
-                        "&:after": {
-                            content: "''",
-                            position: "absolute",
-                            width: `calc(100% + ${spacing(1)})`,
-                            height: "100%",
-                            pointerEvents: "none",
-                            mx: -1,
-                            borderRadius: 1,
-                            transition: transitions.create("background-color", {
-                                duration: transitions.duration.shorter,
-                                easing: transitions.easing.easeOut
-                            })
-                        }
-                    }),
+                slotProps={{
+                    input: {
+                        disableUnderline: true,
+                        sx: ({ typography, transitions, spacing }) => ({
+                            backgroundColor: "transparent !important",
+                            ...typography.h6,
+                            "& > input": {
+                                padding: 0,
+                            },
+                            "&:hover:after": {
+                                backgroundColor: ({ palette }) => palette.action.hover,
+                                borderRadius: 1
+                            },
+                            "&:after": {
+                                content: "''",
+                                position: "absolute",
+                                width: `calc(100% + ${spacing(1)})`,
+                                height: "100%",
+                                pointerEvents: "none",
+                                mx: -1,
+                                borderRadius: 1,
+                                transition: transitions.create("background-color", {
+                                    duration: transitions.duration.shorter,
+                                    easing: transitions.easing.easeOut
+                                })
+                            }
+                        }),
+                    }
                 }} />
             {children}
         </Stack>

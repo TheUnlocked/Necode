@@ -146,23 +146,25 @@ export default function TextInputWidget({
     return <TextField
         multiline fullWidth variant="filled" hiddenLabel
         value={textContent} onChange={e => setTextContent(e.target.value)}
-        onBlur={commitTextContent}
-        InputProps={{
-            disableUnderline: true,
-            sx: {
-                px: 1,
-                py: 0,
-                [`& ${dragHandleSelector}`]: {
-                    visibility: languageSelectPopup.isOpen ? "visible" : "hidden"
+        onBlur={() => commitTextContent()}
+        slotProps={{
+            input: {
+                disableUnderline: true,
+                sx: {
+                    px: 1,
+                    py: 0,
+                    [`& ${dragHandleSelector}`]: {
+                        visibility: languageSelectPopup.isOpen ? "visible" : "hidden"
+                    },
+                    [`&:hover ${dragHandleSelector}`]: {
+                        visibility: "visible"
+                    },
+                    backgroundColor: "transparent !important",
+                    ...border,
+                    fontSize: ({ typography }) => typography.body1.fontSize
                 },
-                [`&:hover ${dragHandleSelector}`]: {
-                    visibility: "visible"
-                },
-                backgroundColor: "transparent !important",
-                ...border,
-                fontSize: ({ typography }) => typography.body1.fontSize
-            },
-            startAdornment: <DragHandle innerRef={dragHandle} iconProps={{ sx: { mr: 1 } }} />,
-            endAdornment: <IconButton size="small" className={dragHandleClass} onClick={() => changeLanguage('plaintext')}><CodeIcon/></IconButton>
+                startAdornment: <DragHandle innerRef={dragHandle} iconProps={{ sx: { mr: 1 } }} />,
+                endAdornment: <IconButton size="small" className={dragHandleClass} onClick={() => changeLanguage('plaintext')}><CodeIcon/></IconButton>
+            }
         }} />;
 };

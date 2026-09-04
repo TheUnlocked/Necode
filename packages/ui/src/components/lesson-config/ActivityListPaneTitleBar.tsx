@@ -42,7 +42,7 @@ export default function AcitivityListPaneTitleBar({
                 hiddenLabel
                 fullWidth
                 value={displayName}
-                onBlur={commitDisplayName}
+                onBlur={() => commitDisplayName()}
                 onChange={e => setDisplayName(e.target.value)}
                 slotProps={{
                     input: {

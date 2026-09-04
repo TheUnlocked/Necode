@@ -32,11 +32,12 @@ type PossibleRef<T> = MutableRefObject<T> | RefCallback<T> | undefined;
  * This utility takes care of different types of refs: callback refs and RefObject(s)
  */
 function setRef<T>(ref: PossibleRef<T>, value: T): unknown {
-  if (typeof ref === 'function') {
-    return ref(value);
-  } else if (ref !== null && ref !== undefined) {
-    ref.current = value;
-  }
+    if (typeof ref === 'function') {
+        return ref(value);
+    }
+    else if (ref !== null && ref !== undefined) {
+        ref.current = value;
+    }
 }
 
 /**
@@ -44,33 +45,34 @@ function setRef<T>(ref: PossibleRef<T>, value: T): unknown {
  * Accepts callback refs and RefObject(s)
  */
 export default function composeRefs<T>(...refs: PossibleRef<T>[]): RefCallback<T> {
-  return (node) => {
-    let hasCleanup = false;
-    const cleanups = refs.map((ref) => {
-      const cleanup = setRef(ref, node);
-      if (!hasCleanup && typeof cleanup == 'function') {
-        hasCleanup = true;
-      }
-      return cleanup;
-    });
+    return (node) => {
+        let hasCleanup = false;
+        const cleanups = refs.map((ref) => {
+            const cleanup = setRef(ref, node);
+            if (!hasCleanup && typeof cleanup == 'function') {
+                hasCleanup = true;
+            }
+            return cleanup;
+        });
 
-    // React <19 will log an error to the console if a callback ref returns a
-    // value. We don't use ref cleanups internally so this will only happen if a
-    // user's ref callback returns a value, which we only expect if they are
-    // using the cleanup functionality added in React 19.
-    if (hasCleanup) {
-      return () => {
-        for (let i = 0; i < cleanups.length; i++) {
-          const cleanup = cleanups[i];
-          if (typeof cleanup == 'function') {
-            cleanup();
-          } else {
-            setRef(refs[i], null);
-          }
+        // React <19 will log an error to the console if a callback ref returns a
+        // value. We don't use ref cleanups internally so this will only happen if a
+        // user's ref callback returns a value, which we only expect if they are
+        // using the cleanup functionality added in React 19.
+        if (hasCleanup) {
+            return () => {
+                for (let i = 0; i < cleanups.length; i++) {
+                    const cleanup = cleanups[i];
+                    if (typeof cleanup == 'function') {
+                        cleanup();
+                    }
+                    else {
+                        setRef(refs[i], null);
+                    }
+                }
+            };
         }
-      };
-    }
-  };
+    };
 }
 
 /**
@@ -78,8 +80,9 @@ export default function composeRefs<T>(...refs: PossibleRef<T>[]): RefCallback<T
  * Accepts callback refs and RefObject(s)
  */
 function useComposedRefs<T>(...refs: PossibleRef<T>[]): RefCallback<T> {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  return useCallback(composeRefs(...refs), refs);
+
+    // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps, react-hooks/use-memo
+    return useCallback(composeRefs(...refs), refs);
 }
 
 export { composeRefs, useComposedRefs };

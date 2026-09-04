@@ -7,8 +7,10 @@ const { TsconfigPathsPlugin } = require('tsconfig-paths-webpack-plugin');
 
 /** @typedef {import('webpack').Compiler} Compiler */
 
+/** @type {(path: string) => string} */
 const rel = x => './' + path.join(path.relative(process.cwd(), __dirname), x);
 
+/** @type {import('child_process').ChildProcessWithoutNullStreams} */
 let child;
 
 /** @type {import('webpack').Configuration} */

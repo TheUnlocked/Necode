@@ -44,26 +44,30 @@ export default function AcitivityListPaneTitleBar({
                 value={displayName}
                 onBlur={commitDisplayName}
                 onChange={e => setDisplayName(e.target.value)}
-                InputProps={{ disableUnderline: true, sx: ({ typography, transitions }) => ({
-                    ...typography.h6,
-                    "&:hover:after": {
-                        backgroundColor: ({ palette }) => palette.action.hover,
-                        borderRadius: 1
-                    },
-                    "&:after": {
-                        content: "''",
-                        position: "absolute",
-                        width: ({ spacing }) => `calc(100% + ${spacing(2)})`,
-                        height: "100%",
-                        pointerEvents: "none",
-                        mx: -1,
-                        borderRadius: 1,
-                        transition: transitions.create("background-color", {
-                            duration: transitions.duration.shorter,
-                            easing: transitions.easing.easeOut
-                        })
-                    }
-                }) }} />
+                slotProps={{
+                    input: {
+                        disableUnderline: true, sx: ({ typography, transitions }) => ({
+                        ...typography.h6,
+                        "&:hover:after": {
+                            backgroundColor: ({ palette }) => palette.action.hover,
+                            borderRadius: 1
+                        },
+                        "&:after": {
+                            content: "''",
+                            position: "absolute",
+                            width: ({ spacing }) => `calc(100% + ${spacing(2)})`,
+                            height: "100%",
+                            pointerEvents: "none",
+                            mx: -1,
+                            borderRadius: 1,
+                            transition: transitions.create("background-color", {
+                                duration: transitions.duration.shorter,
+                                easing: transitions.easing.easeOut
+                            })
+                        }
+                    })
+                }
+            }} />
             <Typography variant="body2" component="span">{
                 forTodayOnly
                     ? "Today"

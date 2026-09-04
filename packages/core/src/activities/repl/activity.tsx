@@ -44,7 +44,7 @@ export function Activity({ language, features }: ActivityPageProps<['repl/instan
     const [replCode, setReplCode] = useState<string>();
     const replCodeRef = useRef<string>();
 
-    const [commandHistory, setCommandHistory] = useState([] as string[]);
+    const [, setCommandHistory] = useState([] as string[]);
 
     const transientCommandHistory = useRef<(string | undefined)[]>(['']);
     const [focusedHistoryId, setFocusedHistoryId] = useState(0);
@@ -141,6 +141,13 @@ export function Activity({ language, features }: ActivityPageProps<['repl/instan
 
     const [reloadCounter, setReloadCounter] = useState(0);
 
+    function reload() {
+        setOutput([]);
+        setIsDirty(false);
+        setComputing(true);
+        setReloadCounter(x => x + 1);
+    }
+
     useEffect(() => {
         if (!monaco) {
             return;
@@ -149,9 +156,6 @@ export function Activity({ language, features }: ActivityPageProps<['repl/instan
         let destroyed = false;
         let destroy: undefined | (() => void);
 
-        setOutput([]);
-        setComputing(true);
-        setIsDirty(false);
         features.repl.instanced.createInstance().then(async inst => {
             if (destroyed) {
                 inst.destroy?.();
@@ -186,7 +190,7 @@ export function Activity({ language, features }: ActivityPageProps<['repl/instan
         <Pane icon={language.icon ? <language.icon /> : undefined} label={language.displayName}
             toolbar={<>
                 {showKeybindingHint ? <PaneTitle>Press <Key>Ctrl</Key>+<Key>S</Key> to restart the REPL with new code</PaneTitle> : undefined}
-                <Button size="small" onClick={() => setReloadCounter(x => x + 1)}
+                <Button size="small" onClick={() => reload()}
                     sx={{ ml: showKeybindingHint ? 0.5 : "auto", flexShrink: 0 }}>
                     Restart
                 </Button>
@@ -201,7 +205,7 @@ export function Activity({ language, features }: ActivityPageProps<['repl/instan
                     updateHeight(editor)();
                     editor.onDidContentSizeChange(updateHeight(editor));
                     
-                    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => setReloadCounter(x => x + 1));
+                    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => reload());
                 }} />
         </Pane>
         <Pane label="REPL" toolbar={computing ? <CircularProgress variant="indeterminate" size={24} /> : undefined}>

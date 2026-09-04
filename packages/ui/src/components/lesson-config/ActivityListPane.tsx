@@ -77,17 +77,16 @@ export default function ActivityListPane({
 
     const { upload } = useNecodeFetch();
     
-    const widgetContainerRef = useRef<HTMLElement>();
+    const [widgetContainer, setWidgetContainerRef] = useState<HTMLElement>();
 
     const [, setLastHoveredWidgetIndex] = useState<number>();
     const [dropIntoPos, setDropIntoPos] = useState<number>();
 
     const dropIndicatorPos = useMemo(() => {
-        const container = widgetContainerRef.current;
-        if (container && dropIntoPos !== undefined) {
-            if (dropIntoPos >= container.children.length) {
+        if (widgetContainer && dropIntoPos !== undefined) {
+            if (dropIntoPos >= widgetContainer.children.length) {
                 // Place indicator after last widget
-                const rect = container.children[container.children.length - 1].getBoundingClientRect();
+                const rect = widgetContainer.children[widgetContainer.children.length - 1].getBoundingClientRect();
                 return {
                     left: rect.left,
                     width: rect.width,
@@ -96,7 +95,7 @@ export default function ActivityListPane({
                 };
             }
             else {
-                const rect = container.children[dropIntoPos].getBoundingClientRect();
+                const rect = widgetContainer.children[dropIntoPos].getBoundingClientRect();
                 return {
                     left: rect.left,
                     width: rect.width,
@@ -105,7 +104,7 @@ export default function ActivityListPane({
                 };
             }
         }
-    }, [dropIntoPos]);
+    }, [dropIntoPos, widgetContainer]);
 
     const [{ isDragging }, drop] = useDrop(() => ({
         accept: activityDragDropType,
@@ -114,14 +113,13 @@ export default function ActivityListPane({
             return { isDragging: Boolean(itemType) };
         },
         hover({ event, item }) {
-            const container = widgetContainerRef.current;
-            if (container) {
+            if (widgetContainer) {
                 setLastHoveredWidgetIndex(oldWidgetIndex => {
                     if (activities.length === 1) {
                         setDropIntoPos(0);
                         return 0;
                     }
-                    const fracDropPos = findWidgetInsertPosition(container, event.clientY, oldWidgetIndex);
+                    const fracDropPos = findWidgetInsertPosition(widgetContainer, event.clientY, oldWidgetIndex);
     
                     const intDropPos = Math.ceil(fracDropPos);
                     if (activities[intDropPos]?.id === item.id) {
@@ -183,13 +181,11 @@ export default function ActivityListPane({
             );
             // No need to fire onLessonChange for reordering
         },
-    }), [activities, dropIntoPos, lessonEntity, classroomId, mutateLesson, upload]);
+    }), [activities, dropIntoPos, widgetContainer, lessonEntity, classroomId, mutateLesson, upload]);
 
-    useEffect(() => {
-        if (!isDragging) {
-            setDropIntoPos(undefined);
-        }
-    }, [isDragging]);
+    if (!isDragging && dropIntoPos !== undefined) {
+        setDropIntoPos(undefined);
+    }
 
     const creatingLessonPromiseRef = useRef<Promise<LessonEntity<{ activities: 'deep' }>> | undefined>();
     const getOrCreateLesson = useCallback(async ({ date, displayName }: { date: Iso8601Date, displayName: string }) => {
@@ -388,7 +384,7 @@ export default function ActivityListPane({
                     onDeleteActivity={deleteActivityHandler}
                     onDeleteLesson={deleteLessonHandler} />
             </Box>
-            <Stack ref={composeRefs(drop, widgetContainerRef)} sx={{ m: 1, mt: 0, flexGrow: 1, overflow: "auto" }} spacing={1}>
+            <Stack ref={composeRefs(drop, setWidgetContainerRef)} sx={{ m: 1, mt: 0, flexGrow: 1, overflow: "auto" }} spacing={1}>
                 {activityWidgets}
             </Stack>
         </Card>

@@ -1,18 +1,18 @@
+import { Alert, Button, Card, Checkbox, Container, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Typography } from "@mui/material";
+import { readdir, readFile } from 'fs/promises';
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
-import { readFile, readdir } from 'fs/promises';
+import { MDXClient } from "next-mdx-remote-client";
+import { serialize, SerializeResult } from 'next-mdx-remote-client/serialize';
 import { join, parse as parsePath } from 'path';
 import { PropsWithChildren } from "react";
-import { Alert, Button, Card, Checkbox, Container, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Typography } from "@mui/material";
-import { serialize, SerializeProps, SerializeResult } from 'next-mdx-remote-client/serialize';
-import Footer from "~ui/components/Footer";
-import rehypeHighlight from "rehype-highlight";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import rehypeHighlight from "rehype-highlight";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 import remarkToc from "remark-toc";
+import Footer from "~ui/components/Footer";
 import WithState from "~ui/components/WithState";
 import remarkUnwrapMdx from '~ui/remark/remark-unwrap-mdx';
-import { MDXClient } from "next-mdx-remote-client";
 import NotFoundPage from "../404";
 
 const h1 = (props: PropsWithChildren<{}>) => <>

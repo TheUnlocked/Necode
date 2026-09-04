@@ -3,7 +3,7 @@ import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { constant } from "lodash";
 import { NextPage } from "next";
 import { useSnackbar } from "notistack";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { UserEntity } from "~api/entities/UserEntity";
 import { Response } from "~api/Response";
 import { useGetRequestImmutable } from "~shared-ui/hooks/useGetRequest";
@@ -65,12 +65,10 @@ const Page: NextPage = () => {
 
     const [reloadNow, setReloadNow] = useState(true);
 
-    useEffect(() => {
-        if (reloadNow) {
-            setReloadNow(false);
-            handlePageChange(page);
-        }
-    }, [reloadNow, page, handlePageChange]);
+    if (reloadNow) {
+        setReloadNow(false);
+        handlePageChange(page);
+    }
 
     async function processRowUpdate(updatedRow: UserEntity, originalRow: UserEntity): Promise<UserEntity> {
         const delta = getChangedEntityAttributes(originalRow, updatedRow);

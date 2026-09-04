@@ -41,7 +41,7 @@ export function RtcProvider({ socketInfo, children }: PropsWithChildren<{ socket
     const signalRef = useRef<(network: NetworkId, event: string, data: SignalData) => Promise<void>>(
         () => Promise.reject(new Error('Connection not initialized'))
     );
-    const getNetworkCallbacksRef = useRef<RtcContextValue>((network: NetworkId) => {
+    const [getNetworkCallbacks] = useState((): RtcContextValue => network => {
         if (network === NetworkId.OFFLINE) {
             return {
                 callbacks: new Set<UsePeerCallback>(),
@@ -61,15 +61,17 @@ export function RtcProvider({ socketInfo, children }: PropsWithChildren<{ socket
         };
     });
 
-    signalRef.current = useCallback((networkId: NetworkId, event: string, data: SignalData) => {
-        return new Promise((resolve, reject) => {
-            socketInfo.socket.emit('signal', networkId, event, data, err => {
-                if (err === undefined) {
-                    return resolve();
-                }
-                return reject(new Error(err));
+    useEffect(() => {
+        signalRef.current = (networkId, event, data) => {
+            return new Promise((resolve, reject) => {
+                socketInfo.socket.emit('signal', networkId, event, data, err => {
+                    if (err === undefined) {
+                        return resolve();
+                    }
+                    return reject(new Error(err));
+                });
             });
-        });
+        };
     }, [socketInfo.socket]);
 
     useEffect(() => {
@@ -135,7 +137,7 @@ export function RtcProvider({ socketInfo, children }: PropsWithChildren<{ socket
                 console.debug('connected', connectionId);
             });
 
-            cleanupCallbacks.push(...[...getNetworkCallbacksRef.current(network).callbacks].map(cb => cb(peer) ?? (() => {})));
+            cleanupCallbacks.push(...[...getNetworkCallbacks(network).callbacks].map(cb => cb(peer) ?? (() => {})));
         }
 
         ws.on('createWebRTCConnection', createPeerConnection);
@@ -149,7 +151,7 @@ export function RtcProvider({ socketInfo, children }: PropsWithChildren<{ socket
         return () => {
             ws.offTracked();
         };
-    }, [socketInfo]);
+    }, [socketInfo, getNetworkCallbacks]);
 
     // Cleanup peers when leaving
     useEffect(() => {
@@ -163,7 +165,7 @@ export function RtcProvider({ socketInfo, children }: PropsWithChildren<{ socket
         };
     }, []);
 
-    return <RtcContext.Provider value={getNetworkCallbacksRef.current}>{children}</RtcContext.Provider>;
+    return <RtcContext.Provider value={getNetworkCallbacks}>{children}</RtcContext.Provider>;
 }
 
 export function useSignal(network: NetworkId) {
@@ -310,9 +312,12 @@ export function useDataChannelLifecycle(
     }, [recvHandler]);
 
     const disconnectHandlerRef = useRef<(peer: Peer) => void>(null!);
-    disconnectHandlerRef.current = peer => {
-        handler('disconnect', { who: peer });
-    };
+    
+    useEffect(() => {
+        disconnectHandlerRef.current = peer => {
+            handler('disconnect', { who: peer });
+        };
+    }, [handler]);
 
     usePeer(network, useCallback(peer => {
         peersRef.current.add(peer);

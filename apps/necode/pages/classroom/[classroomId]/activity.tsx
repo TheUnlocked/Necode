@@ -238,6 +238,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, role }) => {
                             loadSubmissionRef.current = loadSubmission;
                         }
                     }}>
+                    {/* eslint-disable-next-line react-hooks/static-components */}
                     <ActivityPage
                         key={activityEntity!.id}
                         id={activityEntity!.id}

@@ -8,11 +8,11 @@ import { Ref } from "react";
 export const dragHandleClass = 'DragHandle-svg-icon';
 export const dragHandleSelector = `.${dragHandleClass}`;
 
-export default function DragHandle(props: Omit<DefaultComponentProps<BoxTypeMap<{}, "div">>, 'ref'> & {
+export default function DragHandle({ innerRef, ...props }: Omit<DefaultComponentProps<BoxTypeMap<{}, "div">>, 'ref'> & {
     innerRef?: Ref<unknown>,
     iconProps?: DefaultComponentProps<SvgIconTypeMap<{}, "svg">>
 }) {
-    return <Box ref={props.innerRef} {...omit(props, ['iconProps', 'innerRef'])}
+    return <Box ref={innerRef} {...omit(props, ['iconProps', 'innerRef'])}
         sx={{
             display: "flex",
             justifyContent: "center",

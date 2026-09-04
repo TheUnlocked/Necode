@@ -1,7 +1,7 @@
 import { Button, Skeleton, TextField, Typography } from "@mui/material";
 import { NextPage } from "next";
 import { useRouter } from "next/dist/client/router";
-import { FormEventHandler, useEffect, useState } from "react";
+import { FormEventHandler, useState } from "react";
 import FormPage from "~ui/components/layouts/FormPage";
 import { signIn } from "next-auth/react";
 import { ClassroomEntity } from "~api/entities/ClassroomEntity";
@@ -9,6 +9,7 @@ import { useSnackbar } from "notistack";
 import { useGetRequestImmutable } from "~shared-ui/hooks/useGetRequest";
 import { UserEntity } from "~api/entities/UserEntity";
 import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
+import useChanged from "~shared-ui/hooks/useChanged";
 
 
 const Join: NextPage = () => {
@@ -17,13 +18,14 @@ const Join: NextPage = () => {
 
     const { upload } = useNecodeFetch();
 
-    const [joinCode, setJoinCode] = useState("");
+    const [joinCode, setJoinCode] = useState('');
 
-    useEffect(() => {
-        if (router.query.joinCode) {
-            setJoinCode(router.query.joinCode as string);
+    const joinCodeFromRouter = router.query.joinCode;
+    if (useChanged(joinCodeFromRouter, true)) {
+        if (typeof joinCodeFromRouter === 'string') {
+            setJoinCode(joinCodeFromRouter);
         }
-    }, [router.query.joinCode]);
+    }
 
     const { enqueueSnackbar } = useSnackbar();
 

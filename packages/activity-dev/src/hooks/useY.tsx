@@ -78,7 +78,10 @@ export function useYText(y: YHandle, name: string): YTextHandle {
             setValue(text.toString());
         };
 
-        // If the text object changes, we'll need to update the value immediately
+        // If the text object changes, we'll need to update the value immediately.
+        // It's generally inefficient to call setValue in an effect, but in this case it's important to ensure
+        // that timing and ordering doesn't get messed up. 
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setValue(text.toString());
         text.observe(handler);
 

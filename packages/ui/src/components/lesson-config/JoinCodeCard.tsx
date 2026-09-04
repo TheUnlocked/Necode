@@ -1,9 +1,8 @@
 import { ContentCopy, Refresh, Share } from '@mui/icons-material';
-import { Box, IconButton, Skeleton, Stack, Tooltip, Typography, useTheme } from '@mui/material';
+import { IconButton, Skeleton, Stack, Tooltip, Typography } from '@mui/material';
 import { useConfirm } from 'material-ui-confirm';
 import { useSnackbar } from 'notistack';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import QRCode from 'react-qr-code';
 import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
 
 export interface JoinCodeCardProps {
@@ -53,8 +52,6 @@ export default function JoinCodeCard({ classroomId }: JoinCodeCardProps) {
         }
         catch (e) {}
     }, [classroomId, confirm, upload]);
-
-    const theme = useTheme();
 
     return <Stack direction="row" sx={{ width: 'max-content' }}>
         <Stack direction="column" sx={{ pr: 2 }}>

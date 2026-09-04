@@ -67,9 +67,9 @@ export function useApiFetch() {
     const { download, upload } = useNecodeFetch();
 
     return {
-        // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps
+        // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps, react-hooks/use-memo
         download: useCallback(createApiFetch(download), [download]),
-        // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps
+        // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps, react-hooks/use-memo
         upload: useCallback(createApiFetch(upload), [upload]),
     };
 }

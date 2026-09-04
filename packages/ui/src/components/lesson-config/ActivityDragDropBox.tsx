@@ -1,9 +1,9 @@
 import { Box } from "@mui/material";
-import { useApiFetch, useCompatibleLanguages, useImperativeDialog } from '@necode-org/activity-dev';
+import { useApiFetch, useCompatibleLanguages, useImperativeDialog, useLocalCachedState } from '@necode-org/activity-dev';
 import { ActivityConfigWidgetProps } from '@necode-org/plugin-dev';
 import { isEqual } from 'lodash';
 import { useRouter } from "next/router";
-import { ComponentType, useCallback, useEffect, useState } from "react";
+import { ComponentType, useCallback, useEffect, useMemo } from "react";
 import { createEmptyPreviewImage, useDrag } from "use-dnd";
 import { ActivityEntity } from '~api/entities/ActivityEntity';
 import type { PartialAttributesOf } from '~backend/Endpoint';
@@ -76,25 +76,24 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
     }, [onActivityChange]);
 
     const { getLanguage } = usePlugins();
-    const firstEnabledLanguageName = props.activity?.attributes.enabledLanguages[0];
-    const [language, setLanguage] = useState(getLanguage(firstEnabledLanguageName));
-    const supportedLanguages = useCompatibleLanguages(activityType?.requiredFeatures ?? []);
 
-    useEffect(() => {
-        setLanguage(getLanguage(firstEnabledLanguageName));
-    }, [firstEnabledLanguageName, getLanguage]);
+    const [enabledLanguageNames,, commitEnabledLanguages] = useLocalCachedState(
+        props.activity?.attributes.enabledLanguages,
+        useCallback(newLanguages => {
+            if (newLanguages) {
+                onActivityChange?.({ enabledLanguages: newLanguages });
+            }
+        }, [onActivityChange]),
+    );
+
+    const language = useMemo(() => getLanguage(enabledLanguageNames?.[0]), [getLanguage, enabledLanguageNames]);
+    const supportedLanguages = useCompatibleLanguages(activityType?.requiredFeatures ?? []);
 
     const [configureLanguageDialog, openConfigureLanguageDialog] = useImperativeDialog(ConfigureLanguageDialog, {
         availableLanguages: supportedLanguages,
         enabledLanguage: language,
         saveEnabledLanguage: lang => {
-            setLanguage(lang);
-            upload(api.classroom(classroomId).activity(id), {
-                method: 'PATCH',
-                body: {
-                    enabledLanguages: [lang.name],
-                },
-            });
+            commitEnabledLanguages({ value: [lang.name] });
         },
     });
 
@@ -143,6 +142,7 @@ export function ActivityDragDropBox<IsSkeleton extends boolean>(props: ActivityD
 
     return <Box sx={{ opacity: isDragging ? 0 : 1 }}>
         {configureLanguageDialog}
+        {/* eslint-disable-next-line react-hooks/static-components */}
         <Widget
             id={id}
             classroomId={classroomId}

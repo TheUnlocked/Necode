@@ -4,7 +4,23 @@
         ".env"
     ],
     "globalEnv": [
-        "NODE_ENV"
+        "NODE_ENV",
+        "PORT",
+        "WS_PORT",
+        "FRONTEND_ORIGIN",
+        "WEBSOCKET_SERVER",
+        "USE_SSL_WEBSOCKET",
+        "SSL_CERT",
+        "SSL_KEY",
+        "DATABASE_URL",
+        "NEXTAUTH_SECRET",
+        "JWT_SIGNING_PRIVATE_KEY",
+        "DEV_PASSWORD",
+        "WEBRTC_STUN_SERVER_URL",
+        "WEBRTC_TURN_SERVER_URL",
+        "WEBRTC_TURN_SECRET",
+        "WEBSOCKET_CORS_REGEX",
+        "NEXT_PUBLIC_APP_ENV",
     ],
     "tasks": {
         "vercel-build": {
@@ -16,6 +32,7 @@
         },
         "db:migrate:deploy": {
             "dependsOn": ["generate"],
+            "env": ["DATABASE_URL"],
             "cache": false
         },
         "db:push": {

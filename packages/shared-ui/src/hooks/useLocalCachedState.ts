@@ -1,11 +1,15 @@
-import { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import useChanged from './useChanged';
 import useDirty from './useDirty';
+
+export interface CommitOptions<T> {
+    value?: T;
+}
 
 type HookResult<T> = [
     state: T,
     setState: Dispatch<SetStateAction<T>>,
-    commit: () => void,
+    commit: (options?: CommitOptions<T>) => void,
     revert: () => void,
     isDirty: boolean,
 ];
@@ -17,11 +21,9 @@ export default function useLocalCachedState<T>(externalState: T, setExternalStat
 
     const externalStateChanged = useChanged(externalState);
 
-    useEffect(() => {
-        if (externalStateChanged && !isDirty) {
-            _setState(externalState);
-        }
-    }, [isDirty, externalStateChanged, externalState]);
+    if (externalStateChanged && !isDirty) {
+        _setState(externalState);
+    }
 
     const setState: typeof _setState = useCallback(st => {
         _setState(oldVal => {
@@ -33,10 +35,11 @@ export default function useLocalCachedState<T>(externalState: T, setExternalStat
         });
     }, []);
 
-    const commit = useCallback(() => {
+    const commit = useCallback((options?: CommitOptions<T>) => {
         clearDirty();
-        if (state !== externalState) {
-            setExternalState(state);
+        const newState = options && 'value' in options ? options.value! : state;
+        if (newState !== externalState) {
+            setExternalState(newState);
         }
     }, [setExternalState, externalState, state]);
 

@@ -20,6 +20,7 @@ import StatusPage from '~ui/components/layouts/StatusPage';
 import useAsyncMemo from '~shared-ui/hooks/useAsyncMemo';
 import { flip, make } from "~utils/fp";
 import NotFoundPage from "../../../../404";
+import { useMultiChanged } from "~shared-ui/hooks/useChanged";
 
 interface StaticProps {
     classroomId: string;
@@ -66,7 +67,9 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
 
     const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
+    // Rather than using an effect to detect changes, it is more efficient to store a "previous render" state.
+    // See https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+    if (useMultiChanged([activityEntity, supportedLanguages], true)) {
         if (activityEntity && supportedLanguages) {
             setIsLoading(notYetFinished => {
                 if (notYetFinished) {
@@ -80,7 +83,7 @@ const PageContent: NextPage<StaticProps> = ({ classroomId, activityId }) => {
                 return false;
             });
         }
-    }, [activityEntity, supportedLanguages]);
+    }
 
     const [configureLanguageDialog, openConfigureLanguageDialog] = useImperativeDialog(ConfigureLanguageDialog, {
         availableLanguages: supportedLanguages,

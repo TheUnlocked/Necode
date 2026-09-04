@@ -1,18 +1,17 @@
 import { GroupRemove } from '@mui/icons-material';
 import { Container, IconButton, Stack, Tooltip } from "@mui/material";
-import { DataGrid, GridColDef, GridEventListener, GridRowId, GridRowSelectionModel, GridToolbarContainer, GridToolbarProps, ToolbarPropsOverrides } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridRowId, GridRowSelectionModel, GridToolbarContainer, GridToolbarProps, ToolbarPropsOverrides } from "@mui/x-data-grid";
 import { groupBy } from "lodash";
 import { useConfirm } from 'material-ui-confirm';
 import { NextPage } from "next";
 import { useSnackbar } from "notistack";
-import { useEffect, useState, useMemo } from "react";
-import { useGetRequest } from '~shared-ui/hooks/useGetRequest';
+import { useEffect, useState } from "react";
 import { ClassroomMemberEntity } from '~api/entities/ClassroomMemberEntity';
-import ManageClassroomPage, { ManageClassroomPageContentProps } from '~ui/components/layouts/ManageClassroomPage';
+import { useGetRequest } from '~shared-ui/hooks/useGetRequest';
 import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
-import { entityAttributeColumn } from '~ui/util/dataGridUtils';
-import { UserEntity } from '~api/entities/UserEntity';
 import getChangedEntityAttributes from '~shared-ui/util/getChangedEntityAttributes';
+import ManageClassroomPage, { ManageClassroomPageContentProps } from '~ui/components/layouts/ManageClassroomPage';
+import { entityAttributeColumn } from '~ui/util/dataGridUtils';
 
 const Page: NextPage = () => {
     return <ManageClassroomPage page="members" component={PageContent} />;

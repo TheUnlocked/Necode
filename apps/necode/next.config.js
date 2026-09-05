@@ -10,7 +10,6 @@ const assign = Object.assign;
 /** @type {import('next').NextConfig} */
 module.exports = {
     reactStrictMode: true,
-    output: 'standalone',
     // Omits certain modules to significantly speed up lambda cold start.
     // Note that excluding @mui means `getServerSideProps`/`getInitialProps` WILL NOT WORK.
     // `getStaticProps` is still fine to use, since it happens during build time.

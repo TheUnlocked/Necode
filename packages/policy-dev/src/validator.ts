@@ -103,7 +103,7 @@ async function compileMiKe(script: string): Promise<CompileMiKeResult> {
     if (!buffer) {
         throw new Error(`Failed to compile script.\n${diagnostics.getDiagnostics().join('\n')}`);
     }
-    // console.log(Buffer.from(buffer).toString('utf-8'));
+    console.log(Buffer.from(buffer).toString('utf-8'));
 
     return {
         createProgram: (await import_(`data:text/javascript;base64,${Buffer.from(buffer).toString('base64')}`)).default,
@@ -521,7 +521,6 @@ export async function validate(source: string, validatorConfig: PolicyValidatorC
 
     const runDetails = check(
         property(testConfig(program, validatorConfig), data => {
-            info('ran prop');
             const [events, _params] = data;
 
             const params = program.createParams({
@@ -554,22 +553,22 @@ export async function validate(source: string, validatorConfig: PolicyValidatorC
             let state = program.createInitialState();
             const listeners = Object.fromEntries(program.listeners.map(l => [l.event, l.callback]));
             for (const event of events) {
-                const { event: eventName, args } = event;
-                let realArgs: unknown[] = [...args];
-                if (eventName === 'signal') {
-                    const dict = args[2];
-                    realArgs[2] = {
-                        getInt: (name: string) =>
-                            typeof dict[name] === 'bigint' ? program.exposed.some(dict[name]) : program.exposed.none,
-                        getFloat: (name: string) =>
-                            typeof dict[name] === 'number' ? program.exposed.some(dict[name]) : program.exposed.none,
-                        getString: (name: string) =>
-                            typeof dict[name] === 'string' ? program.exposed.some(dict[name]) : program.exposed.none,
-                        getBoolean: (name: string) =>
-                            typeof dict[name] === 'boolean' ? program.exposed.some(dict[name]) : program.exposed.none,
-                    };
-                }
                 try {
+                    const { event: eventName, args } = event;
+                    let realArgs: unknown[] = [...args];
+                    if (eventName === 'signal') {
+                        const dict = args[2];
+                        realArgs[2] = {
+                            getInt: (name: string) =>
+                                typeof dict[name] === 'bigint' ? program.exposed.some(dict[name]) : program.exposed.none,
+                            getFloat: (name: string) =>
+                                typeof dict[name] === 'number' ? program.exposed.some(dict[name]) : program.exposed.none,
+                            getString: (name: string) =>
+                                typeof dict[name] === 'string' ? program.exposed.some(dict[name]) : program.exposed.none,
+                            getBoolean: (name: string) =>
+                                typeof dict[name] === 'boolean' ? program.exposed.some(dict[name]) : program.exposed.none,
+                        };
+                    }
                     const result = listeners[eventName]?.({
                         params,
                         state,
@@ -579,34 +578,43 @@ export async function validate(source: string, validatorConfig: PolicyValidatorC
                     if (result) {
                         state = result.state;
                     }
-                }
-                catch (e: any) {
-                    throw new ValidationError(e.message, event);
-                }
-                if (eventName === 'join') {
-                    joined.add(args[0]);
-                }
-                else if (eventName === 'leave') {
-                    joined.delete(args[0]);
-                    if ([...externals.links.entries()].some(([user, others]) => (others.size > 0 && user === args[0]) || others.has(args[0]))) {
-                        throw new ValidationError(`User ${args[0]} was still linked even after leaving`, event);
-                    }
-                    if (externals.groups.some(g => g.has(args[0]))) {
-                        throw new ValidationError(`User ${args[0]} was still in a sub-group even after leaving`, event);
-                    }
-                    externals.resetSerializationTracking();
-                    program.serialize(state);
-                    if (externals.serializedUsers.has(args[0])) {
-                        throw new ValidationError(`User ${args[0]} was still tracked in policy state after leaving, a likely bug`, event);
-                    }
-                }
 
-                const improperlyLinkedUser = [...externals.links.entries()]
-                    .flatMap(([user, others]) => others.size > 0 ? [user, ...others] : [])
-                    .find(u => !joined.has(u));
-                
-                if (improperlyLinkedUser) {
-                    throw new ValidationError(`User ${improperlyLinkedUser} was linked even though they weren't in the ring`, event);
+                    if (eventName === 'join') {
+                        joined.add(args[0]);
+                    }
+                    else if (eventName === 'leave') {
+                        joined.delete(args[0]);
+                        if ([...externals.links.entries()].some(([user, others]) => (others.size > 0 && user === args[0]) || others.has(args[0]))) {
+                            throw new ValidationError(`User ${args[0]} was still linked even after leaving`, event);
+                        }
+                        if (externals.groups.some(g => g.has(args[0]))) {
+                            throw new ValidationError(`User ${args[0]} was still in a sub-group even after leaving`, event);
+                        }
+                        externals.resetSerializationTracking();
+                        program.serialize(state);
+                        if (externals.serializedUsers.has(args[0])) {
+                            throw new ValidationError(`User ${args[0]} was still tracked in policy state after leaving, a likely bug`, event);
+                        }
+                    }
+
+                    const improperlyLinkedUser = [...externals.links.entries()]
+                        .flatMap(([user, others]) => others.size > 0 ? [user, ...others] : [])
+                        .find(u => !joined.has(u));
+                    
+                    if (improperlyLinkedUser) {
+                        throw new ValidationError(`User ${improperlyLinkedUser} was linked even though they weren't in the ring`, event);
+                    }
+                }
+                catch (e) {
+                    if (e instanceof ValidationError) {
+                        throw e;
+                    }
+                    else if (e instanceof Error) {
+                        throw new ValidationError(e.message, event);
+                    }
+                    else {
+                        throw new ValidationError(`Unexpected throw: ${e}`, event);
+                    }
                 }
             }
 
@@ -620,27 +628,30 @@ export async function validate(source: string, validatorConfig: PolicyValidatorC
         { numRuns, skipEqualValues: true },
     );
 
-    info('run details:' + JSON.stringify(runDetails));
-
-    if (runDetails.error && runDetails.errorInstance instanceof ValidationError) {
-        error('Validation Failed!', [runDetails.errorInstance.message]);
-        if (runDetails.counterexample) {
-            let [[events, params]] = runDetails.counterexample;
-            events = events.slice(0, events.indexOf(runDetails.errorInstance.event) + 1);
-            error('Caused by the following event sequence:', [
-                events.map(e => {
-                    const args = e.args.map(arg => typeof arg === 'object' ? JSON.stringify(arg, jsonReplacer) : arg);
-                    return `${e.event}(${args.join(', ')})`;
-                }).join(' ')
-            ]);
-
-            if (Object.keys(params).length > 0) {
-                error(
-                    'With the following parameters:',
-                    Object.entries(params)
-                        .map(([name, value]) => `${name}: ${JSON.stringify(value, jsonReplacer)}`)
-                );
+    if (runDetails.error) {
+        if (runDetails.errorInstance instanceof ValidationError) {
+            error('Validation Failed!', [runDetails.errorInstance.message]);
+            if (runDetails.counterexample) {
+                let [[events, params]] = runDetails.counterexample;
+                events = events.slice(0, events.indexOf(runDetails.errorInstance.event) + 1);
+                error('Caused by the following event sequence:', [
+                    events.map(e => {
+                        const args = e.args.map(arg => typeof arg === 'object' ? JSON.stringify(arg, jsonReplacer) : arg);
+                        return `${e.event}(${args.join(', ')})`;
+                    }).join(' ')
+                ]);
+    
+                if (Object.keys(params).length > 0) {
+                    error(
+                        'With the following parameters:',
+                        Object.entries(params)
+                            .map(([name, value]) => `${name}: ${JSON.stringify(value, jsonReplacer)}`)
+                    );
+                }
             }
+        }
+        else {
+            error('Validation Failed!', [`Abnormal failure: ${runDetails.error}`], runDetails.errorInstance);
         }
         return result();
     }

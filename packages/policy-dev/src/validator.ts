@@ -5,7 +5,7 @@ import { MiKeProgram as _MiKeProgram, MiKeProgramWithoutExternals as _MiKeProgra
 import { createJavascriptTarget } from '@necode-org/mike/codegen/js/JavascriptTarget';
 import { createMiKeDiagnosticsManager, Severity } from '@necode-org/mike/diagnostics';
 import { TypeKind } from '@necode-org/mike/types';
-import { integer as _integer, Arbitrary, boolean, check, constant, float, oneof, property, record, shuffledSubarray, stringify, tuple } from 'fast-check';
+import { integer as _integer, Arbitrary, boolean, check, constant, float, oneof, property, record, shuffledSubarray, tuple } from 'fast-check';
 import { cloneDeep } from 'lodash';
 import { PolicyValidatorConfig, SignalInfo, Value, Values } from '~api/PolicyValidatorConfig';
 import { internalUniqueBugType, events as necodeEvents, necodeLib } from '~mike-config';
@@ -519,15 +519,9 @@ export async function validate(source: string, validatorConfig: PolicyValidatorC
 
     const allBranchesVisited = new Set<number>();
 
-    const inputs = new Set<string>();
-
     const runDetails = check(
         property(testConfig(program, validatorConfig), data => {
-            const dataString = stringify(data);
-            // if (inputs.has(dataString)) {
-            //     return;
-            // }
-
+            console.log('ran prop');
             const [events, _params] = data;
 
             const params = program.createParams({
@@ -620,12 +614,13 @@ export async function validate(source: string, validatorConfig: PolicyValidatorC
                 allBranchesVisited.add(branch);
             }
 
-            inputs.add(dataString);
             onProgress?.();
         })
         .beforeEach(() => externals.reset()),
         { numRuns, skipEqualValues: true },
     );
+
+    console.log(runDetails);
 
     if (runDetails.error && runDetails.errorInstance instanceof ValidationError) {
         error('Validation Failed!', [runDetails.errorInstance.message]);

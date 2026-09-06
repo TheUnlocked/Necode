@@ -1,7 +1,7 @@
 import { SitewideRights, User } from "~database/server";
+import { ClassroomEntity } from "./ClassroomEntity";
 import { Entity, EntityType } from "./Entity";
 import { EntityReferenceArray, makeEntityReferenceArray, ReferenceDepth } from "./EntityReference";
-import { ClassroomEntity } from "./ClassroomEntity";
 
 
 export type UserEntityRefs = { classes?: ReferenceDepth, simulatedUsers?: ReferenceDepth };

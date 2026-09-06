@@ -1,15 +1,15 @@
 import { Box, Button, Card, CardActions, CardContent, Skeleton, Stack, Typography } from "@mui/material";
+import { set } from 'lodash/fp';
+import { useConfirm } from 'material-ui-confirm';
 import { NextPage } from "next";
-import FormPage from "~ui/components/layouts/FormPage";
 import { FormEventHandler, useCallback, useState } from "react";
-import { useGetRequestImmutable } from "~shared-ui/hooks/useGetRequest";
+import { PluginEntity } from '~api/entities/PluginEntity';
 import { UserEntity } from "~api/entities/UserEntity";
-import AdminPageAlert from "~ui/components/AdminPageAlert";
 import api from '~api/handles';
 import { useApiFetch, useApiGet } from '~shared-ui/hooks/useApi';
-import { useConfirm } from 'material-ui-confirm';
-import { PluginEntity } from '~api/entities/PluginEntity';
-import { set } from 'lodash/fp';
+import { useGetRequestImmutable } from "~shared-ui/hooks/useGetRequest";
+import AdminPageAlert from "~ui/components/AdminPageAlert";
+import FormPage from "~ui/components/layouts/FormPage";
 
 const Page: NextPage = () => {
     const { data: me, isLoading: meLoading } = useGetRequestImmutable<UserEntity>('/api/me');

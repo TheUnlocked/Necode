@@ -1,12 +1,12 @@
 import { omit } from 'lodash';
-import { createContext, PropsWithChildren, useCallback, useEffect, useRef, useState, useContext, useMemo } from 'react';
+import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import SimplePeer from 'simple-peer';
 import { NetworkId } from '~api/RtcNetwork';
+import { SignalData } from '~api/ws';
+import tracked from '~shared/trackedEventEmitter';
 import cyrb53 from '~utils/cyrb53';
 import { callWith } from '~utils/fp';
-import tracked from '~shared/trackedEventEmitter';
 import SocketInfo from '../types/SocketInfo';
-import { SignalData } from '~api/ws';
 
 /**
  * Information about a remote user.

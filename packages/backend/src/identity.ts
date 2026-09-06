@@ -1,10 +1,10 @@
 
-import { Session, getServerSession } from 'next-auth';
-import { prisma } from '~database/server';
-import { hasScope } from './scopes';
-import { IMPERSONATION_COOKIE } from '~api/constants';
-import { getNextAuthOptions } from './nextAuth';
 import { GetServerSidePropsContext } from 'next';
+import { Session, getServerSession } from 'next-auth';
+import { IMPERSONATION_COOKIE } from '~api/constants';
+import { prisma } from '~database/server';
+import { getNextAuthOptions } from './nextAuth';
+import { hasScope } from './scopes';
 
 export type IdentityError
     = 'not-logged-in'

@@ -1,6 +1,6 @@
 import { Stream } from 'stream';
-import { createGunzip } from 'zlib';
 import { Parser as TarParser } from 'tar';
+import { createGunzip } from 'zlib';
 import { streamToPromise } from './streams';
 
 export async function extractTgz(stream: Stream) {

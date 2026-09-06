@@ -1,7 +1,7 @@
 import { Error } from '@mui/icons-material';
 import { Tooltip } from '@mui/material';
-import ActivityWidgetBase from '~shared-ui/components/ActivityWidgetBase';
 import { ActivityConfigWidgetProps } from '@necode-org/plugin-dev';
+import ActivityWidgetBase from '~shared-ui/components/ActivityWidgetBase';
 
 export interface BrokenWidgetProps extends Omit<ActivityConfigWidgetProps, 'activityType'> {
     activityTypeId: string;

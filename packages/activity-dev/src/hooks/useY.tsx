@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { applyUnifiedUpdates } from '../utils/y-utils';
 import { Awareness, applyAwarenessUpdate, encodeAwarenessUpdate } from 'y-protocols/awareness';
 import * as Y from 'yjs';
 import { NetworkId } from '~api/RtcNetwork';
 import { useDataChannel, useDataChannelLifecycle } from '~shared-ui/hooks/RtcHooks';
+import { applyUnifiedUpdates } from '../utils/y-utils';
 
 export interface YHandle {
     readonly _doc: Y.Doc;

@@ -1,7 +1,7 @@
-import { endpoint, Status } from "~backend/Endpoint";
 import { makeClassroomEntity } from "~api/entities/ClassroomEntity";
 import { makeClassroomMemberEntity } from "~api/entities/ClassroomMemberEntity";
 import { makeLessonEntity } from "~api/entities/LessonEntity";
+import { endpoint, Status } from "~backend/Endpoint";
 import { hasScope } from "~backend/scopes";
 import { prisma } from "~database/server";
 import { singleArg } from "~utils/typeguards";

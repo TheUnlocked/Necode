@@ -2,7 +2,7 @@ import { ClassroomMembership, ClassroomRole, User } from "~database/server";
 import { ClassroomEntity } from "./ClassroomEntity";
 import { Entity, EntityType } from "./Entity";
 import { EntityReference, makeEntityReference, ReferenceDepth } from "./EntityReference";
-import { UserEntity, makeUserEntity } from "./UserEntity";
+import { makeUserEntity, UserEntity } from "./UserEntity";
 
 
 type Refs = { classroom?: ReferenceDepth, classes?: ReferenceDepth };

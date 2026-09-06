@@ -1,8 +1,8 @@
-import { EndpointHandle, HttpMethod } from '~api/handles';
+import { useCallback } from 'react';
 import { SWRConfiguration } from "swr";
+import { EndpointHandle, HttpMethod } from '~api/handles';
 import { useGetRequest, UseGetRequestResult } from './useGetRequest';
 import useNecodeFetch, { NecodeFetch, NecodeFetchRequestOptions } from './useNecodeFetch';
-import { useCallback } from 'react';
 
 interface UseApiGetOptions extends SWRConfiguration {
     disabled?: boolean;

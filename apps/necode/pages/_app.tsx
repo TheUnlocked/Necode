@@ -1,26 +1,26 @@
-import 'react-reflex/styles.css';
 import 'highlight.js/styles/vs2015.css';
+import 'react-reflex/styles.css';
 import '~ui/styles/hljs.scss';
 
-import type { AppProps } from 'next/app';
-import { useMemo, useRef } from 'react';
-import theme from '~ui/themes/theme';
-import { CssBaseline, ThemeProvider, Box, SxProps } from '@mui/material';
-import Head from 'next/head';
-import Header from '~ui/components/Header';
-import { SnackbarProvider } from 'notistack';
+import { Box, CssBaseline, SxProps, ThemeProvider } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
-import LoadingContext, { LoadingContextInfo } from '~shared-ui/hooks/useLoadingContext';
-import { callWith } from '~utils/fp';
-import LoadingSpinners from '~ui/components/LoadingSpinners';
-import CustomAdapterLuxon from '~ui/util/CustomLuxonAdapter';
-import { ErrorBoundary } from 'react-error-boundary';
-import ErrorBoundaryPage from '~ui/components/layouts/ErrorBoundaryPage';
-import usePageTitle from '~ui/hooks/usePageTitle';
 import { ConfirmProvider } from 'material-ui-confirm';
+import type { AppProps } from 'next/app';
+import Head from 'next/head';
+import { SnackbarProvider } from 'notistack';
+import { useMemo, useRef } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 import { DragDropProvider } from 'use-dnd';
-import { PluginsProvider } from '~shared-ui/hooks/usePlugins';
 import CorePlugin from '~core';
+import LoadingContext, { LoadingContextInfo } from '~shared-ui/hooks/useLoadingContext';
+import { PluginsProvider } from '~shared-ui/hooks/usePlugins';
+import Header from '~ui/components/Header';
+import ErrorBoundaryPage from '~ui/components/layouts/ErrorBoundaryPage';
+import LoadingSpinners from '~ui/components/LoadingSpinners';
+import usePageTitle from '~ui/hooks/usePageTitle';
+import theme from '~ui/themes/theme';
+import CustomAdapterLuxon from '~ui/util/CustomLuxonAdapter';
+import { callWith } from '~utils/fp';
 
 const builtinPlugins = [CorePlugin];
 

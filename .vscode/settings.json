@@ -11,4 +11,7 @@
         },
     ],
     "npm.packageManager": "pnpm",
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+    }
 }

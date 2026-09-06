@@ -1,6 +1,6 @@
-import TotalMap from '~utils/maps/TotalMap';
-import { Feature, FeatureMap, FeatureObject } from '~shared-ui/types/Feature';
 import { zipObjectDeep } from 'lodash';
+import { Feature, FeatureMap, FeatureObject } from '~shared-ui/types/Feature';
+import TotalMap from '~utils/maps/TotalMap';
 
 export type FeatureImplRecord<Fs extends readonly Feature[]> = { [F in Fs[number]]: FeatureMap[F] };
 

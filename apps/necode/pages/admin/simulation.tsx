@@ -8,7 +8,7 @@ import { NextPage } from "next";
 import { useSnackbar } from "notistack";
 import { useState } from "react";
 import { UserEntity } from "~api/entities/UserEntity";
-import { SitewideRights } from '~database';
+import { SitewideRights } from '~database/browser';
 import { useGetRequestImmutable } from "~shared-ui/hooks/useGetRequest";
 import { useImpersonation } from '~shared-ui/hooks/useImpersonation';
 import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';

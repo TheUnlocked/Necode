@@ -8,6 +8,8 @@ import { useSnackbar } from 'notistack';
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityEntity } from "~api/entities/ActivityEntity";
 import { ClassroomMemberEntity } from "~api/entities/ClassroomMemberEntity";
+import useAsyncMemo from '~shared-ui/hooks/useAsyncMemo';
+import { useMultiChanged } from "~shared-ui/hooks/useChanged";
 import useDirty from "~shared-ui/hooks/useDirty";
 import { useGetRequest, useGetRequestImmutable } from "~shared-ui/hooks/useGetRequest";
 import useImperativeDialog from "~shared-ui/hooks/useImperativeDialog";
@@ -17,10 +19,8 @@ import { MockSubmissionProvider } from '~shared-ui/hooks/useSubmissions';
 import ConfigureLanguageDialog from "~ui/components/dialogs/ConfigureLanguageDialog";
 import InstructorToolbar from '~ui/components/InstructorToolbar';
 import StatusPage from '~ui/components/layouts/StatusPage';
-import useAsyncMemo from '~shared-ui/hooks/useAsyncMemo';
 import { flip, make } from "~utils/fp";
 import NotFoundPage from "../../../../404";
-import { useMultiChanged } from "~shared-ui/hooks/useChanged";
 
 interface StaticProps {
     classroomId: string;

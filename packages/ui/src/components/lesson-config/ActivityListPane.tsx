@@ -1,23 +1,23 @@
-import { Card, Divider, Stack, Box, SxProps } from "@mui/material";
+import { Box, Card, Divider, Stack, SxProps } from "@mui/material";
+import { ActivityDescription } from '@necode-org/plugin-dev';
+import { useConfirm } from 'material-ui-confirm';
 import { Dispatch, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDrop } from "use-dnd";
-import { useGetRequest } from "~shared-ui/hooks/useGetRequest";
 import { ActivityEntity } from "~api/entities/ActivityEntity";
 import { LessonEntity } from "~api/entities/LessonEntity";
-import { Iso8601Date } from "~utils/iso8601";
-import { ActivityDragDropBox } from "./ActivityDragDropBox";
-import SkeletonActivityListPane from "./SkeletonActivityListPane";
+import type { PartialAttributesOf } from '~backend/Endpoint';
+import { useGetRequest } from "~shared-ui/hooks/useGetRequest";
 import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
 import composeRefs from '~shared-ui/util/composeRefs';
-import WidgetDragLayer from './WidgetDragLayer';
-import { binarySearchIndex } from '~utils/binarySearch';
-import ActivityListPaneActions from './ActivityListPaneActions';
 import { assignRef, SimpleRef } from '~shared-ui/util/simpleRef';
-import type { PartialAttributesOf } from '~backend/Endpoint';
-import AcitivityListPaneTitleBar from './ActivityListPaneTitleBar';
+import { binarySearchIndex } from '~utils/binarySearch';
+import { Iso8601Date } from "~utils/iso8601";
 import { activityDragDropType } from '../../dnd/types';
-import { useConfirm } from 'material-ui-confirm';
-import { ActivityDescription } from '@necode-org/plugin-dev';
+import { ActivityDragDropBox } from "./ActivityDragDropBox";
+import ActivityListPaneActions from './ActivityListPaneActions';
+import AcitivityListPaneTitleBar from './ActivityListPaneTitleBar';
+import SkeletonActivityListPane from "./SkeletonActivityListPane";
+import WidgetDragLayer from './WidgetDragLayer';
 
 interface ActivityListPaneProps {
     sx: SxProps;

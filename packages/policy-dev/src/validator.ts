@@ -1,16 +1,16 @@
 import { import_ } from '@brillout/import';
 import { MiKe } from '@necode-org/mike';
 import { ASTNodeKind, Block, DebugStatement, FloatLiteral, getNodeSourceRange, Identifier, StatementOrBlock, stringifyPosition, Variable, visit } from '@necode-org/mike/ast';
-import { JsLibraryImplementation, MiKeProgram as _MiKeProgram, MiKeProgramWithoutExternals as _MiKeProgramWithoutExternals, ParameterType } from '@necode-org/mike/codegen/js';
+import { MiKeProgram as _MiKeProgram, MiKeProgramWithoutExternals as _MiKeProgramWithoutExternals, JsLibraryImplementation, ParameterType } from '@necode-org/mike/codegen/js';
 import { createJavascriptTarget } from '@necode-org/mike/codegen/js/JavascriptTarget';
 import { createMiKeDiagnosticsManager, Severity } from '@necode-org/mike/diagnostics';
 import { TypeKind } from '@necode-org/mike/types';
-import { Arbitrary, boolean, check, constant, float, integer as _integer, oneof, property, record, shuffledSubarray, stringify, tuple } from 'fast-check';
+import { integer as _integer, Arbitrary, boolean, check, constant, float, oneof, property, record, shuffledSubarray, stringify, tuple } from 'fast-check';
+import { cloneDeep } from 'lodash';
 import { PolicyValidatorConfig, SignalInfo, Value, Values } from '~api/PolicyValidatorConfig';
-import { events as necodeEvents, internalUniqueBugType, necodeLib } from '~mike-config';
+import { internalUniqueBugType, events as necodeEvents, necodeLib } from '~mike-config';
 import asArray from '~utils/asArray';
 import { Mutable, NewType } from '~utils/types';
-import { cloneDeep } from 'lodash';
 
 interface MiKeExposed {
     some(v: any): unknown;

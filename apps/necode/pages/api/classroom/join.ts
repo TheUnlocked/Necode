@@ -1,7 +1,7 @@
 import slowDown from 'express-slow-down';
 import Joi from 'joi';
-import { endpoint, Status } from '~backend/Endpoint';
 import { makeClassroomEntity } from '~api/entities/ClassroomEntity';
+import { endpoint, Status } from '~backend/Endpoint';
 import { prisma } from '~database/server';
 
 

@@ -1,5 +1,5 @@
 import { alpha, Box, Button, CircularProgress, useTheme } from '@mui/material';
-import { Panes, Pane, Editor, Key, PaneTitle, useIsSizeOrSmaller, useMonaco } from '@necode-org/activity-dev';
+import { Editor, Key, Pane, Panes, PaneTitle, useIsSizeOrSmaller, useMonaco } from '@necode-org/activity-dev';
 import { ActivityPageProps } from '@necode-org/plugin-dev';
 import { editor } from 'monaco-editor';
 import { ReactNode, useCallback, useEffect, useRef, useState } from 'react';

@@ -1,9 +1,9 @@
 import MonacoEditor, { Monaco, OnChange, OnMount, OnValidate } from "@monaco-editor/react";
+import { LanguageDescription } from '@necode-org/plugin-dev';
 import { editor, Selection } from 'monaco-editor';
 import { nanoid } from 'nanoid';
 import { useCallback, useEffect, useState } from 'react';
 import { MonacoBinding, setMonaco } from 'y-monaco';
-import { LanguageDescription } from '@necode-org/plugin-dev';
 import cyrb53 from '~utils/cyrb53';
 import { DisposeFn } from '~utils/types';
 import { YTextHandle } from '../hooks/useY';
@@ -12,7 +12,7 @@ import { Y, YAwareness } from '../utils/y-utils';
 export {
     type OnChange as OnEditorChange,
     type OnMount as OnEditorMount,
-    type OnValidate as OnEditorValidate,
+    type OnValidate as OnEditorValidate
 } from "@monaco-editor/react";
 
 export interface EditorProps {

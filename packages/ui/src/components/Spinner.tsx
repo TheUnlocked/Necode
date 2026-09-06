@@ -1,4 +1,4 @@
-import { styled, keyframes, alpha } from '@mui/material';
+import { alpha, keyframes, styled } from '@mui/material';
 import { useId } from 'react';
 
 const spinnerAnimation = keyframes`

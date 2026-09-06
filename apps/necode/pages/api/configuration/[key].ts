@@ -1,10 +1,10 @@
+import Joi from "joi";
+import { makeConfigurationEntity } from "~api/entities/ConfigurationEntity";
 import { Status, endpoint } from "~backend/Endpoint";
 import { configOptions } from "~backend/config";
-import { makeConfigurationEntity } from "~api/entities/ConfigurationEntity";
 import { hasScope } from "~backend/scopes";
-import { $in } from "~utils/typeguards";
 import { prisma } from "~database/server";
-import Joi from "joi";
+import { $in } from "~utils/typeguards";
 
 const apiConfigurationOne = endpoint(makeConfigurationEntity, ['key'], {
     type: 'entity',

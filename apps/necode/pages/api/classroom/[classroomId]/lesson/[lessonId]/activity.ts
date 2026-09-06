@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { AttributesOf, endpoint, Status } from "~backend/Endpoint";
 import { ActivityEntity, makeActivityEntity } from "~api/entities/ActivityEntity";
+import { AttributesOf, endpoint, Status } from "~backend/Endpoint";
 import { hasScope } from "~backend/scopes";
 import { prisma } from "~database/server";
 

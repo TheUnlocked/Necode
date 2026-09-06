@@ -1,5 +1,5 @@
-import { Entity, EntityType } from "~api/entities/Entity";
 import { GridColDef } from "@mui/x-data-grid";
+import { Entity, EntityType } from "~api/entities/Entity";
 
 export function entityAttributeColumn<E extends Entity<EntityType, {}>>(
     attributeName: E extends Entity<EntityType, infer A> ? keyof A : never,

@@ -1,10 +1,10 @@
-import { PrismaClient } from "~database/server";
 import { NetworkId, PolicyConfiguration } from '~api/RtcNetwork';
+import { IOServer } from "~api/ws";
+import { PrismaClient } from "~database/server";
 import { stream } from "~utils/iterables/Stream";
 import { isNotNull } from "~utils/typeguards";
 import RtcManager from './rtc/RtcManager';
 import { RtcNetwork } from './rtc/RtcNetwork';
-import { IOServer } from "~api/ws";
 import UserManager from "./UserManager";
 
 function toNetworkId(x: number) {

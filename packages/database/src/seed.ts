@@ -2,7 +2,7 @@ import { exec as execCallback } from 'child_process';
 import { createReadStream } from 'fs';
 import path from 'path';
 import { promisify } from 'util';
-import apiPlugin from '../../../apps/necode/pages/api/plugin'; 
+import apiPlugin from '../../../apps/necode/pages/api/plugin';
 import { prisma } from './server';
 
 if (process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_APP_ENV !== 'development') {

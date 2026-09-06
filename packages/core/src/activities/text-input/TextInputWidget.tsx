@@ -1,6 +1,6 @@
 import { Code as CodeIcon, TextFields as TextFieldsIcon } from "@mui/icons-material";
 import { ClickAwayListener, Grow, IconButton, MenuItem, MenuList, Paper, Popper, Stack, SxProps, TextField, Theme } from "@mui/material";
-import { DragHandle, dragHandleClass, dragHandleSelector, Editor, useLocalCachedState, useMonaco, useLanguageList } from "@necode-org/activity-dev";
+import { DragHandle, dragHandleClass, dragHandleSelector, Editor, useLanguageList, useLocalCachedState, useMonaco } from "@necode-org/activity-dev";
 import { ActivityConfigWidgetProps } from '@necode-org/plugin-dev';
 import { bindPopper, bindTrigger, usePopupState } from "material-ui-popup-state/hooks";
 import type { editor } from "monaco-editor";

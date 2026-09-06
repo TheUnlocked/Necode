@@ -1,7 +1,7 @@
-import { prisma } from "~database/server";
+import { makeClassroomEntity } from "~api/entities/ClassroomEntity";
 import { makeClassroomMemberEntity } from "~api/entities/ClassroomMemberEntity";
 import { endpoint, Status } from "~backend/Endpoint";
-import { makeClassroomEntity } from "~api/entities/ClassroomEntity";
+import { prisma } from "~database/server";
 
 const apiClassroomMe = endpoint(makeClassroomMemberEntity, ['classroomId', 'include[]'] as const, {
     type: 'entity' as const,

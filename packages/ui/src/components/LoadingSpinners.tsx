@@ -1,4 +1,4 @@
-import { useTheme, Box } from "@mui/material";
+import { Box, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useLoadingContext } from "~shared-ui/hooks/useLoadingContext";
 import Spinner from "./Spinner";

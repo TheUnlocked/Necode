@@ -1,4 +1,4 @@
-import { Entity, EntityType, EntityId } from "./Entity";
+import { Entity, EntityId, EntityType } from "./Entity";
 
 
 export type ReferenceDepth = 'deep' | 'shallow' | 'none';

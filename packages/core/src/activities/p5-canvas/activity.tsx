@@ -1,5 +1,5 @@
 import { Box, Card } from "@mui/material";
-import { Editor, CodeAlert, NetworkId, Pane, Panes, PanesLayouts, PassthroughPane, useImported, useMediaChannel, Video, useMonaco, useAsyncMemo } from '@necode-org/activity-dev';
+import { CodeAlert, Editor, NetworkId, Pane, Panes, PanesLayouts, PassthroughPane, useAsyncMemo, useImported, useMediaChannel, useMonaco, Video } from '@necode-org/activity-dev';
 import { ActivityPageProps } from '@necode-org/plugin-dev';
 import dedent from "dedent-js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";

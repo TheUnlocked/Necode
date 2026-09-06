@@ -1,9 +1,8 @@
-import { SitewideRights } from "~database/server";
 import Joi from "joi";
-import { endpoint, Status } from "~backend/Endpoint";
 import { makeUserEntity } from "~api/entities/UserEntity";
+import { endpoint, Status } from "~backend/Endpoint";
 import { hasScope } from "~backend/scopes";
-import { prisma } from "~database/server";
+import { prisma, SitewideRights } from "~database/server";
 
 const apiUsers = endpoint(makeUserEntity, ['userId'], {
     type: 'entity',

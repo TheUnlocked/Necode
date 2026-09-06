@@ -1,10 +1,10 @@
 import { Box, Button, Container, Stack, styled, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
-import { SitewideRights } from '~database/browser';
 import type { NextPage } from 'next';
 import { PropsWithChildren, ReactNode, useMemo, useState } from 'react';
 import { ClassroomEntity } from '~api/entities/ClassroomEntity';
 import { UserEntity } from '~api/entities/UserEntity';
+import { SitewideRights } from '~database/browser';
 import SubtleLink from '~shared-ui/components/SubtleLink';
 import { useGetRequestImmutable } from '~shared-ui/hooks/useGetRequest';
 import Footer from '~ui/components/Footer';

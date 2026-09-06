@@ -1,6 +1,6 @@
 import { MutableRefObject, ReactNode, useCallback, useEffect, useState } from "react";
-import useImported from '../hooks/useImported';
 import { Importable } from '~utils/types';
+import useImported from '../hooks/useImported';
 
 export interface LazyProps {
     children?: ReactNode | undefined;

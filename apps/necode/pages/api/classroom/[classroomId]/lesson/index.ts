@@ -3,8 +3,7 @@ import { ActivityEntity, makeActivityEntity } from "~api/entities/ActivityEntity
 import { LessonEntity, makeLessonEntity } from "~api/entities/LessonEntity";
 import { AttributesOf, endpoint, Status } from "~backend/Endpoint";
 import { hasScope } from "~backend/scopes";
-import { Activity } from "~database/server";
-import { prisma } from "~database/server";
+import { Activity, prisma } from "~database/server";
 import { iso8601DateRegex } from "~utils/iso8601";
 import { singleArg } from "~utils/typeguards";
 

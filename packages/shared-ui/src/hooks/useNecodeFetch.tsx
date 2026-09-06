@@ -1,7 +1,7 @@
 import { useSnackbar } from 'notistack';
 import { useCallback, useMemo } from 'react';
-import useLoadingFetch from './useLoadingFetch';
 import { Response } from '~api/Response';
+import useLoadingFetch from './useLoadingFetch';
 
 export interface NecodeFetchRequestOptions extends RequestInit {
     errorMessage?: string | ((err: Error) => string | null | undefined) | null;

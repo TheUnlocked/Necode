@@ -1,19 +1,19 @@
-import { Server } from 'socket.io';
-import { IOServer, CreateLiveActivityInfo } from '~api/ws';
-import { jwtVerify, importJWK } from 'jose';
 import * as dotenv from 'dotenv';
-import { isNotNull } from '~utils/typeguards';
-import UserManager from './UserManager';
-import RtcManager from './rtc/RtcManager';
-import * as fs from 'fs';
-import SocketJWT from '~backend/SocketJWT';
-import { prisma } from '~database/server';
-import ClassroomManager, { Classroom } from './ClassroomManager';
 import express from 'express';
+import * as fs from 'fs';
+import { importJWK, jwtVerify } from 'jose';
 import { DateTime, Duration } from 'luxon';
+import { Server } from 'socket.io';
 import { makeActivitySubmissionEntity } from '~api/entities/ActivitySubmissionEntity';
 import { makeUserEntity } from '~api/entities/UserEntity';
+import { CreateLiveActivityInfo, IOServer } from '~api/ws';
+import SocketJWT from '~backend/SocketJWT';
 import { hasScope } from '~backend/scopes';
+import { prisma } from '~database/server';
+import { isNotNull } from '~utils/typeguards';
+import ClassroomManager, { Classroom } from './ClassroomManager';
+import UserManager from './UserManager';
+import RtcManager from './rtc/RtcManager';
 
 dotenv.config();
 

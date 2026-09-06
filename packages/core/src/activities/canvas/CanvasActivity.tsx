@@ -3,8 +3,8 @@ import { CodeAlert, Editor, NetworkId, Pane, Panes, PanesLayouts, PassthroughPan
 import { ActivityPageProps } from '@necode-org/plugin-dev';
 import dedent from "dedent-js";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Configuration } from '.';
 import { useMultiChanged } from "~shared-ui/hooks/useChanged";
+import { Configuration } from '.';
 
 const DrawingCanvas = styled('canvas')({
     maxWidth: "100%",

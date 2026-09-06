@@ -1,7 +1,7 @@
 import { RtcPolicy } from "~database/server";
 import asArray from "~utils/asArray";
-import { Entity, EntityType } from "./Entity";
 import { PolicyValidatorConfig, Values } from '../PolicyValidatorConfig';
+import { Entity, EntityType } from "./Entity";
 
 export type RtcPolicyEntity
     = Entity<EntityType.RtcPolicy, {

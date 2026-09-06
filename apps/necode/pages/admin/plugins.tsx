@@ -50,18 +50,13 @@ const Page: NextPage = () => {
     const confirm = useConfirm();
 
     async function tryUninstallPlugin(plugin: PluginEntity) {
-        try {
-            await confirm({ description: <>
-                Are you sure you want to uninstall {plugin.attributes.displayName} (<code>{plugin.attributes.name}</code>)?
-                This may break existing activities, including activities from other plugins which depend on languages or policies from this one.
-            </> });
+        if ((await confirm({ description: <>
+            Are you sure you want to uninstall {plugin.attributes.displayName} (<code>{plugin.attributes.name}</code>)?
+            This may break existing activities, including activities from other plugins which depend on languages or policies from this one.
+        </> })).confirmed) {
+            await upload(api.plugin(plugin.id), { method: 'DELETE' });
+            mutatePlugins();
         }
-        catch {
-            return;
-        }
-
-        await upload(api.plugin(plugin.id), { method: 'DELETE' });
-        mutatePlugins();
     }
 
     const selectFileHandler: FormEventHandler<HTMLInputElement> = e => {

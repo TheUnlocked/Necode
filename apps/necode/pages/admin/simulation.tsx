@@ -87,44 +87,41 @@ const Page: NextPage = () => {
     const confirm = useConfirm();
 
     async function handleDeleteSelectedUsers() {
-        try {
-            await confirm({ description: `Are you sure you want to delete ${selectedUsers.length} simulated user(s)?` });
-        }
-        catch (e) { return }
-
-        const result = await Promise.allSettled(selectedUsers.map(async id => {
-            await upload(`/api/users/${id}`, { method: 'DELETE', errorMessage: null });
-            return id;
-        }));
-
-        const { rejected = [], fulfilled = [] } = groupBy(result, x => x.status) as {
-            fulfilled: PromiseFulfilledResult<GridRowId>[],
-            rejected: PromiseRejectedResult[],
-        };
-
-        if (rejected.length === 0) {
-            enqueueSnackbar(`Successfully deleted ${fulfilled.length} user(s)`, {
-                variant: 'success',
-            });
-        }
-        else if (fulfilled.length === 0) {
-            enqueueSnackbar(`Failed to delete ${rejected.length} user(s)`, {
-                variant: 'error',
-            });
-        }
-        else {
-            enqueueSnackbar(`Failed to delete ${rejected.length} user(s) (successfully deleted ${fulfilled.length})`, {
-                variant: 'error',
-            });
-        }
-
-        mutate(data => data ? {
-            ...data,
-            attributes: {
-                ...data.attributes,
-                simulatedUsers: data.attributes.simulatedUsers.filter(user => fulfilled.some(x => user.id === x.value)),
+        if ((await confirm({ description: `Are you sure you want to delete ${selectedUsers.length} simulated user(s)?` })).confirmed) {
+            const result = await Promise.allSettled(selectedUsers.map(async id => {
+                await upload(`/api/users/${id}`, { method: 'DELETE', errorMessage: null });
+                return id;
+            }));
+    
+            const { rejected = [], fulfilled = [] } = groupBy(result, x => x.status) as {
+                fulfilled: PromiseFulfilledResult<GridRowId>[],
+                rejected: PromiseRejectedResult[],
+            };
+    
+            if (rejected.length === 0) {
+                enqueueSnackbar(`Successfully deleted ${fulfilled.length} user(s)`, {
+                    variant: 'success',
+                });
             }
-        } : undefined);
+            else if (fulfilled.length === 0) {
+                enqueueSnackbar(`Failed to delete ${rejected.length} user(s)`, {
+                    variant: 'error',
+                });
+            }
+            else {
+                enqueueSnackbar(`Failed to delete ${rejected.length} user(s) (successfully deleted ${fulfilled.length})`, {
+                    variant: 'error',
+                });
+            }
+    
+            mutate(data => data ? {
+                ...data,
+                attributes: {
+                    ...data.attributes,
+                    simulatedUsers: data.attributes.simulatedUsers.filter(user => fulfilled.some(x => user.id === x.value)),
+                }
+            } : undefined);
+        }
     }
 
     const [hiddenCols, setHiddenCols] = useState({

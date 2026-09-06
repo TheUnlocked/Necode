@@ -55,44 +55,42 @@ const PageContent: NextPage<ManageClassroomPageContentProps> = ({ classroomId, m
             return;
         }
 
-        try {
-            await confirm({ description: <>
-                Are you sure you want to remove {selectedMembers.length} {selectedMembers.length === 1 ? 'person' : 'people'} from the classroom?
-                They will not be able to participate in class activities unless they re-join the classroom.
-                <br />
-                Note: Unless you have reset the join code, they may be able to re-join the class on their own using the code/link originally sent to them.
-            </> });
+        if ((await confirm({ description: <>
+            Are you sure you want to remove {selectedMembers.length} {selectedMembers.length === 1 ? 'person' : 'people'} from the classroom?
+            They will not be able to participate in class activities unless they re-join the classroom.
+            <br />
+            Note: Unless you have reset the join code, they may be able to re-join the class on their own using the code/link originally sent to them.
+        </> })).confirmed) {
+            const result = await Promise.allSettled(selectedMembers.map(async id => {
+                await upload(`/api/classroom/${classroomId}/members/${id}`, { method: 'DELETE', errorMessage: null });
+                return id;
+            }));
+    
+            const { rejected = [], fulfilled = [] } = groupBy(result, x => x.status) as {
+                fulfilled: PromiseFulfilledResult<GridRowId>[],
+                rejected: PromiseRejectedResult[],
+            };
+    
+            if (rejected.length === 0) {
+                enqueueSnackbar(`Successfully removed ${fulfilled.length} members(s)`, {
+                    variant: 'success',
+                });
+            }
+            else if (fulfilled.length === 0) {
+                enqueueSnackbar(`Failed to remove ${rejected.length} members(s)`, {
+                    variant: 'error',
+                });
+            }
+            else {
+                enqueueSnackbar(`Failed to remove ${rejected.length} members(s) (successfully removed ${fulfilled.length})`, {
+                    variant: 'error',
+                });
+            }
+    
+            mutate(data => data?.filter(member => fulfilled.some(x => x.value === member.id)));
+            setSelectedMembers(ids => ids.filter(id => fulfilled.some(x => x.value === id)));
         }
-        catch (e) { return }
 
-        const result = await Promise.allSettled(selectedMembers.map(async id => {
-            await upload(`/api/classroom/${classroomId}/members/${id}`, { method: 'DELETE', errorMessage: null });
-            return id;
-        }));
-
-        const { rejected = [], fulfilled = [] } = groupBy(result, x => x.status) as {
-            fulfilled: PromiseFulfilledResult<GridRowId>[],
-            rejected: PromiseRejectedResult[],
-        };
-
-        if (rejected.length === 0) {
-            enqueueSnackbar(`Successfully removed ${fulfilled.length} members(s)`, {
-                variant: 'success',
-            });
-        }
-        else if (fulfilled.length === 0) {
-            enqueueSnackbar(`Failed to remove ${rejected.length} members(s)`, {
-                variant: 'error',
-            });
-        }
-        else {
-            enqueueSnackbar(`Failed to remove ${rejected.length} members(s) (successfully removed ${fulfilled.length})`, {
-                variant: 'error',
-            });
-        }
-
-        mutate(data => data?.filter(member => fulfilled.some(x => x.value === member.id)));
-        setSelectedMembers(ids => ids.filter(id => fulfilled.some(x => x.value === id)));
     }
 
     async function processRowUpdate(updatedRow: ClassroomMemberEntity, originalRow: ClassroomMemberEntity): Promise<ClassroomMemberEntity> {

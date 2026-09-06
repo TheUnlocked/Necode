@@ -1,16 +1,15 @@
+import { assertIsValidatorConfig, ParseValidationConfigError, validate } from '@necode-org/policy-dev';
 import Joi, { Schema } from 'joi';
 import { posix as path } from 'path';
+import semver from 'semver';
 import { makePluginEntity } from '~api/entities/PluginEntity';
 import { NecodeJson, PackageJson } from '~api/NecodeJson';
-import { assertIsValidatorConfig, ParseValidationConfigError, validate } from '@necode-org/policy-dev';
 import { endpoint, Status } from "~backend/Endpoint";
 import { extractTgz } from '~backend/extract';
-import { hasScope } from '~backend/scopes';
 import { compileMiKeProgram } from '~backend/mike';
-import { Plugin, Prisma } from "~database/server";
-import { prisma } from "~database/server";
+import { hasScope } from '~backend/scopes';
+import { Plugin, Prisma, prisma } from "~database/server";
 import { neverResolve } from '~utils/async';
-import semver from 'semver';
 
 export const config = {
     api: {
@@ -220,8 +219,10 @@ const apiPlugin = endpoint(makePluginEntity, [], {
                     });
 
                     console.log(`checking policy ${policy.id} - completed validation`);
-
+                    
                     if (!validationResult.ok) {
+                        console.log(`policy ${policy.id} - validation failed with ${validationResult.messages.length} messages`);
+
                         issues.push(`Policy ${policy.id} failed to validate:`);
                         for (const { message, details, severity } of validationResult.messages) {
                             const icon = { info: 'ℹ', warn: '⚠️', error: '🛑' }[severity];

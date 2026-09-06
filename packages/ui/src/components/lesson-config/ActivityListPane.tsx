@@ -322,14 +322,12 @@ export default function ActivityListPane({
     const confirm = useConfirm();
 
     const deleteLessonHandler = useCallback(async (lesson: LessonEntity) => {
-        try {
-            await confirm({ description: `Are you sure you want to delete this lesson? This cannot be undone.` });
+        if ((await confirm({ description: `Are you sure you want to delete this lesson? This cannot be undone.` })).confirmed) {
             deleteLesson(async () => {
                 await upload(`/api/classroom/${classroomId}/lesson/${lesson.id}`, { method: 'DELETE' });
                 onLessonChange?.(undefined);
             });
         }
-        catch (e) { return }
     }, [classroomId, confirm, upload, deleteLesson, onLessonChange]);
 
     const activityChangeHandler = useCallback((activity: ActivityEntity, changes: Omit<PartialAttributesOf<ActivityEntity>, 'lesson'>) => {

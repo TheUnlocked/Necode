@@ -524,9 +524,9 @@ export async function validate(source: string, validatorConfig: PolicyValidatorC
     const runDetails = check(
         property(testConfig(program, validatorConfig), data => {
             const dataString = stringify(data);
-            if (inputs.has(dataString)) {
-                return;
-            }
+            // if (inputs.has(dataString)) {
+            //     return;
+            // }
 
             const [events, _params] = data;
 

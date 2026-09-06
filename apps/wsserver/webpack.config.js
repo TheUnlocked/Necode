@@ -29,6 +29,9 @@ module.exports = {
             configFile: path.join(__dirname, 'tsconfig.json'),
             baseUrl: '.',
         })],
+        alias: {
+            'pg-native': false,
+        },
     },
     module: {
         rules: [
@@ -69,7 +72,7 @@ module.exports = {
         "socket.io": "commonjs socket.io",
         "_http_common": "commonjs2 _http_common",
         encoding: "commonjs2 encoding",
-        "util/types": "commonjs2 util/types"
+        "util/types": "commonjs2 util/types",
     },
     node: {
         __dirname: false,

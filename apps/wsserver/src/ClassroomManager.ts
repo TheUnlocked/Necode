@@ -1,4 +1,4 @@
-import { PrismaClient } from "~database";
+import { PrismaClient } from "~database/server";
 import { NetworkId, PolicyConfiguration } from '~api/RtcNetwork';
 import { stream } from "~utils/iterables/Stream";
 import { isNotNull } from "~utils/typeguards";

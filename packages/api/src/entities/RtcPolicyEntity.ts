@@ -1,4 +1,4 @@
-import { RtcPolicy } from "~database";
+import { RtcPolicy } from "~database/server";
 import asArray from "~utils/asArray";
 import { Entity, EntityType } from "./Entity";
 import { PolicyValidatorConfig, Values } from '../PolicyValidatorConfig';

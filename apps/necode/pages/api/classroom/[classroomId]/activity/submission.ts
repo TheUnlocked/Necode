@@ -1,11 +1,11 @@
-import { Activity, ActivitySubmission, User } from "~database";
+import { Activity, ActivitySubmission, User } from "~database/server";
 import { endpoint, Status } from "~backend/Endpoint";
 import { makeActivityEntity } from "~api/entities/ActivityEntity";
 import { makeActivitySubmissionEntity } from "~api/entities/ActivitySubmissionEntity";
 import { EntityType } from "~api/entities/Entity";
 import { makeUserEntity } from "~api/entities/UserEntity";
 import { hasScope } from "~backend/scopes";
-import { prisma } from "~database";
+import { prisma } from "~database/server";
 
 const apiActivitySubmissionAll = endpoint(makeActivitySubmissionEntity, ['classroomId', 'activityId?', 'userId?', 'version?', 'include[]'], {
     type: 'entityType',

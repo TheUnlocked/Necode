@@ -1,6 +1,6 @@
 import { makeRtcPolicyEntity } from '~api/entities/RtcPolicyEntity';
 import { endpoint, Status } from '~backend/Endpoint';
-import { prisma } from '~database';
+import { prisma } from '~database/server';
 
 const apiPolicy = endpoint(makeRtcPolicyEntity, ['policyId'], {
     type: 'entity',

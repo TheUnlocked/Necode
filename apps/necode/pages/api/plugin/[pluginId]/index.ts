@@ -1,4 +1,4 @@
-import { prisma } from '~database';
+import { prisma } from '~database/server';
 import { makePluginEntity } from '~api/entities/PluginEntity';
 import { endpoint, Status } from '~backend/Endpoint';
 import { hasScope } from '~backend/scopes';

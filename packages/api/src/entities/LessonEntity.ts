@@ -1,4 +1,4 @@
-import { Lesson } from "~database";
+import { Lesson } from "~database/server";
 import { DateTime } from "luxon";
 import { fromLuxon, Iso8601Date } from "~utils/iso8601";
 import { ActivityEntity } from "./ActivityEntity";

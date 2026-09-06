@@ -3,7 +3,7 @@ import { importJWK, SignJWT } from "jose";
 import { endpoint, Status } from "~backend/Endpoint";
 import { PolicyConfiguration } from '~api/RtcNetwork';
 import { hasScope } from "~backend/scopes";
-import { prisma } from "~database";
+import { prisma } from "~database/server";
 import { CreateLiveActivityInfo } from "~api/ws";
 
 async function makeJwt(content: { [propName: string]: unknown }, expireIn: string) {

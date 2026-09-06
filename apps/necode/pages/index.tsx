@@ -1,6 +1,6 @@
 import { Box, Button, Container, Stack, styled, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
-import { SitewideRights } from '@necode-org/database';
+import { SitewideRights } from '~database/browser';
 import type { NextPage } from 'next';
 import { PropsWithChildren, ReactNode, useMemo, useState } from 'react';
 import { ClassroomEntity } from '~api/entities/ClassroomEntity';

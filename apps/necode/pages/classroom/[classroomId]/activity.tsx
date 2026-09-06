@@ -10,7 +10,7 @@ import StatusPage from "~ui/components/layouts/StatusPage";
 import { ActivityEntity } from "~api/entities/ActivityEntity";
 import useImperativeDialog from "~shared-ui/hooks/useImperativeDialog";
 import SubmissionsDialog from "~ui/components/dialogs/SubmissionsDialog";
-import { ClassroomRole } from "~database";
+import { ClassroomRole } from "~database/browser";
 import NotFoundPage from "../../404";
 import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
 import useImported from '~shared-ui/hooks/useImported';

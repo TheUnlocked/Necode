@@ -3,7 +3,7 @@ import { configOptions } from "~backend/config";
 import { makeConfigurationEntity } from "~api/entities/ConfigurationEntity";
 import { hasScope } from "~backend/scopes";
 import { $in } from "~utils/typeguards";
-import { prisma } from "@necode-org/database";
+import { prisma } from "~database/server";
 import Joi from "joi";
 
 const apiConfigurationOne = endpoint(makeConfigurationEntity, ['key'], {

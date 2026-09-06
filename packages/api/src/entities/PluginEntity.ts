@@ -1,4 +1,4 @@
-import { Plugin } from "~database";
+import { Plugin } from "~database/server";
 import { Entity, EntityType } from "./Entity";
 
 export type PluginEntity

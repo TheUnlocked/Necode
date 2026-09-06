@@ -1,4 +1,4 @@
-import { prisma } from "~database/src";
+import { prisma } from "~database/server";
 
 interface ConfigurationSettings {
     default: string;

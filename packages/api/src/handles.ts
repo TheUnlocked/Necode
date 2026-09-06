@@ -1,4 +1,4 @@
-import { ClassroomRole, SitewideRights } from '~database/src';
+import { ClassroomRole, SitewideRights } from '~database/server';
 import { Iso8601Date } from '~utils/iso8601';
 import { ActivityEntity, ActivityEntityRefs } from './entities/ActivityEntity';
 import { ActivitySubmissionEntity } from './entities/ActivitySubmissionEntity';

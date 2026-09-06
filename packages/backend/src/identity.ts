@@ -1,6 +1,6 @@
 
 import { Session, getServerSession } from 'next-auth';
-import { prisma } from '~database';
+import { prisma } from '~database/server';
 import { hasScope } from './scopes';
 import { IMPERSONATION_COOKIE } from '~api/constants';
 import { getNextAuthOptions } from './nextAuth';

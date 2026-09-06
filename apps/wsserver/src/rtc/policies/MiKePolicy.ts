@@ -19,7 +19,7 @@ interface MiKeExposed {
     none: unknown;
 }
 
-export default async function createMiKePolicy(id: string, compiledCode: Buffer, validatorConfig: PolicyValidatorConfig): Promise<RtcCoordinatorFactory> {
+export default async function createMiKePolicy(id: string, compiledCode: Uint8Array, validatorConfig: PolicyValidatorConfig): Promise<RtcCoordinatorFactory> {
 
     const jsModuleCode = `data:text/javascript;base64,${Buffer.from(compiledCode).toString('base64')}`;
     const createMiKeProgram: MiKeProgramWithoutExternals<MiKeExposed> = (await import_(jsModuleCode)).default;

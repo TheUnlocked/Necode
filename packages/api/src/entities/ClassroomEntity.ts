@@ -1,4 +1,4 @@
-import { Classroom } from "~database";
+import { Classroom } from "~database/server";
 import { Entity, EntityType } from "./Entity";
 import { EntityReferenceArray, makeEntityReferenceArray, ReferenceDepth } from "./EntityReference";
 import { ClassroomMemberEntity } from "./ClassroomMemberEntity";

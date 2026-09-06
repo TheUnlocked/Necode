@@ -23,6 +23,7 @@
             "~api/*":          ["../../packages/api/src/*"          ],
             "~shared/*":       ["../../packages/shared/src/*"       ],
             "~utils/*":        ["../../packages/utils/src/*"        ],
+            "~database/*":     ["../../packages/database/src/*"     ],
             "@necode-org/*":   ["../../packages/*/src"              ],
             "~*":              ["../../packages/*/src"              ],
         },

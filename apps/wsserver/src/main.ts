@@ -7,7 +7,7 @@ import UserManager from './UserManager';
 import RtcManager from './rtc/RtcManager';
 import * as fs from 'fs';
 import SocketJWT from '~backend/SocketJWT';
-import { prisma } from '~database';
+import { prisma } from '~database/server';
 import ClassroomManager, { Classroom } from './ClassroomManager';
 import express from 'express';
 import { DateTime, Duration } from 'luxon';

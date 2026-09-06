@@ -1,4 +1,4 @@
-import { Activity, Classroom, Lesson } from "~database";
+import { Activity, Classroom, Lesson } from "~database/server";
 import Joi from "joi";
 import { endpoint, PartialAttributesOf, Status } from "~backend/Endpoint";
 import { makeActivityEntity } from "~api/entities/ActivityEntity";
@@ -6,7 +6,7 @@ import { makeClassroomEntity } from "~api/entities/ClassroomEntity";
 import { ReferenceDepth } from "~api/entities/EntityReference";
 import { LessonEntity, makeLessonEntity } from "~api/entities/LessonEntity";
 import { hasScope } from "~backend/scopes";
-import { prisma } from "~database";
+import { prisma } from "~database/server";
 import { isIso8601Date, iso8601DateRegex } from "~utils/iso8601";
 import { includes, singleArg } from "~utils/typeguards";
 

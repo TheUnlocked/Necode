@@ -1,6 +1,6 @@
 import { endpoint, Status } from '~backend/Endpoint';
 import { hasScope } from '~backend/scopes';
-import { prisma } from '~database';
+import { prisma } from '~database/server';
 
 const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
 function generateShortCode() {

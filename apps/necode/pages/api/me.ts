@@ -1,4 +1,4 @@
-import { prisma } from "~database";
+import { prisma } from "~database/server";
 import { makeUserEntity } from "~api/entities/UserEntity";
 import { endpoint, Status } from "~backend/Endpoint";
 import { makeClassroomEntity } from "~api/entities/ClassroomEntity";

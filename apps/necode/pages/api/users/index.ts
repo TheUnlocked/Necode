@@ -1,9 +1,9 @@
-import { User } from "~database";
+import { User } from "~database/server";
 import { endpoint, Status } from "~backend/Endpoint";
 import { makeUserEntity } from "~api/entities/UserEntity";
 import { paginationParams } from "~api/standardParams";
 import { hasScope } from "~backend/scopes";
-import { prisma } from "~database";
+import { prisma } from "~database/server";
 import { singleArg } from "~utils/typeguards";
 
 const apiUsers = endpoint(makeUserEntity, [...paginationParams, 'includeSimulated?'], {

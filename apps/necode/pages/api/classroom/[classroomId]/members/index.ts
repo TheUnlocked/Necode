@@ -1,7 +1,7 @@
 import { endpoint, Status } from "~backend/Endpoint";
 import { makeClassroomMemberEntity } from "~api/entities/ClassroomMemberEntity";
 import { hasScope } from "~backend/scopes";
-import { prisma } from "~database";
+import { prisma } from "~database/server";
 import { singleArg } from "~utils/typeguards";
 
 const apiUsers = endpoint(makeClassroomMemberEntity, ['classroomId'], {

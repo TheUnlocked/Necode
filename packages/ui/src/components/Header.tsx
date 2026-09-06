@@ -5,7 +5,7 @@ import { useGetRequestImmutable } from "~shared-ui/hooks/useGetRequest";
 import { setImpersonation, useImpersonation } from '~shared-ui/hooks/useImpersonation';
 import useImperativeDialog from '~shared-ui/hooks/useImperativeDialog';
 import SimulationDialog from './dialogs/SimulationDialog';
-import { SitewideRights } from '~database';
+import { SitewideRights } from '~database/browser';
 import useBreadcrumbsData from '../hooks/useBreadcrumbsData';
 import { UnstyledLink } from '~shared-ui/components/SubtleLink';
 

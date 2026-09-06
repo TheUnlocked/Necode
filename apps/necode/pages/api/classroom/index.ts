@@ -1,6 +1,6 @@
-import { ClassroomRole } from "~database";
+import { ClassroomRole } from "~database/server";
 import Joi from "joi";
-import { prisma } from "~database";
+import { prisma } from "~database/server";
 import { makeClassroomEntity } from "~api/entities/ClassroomEntity";
 import { endpoint, Status } from "~backend/Endpoint";
 import { hasScope } from "~backend/scopes";

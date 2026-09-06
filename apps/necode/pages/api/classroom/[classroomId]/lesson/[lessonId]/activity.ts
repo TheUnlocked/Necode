@@ -2,7 +2,7 @@ import Joi from "joi";
 import { AttributesOf, endpoint, Status } from "~backend/Endpoint";
 import { ActivityEntity, makeActivityEntity } from "~api/entities/ActivityEntity";
 import { hasScope } from "~backend/scopes";
-import { prisma } from "~database";
+import { prisma } from "~database/server";
 
 const apiActivityAll = endpoint(makeActivityEntity, ['classroomId', 'lessonId'] as const, {
     type: 'entityType',

@@ -221,13 +221,13 @@ const apiPlugin = endpoint(makePluginEntity, [], {
                     console.log(`checking policy ${policy.id} - completed validation`);
                     
                     if (!validationResult.ok) {
-                        console.log(`policy ${policy.id} - validation failed with ${validationResult.messages.length} messages`);
-
                         issues.push(`Policy ${policy.id} failed to validate:`);
                         for (const { message, details, severity } of validationResult.messages) {
                             const icon = { info: 'ℹ', warn: '⚠️', error: '🛑' }[severity];
                             issues.push(`\t${icon} ${message}`);
                             details?.forEach(x => issues.push(`\t\t${x}`));
+
+                            console.log(`policy ${policy.id} - ${severity} - ${message}\n${details?.join('\n')}`);
                         }
                     }
 

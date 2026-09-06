@@ -521,7 +521,7 @@ export async function validate(source: string, validatorConfig: PolicyValidatorC
 
     const runDetails = check(
         property(testConfig(program, validatorConfig), data => {
-            console.log('ran prop');
+            info('ran prop');
             const [events, _params] = data;
 
             const params = program.createParams({
@@ -620,7 +620,7 @@ export async function validate(source: string, validatorConfig: PolicyValidatorC
         { numRuns, skipEqualValues: true },
     );
 
-    console.log(runDetails);
+    info('run details:' + JSON.stringify(runDetails));
 
     if (runDetails.error && runDetails.errorInstance instanceof ValidationError) {
         error('Validation Failed!', [runDetails.errorInstance.message]);

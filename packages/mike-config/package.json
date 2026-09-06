@@ -15,7 +15,7 @@
     "@necode-org/mike": "^0.3.3"
   },
   "devDependencies": {
-    "@necode-org/mike": "^0.3.3",
+    "@necode-org/mike": "^0.3.8",
     "typescript": "^6.0.3",
     "~tsconfig": "workspace:*"
   }

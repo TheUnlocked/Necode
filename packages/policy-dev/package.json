@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@brillout/import": "^0.2.2",
-    "@necode-org/mike": "^0.3.3",
+    "@necode-org/mike": "^0.3.8",
     "cli-progress": "^3.11.2",
     "fast-check": "^3.23.2",
     "lodash": "^4.18.1",

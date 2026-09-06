@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@brillout/import": "^0.2.2",
-    "@necode-org/mike": "^0.3.3",
+    "@necode-org/mike": "^0.3.8",
     "@necode-org/policy-dev": "workspace:*",
     "dotenv": "^16.3.1",
     "express": "^4.22.2",

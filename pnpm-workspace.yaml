@@ -10,5 +10,6 @@ allowBuilds:
 minimumReleaseAgeExclude:
   - use-dnd@1.3.3
 patchedDependencies:
+  '@necode-org/mike': patches/@necode-org__mike.patch
   y-monaco@0.1.4: "patches/y-monaco@0.1.4.patch"
   yjs@13.5.44: "patches/yjs@13.5.44.patch"

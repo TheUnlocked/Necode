@@ -5,6 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
+  '@necode-org/mike': 56244b3eeb4106973772f0c3b38c0c39aa7486e8173b21107ce63b0ed51e5ea3
   y-monaco@0.1.4: 8a502006d4bf04ebfc1baa4976d61afc72d08e27b49dec44697ca4ca0f066431
   yjs@13.5.44: 3de6a4f53f86267c0c59a2080bff3cf0ec54bb2d5adbed92bf03ba44872f2f3c
 
@@ -237,7 +238,7 @@ importers:
         version: 0.2.2
       '@necode-org/mike':
         specifier: ^0.3.8
-        version: 0.3.8
+        version: 0.3.8(patch_hash=56244b3eeb4106973772f0c3b38c0c39aa7486e8173b21107ce63b0ed51e5ea3)
       '@necode-org/policy-dev':
         specifier: workspace:*
         version: link:../../packages/policy-dev
@@ -408,7 +409,7 @@ importers:
     dependencies:
       '@necode-org/mike':
         specifier: ^0.3.8
-        version: 0.3.8
+        version: 0.3.8(patch_hash=56244b3eeb4106973772f0c3b38c0c39aa7486e8173b21107ce63b0ed51e5ea3)
       '@next-auth/prisma-adapter':
         specifier: ^1.0.7
         version: 1.0.7(@prisma/client@7.10.0(prisma@7.10.0(@types/react@18.3.31)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3))(typescript@6.0.3))(next-auth@4.24.15(next@16.3.3(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@26.4.0)(babel-plugin-macros@3.1.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.57.1))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))
@@ -606,7 +607,7 @@ importers:
     dependencies:
       '@necode-org/mike':
         specifier: ^0.3.8
-        version: 0.3.8
+        version: 0.3.8(patch_hash=56244b3eeb4106973772f0c3b38c0c39aa7486e8173b21107ce63b0ed51e5ea3)
     devDependencies:
       typescript:
         specifier: ^6.0.3
@@ -656,7 +657,7 @@ importers:
         version: 0.2.2
       '@necode-org/mike':
         specifier: ^0.3.8
-        version: 0.3.8
+        version: 0.3.8(patch_hash=56244b3eeb4106973772f0c3b38c0c39aa7486e8173b21107ce63b0ed51e5ea3)
       cli-progress:
         specifier: ^3.11.2
         version: 3.11.2
@@ -8285,7 +8286,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react'
 
-  '@necode-org/mike@0.3.8':
+  '@necode-org/mike@0.3.8(patch_hash=56244b3eeb4106973772f0c3b38c0c39aa7486e8173b21107ce63b0ed51e5ea3)':
     dependencies:
       autobind-decorator: 2.4.0
       lodash: 4.18.1

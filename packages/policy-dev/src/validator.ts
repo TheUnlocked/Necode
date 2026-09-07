@@ -60,8 +60,6 @@ async function compileMiKe(script: string): Promise<CompileMiKeResult> {
     mike.init();
     mike.loadScript(script);
 
-    console.log(createJavascriptTarget.toString());
-
     const branches = new Map<number, Block>();
     visit(mike.root, ast => {
         if (ast.kind === ASTNodeKind.Block) {
@@ -105,7 +103,7 @@ async function compileMiKe(script: string): Promise<CompileMiKeResult> {
     if (!buffer) {
         throw new Error(`Failed to compile script.\n${diagnostics.getDiagnostics().join('\n')}`);
     }
-    console.log(Buffer.from(buffer).toString('utf-8'));
+    // console.log(Buffer.from(buffer).toString('utf-8'));
 
     return {
         createProgram: (await import_(`data:text/javascript;base64,${Buffer.from(buffer).toString('base64')}`)).default,

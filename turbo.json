@@ -26,6 +26,7 @@
         },
         "necode:build": {
             "dependsOn": ["~database#generate"],
+            "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/packages/**"],
             "outputs": [".next/**", "!.next/cache/**"]
         },
         "db:migrate:deploy": {

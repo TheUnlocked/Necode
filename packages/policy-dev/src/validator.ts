@@ -1,12 +1,12 @@
 import { import_ } from '@brillout/import';
 import { MiKe } from '@necode-org/mike';
-import { ASTNodeKind, Block, DebugStatement, FloatLiteral, getNodeSourceRange, Identifier, StateDefinition, StatementOrBlock, stringifyPosition, Variable, visit } from '@necode-org/mike/ast';
+import { ASTNodeKind, Block, DebugStatement, FloatLiteral, getNodeSourceRange, Identifier, StatementOrBlock, stringifyPosition, Variable, visit } from '@necode-org/mike/ast';
 import { MiKeProgram as _MiKeProgram, MiKeProgramWithoutExternals as _MiKeProgramWithoutExternals, JsLibraryImplementation, ParameterType } from '@necode-org/mike/codegen/js';
 import { createJavascriptTarget } from '@necode-org/mike/codegen/js/JavascriptTarget';
 import { createMiKeDiagnosticsManager, Severity } from '@necode-org/mike/diagnostics';
-import { stringifyType, TypeKind } from '@necode-org/mike/types';
+import { TypeKind } from '@necode-org/mike/types';
 import { integer as _integer, Arbitrary, boolean, check, constant, float, oneof, property, record, shuffledSubarray, tuple } from 'fast-check';
-import { cloneDeep, groupBy } from 'lodash';
+import { cloneDeep } from 'lodash';
 import { PolicyValidatorConfig, SignalInfo, Value, Values } from '~api/PolicyValidatorConfig';
 import { internalUniqueBugType, events as necodeEvents, necodeLib } from '~mike-config';
 import asArray from '~utils/asArray';
@@ -59,7 +59,8 @@ async function compileMiKe(script: string): Promise<CompileMiKeResult> {
 
     mike.init();
     mike.loadScript(script);
-    console.log(groupBy(mike.root.definitions, x => x.kind)[ASTNodeKind.StateDefinition]?.map(x => stringifyType(mike.typechecker.fetchTypeOfTypeNode((x as StateDefinition).type!))).join('\n'));
+
+    console.log(createJavascriptTarget.toString());
 
     const branches = new Map<number, Block>();
     visit(mike.root, ast => {

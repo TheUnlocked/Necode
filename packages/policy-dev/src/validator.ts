@@ -59,6 +59,7 @@ async function compileMiKe(script: string): Promise<CompileMiKeResult> {
 
     mike.init();
     mike.loadScript(script);
+    console.log(mike.root.definitions.map(x => `${ASTNodeKind[x.kind]}: ${x.tokens?.map(x => x.content).join(' ')}`).join('\n'));
 
     const branches = new Map<number, Block>();
     visit(mike.root, ast => {

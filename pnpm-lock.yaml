@@ -603,10 +603,11 @@ importers:
         version: link:../tsconfig
 
   packages/mike-config:
-    devDependencies:
+    dependencies:
       '@necode-org/mike':
         specifier: ^0.3.8
         version: 0.3.8
+    devDependencies:
       typescript:
         specifier: ^6.0.3
         version: 6.0.3

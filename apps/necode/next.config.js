@@ -10,6 +10,10 @@ const assign = Object.assign;
 /** @type {import('next').NextConfig} */
 module.exports = {
     reactStrictMode: true,
+    experimental: {
+        // https://github.com/swc-project/swc/issues/12282 breaks some APIs, so disable minification on the backend for now. 
+        serverMinification: false,
+    },
     // Omits certain modules to significantly speed up lambda cold start.
     // Note that excluding @mui means `getServerSideProps`/`getInitialProps` WILL NOT WORK.
     // `getStaticProps` is still fine to use, since it happens during build time.

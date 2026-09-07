@@ -59,7 +59,7 @@ async function compileMiKe(script: string): Promise<CompileMiKeResult> {
 
     mike.init();
     mike.loadScript(script);
-    console.log(groupBy(mike.root.definitions, x => x.kind)[ASTNodeKind.StateDefinition].map(x => stringifyType(mike.typechecker.fetchTypeOfTypeNode((x as StateDefinition).type!))).join('\n'));
+    console.log(groupBy(mike.root.definitions, x => x.kind)[ASTNodeKind.StateDefinition]?.map(x => stringifyType(mike.typechecker.fetchTypeOfTypeNode((x as StateDefinition).type!))).join('\n'));
 
     const branches = new Map<number, Block>();
     visit(mike.root, ast => {

@@ -3,7 +3,7 @@
     "include": ["**/*.ts"],
     "exclude": ["node_modules"],
     "compilerOptions": {
-        "baseUrl": ".",
+        "typeRoots": ["node"],
         "declaration": false,
         "declarationMap": false,
         "inlineSourceMap": true,

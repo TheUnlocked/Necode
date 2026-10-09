@@ -1,9 +1,9 @@
+import { PolicyConfiguration } from '@necode-org/activity-dev';
+import { Feature, FeatureObject } from '@necode-org/plugin-dev';
 import { ComponentType } from "react";
 import { RefConnector } from "use-dnd";
-import { PolicyConfiguration } from '@necode-org/activity-dev';
-import { LanguageDescription } from "../languages/LanguageDescription";
 import { Importable } from '~utils/types';
-import { FeatureObject, Feature } from '@necode-org/plugin-dev';
+import { LanguageDescription } from "../languages/LanguageDescription";
 
 interface BaseActivityProps<ConfigData = undefined> {
     id: string;

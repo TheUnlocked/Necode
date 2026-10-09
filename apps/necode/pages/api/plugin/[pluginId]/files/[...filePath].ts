@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { Status } from "~backend/Endpoint";
 import getIdentity from '~backend/identity';
-import { prisma } from "~database";
+import { prisma } from "~database/server";
 
 export default async function pluginFile(req: NextApiRequest, res: NextApiResponse) {
     switch (await getIdentity(req, res)) {

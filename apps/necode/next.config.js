@@ -10,13 +10,19 @@ const assign = Object.assign;
 /** @type {import('next').NextConfig} */
 module.exports = {
     reactStrictMode: true,
-    swcMinify: true,
     experimental: {
-        // Omits certain modules to significantly speed up lambda cold start.
-        // Note that excluding @mui means `getServerSideProps`/`getInitialProps` WILL NOT WORK.
-        // `getStaticProps` is still fine to use, since it happens during build time.
-        outputFileTracingIgnores: ['**esbuild-linux-64**', '**@mui**'],
-        esmExternals: 'loose',
+        // https://github.com/swc-project/swc/issues/12282 breaks some APIs, so disable minification on the backend for now. 
+        serverMinification: false,
+    },
+    // Omits certain modules to significantly speed up lambda cold start.
+    // Note that excluding @mui means `getServerSideProps`/`getInitialProps` WILL NOT WORK.
+    // `getStaticProps` is still fine to use, since it happens during build time.
+    outputFileTracingRoot: path.join(__dirname, '../../'),
+    outputFileTracingExcludes: {
+        "*": [
+            '**esbuild-linux-64**',
+            '**@mui**',
+        ]
     },
     transpilePackages: [...localPackages],
     modularizeImports: {
@@ -62,6 +68,15 @@ module.exports = {
             ],
         });
     },
+    // turbopack: {
+    //     resolveAlias: {
+    //         fs: {},
+    //         module: {},
+    //         net: {},
+    //         bufferutil: {},
+    //         'utf-8-validate': {},
+    //     },
+    // },
     async headers() {
         return [
             {

@@ -1,11 +1,15 @@
-import { Container, Stack, Typography, styled, ToggleButtonGroup, ToggleButton, Tooltip, Box } from '@mui/material';
+import { Box, Button, Container, Stack, styled, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
+import { DataGrid } from '@mui/x-data-grid';
 import type { NextPage } from 'next';
 import { PropsWithChildren, ReactNode, useMemo, useState } from 'react';
-import { useGetRequestImmutable } from '~shared-ui/hooks/useGetRequest';
+import { ClassroomEntity } from '~api/entities/ClassroomEntity';
 import { UserEntity } from '~api/entities/UserEntity';
+import { SitewideRights } from '~database/browser';
+import SubtleLink from '~shared-ui/components/SubtleLink';
+import { useGetRequestImmutable } from '~shared-ui/hooks/useGetRequest';
 import Footer from '~ui/components/Footer';
 import NecodeLogo from '~ui/components/NecodeLogo';
-import SubtleLink from '~shared-ui/components/SubtleLink';
+import { entityAttributeColumn } from '~ui/util/dataGridUtils';
 
 const InfoBox = styled('section')`
     padding-bottom: 32px;
@@ -19,7 +23,7 @@ function InfoSection({ title, omitParagraph = false, children }: PropsWithChildr
 }
 
 const Home: NextPage = () => {
-    const { data: meInfo } = useGetRequestImmutable<UserEntity<{ classes: 'deep' }>>('/api/me?include=classes');
+    const { data: meInfo, isLoading } = useGetRequestImmutable<UserEntity<{ classes: 'deep' }>>('/api/me?include=classes');
 
     const [infoCategory, setInfoCategory] = useState('general');
 
@@ -31,6 +35,29 @@ const Home: NextPage = () => {
         }
     }, [infoCategory, meInfo]);
 
+    const classroomTable = <DataGrid
+        loading={isLoading}
+        sx={{ width: '100%' }}
+        rows={meInfo?.attributes.classes}
+        columns={[
+            entityAttributeColumn<ClassroomEntity>('displayName', { headerName: 'My Classrooms', flex: 1 }),
+            {
+                field: '_actions',
+                headerName: '',
+                type: 'custom',
+                renderCell: entity => <Button fullWidth variant="contained" href={`/classroom/${entity.row.id}`}>Go</Button>,
+            }
+        ]}
+        disableColumnFilter
+        disableColumnResize
+        disableColumnSorting
+        disableColumnSelector
+        disableColumnMenu
+        disableMultipleRowSelection
+        disableRowSelectionOnClick
+        hideFooter
+    />;
+
     return <>
         <Stack direction="column" alignItems="center" p={4}>
             <Box sx={{
@@ -41,7 +68,20 @@ const Home: NextPage = () => {
                 <NecodeLogo color="white" />
             </Box>
             {meInfo
-                ? <ToggleButtonGroup value={infoCategory} exclusive onChange={(_, v) => v ? setInfoCategory(v) : null} sx={{ mb: 8 }}>
+                ? <Container maxWidth="sm" sx={{ mb: 4 }}>
+                    <InfoBox>
+                        {classroomTable}
+                        <Stack direction="row" justifyContent="space-between" sx={{ mt: 1 }}>
+                            {([SitewideRights.Faculty, SitewideRights.Admin] as (string | undefined)[]).includes(meInfo?.attributes.rights)
+                                ? <Button href="/admin/createClassroom" variant="contained" color="warning">Create Classroom</Button>
+                                : <div></div>}
+                            <Button href="/classroom/join" variant="contained">Join Classroom</Button>
+                        </Stack>
+                    </InfoBox>
+                </Container>
+                : null}
+            {meInfo
+                ? <ToggleButtonGroup value={infoCategory} exclusive onChange={(_, v) => v ? setInfoCategory(v) : null} sx={{ mb: 4 }}>
                     <ToggleButton value="general">General</ToggleButton>
                     <ToggleButton value="instructor">Instructor</ToggleButton>
                     <ToggleButton value="student">Student</ToggleButton>
@@ -90,11 +130,11 @@ const generalInfo = <>
         <p>There are two, both an MQP report and a master&apos;s thesis:</p>
         <ul>
             <li>
-                <SubtleLink target="_blank" rel="noopener" href="/papers/mqp_report_2022.pdf">MQP Report (2022)</SubtleLink>&sp;
+                <SubtleLink target="_blank" rel="noopener" href="/papers/mqp_report_2022.pdf">MQP Report (2022)</SubtleLink>{' '}
                 (<SubtleLink target="_blank" rel="noopener" href="https://digital.wpi.edu/show/6h440w69h">WPI Mirror</SubtleLink>)
             </li>
             <li>
-                <SubtleLink target="_blank" rel="noopener" href="/papers/masters_thesis_2023.pdf">Master&apos;s thesis (2023)</SubtleLink>&sp;
+                <SubtleLink target="_blank" rel="noopener" href="/papers/masters_thesis_2023.pdf">Master&apos;s thesis (2023)</SubtleLink>{' '}
                 (<SubtleLink target="_blank" rel="noopener" href="https://digital.wpi.edu/concern/etds/8623j227w">WPI Mirror</SubtleLink>)
             </li>
         </ul>
@@ -102,16 +142,6 @@ const generalInfo = <>
             The MQP report covers a larger breadth of Necode&apos;s functionality, but many details are also outdated.
             The master&apos;s thesis is much more recent and focuses much more deeply on Necode&apos;s plugin API.
         </p>
-    </InfoSection>
-    <InfoSection title="I'd like to evaluate Necode for use in my class. How should I get in touch?">
-        Thank you very much for your interest! Feel free to shoot an email to Trevor at{' '}
-        <SubtleLink href="mailto:tmpaley@wpi.edu">tmpaley@wpi.edu</SubtleLink>, and cc Charlie at{' '}
-        <SubtleLink href="mailto:cdroberts@wpi.edu">cdroberts@wpi.edu</SubtleLink>. We&apos;ll give you a tour
-        and help you get acquianted with the software in case you choose to use it.
-    </InfoSection>
-    <InfoSection title="I don't teach a class, but I'm still interested in Necode. Can I try it out?">
-        Currently no, unfortunately. However, if you&apos;re willing to put in a bit of effort to get it running
-        on your local machine, the source code for Necode is available on <SubtleLink target="_blank" rel="noopener" href="https://github.com/TheUnlocked/Necode">GitHub</SubtleLink>.
     </InfoSection>
 </>;
 
@@ -122,10 +152,6 @@ const canIUsePhoneText = <>
 </>;
 
 const instructorInfo = (me: UserEntity<{ classes: 'deep' }> | undefined) => <>
-    <InfoSection title="How can I use Necode in my classroom?">
-        Please email Trevor at <SubtleLink href="mailto:tmpaley@wpi.edu">tmpaley@wpi.edu</SubtleLink>{' '}
-        and cc Charlie at <SubtleLink href="mailto:cdroberts@wpi.edu">cdroberts@wpi.edu</SubtleLink>.
-    </InfoSection>
     <InfoSection title="Can I use Necode for graded assignments?">
         We would <em>strongly</em> recommend against doing so. Necode intentionally sacrifices test secrecy and solution verifiability
         in exchange for students to be able to run their code on their own devices. In other words, any tests cases

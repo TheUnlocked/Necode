@@ -3,6 +3,7 @@ import { CodeAlert, Editor, NetworkId, Pane, Panes, PanesLayouts, PassthroughPan
 import { ActivityPageProps } from '@necode-org/plugin-dev';
 import dedent from "dedent-js";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMultiChanged } from "~shared-ui/hooks/useChanged";
 import { Configuration } from '.';
 
 const DrawingCanvas = styled('canvas')({
@@ -102,7 +103,7 @@ export function CanvasActivity({ language, activityConfig, features }: ActivityP
     const [codeError, setCodeError] = useState<Error | undefined>();
     const [entryPoint, setEntryPoint] = useState<(ctx: CanvasRenderingContext2D, video?: HTMLVideoElement) => Promise<void>>();
 
-    useEffect(() => {
+    if (useMultiChanged([code, features], true)) {
         try {
             const newEntry = features.entryPoint.any.entryPoint<Parameters<NonNullable<typeof entryPoint>>, void>(code, 'draw');
             setEntryPoint(() => newEntry);
@@ -111,7 +112,7 @@ export function CanvasActivity({ language, activityConfig, features }: ActivityP
             setCodeError(e as Error);
             setEntryPoint(undefined);
         }
-    }, [code, features]);
+    }
     
     const [inboundVideoElt, setInboundVideoElt] = useState<HTMLVideoElement>();
 

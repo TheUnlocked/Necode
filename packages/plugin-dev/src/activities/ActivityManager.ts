@@ -1,4 +1,4 @@
-import { Feature } from '../../../activity-dev/src';
+import { Feature } from '@necode-org/activity-dev';
 import { ActivityDescription } from './ActivityDescription';
 
 export class ActivityManager {

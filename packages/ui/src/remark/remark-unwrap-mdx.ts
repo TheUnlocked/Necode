@@ -1,5 +1,5 @@
-import { visit, SKIP, Visitor } from 'unist-util-visit';
 import type { Plugin } from 'unified';
+import { SKIP, visit, Visitor } from 'unist-util-visit';
 
 const remarkUnwrapMdx: Plugin = () => {
     

@@ -2,8 +2,9 @@ import { Code } from '@mui/icons-material';
 import { ActivityManager, FeatureManager, LanguageManager, Plugin } from '@necode-org/plugin-dev';
 import canvasActivityDescription from './activities/canvas';
 import glslActivityDescription from './activities/glsl';
-import p5jsActivityDescription from './activities/p5js';
 import p5jsRingActivityDescription from './activities/p5-canvas';
+import p5jsActivityDescription from './activities/p5js';
+import replInputActivityDescription from './activities/repl';
 import testDomActivityDescription from './activities/test-dom';
 import testDomBreakoutActivityDescription from './activities/test-dom-breakout';
 import textInputActivityDescription from './activities/text-input';
@@ -12,7 +13,6 @@ import MarkdownIcon from './icons/MarkdownIcon';
 import PythonIcon from './icons/PythonIcon';
 import TypescriptIcon from './icons/TypescriptIcon';
 import BabelPlugin from './languages/transformers/BabelPlugin';
-import replInputActivityDescription from './activities/repl';
 
 declare module '@necode-org/plugin-dev' {
     interface FeatureMap {

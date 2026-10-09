@@ -1,5 +1,5 @@
 import type * as BabelCoreNamespace from '@babel/core';
-import type { PluginPass, NodePath, PluginObj } from '@babel/core';
+import type { NodePath, PluginObj, PluginPass } from '@babel/core';
 import type { CallExpression, Identifier, Node } from '@babel/types';
 import SyntaxTransformError from './SyntaxTransformError';
 

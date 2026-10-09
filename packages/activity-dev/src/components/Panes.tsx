@@ -1,10 +1,10 @@
+import { useTheme } from '@mui/material';
 import { ReactElement, useMemo } from 'react';
 import { ReflexContainer, ReflexElement, ReflexSplitter } from 'react-reflex';
-import { useTheme } from '@mui/material';
 import { isNotNull } from '~utils/typeguards';
+import useIsSizeOrSmaller from '../hooks/useIsSizeOrSmaller';
 import Pane from './Pane';
 import PassthroughPane from './PassthroughPane';
-import useIsSizeOrSmaller from '../hooks/useIsSizeOrSmaller';
 import TabbedPane from './TabbedPane';
 
 export type PaneLike = typeof Pane | typeof TabbedPane | typeof PassthroughPane;

@@ -40,6 +40,9 @@ export default function SubmissionsDialog({
     );
 
     const pickRandomSubmission = useCallback(() => {
+        if (filteredSubmissions.length === 0) {
+            return;
+        }
         onPickSubmission(filteredSubmissions[Math.floor(Math.random() * filteredSubmissions.length)]);
         onClose();
     }, [filteredSubmissions, onPickSubmission, onClose]);
@@ -53,7 +56,7 @@ export default function SubmissionsDialog({
             <TextField label="Search" value={filter} onChange={e => setFilter(e.target.value)}
                 variant="standard" size="small" sx={{ flexGrow: 1 }} />
             <Tooltip title="Opens a random submission without showing the student's name" disableInteractive>
-                <Button variant="text" onClick={pickRandomSubmission}>Pick&nbsp;Random</Button>
+                <Button variant="text" onClick={pickRandomSubmission} disabled={filteredSubmissions.length === 0}>Pick&nbsp;Random</Button>
             </Tooltip>
         </Stack>
         <List sx={{ overflowY: 'auto' }}>

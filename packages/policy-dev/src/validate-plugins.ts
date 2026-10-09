@@ -1,8 +1,8 @@
 import { MultiBar } from 'cli-progress';
 import { readFile, stat } from 'fs/promises';
 import path from 'path';
-import { isNotNull } from '~utils/typeguards';
 import { NecodeJson } from '~api/NecodeJson';
+import { isNotNull } from '~utils/typeguards';
 import { assertIsValidatorConfig, ParseValidationConfigError } from './parsePolicyValidatorConfig';
 import { validate } from './validator';
 

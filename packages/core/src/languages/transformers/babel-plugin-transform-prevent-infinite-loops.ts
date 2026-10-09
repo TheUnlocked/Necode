@@ -13,9 +13,9 @@
 
 // Based on https://repl.it/site/blog/infinite-loops.
 
-import type babel from '@babel/core'
-import type { VisitNodeFunction } from '@babel/traverse';
+import type babel from '@babel/core';
 import { PluginObj, PluginPass } from '@babel/core';
+import type { VisitNodeFunction } from '@babel/traverse';
 
 const MAX_ITERATIONS = 10001;
 

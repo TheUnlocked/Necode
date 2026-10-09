@@ -1,15 +1,15 @@
+import { assertIsValidatorConfig, ParseValidationConfigError, validate } from '@necode-org/policy-dev';
 import Joi, { Schema } from 'joi';
 import { posix as path } from 'path';
+import semver from 'semver';
 import { makePluginEntity } from '~api/entities/PluginEntity';
 import { NecodeJson, PackageJson } from '~api/NecodeJson';
-import { assertIsValidatorConfig, ParseValidationConfigError, validate } from '@necode-org/policy-dev';
 import { endpoint, Status } from "~backend/Endpoint";
 import { extractTgz } from '~backend/extract';
-import { hasScope } from '~backend/scopes';
 import { compileMiKeProgram } from '~backend/mike';
-import { Plugin, Prisma, prisma } from "~database";
+import { hasScope } from '~backend/scopes';
+import { Plugin, Prisma, prisma } from "~database/server";
 import { neverResolve } from '~utils/async';
-import semver from 'semver';
 
 export const config = {
     api: {
@@ -219,13 +219,15 @@ const apiPlugin = endpoint(makePluginEntity, [], {
                     });
 
                     console.log(`checking policy ${policy.id} - completed validation`);
-
+                    
                     if (!validationResult.ok) {
                         issues.push(`Policy ${policy.id} failed to validate:`);
                         for (const { message, details, severity } of validationResult.messages) {
                             const icon = { info: 'ℹ', warn: '⚠️', error: '🛑' }[severity];
                             issues.push(`\t${icon} ${message}`);
                             details?.forEach(x => issues.push(`\t\t${x}`));
+
+                            console.log(`policy ${policy.id} - ${severity} - ${message}\n${details?.join('\n')}`);
                         }
                     }
 
@@ -253,14 +255,14 @@ const apiPlugin = endpoint(makePluginEntity, [], {
                             entryFilename: entry,
                             files: { createMany: { data: frontendFiles.map(([path, contents]) => ({
                                 filename: path,
-                                contents,
+                                contents: new Uint8Array(contents),
                             })) } },
                             policies: { createMany: { data: policies?.map(policy => {
                                 const absPath = path.join(policyRoot, policy.path);
                                 return {
                                     id: policy.id,
                                     displayName: policy.displayName,
-                                    source: files[absPath],
+                                    source: new Uint8Array(files[absPath]),
                                     compiled: Buffer.from(compileMiKeProgram(files[absPath].toString('utf-8')).compiled!),
                                     validationConfig: policy.config as any ?? {},
                                 };

@@ -1,22 +1,23 @@
 import { Paper } from "@mui/material";
-import { NextPage } from "next";
-import { Dispatch, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import ActivityListPane from "~ui/components/lesson-config/ActivityListPane";
-import { LessonEntity } from "~api/entities/LessonEntity";
-import { useGetRequest } from "~shared-ui/hooks/useGetRequest";
-import { fromLuxon, Iso8601Date, iso8601DateRegex, toLuxon } from "~utils/iso8601";
-import SkeletonActivityListPane from "~ui/components/lesson-config/SkeletonActivityListPane";
 import { DateTime } from "luxon";
+import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useSnackbar } from "notistack";
-import LessonDatePicker from '~ui/components/lesson-config/LessonDatePicker';
-import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
+import { Dispatch, useCallback, useMemo, useRef, useState } from "react";
 import { ActivityEntity } from '~api/entities/ActivityEntity';
-import LessonDragLayer from '~ui/components/lesson-config/LessonDragLayer';
+import { LessonEntity } from "~api/entities/LessonEntity";
+import useChanged from "~shared-ui/hooks/useChanged";
+import { useGetRequest } from "~shared-ui/hooks/useGetRequest";
 import useImperativeDialog from '~shared-ui/hooks/useImperativeDialog';
+import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
 import LessonMergeDialog from '~ui/components/dialogs/LessonMergeDialog';
-import isContentfulLesson from '~ui/lessons/isContentfulLesson';
 import ManageClassroomPage, { ManageClassroomPageContentProps } from '~ui/components/layouts/ManageClassroomPage';
+import ActivityListPane from "~ui/components/lesson-config/ActivityListPane";
+import LessonDatePicker from '~ui/components/lesson-config/LessonDatePicker';
+import LessonDragLayer from '~ui/components/lesson-config/LessonDragLayer';
+import SkeletonActivityListPane from "~ui/components/lesson-config/SkeletonActivityListPane";
+import isContentfulLesson from '~ui/lessons/isContentfulLesson';
+import { fromLuxon, Iso8601Date, iso8601DateRegex, toLuxon } from "~utils/iso8601";
 
 
 function getDateFromPath(path: string) {
@@ -39,12 +40,12 @@ const PageContent: NextPage<ManageClassroomPageContentProps> = ({ classroomId })
     // Normally fromLuxon uses UTC, but for the default we want "today" in the user's timezone
     const [selectedDate, setSelectedDate] = useState(fromLuxon(DateTime.now(), false));
 
-    useEffect(() => {
+    if (useChanged(router.asPath, true)) {
         const date = getDateFromPath(router.asPath);
         if (date) {
             setSelectedDate(date);
         }
-    }, [router.asPath]);
+    }
 
     const { data: lessons } = useGetRequest<LessonEntity<{ activities: 'shallow' }>[]>(
         classroomId === undefined ? null : `/api/classroom/${classroomId}/lesson`,
@@ -53,11 +54,9 @@ const PageContent: NextPage<ManageClassroomPageContentProps> = ({ classroomId })
 
     const [lessonsByDate, setLessonsByDate] = useState<{ [date: Iso8601Date]: LessonEntity<{ activities: 'shallow' }> | undefined }>({});
 
-    useEffect(() => {
-        if (lessons) {
-            setLessonsByDate(Object.fromEntries(lessons.map(x => [x.attributes.date, x])));
-        }
-    }, [lessons]);
+    if (useChanged(lessons, true) && lessons) {
+        setLessonsByDate(Object.fromEntries(lessons.map(x => [x.attributes.date, x])));
+    }
 
     const onLessonChange: Dispatch<LessonEntity<{ activities: 'shallow' }> | undefined> = useCallback(newLesson => {
         setLessonsByDate(lessonsByDate => ({

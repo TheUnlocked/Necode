@@ -1,6 +1,6 @@
 import { activityDescription } from '@necode-org/plugin-dev';
-import { HtmlTestActivityBaseConfig } from "../html-test-activity-base/createTestActivityPage";
 import dedent from "dedent-js";
+import { HtmlTestActivityBaseConfig } from "../html-test-activity-base/createTestActivityPage";
 import createTestActivityPages from '../html-test-activity-base/createTestActivityPages';
 import typeDeclarationFiles from './typeDeclarationFiles';
 
@@ -12,7 +12,7 @@ interface P5ActivityConfig extends HtmlTestActivityBaseConfig {
     }
 }
 
-const [activityPage, configPage] = createTestActivityPages({
+const [activityPage, configPage] = createTestActivityPages<P5ActivityConfig>({
     hasCss: false,
     hasHtml: false,
     hasTests: true,

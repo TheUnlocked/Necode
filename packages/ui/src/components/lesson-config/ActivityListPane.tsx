@@ -1,23 +1,23 @@
-import { Card, Divider, Stack, Box, SxProps } from "@mui/material";
+import { Box, Card, Divider, Stack, SxProps } from "@mui/material";
+import { ActivityDescription } from '@necode-org/plugin-dev';
+import { useConfirm } from 'material-ui-confirm';
 import { Dispatch, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDrop } from "use-dnd";
-import composeRefs from '@seznam/compose-react-refs';
-import { useGetRequest } from "~shared-ui/hooks/useGetRequest";
 import { ActivityEntity } from "~api/entities/ActivityEntity";
 import { LessonEntity } from "~api/entities/LessonEntity";
-import { Iso8601Date } from "~utils/iso8601";
-import { ActivityDragDropBox } from "./ActivityDragDropBox";
-import SkeletonActivityListPane from "./SkeletonActivityListPane";
-import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
-import WidgetDragLayer from './WidgetDragLayer';
-import { binarySearchIndex } from '~utils/binarySearch';
-import ActivityListPaneActions from './ActivityListPaneActions';
-import { assignRef, SimpleRef } from '~shared-ui/util/simpleRef';
 import type { PartialAttributesOf } from '~backend/Endpoint';
-import AcitivityListPaneTitleBar from './ActivityListPaneTitleBar';
+import { useGetRequest } from "~shared-ui/hooks/useGetRequest";
+import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
+import composeRefs from '~shared-ui/util/composeRefs';
+import { assignRef, SimpleRef } from '~shared-ui/util/simpleRef';
+import { binarySearchIndex } from '~utils/binarySearch';
+import { Iso8601Date } from "~utils/iso8601";
 import { activityDragDropType } from '../../dnd/types';
-import { useConfirm } from 'material-ui-confirm';
-import { ActivityDescription } from '../../../../plugin-dev/src';
+import { ActivityDragDropBox } from "./ActivityDragDropBox";
+import ActivityListPaneActions from './ActivityListPaneActions';
+import AcitivityListPaneTitleBar from './ActivityListPaneTitleBar';
+import SkeletonActivityListPane from "./SkeletonActivityListPane";
+import WidgetDragLayer from './WidgetDragLayer';
 
 interface ActivityListPaneProps {
     sx: SxProps;
@@ -77,17 +77,16 @@ export default function ActivityListPane({
 
     const { upload } = useNecodeFetch();
     
-    const widgetContainerRef = useRef<HTMLElement>();
+    const [widgetContainer, setWidgetContainerRef] = useState<HTMLElement>();
 
     const [, setLastHoveredWidgetIndex] = useState<number>();
     const [dropIntoPos, setDropIntoPos] = useState<number>();
 
     const dropIndicatorPos = useMemo(() => {
-        const container = widgetContainerRef.current;
-        if (container && dropIntoPos !== undefined) {
-            if (dropIntoPos >= container.children.length) {
+        if (widgetContainer && dropIntoPos !== undefined) {
+            if (dropIntoPos >= widgetContainer.children.length) {
                 // Place indicator after last widget
-                const rect = container.children[container.children.length - 1].getBoundingClientRect();
+                const rect = widgetContainer.children[widgetContainer.children.length - 1].getBoundingClientRect();
                 return {
                     left: rect.left,
                     width: rect.width,
@@ -96,7 +95,7 @@ export default function ActivityListPane({
                 };
             }
             else {
-                const rect = container.children[dropIntoPos].getBoundingClientRect();
+                const rect = widgetContainer.children[dropIntoPos].getBoundingClientRect();
                 return {
                     left: rect.left,
                     width: rect.width,
@@ -105,7 +104,7 @@ export default function ActivityListPane({
                 };
             }
         }
-    }, [dropIntoPos]);
+    }, [dropIntoPos, widgetContainer]);
 
     const [{ isDragging }, drop] = useDrop(() => ({
         accept: activityDragDropType,
@@ -114,14 +113,13 @@ export default function ActivityListPane({
             return { isDragging: Boolean(itemType) };
         },
         hover({ event, item }) {
-            const container = widgetContainerRef.current;
-            if (container) {
+            if (widgetContainer) {
                 setLastHoveredWidgetIndex(oldWidgetIndex => {
                     if (activities.length === 1) {
                         setDropIntoPos(0);
                         return 0;
                     }
-                    const fracDropPos = findWidgetInsertPosition(container, event.clientY, oldWidgetIndex);
+                    const fracDropPos = findWidgetInsertPosition(widgetContainer, event.clientY, oldWidgetIndex);
     
                     const intDropPos = Math.ceil(fracDropPos);
                     if (activities[intDropPos]?.id === item.id) {
@@ -183,13 +181,11 @@ export default function ActivityListPane({
             );
             // No need to fire onLessonChange for reordering
         },
-    }), [activities, dropIntoPos, lessonEntity, classroomId, mutateLesson, upload]);
+    }), [activities, dropIntoPos, widgetContainer, lessonEntity, classroomId, mutateLesson, upload]);
 
-    useEffect(() => {
-        if (!isDragging) {
-            setDropIntoPos(undefined);
-        }
-    }, [isDragging]);
+    if (!isDragging && dropIntoPos !== undefined) {
+        setDropIntoPos(undefined);
+    }
 
     const creatingLessonPromiseRef = useRef<Promise<LessonEntity<{ activities: 'deep' }>> | undefined>();
     const getOrCreateLesson = useCallback(async ({ date, displayName }: { date: Iso8601Date, displayName: string }) => {
@@ -326,14 +322,12 @@ export default function ActivityListPane({
     const confirm = useConfirm();
 
     const deleteLessonHandler = useCallback(async (lesson: LessonEntity) => {
-        try {
-            await confirm({ description: `Are you sure you want to delete this lesson? This cannot be undone.` });
+        if ((await confirm({ description: `Are you sure you want to delete this lesson? This cannot be undone.` })).confirmed) {
             deleteLesson(async () => {
                 await upload(`/api/classroom/${classroomId}/lesson/${lesson.id}`, { method: 'DELETE' });
                 onLessonChange?.(undefined);
             });
         }
-        catch (e) { return }
     }, [classroomId, confirm, upload, deleteLesson, onLessonChange]);
 
     const activityChangeHandler = useCallback((activity: ActivityEntity, changes: Omit<PartialAttributesOf<ActivityEntity>, 'lesson'>) => {
@@ -388,7 +382,7 @@ export default function ActivityListPane({
                     onDeleteActivity={deleteActivityHandler}
                     onDeleteLesson={deleteLessonHandler} />
             </Box>
-            <Stack ref={composeRefs(drop, widgetContainerRef)} sx={{ m: 1, mt: 0, flexGrow: 1, overflow: "auto" }} spacing={1}>
+            <Stack ref={composeRefs(drop, setWidgetContainerRef)} sx={{ m: 1, mt: 0, flexGrow: 1, overflow: "auto" }} spacing={1}>
                 {activityWidgets}
             </Stack>
         </Card>

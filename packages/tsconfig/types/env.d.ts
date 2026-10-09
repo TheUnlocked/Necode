@@ -95,22 +95,6 @@ declare namespace NodeJS {
         readonly JWT_SIGNING_PRIVATE_KEY: string;
 
         /**
-         * The MSAL application ID. Available only when Microsoft authentication is being used.
-         * @availablein Next.js Backend
-         */
-        readonly MSAL_APPLICATION_ID?: string;
-        /**
-         * The MSAL client secret. Available only when Microsoft authentication is being used.
-         * @availablein Next.js Backend
-         */
-        readonly MSAL_CLIENT_SECRET?: string;
-        /**
-         * The MSAL tenant ID. Available only when Microsoft authentication is being used.
-         * @availablein Next.js Backend
-         */
-        readonly MSAL_TENANT_ID?: string;
-
-        /**
          * The STUN server to use for WebRTC connections, if any.
          * @availablein Next.js Backend
          */

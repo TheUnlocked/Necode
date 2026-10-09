@@ -1,7 +1,7 @@
 import { NextPage } from "next";
 import { useRouter } from 'next/router';
-import { useGetRequest } from '~shared-ui/hooks/useGetRequest';
 import { ClassroomMemberEntity } from '~api/entities/ClassroomMemberEntity';
+import { useGetRequest } from '~shared-ui/hooks/useGetRequest';
 import NotFoundPage from '../../404';
 
 const Page: NextPage = () => {

@@ -1,6 +1,6 @@
 import { makeRtcPolicyEntity } from '~api/entities/RtcPolicyEntity';
 import { endpoint } from '~backend/Endpoint';
-import { prisma } from '~database';
+import { prisma } from '~database/server';
 import { singleArg } from '~utils/typeguards';
 
 const apiPolicies = endpoint(makeRtcPolicyEntity, [], {

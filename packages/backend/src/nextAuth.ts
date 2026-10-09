@@ -1,8 +1,7 @@
-import { ISODateString, NextAuthOptions, User } from "next-auth";
-import { SitewideRights } from "~database";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { prisma } from "~database";
+import { ISODateString, NextAuthOptions, User } from "next-auth";
 import Credentials from 'next-auth/providers/credentials';
+import { prisma, SitewideRights } from "~database/server";
 import { AzureProvider } from "./auth/azure";
 import { getConfigValues } from "./config";
 
@@ -86,9 +85,9 @@ export async function getNextAuthOptions(): Promise<NextAuthOptions> {
         adapter: (() => {
             const adapter = PrismaAdapter(prisma);
             const createUser = adapter.createUser;
-            adapter.createUser = function(user) {
+            adapter.createUser = function(user: User) {
                 if (process.env.NEXT_PUBLIC_APP_ENV === 'development') {
-                    user.username ??= 'dev_credentials_' + (user as any).id;
+                    user.username ??= 'dev_credentials_' + user.id;
                     user.displayName ??= user.username;
                     user.firstName ??= 'dev';
                     user.lastName ??= user.username;

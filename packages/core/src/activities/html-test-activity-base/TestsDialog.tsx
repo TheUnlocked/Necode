@@ -1,6 +1,6 @@
-import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Box } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
+import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
 import { useOnOpen } from '@necode-org/activity-dev';
+import { useCallback, useEffect, useState } from "react";
 
 type RunningState 
     = { type: 'pending' }

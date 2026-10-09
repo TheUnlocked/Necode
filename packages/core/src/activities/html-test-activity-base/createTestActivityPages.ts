@@ -1,7 +1,7 @@
-import { Importable } from '~utils/types';
 import { ActivityConfigPageProps, ActivityPageProps, Feature } from '@necode-org/plugin-dev';
-import type { HTAFeatures, HtmlTestActivityBaseConfig, HtmlTestActivityOptions } from './createTestActivityPage';
+import { Importable } from '~utils/types';
 import type createTestActivityPage from './createTestActivityPage';
+import type { HTAFeatures, HtmlTestActivityBaseConfig, HtmlTestActivityOptions } from './createTestActivityPage';
 
 let createTestActivityPagePromise: Promise<typeof createTestActivityPage>;
 

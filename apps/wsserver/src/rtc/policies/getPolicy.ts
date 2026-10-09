@@ -1,5 +1,5 @@
 import { PolicyValidatorConfig } from '~api/PolicyValidatorConfig';
-import { prisma } from '~database';
+import { prisma } from '~database/server';
 import createMiKePolicy from './MiKePolicy';
 import { RtcCoordinatorFactory } from "./RtcPolicy";
 

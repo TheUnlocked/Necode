@@ -2,7 +2,7 @@ import { ContentCopy, Refresh, Share } from '@mui/icons-material';
 import { IconButton, Skeleton, Stack, Tooltip, Typography } from '@mui/material';
 import { useConfirm } from 'material-ui-confirm';
 import { useSnackbar } from 'notistack';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import useNecodeFetch from '~shared-ui/hooks/useNecodeFetch';
 
 export interface JoinCodeCardProps {
@@ -30,22 +30,25 @@ export default function JoinCodeCard({ classroomId }: JoinCodeCardProps) {
                 .catch(() => enqueueSnackbar('Failed to copy to clipboard', { variant: 'error' }));
         }
     }, [joinCode, enqueueSnackbar]);
+    
+    const joinLink = useMemo(() => joinCode ? `${location.origin}/classroom/join?joinCode=${joinCode}` : undefined, [joinCode]);
 
     const copyJoinLinkToKeyboard = useCallback(() => {
-        if (joinCode) {
-            navigator.clipboard.writeText(`${location.origin}/classroom/join?joinCode=${joinCode}`)
+        if (joinLink) {
+            navigator.clipboard.writeText(joinLink)
                 .then(() => enqueueSnackbar('Copied join link to clipboard', { variant: 'success' }))
                 .catch(() => enqueueSnackbar('Failed to copy to clipboard', { variant: 'error' }));
         }
-    }, [joinCode, enqueueSnackbar]);
+    }, [joinLink, enqueueSnackbar]);
 
     const confirm = useConfirm();
 
     const resetJoinCode = useCallback(async () => {
         try {
-            await confirm({ description: 'Are you sure you want to reset the join code? The old join code can never be recovered.' });
-            await upload(`/api/classroom/${classroomId}/join-code`, { method: 'DELETE' });
-            setJoinCode(undefined);
+            if ((await confirm({ description: 'Are you sure you want to reset the join code? The old join code can never be recovered.' })).confirmed) {
+                await upload(`/api/classroom/${classroomId}/join-code`, { method: 'DELETE' });
+                setJoinCode(undefined);
+            }
         }
         catch (e) {}
     }, [classroomId, confirm, upload]);
@@ -63,8 +66,12 @@ export default function JoinCodeCard({ classroomId }: JoinCodeCardProps) {
             {joinCode
                 ? <Typography variant="h3" component="div" sx={{ mt: 1 }}>{joinCode}</Typography>
                 : <Typography variant="h3" component="div" sx={{ mt: 1 }}><Skeleton /></Typography>}
+            {/* Necode is not currently supported on mobile devices, so a QR code is probably not that helpful... */}
+            {/* {joinLink
+                ? <Box sx={{ mt: 1 }}><QRCode value={joinLink} bgColor={theme.palette.text.primary} fgColor="transparent" style={{ width: '60%', height: 'auto' }} /></Box>
+                : <Typography variant="h3" component="div" sx={{ mt: 1 }}><Skeleton /></Typography>} */}
         </Stack>
-        {joinCode ? <Stack direction="column" justifyContent="flex-end" spacing={1} sx={{ py: 1 }}>
+        {joinCode ? <Stack direction="column" justifyContent="flex-start" spacing={1} sx={{ py: 1 }}>
             <Tooltip title="Copy Join Code" disableInteractive><IconButton onClick={copyJoinCodeToKeyboard}><ContentCopy/></IconButton></Tooltip>
             <Tooltip title="Copy Join Link" disableInteractive><IconButton onClick={copyJoinLinkToKeyboard}><Share/></IconButton></Tooltip>
         </Stack> : undefined}

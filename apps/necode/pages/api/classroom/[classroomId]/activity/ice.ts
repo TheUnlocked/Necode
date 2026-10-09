@@ -1,6 +1,6 @@
+import { createHmac } from 'crypto';
 import { endpoint, Status } from '~backend/Endpoint';
 import { hasScope } from '~backend/scopes';
-import { createHmac } from 'crypto';
 
 const apiActivityIce = endpoint(null, ['classroomId'], {
     type: 'other',
@@ -21,7 +21,7 @@ const apiActivityIce = endpoint(null, ['classroomId'], {
             else {
                 iceServers.push(
                     { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:global.stun.twilio.com:3478?transport=udp' },
+                    { urls: 'stun:global.stun.twilio.com:3478' },
                 );
             }
 

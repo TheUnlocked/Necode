@@ -1,8 +1,7 @@
 import { Refresh as RefreshIcon, Sync as SyncIcon } from "@mui/icons-material";
 import { Box, Button, CardContent, Checkbox, IconButton, Stack, Tooltip, useTheme } from "@mui/material";
 import { api, applyTransaction, CodeAlert, Editor, Feature, FeatureObject, Key, Link, NetworkId, OnEditorChange, Pane, Panes, PanesLayouts, PaneTab, PaneTitle, PassthroughPane, TabbedPane, useApiGet, useFetch, useImperativeDialog, useImported, useIsSizeOrSmaller, useLanguageFeatures, useLanguages, useMonaco, useSubmissions, useY, useYAwareness, useYInit, useYText } from "@necode-org/activity-dev";
-import { ActivityPageProps, LanguageDescription } from '@necode-org/plugin-dev';
-import { ActivityConfigPageProps } from '@necode-org/plugin-dev';
+import { ActivityConfigPageProps, ActivityPageProps, LanguageDescription } from '@necode-org/plugin-dev';
 import { debounce, identity } from "lodash";
 import { set as setIn } from "lodash/fp";
 import { editor } from 'monaco-editor';
@@ -592,7 +591,10 @@ export default function createTestActivityPage<Features extends readonly Feature
                     <ReactMarkdown
                         rehypePlugins={[[rehypeHighlight, { ignoreMissing: true }]]}
                         remarkPlugins={[remarkGfm]}
-                        linkTarget="_blank">{description ?? ''}</ReactMarkdown>
+                        // See https://github.com/remarkjs/react-markdown/pull/761#issuecomment-1691801892
+                        components={{
+                            a: ({ node, href, children, ...props }) => <a href={href} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>,
+                        }}>{description ?? ''}</ReactMarkdown>
                 </CardContent>}
         </Pane>;
 

@@ -7,8 +7,10 @@ const { TsconfigPathsPlugin } = require('tsconfig-paths-webpack-plugin');
 
 /** @typedef {import('webpack').Compiler} Compiler */
 
+/** @type {(path: string) => string} */
 const rel = x => './' + path.join(path.relative(process.cwd(), __dirname), x);
 
+/** @type {import('child_process').ChildProcessWithoutNullStreams} */
 let child;
 
 /** @type {import('webpack').Configuration} */
@@ -23,7 +25,13 @@ module.exports = {
     },
     resolve: {
         extensions: ['.ts', '.tsx', '.js'],
-        plugins: [new TsconfigPathsPlugin({ configFile: path.join(__dirname, 'tsconfig.json') })],
+        plugins: [new TsconfigPathsPlugin({
+            configFile: path.join(__dirname, 'tsconfig.json'),
+            baseUrl: '.',
+        })],
+        alias: {
+            'pg-native': false,
+        },
     },
     module: {
         rules: [
@@ -31,7 +39,7 @@ module.exports = {
                 loader: 'ts-loader',
                 test: /\.tsx?$/,
                 // Intentionally not excluding node_modules since our code is there.
-                // exclude: /node_modules/,
+                exclude: /node_modules/,
                 options: {
                     allowTsInNodeModules: true,
                 }
@@ -64,10 +72,10 @@ module.exports = {
         "socket.io": "commonjs socket.io",
         "_http_common": "commonjs2 _http_common",
         encoding: "commonjs2 encoding",
-        "util/types": "commonjs2 util/types"
+        "util/types": "commonjs2 util/types",
     },
     node: {
-        __dirname: true,
+        __dirname: false,
     },
     experiments: {
         topLevelAwait: true

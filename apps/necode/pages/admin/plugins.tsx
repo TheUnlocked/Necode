@@ -1,15 +1,15 @@
 import { Box, Button, Card, CardActions, CardContent, Skeleton, Stack, Typography } from "@mui/material";
+import { set } from 'lodash/fp';
+import { useConfirm } from 'material-ui-confirm';
 import { NextPage } from "next";
-import FormPage from "~ui/components/layouts/FormPage";
 import { FormEventHandler, useCallback, useState } from "react";
-import { useGetRequestImmutable } from "~shared-ui/hooks/useGetRequest";
+import { PluginEntity } from '~api/entities/PluginEntity';
 import { UserEntity } from "~api/entities/UserEntity";
-import AdminPageAlert from "~ui/components/AdminPageAlert";
 import api from '~api/handles';
 import { useApiFetch, useApiGet } from '~shared-ui/hooks/useApi';
-import { useConfirm } from 'material-ui-confirm';
-import { PluginEntity } from '~api/entities/PluginEntity';
-import { set } from 'lodash/fp';
+import { useGetRequestImmutable } from "~shared-ui/hooks/useGetRequest";
+import AdminPageAlert from "~ui/components/AdminPageAlert";
+import FormPage from "~ui/components/layouts/FormPage";
 
 const Page: NextPage = () => {
     const { data: me, isLoading: meLoading } = useGetRequestImmutable<UserEntity>('/api/me');
@@ -50,18 +50,13 @@ const Page: NextPage = () => {
     const confirm = useConfirm();
 
     async function tryUninstallPlugin(plugin: PluginEntity) {
-        try {
-            await confirm({ description: <>
-                Are you sure you want to uninstall {plugin.attributes.displayName} (<code>{plugin.attributes.name}</code>)?
-                This may break existing activities, including activities from other plugins which depend on languages or policies from this one.
-            </> });
+        if ((await confirm({ description: <>
+            Are you sure you want to uninstall {plugin.attributes.displayName} (<code>{plugin.attributes.name}</code>)?
+            This may break existing activities, including activities from other plugins which depend on languages or policies from this one.
+        </> })).confirmed) {
+            await upload(api.plugin(plugin.id), { method: 'DELETE' });
+            mutatePlugins();
         }
-        catch {
-            return;
-        }
-
-        await upload(api.plugin(plugin.id), { method: 'DELETE' });
-        mutatePlugins();
     }
 
     const selectFileHandler: FormEventHandler<HTMLInputElement> = e => {

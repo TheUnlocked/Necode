@@ -1,6 +1,5 @@
-import { NextPage } from "next";
-import React from "react";
 import { Card } from "@mui/material";
+import { NextPage } from "next";
 import { useRouter } from "next/router";
 
 const Login: NextPage = () => {

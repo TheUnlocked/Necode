@@ -1,6 +1,6 @@
 import { MutableRefObject, ReactNode, useCallback, useEffect, useState } from "react";
-import useImported from '../hooks/useImported';
 import { Importable } from '~utils/types';
+import useImported from '../hooks/useImported';
 
 export interface LazyProps {
     children?: ReactNode | undefined;
@@ -26,19 +26,19 @@ export interface LazyImportableProps<T> extends Omit<LazyProps, 'children'> {
 export default function Lazy({ show, children, keepInDom = false, unloadRef }: LazyProps) {
     const [hasShown, setHasShown] = useState(show);
 
-    useEffect(() => {
-        if (show) {
-            setHasShown(true);
-        }
-    }, [show]);
+    if (show && !hasShown) {
+        setHasShown(true);
+    }
 
     const unload = useCallback(() => {
         setHasShown(false);
     }, []);
 
-    if (unloadRef) {
-        unloadRef.current = unload;
-    }
+    useEffect(() => {
+        if (unloadRef) {
+            unloadRef.current = unload;
+        }
+    }, [unloadRef, unload]);
 
     if (hasShown) {
         if (keepInDom) {
@@ -55,19 +55,19 @@ export default function Lazy({ show, children, keepInDom = false, unloadRef }: L
 export function LazyImportable<T>({ show, keepInDom = false, unloadRef, importable, fallback, render }: LazyImportableProps<T>) {
     const [hasShown, setHasShown] = useState(show);
 
-    useEffect(() => {
-        if (show) {
-            setHasShown(true);
-        }
-    }, [show]);
+    if (show && !hasShown) {
+        setHasShown(true);
+    }
 
     const unload = useCallback(() => {
         setHasShown(false);
     }, []);
 
-    if (unloadRef) {
-        unloadRef.current = unload;
-    }
+    useEffect(() => {
+        if (unloadRef) {
+            unloadRef.current = unload;
+        }
+    }, [unloadRef, unload]);
 
     const imported = useImported(show || hasShown ? importable : undefined);
 

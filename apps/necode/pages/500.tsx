@@ -1,7 +1,7 @@
-import { NextPage } from "next";
-import { Stack, Typography, Link, styled } from "@mui/material";
-import { MouseEvent } from "react";
+import { Link, Stack, styled, Typography } from "@mui/material";
 import dedent from "dedent-js";
+import { NextPage } from "next";
+import { MouseEvent } from "react";
 import SubtleLink from "~shared-ui/components/SubtleLink";
 
 const AsciiArt = styled('pre')`

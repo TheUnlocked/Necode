@@ -1,13 +1,13 @@
 import { Add, ContentCopy, Delete, TextFields } from '@mui/icons-material';
-import { Button, IconButton, Tooltip, Stack } from '@mui/material';
-import { useDrop } from 'use-dnd';
+import { Button, IconButton, Stack, Tooltip } from '@mui/material';
 import { ActivityDescription } from '@necode-org/plugin-dev';
-import textInputActivityDescription from '~core/activities/text-input';
+import { useDrop } from 'use-dnd';
 import { ActivityEntity } from '~api/entities/ActivityEntity';
 import { EntityType } from '~api/entities/Entity';
 import { LessonEntity } from '~api/entities/LessonEntity';
-import { activityDragDropType, lessonDragDropType } from '../../dnd/types';
+import textInputActivityDescription from '~core/activities/text-input';
 import useImperativeDialog from '~shared-ui/hooks/useImperativeDialog';
+import { activityDragDropType, lessonDragDropType } from '../../dnd/types';
 import SelectActivityDialog from './SelectActivityDialog';
 
 interface ActivityListPaneActionsProps {

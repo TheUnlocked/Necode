@@ -36,7 +36,7 @@ Necode has spawned a number of projects which, though originally designed for us
 ### Pre-requisites
 
 There are a few things you need to run Necode
-- Node.js 16+
+- Node.js 18+
 - A PostgreSQL database with an appropriate user role attached
 - SSL Certificates (not necessary for local development)
 

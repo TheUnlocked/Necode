@@ -1,7 +1,7 @@
-import { IMPERSONATION_COOKIE } from '~api/constants';
-import createGlobalState from '../util/globalState';
 import Cookies from 'js-cookie';
 import { mutate } from 'swr';
+import { IMPERSONATION_COOKIE } from '~api/constants';
+import createGlobalState from '../util/globalState';
 
 const impersonationState = createGlobalState<string | undefined>(Cookies.get(IMPERSONATION_COOKIE));
 

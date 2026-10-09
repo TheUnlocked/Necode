@@ -1,8 +1,8 @@
-import { EndpointHandle, HttpMethod } from '~api/handles';
+import { useCallback } from 'react';
 import { SWRConfiguration } from "swr";
+import { EndpointHandle, HttpMethod } from '~api/handles';
 import { useGetRequest, UseGetRequestResult } from './useGetRequest';
 import useNecodeFetch, { NecodeFetch, NecodeFetchRequestOptions } from './useNecodeFetch';
-import { useCallback } from 'react';
 
 interface UseApiGetOptions extends SWRConfiguration {
     disabled?: boolean;
@@ -67,9 +67,9 @@ export function useApiFetch() {
     const { download, upload } = useNecodeFetch();
 
     return {
-        // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps
+        // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps, react-hooks/use-memo
         download: useCallback(createApiFetch(download), [download]),
-        // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps
+        // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps, react-hooks/use-memo
         upload: useCallback(createApiFetch(upload), [upload]),
     };
 }

@@ -1,5 +1,5 @@
-import { NextPage } from "next";
 import { Link } from "@mui/material";
+import { NextPage } from "next";
 import { MouseEvent } from "react";
 import StatusPage from "./StatusPage";
 

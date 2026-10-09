@@ -4,6 +4,8 @@ import { NetworkId, useSignal, useSnackbar } from '@necode-org/activity-dev';
 import { useCallback, useContext, useMemo, useState } from 'react';
 import { ScrollMenu, VisibilityContext } from 'react-horizontal-scrolling-menu';
 
+import 'react-horizontal-scrolling-menu/dist/styles.css';
+
 export interface BreakoutRoomSelectorProps {
     network: NetworkId;
     numRooms: number;
@@ -65,7 +67,9 @@ export default function BreakoutRoomProvider({ network, numRooms, roomNames, chi
     }, [currentRoom, signal, enqueueSnackbar]);
 
     return <Stack height="100%">
-        <Box mb={1} height={menuHeight} sx={{
+        <Box sx={{
+            mb: 1,
+            height: menuHeight,
             ".breakout-room-selector-scroll-container": {
                 // Chromium
                 "&::-webkit-scrollbar": {

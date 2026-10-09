@@ -1,12 +1,12 @@
 import { Box, Stack, TextField, Typography } from '@mui/material';
 import { useEffect, useMemo } from 'react';
-import { useDrag, createEmptyPreviewImage } from 'use-dnd';
+import { createEmptyPreviewImage, useDrag } from 'use-dnd';
 import { LessonEntity } from '~api/entities/LessonEntity';
-import { lessonDragDropType } from '../../dnd/types';
-import useLocalCachedState from '~shared-ui/hooks/useLocalCachedState';
-import isContentfulLesson from '../../lessons/isContentfulLesson';
-import { Iso8601Date, toLuxon } from '~utils/iso8601';
 import DragHandle, { dragHandleSelector } from '~shared-ui/components/DragHandle';
+import useLocalCachedState from '~shared-ui/hooks/useLocalCachedState';
+import { Iso8601Date, toLuxon } from '~utils/iso8601';
+import { lessonDragDropType } from '../../dnd/types';
+import isContentfulLesson from '../../lessons/isContentfulLesson';
 
 export interface AcitivityListPaneTitleBarProps {
     date: Iso8601Date;
@@ -42,28 +42,32 @@ export default function AcitivityListPaneTitleBar({
                 hiddenLabel
                 fullWidth
                 value={displayName}
-                onBlur={commitDisplayName}
+                onBlur={() => commitDisplayName()}
                 onChange={e => setDisplayName(e.target.value)}
-                InputProps={{ disableUnderline: true, sx: ({ typography, transitions }) => ({
-                    ...typography.h6,
-                    "&:hover:after": {
-                        backgroundColor: ({ palette }) => palette.action.hover,
-                        borderRadius: 1
-                    },
-                    "&:after": {
-                        content: "''",
-                        position: "absolute",
-                        width: ({ spacing }) => `calc(100% + ${spacing(2)})`,
-                        height: "100%",
-                        pointerEvents: "none",
-                        mx: -1,
-                        borderRadius: 1,
-                        transition: transitions.create("background-color", {
-                            duration: transitions.duration.shorter,
-                            easing: transitions.easing.easeOut
-                        })
-                    }
-                }) }} />
+                slotProps={{
+                    input: {
+                        disableUnderline: true, sx: ({ typography, transitions }) => ({
+                        ...typography.h6,
+                        "&:hover:after": {
+                            backgroundColor: ({ palette }) => palette.action.hover,
+                            borderRadius: 1
+                        },
+                        "&:after": {
+                            content: "''",
+                            position: "absolute",
+                            width: ({ spacing }) => `calc(100% + ${spacing(2)})`,
+                            height: "100%",
+                            pointerEvents: "none",
+                            mx: -1,
+                            borderRadius: 1,
+                            transition: transitions.create("background-color", {
+                                duration: transitions.duration.shorter,
+                                easing: transitions.easing.easeOut
+                            })
+                        }
+                    })
+                }
+            }} />
             <Typography variant="body2" component="span">{
                 forTodayOnly
                     ? "Today"

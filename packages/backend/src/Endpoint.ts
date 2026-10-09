@@ -1,12 +1,12 @@
 import { Schema } from "joi";
 import { NextApiHandler, NextApiRequest, NextApiResponse } from "next";
-import { Entity } from "~api/entities/Entity";
-import { Response, ResponsePaginationPart } from "~api/Response";
 import { Session } from "next-auth";
-import { IfAny } from "~utils/types";
-import { EntityReference, EntityReferenceArray, ReferenceDepth } from "~api/entities/EntityReference";
-import getIdentity from './identity';
 import { Readable } from 'stream';
+import { Entity } from "~api/entities/Entity";
+import { EntityReference, EntityReferenceArray, ReferenceDepth } from "~api/entities/EntityReference";
+import { Response, ResponsePaginationPart } from "~api/Response";
+import { IfAny } from "~utils/types";
+import getIdentity from './identity';
 
 export enum Status {
     OK = 200,
@@ -392,7 +392,7 @@ type ExecuteMethod<P extends string, E extends Endpoint<any, any, P>> = (
     obj: Parameters<E['handler']>[0],
 ) => Promise<Response<Parameters<Parameters<E['handler']>[1]>[0]>>;
 
-function execute<E extends Endpoint<any, any, any>>(this: E, obj: EndpointHandlerObject<unknown, string>) {
+function execute<E extends Endpoint<any, any, any>, P extends string>(this: E, obj: EndpointHandlerObject<unknown, P>) {
     return new Promise<Response<Parameters<Parameters<E['handler']>[1]>[0]>>(async resolve => {
         function ok(result: any) {
             resolve({

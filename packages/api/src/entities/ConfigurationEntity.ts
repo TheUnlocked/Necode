@@ -1,4 +1,4 @@
-import { SystemConfiguration } from "~database";
+import { SystemConfiguration } from "~database/server";
 import { Entity, EntityType } from "./Entity";
 
 export type ConfigurationEntity

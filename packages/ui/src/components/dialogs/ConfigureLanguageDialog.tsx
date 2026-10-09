@@ -1,6 +1,6 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, List, ListItemButton, ListItemIcon, ListItemText, Radio } from "@mui/material";
-import { LanguageDescription } from "@necode-org/plugin-dev";
 import { useLocalCachedState } from '@necode-org/activity-dev';
+import { LanguageDescription } from "@necode-org/plugin-dev";
 
 interface ConfigureLanguageDialogProps {
     open: boolean;
